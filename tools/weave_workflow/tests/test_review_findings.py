@@ -182,7 +182,6 @@ class IntegrationEvidenceTests(unittest.TestCase):
         self.assertTrue(ev["tree_matches_candidate"])
         self.assertTrue(ev["required_reviews_passed"])
         self.assertEqual((ev["head_ref"], ev["claim_branch"], ev["closes_issue"]), ("agent/10-task", "agent/10-task", True))
-        self.assertEqual((ev["head_ref"], ev["claim_branch"], ev["closes_issue"]), ("agent/10-task", "agent/10-task", True))
 
     def test_altered_merge_failed_checks_and_foreign_merger_are_detected(self):
         self.git("merge", "-q", "--no-ff", "--no-commit", "agent/10-task")
