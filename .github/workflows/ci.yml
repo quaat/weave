@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  inventory-proof:
+    name: inventory-proof (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    defaults:
+      run:
+        working-directory: inventory-proof
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Demo regenerates committed outputs
+        run: |
+          python demo.py
+          git diff --exit-code -- .
+      - name: Process-crash reference model
+        run: python durable.py
+
+  agent-kit:
+    name: agent-kit (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    defaults:
+      run:
+        working-directory: agent-kit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Environment check
+        run: python scripts/weave.py doctor
+      - name: Kit tests
+        run: python -B -m unittest discover -s tests -v
+      - name: Teaching example expectations
+        run: python scripts/weave.py examples
+      - name: Bundled prototype regression suite
+        run: python scripts/weave.py test
+      - name: Demo tests
+        run: |
+          for demo in demos/*/; do
+            echo "::group::$demo"
+            (cd "$demo" && python -B -m unittest discover -s tests -v)
+            echo "::endgroup::"
+          done
+
+  specification:
+    name: specification (validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: specification
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: specification/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate (examples, grammar, tests, strict HTML, link audit)
+        run: make validate-offline PYTHON=python
+      - name: Single-page and text editions
+        run: |
+          make singlehtml text PYTHON=python
+          python scripts/audit_html.py _build/singlehtml

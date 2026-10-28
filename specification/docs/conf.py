@@ -98,6 +98,9 @@ html_search_language = "en"
 html_theme_options = {
     "navigation_with_keys": False,
     "top_of_page_buttons": ["view"],
+    "source_repository": "https://github.com/quaat/weave/",
+    "source_branch": "main",
+    "source_directory": "specification/docs/",
     "announcement": (
         "<strong>Draft 0.2</strong>"
         "<span class='weave-announcement-divider' aria-hidden='true'> / </span>"
