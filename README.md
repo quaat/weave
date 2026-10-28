@@ -3,7 +3,8 @@
 [![CI](https://github.com/quaat/weave/actions/workflows/ci.yml/badge.svg)](https://github.com/quaat/weave/actions/workflows/ci.yml)
 [![Specification site](https://github.com/quaat/weave/actions/workflows/docs.yml/badge.svg)](https://github.com/quaat/weave/actions/workflows/docs.yml)
 
-**Specification:** [HTML](https://quaat.github.io/weave/) ·
+**Specification:** [single page](https://quaat.github.io/weave/) ·
+[multi-page with search](https://quaat.github.io/weave/multipage/) ·
 [PDF](https://quaat.github.io/weave/weave-specification.pdf)
 
 Weave is an experimental, purely functional language that combines Petri nets
@@ -51,7 +52,7 @@ make validate-offline  # examples, grammar audit, tests, strict HTML build, link
 | Workflow | Runs on | What it does |
 | --- | --- | --- |
 | [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, checks that `demo.py` regenerates the committed outputs, runs `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, and demo tests (Python 3.11–3.13). `specification`: `make validate-offline`, single-page and text builds, HTML link audit |
-| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the HTML site and the XeLaTeX PDF. The PDF is uploaded as a build artifact. On `main` the site, with the PDF, is deployed to GitHub Pages |
+| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the single-page edition (site root), the multi-page edition (`/multipage/`) and the XeLaTeX PDF, then audits links in the assembled site. The PDF is also uploaded as a build artifact. Only `main` deploys to GitHub Pages; this is the repository's only Pages workflow |
 
 External link checking (`make linkcheck`) needs network access to many hosts,
 so CI doesn't run it; run it locally before a release.

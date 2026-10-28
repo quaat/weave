@@ -1,5 +1,10 @@
 name: Specification site
 
+# Publishes the specification to GitHub Pages:
+#   /                          single-page edition (one HTML document)
+#   /multipage/                multi-page edition with full-text search
+#   /weave-specification.pdf   XeLaTeX PDF
+
 on:
   push:
     branches: [main]
@@ -14,11 +19,12 @@ permissions:
 
 concurrency:
   group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a deployment from main part-way; superseded PR builds may stop.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    name: Build HTML and PDF
+    name: Build site (single page, multi-page, PDF)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -38,7 +44,9 @@ jobs:
             texlive-lang-english fonts-dejavu
       - name: Install Python dependencies
         run: python -m pip install -r requirements.txt
-      - name: Build HTML
+      - name: Build single-page edition
+        run: make singlehtml PYTHON=python
+      - name: Build multi-page edition
         run: make html PYTHON=python
       - name: Build PDF
         run: make latexpdf PYTHON=python
@@ -48,15 +56,22 @@ jobs:
             | sed 's/^/::warning title=LaTeX::/' || true
       - name: Assemble site
         run: |
-          cp _build/latex/weave-specification.pdf _build/html/weave-specification.pdf
-          touch _build/html/.nojekyll
+          rm -rf _site
+          cp -r _build/singlehtml _site
+          cp -r _build/html _site/multipage
+          cp _build/latex/weave-specification.pdf _site/weave-specification.pdf
+          touch _site/.nojekyll
+      - name: Audit links, anchors and assets
+        run: python scripts/audit_html.py _site
       - uses: actions/upload-artifact@v4
         with:
           name: weave-specification-pdf
           path: specification/_build/latex/weave-specification.pdf
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: specification/_build/html
+          path: specification/_site
 
   deploy:
     name: Deploy to GitHub Pages
