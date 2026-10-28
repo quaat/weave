@@ -3,6 +3,7 @@ import json
 import shutil
 import subprocess
 import unittest
+from unittest import mock
 
 from tools.weave_workflow import docs_audit
 
@@ -235,9 +236,10 @@ class DriftTests(unittest.TestCase):
         self.assertEqual(self.floor_messages(errors), ["ignored path segment 'weave_workflow' added"])
 
     def test_floor_covers_every_other_key(self):
-        base = docs_audit.load_docmap()
+        base = {**docs_audit.load_docmap(), "future_rule": ["strict"]}
         cand = json.loads(json.dumps(base))
-        cand["docmap_version"] = 2                                    # not floored: any change is reported
+        cand["future_rule"] = []                                      # not floored: any change is reported
+        cand["docmap_version"] = base["docmap_version"] - 1           # a version may rise, never fall
         del cand["synced_copies"]                                     # a removed key keeps the base value
         cand["commands"]["make"]["sphinx_builders"].append("everything")
         cand["path_bases"]["README.md"].append("tools")
@@ -246,11 +248,14 @@ class DriftTests(unittest.TestCase):
         eff, found = docs_audit.docmap_floor(cand, base)
         messages = sorted(f.message.split(" relative to the base map")[0] for f in found)
         self.assertEqual(messages, ["command source 'make' changed", "diagnostic-code source '**/*.py' added",
-                                    "path base 'tools' for 'README.md' added", "top-level key 'docmap_version' changed",
+                                    f"docmap_version lowered or invalid ({base['docmap_version'] - 1} < {base['docmap_version']})",
+                                    "path base 'tools' for 'README.md' added", "top-level key 'future_rule' changed",
                                     "top-level key 'synced_copies' removed"])
-        for key in ("docmap_version", "synced_copies", "commands", "path_bases", "diagnostic_code_sources"):
+        for key in ("docmap_version", "future_rule", "synced_copies", "commands", "path_bases", "diagnostic_code_sources"):
             self.assertEqual(eff[key], base[key], key)
         self.assertEqual(eff["future_key"], {"anything": True})
+        bumped = {**base, "docmap_version": base["docmap_version"] + 1}
+        self.assertEqual(docs_audit.docmap_floor(bumped, base), (bumped, []))   # a version bump is allowed
 
     def test_unchanged_map_adds_no_floor_findings(self):
         res, errors = self.findings(base="HEAD")
@@ -279,9 +284,23 @@ class DriftTests(unittest.TestCase):
         self.assertTrue(any(g["check"]["type"] == "docs-map" for g in eff["generated_documents"]))
         self.assertEqual(docs_audit.docmap_floor(base, base), (base, []))
 
-    def test_tree_without_a_map_falls_back_to_the_module_map(self):
+    def test_tree_without_a_map_falls_back_to_the_module_map_only_in_repository_scope(self):
         (self.repo / "tools/weave_workflow/docmap.json").unlink()
-        self.assertEqual(docs_audit.docmap_for(self.repo), docs_audit.load_docmap())
+        self.assertEqual(docs_audit.docmap_for(self.repo), docs_audit.load_docmap())  # no base: a tree predating the map
+        subprocess.run(["git", "rm", "-q", "--cached", "tools/weave_workflow/docmap.json"], cwd=self.repo, check=True)
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "no map"],
+                       cwd=self.repo, check=True)
+        res, errors = self.findings(base="HEAD")                       # neither tree nor base has a map
+        self.assertFalse([e for e in errors if e[0] == "docmap-floor"], errors)
+
+    def test_change_scope_reports_a_deleted_map_and_audits_with_the_base_map(self):
+        (self.repo / "tools/weave_workflow/docmap.json").unlink()
+        with mock.patch.object(docs_audit, "DOCMAP_PATH", self.repo / "no-module-map.json"):  # the module map is never read
+            res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json",
+                       "documentation map deleted relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+        self.assertGreater(res.counts["claims"], 5)                    # the base map's claims were checked
 
     def test_protected_vocabulary_is_flagged_for_review(self):
         self.edit("agent-kit/README.md", "\n", "\nThe merge sort is PROVED correct.\n")

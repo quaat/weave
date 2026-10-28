@@ -130,7 +130,7 @@ def _narrowed(base_rule: dict, rule: dict) -> list[str]:
     return out
 
 
-FLOORED_KEYS = ("impact_rules", "managed_documents", "generated_documents", "claims", "historical_documents",
+FLOORED_KEYS = ("docmap_version", "impact_rules", "managed_documents", "generated_documents", "claims", "historical_documents",
                 "protected_vocabulary", "new_or_removed_document_rule", "boundary", "provenance_manifests",
                 "synced_copies", "ignore_path_segments", "diagnostic_code_sources", "path_bases", "commands")
 
@@ -141,7 +141,8 @@ def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
     required documents, managed globs, generated documents, claims checked with both definitions,
     protected labels, provenance manifests, synced copies); exemptions are intersected (vocabulary
     and historical-record exemptions, ignored path segments, diagnostic-code sources, path bases);
-    the base's commands apply. Every removal or narrowing is reported as an error. Any other
+    the base's commands apply; ``docmap_version`` may rise but not fall. Every removal or
+    narrowing is reported as an error. Any other
     top-level key, including future ones, takes the base value and is reported when the candidate
     changes or removes it; keys only the candidate has are additive and allowed."""
     cand = copy.deepcopy(candidate)
@@ -231,6 +232,10 @@ def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
         if kept:
             bases[pattern] = kept
     eff["path_bases"] = bases
+    version, base_version = cand["docmap_version"], base["docmap_version"]
+    if not (isinstance(version, int) and isinstance(base_version, int) and version >= base_version):
+        flag(f"docmap_version lowered or invalid ({version!r} < {base_version!r})")
+        eff["docmap_version"] = base_version
     for name, spec in base["commands"].items():
         if cand["commands"].get(name) != spec:
             flag(f"command source {name!r} " + ("removed" if name not in cand["commands"] else "changed"))
@@ -599,13 +604,21 @@ def required_documents(docmap: dict, changes: dict[str, str]) -> dict[str, list[
 
 
 def audit(repo: Path, docmap: dict | None = None, base: str | None = None, impact: list[dict] | None = None) -> AuditResult:
-    docmap = docmap or docmap_for(repo)
-    section_map = docmap
+    base_map = base_docmap(repo, base) if base else None
     floor: list[Finding] = []
-    if base:
-        base_map = base_docmap(repo, base)
-        if base_map is not None:
-            docmap, floor = docmap_floor(docmap, base_map)
+    if docmap is None:
+        if (repo / DOCMAP_REL).is_file():
+            docmap = load_docmap(repo / DOCMAP_REL)
+        elif base_map is not None:  # the change deleted the map: audit with the base map, never the module's
+            docmap = copy.deepcopy(base_map)
+            floor.append(Finding("error", "docmap-floor", DOCMAP_REL,
+                                 f"documentation map deleted relative to the base map; the change {FLOOR_NOTE}"))
+        else:  # neither the audited tree nor the base has a map
+            docmap = load_docmap()
+    section_map = docmap
+    if base_map is not None:
+        docmap, narrowed = docmap_floor(docmap, base_map)
+        floor += narrowed
     head = None
     try:
         head = git(repo, "rev-parse", "HEAD").strip()

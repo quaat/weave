@@ -30,14 +30,15 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    labels the issue `agent:docs-stale` and blocks the transition. The audit, `docs-map` and
    the claim-time impact list read the map from the audited tree
    (`tools/weave_workflow/docmap.json` in that worktree or checkout), so a candidate that
-   changes the map is audited against its own map; the running module's map is used only
-   when the audited tree has none. In change scope (`--base`) the base revision's map is a
+   changes the map is audited against its own map. The running module's map is used only
+   when neither the audited tree nor the base revision has one; a change that deletes the
+   map is audited with the base map and reported as an error. In change scope (`--base`) the base revision's map is a
    floor: the audit applies the union of both maps' requirements (impact rules, required
    documents, managed-document globs, generated documents, protected labels, provenance
    manifests and synced copies; a claim id from the base map is checked with both
    definitions), only the exemptions both maps grant (vocabulary and historical-record
    exemptions, ignored path segments, diagnostic-code sources, path bases), and the base
-   map's command sources. Every removal or narrowing, and any change to another top-level
+   map's command sources; `docmap_version` may rise but not fall. Every removal or narrowing, and any change to another top-level
    key of the base map, is an error: it must be justified and approved by the maintainer.
    Keys only the candidate adds are allowed. The generated
    section of `documentation-map.md` is checked against the candidate's own map.
