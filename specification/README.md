@@ -90,6 +90,6 @@ The primary source is `weave-inventory-proof.zip`, version 3. Teaching examples
 originate in the older `weave-agent-kit.zip` and are rechecked against version 3.
 Draft/profile identifiers are editorial identifiers, not upstream release numbers.
 
-The source snapshot did not supply a license. This package makes no new license
-grant for that source or the documentation. Choose distribution terms before
-public release.
+The specification sources, the built editions and the reference prototype
+snapshot are released under the MIT License; see [`LICENSE`](../LICENSE) at the
+repository root.

@@ -76,9 +76,10 @@ Python API. This package's scripts import them solely for reproducibility.
 Distribution status
 -------------------------
 
-The inspected prototype and teaching kit did not supply a source license.
-No license or permission grant is invented by this specification package.
-No public publication, repository push, or third-party sharing is performed.
+The specification, the reference prototype snapshot and the teaching kit are
+released under the MIT License, Copyright (c) 2026 Thomas F. Hagelien. The
+license text is in ``LICENSE`` at the root of the
+`project repository <https://github.com/quaat/weave>`_.
 
 Change history
 --------------------

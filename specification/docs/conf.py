@@ -19,7 +19,7 @@ sys.path.insert(0, str(DOCS_DIR / "_ext"))
 # Project metadata ------------------------------------------------------------
 project = "Weave"
 author = "Danio project"
-copyright = "2026, Danio project; distribution terms not specified"
+copyright = "2026, Thomas F. Hagelien. MIT License"
 version = "0.2"
 release = "0.2-draft"
 language = "en"

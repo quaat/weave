@@ -87,5 +87,5 @@ provenance, and run original tests, teaching expectations, and CLI tests. Update
 the guide and skill when syntax or behavior changes. Investigate changed expected
 diagnostics before accepting them. Do not describe proposed features as implemented.
 
-No license was supplied in the source archive. This kit does not invent or grant
-a license for the prototype; decide the license before public distribution.
+The kit and the vendored prototype are released under the MIT License; see
+[`LICENSE`](../../LICENSE) at the repository root.
