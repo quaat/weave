@@ -131,29 +131,51 @@ class ClaimSlotTests(unittest.TestCase):
         self.assertTrue((self.repo / ".worktrees" / "agent-12-task-12").is_dir())
         self.assertEqual(self.store.active_run()["active_issues"], [12])
 
+    def test_work_returned_over_the_limit_blocks_new_claims(self):
+        for n, paths in ((10, "inventory-proof/**"), (11, "agent-kit/**"), (12, "specification/**")):
+            self.claimed_elsewhere(n, [paths], "In Progress")
+        self.moved(12, "In Progress", "In Review")
+        self.claimed_elsewhere(20, ["docs/decisions/**"], "In Progress")
+        self.moved(12, "In Review", "In Progress")  # changes requested: four issues in implementation
+        snap = self.snap(n10="In Progress", n11="In Progress", n12="In Progress")
+        snap.project.items[20].status = "In Progress"
+        rc, out = run_cli(["--fixture", self.fixture(snap), "plan", "--json"])
+        self.assertIsNone(out["next"])
+        self.assertEqual(out["active"], [10, 11, 12, 20])
+        rc, out = self.claim(snap, 13, "--allowed-path", "README.md")
+        self.assertEqual(rc, 2)
+        self.assertIn("all 3 active implementation slot(s) occupied by #10, #11, #12, #20", out["reasons"][0])
+
     def test_same_issue_cannot_be_claimed_twice(self):
         self.claimed_elsewhere(10)  # claimed, but the card has not left Todo yet
         rc, out = self.claim(self.snap(), 10)
         self.assertEqual(rc, 2)
         self.assertIn("already an active implementation issue (claimed or In Progress)", out["reasons"])
 
-    def test_overlapping_paths_are_refused_while_the_other_issue_is_active(self):
+    def test_overlapping_paths_are_refused_while_the_other_claim_is_held(self):
         self.claimed_elsewhere(10, ["agent-kit/**", "docs/development/documentation-map.md"], "In Progress")
         snap = self.snap(n10="In Progress")
         for paths in (["agent-kit/docs/**"], [], ["tools/weave_workflow/docmap.json"]):
             with self.subTest(paths=paths):
                 rc, out = self.claim(snap, 11, *[a for p in paths for a in ("--allowed-path", p)])
                 self.assertEqual(rc, 2)
-                self.assertTrue(out["reasons"][0].startswith("allowed paths conflict with active implementation issue #10"),
-                                out["reasons"])
+                self.assertTrue(out["reasons"][0].startswith("allowed paths conflict with claimed issue #10 "
+                                                             "(In Progress or In Review)"), out["reasons"])
         self.assertIn("'**' overlaps 'agent-kit/**'", self.claim(snap, 11)[1]["reasons"][0])
         self.assertIn("both may touch generated docs/development/documentation-map.md",
                       self.claim(snap, 11, "--allowed-path", "tools/weave_workflow/docmap.json")[1]["reasons"][0])
         rc, out = self.claim(snap, 11, "--allowed-path", "specification/**")
         self.assertEqual(rc, 0, out)  # disjoint paths are admitted
-        self.moved(10, "In Progress", "In Review")
-        rc, out = self.claim(self.snap(n10="In Review"), 11, "--allowed-path", "agent-kit/docs/**")
-        self.assertEqual(rc, 0, out)  # admitted again once the other issue is In Review
+        self.moved(10, "In Progress", "In Review")  # #10 may return to In Progress: its paths stay reserved
+        snap = self.snap(n10="In Review")
+        rc, out = self.claim(snap, 11, "--allowed-path", "agent-kit/docs/**")
+        self.assertEqual(rc, 2)
+        self.assertIn("allowed paths conflict with claimed issue #10 (In Progress or In Review)", out["reasons"][0])
+        rc, out = self.claim(snap, 11, "--allowed-path", "specification/**")
+        self.assertEqual(rc, 0, out)
+        self.record("COMPLETED", 10, head_sha="a" * 40, merge_sha="c" * 40)
+        rc, out = self.claim(self.snap(n10="Done"), 11, "--allowed-path", "agent-kit/docs/**")
+        self.assertEqual(rc, 0, out)  # released once the claim is completed
 
     def test_in_progress_card_without_a_recorded_claim_blocks_every_path(self):
         rc, out = self.claim(self.snap(n10="In Progress"), 11, "--allowed-path", "specification/**")

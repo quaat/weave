@@ -160,21 +160,55 @@ def milestone_gate(snap: Snapshot, policy: dict, key: str, gate_events: list[dic
 # ---------------------------------------------------------------- selection
 
 
-def active_implementation_issues(events: list[dict]) -> list[int]:
-    """The one definition of an active implementation issue, counted against
-    ``concurrency.max_active_implementation_issues``: CLAIMED, neither RELEASED nor COMPLETED,
-    and not recorded as In Review (or Done). Work In Review waits for review or merge, not
-    implementation; work returned from In Review to In Progress is active again."""
+def _claim_states(events: list[dict]):
+    """Replay claims in order; yields (event, issue, its previous state, all claim states)."""
     state: dict[int, str] = {}
     for e in events:
         n = int(e["issue"].split("#")[1])
+        prev = state.get(n)
         if e["kind"] == "CLAIMED":
             state[n] = "claimed"
         elif e["kind"] in ("RELEASED", "COMPLETED"):
             state.pop(n, None)
         elif e["kind"] == "STATE_CHANGED" and n in state:
             state[n] = e["to_status"]
-    return sorted(n for n, status in state.items() if status not in ("In Review", "Done", "Todo"))
+        yield e, n, prev, state
+
+
+def _implementing(state: dict[int, str]) -> set[int]:
+    return {n for n, status in state.items() if status not in ("In Review", "Done", "Todo")}
+
+
+def active_implementation_issues(events: list[dict]) -> list[int]:
+    """The one definition of an active implementation issue in the ledger: CLAIMED, neither
+    RELEASED nor COMPLETED, and not recorded as In Review (or Done). Work In Review waits for
+    review or merge, not implementation; work returned from In Review to In Progress is active
+    again."""
+    state: dict[int, str] = {}
+    for *_, state in _claim_states(events):
+        pass
+    return sorted(_implementing(state))
+
+
+def active_issues(snap: Snapshot, ledger_active: list[int]) -> list[int]:
+    """The set counted against ``concurrency.max_active_implementation_issues`` by plan, claim and
+    reconcile: active implementation issues in the ledger plus open cards In Progress."""
+    return sorted(set(ledger_active) | {n for n, i in snap.issues.items()
+                                        if i.state == "open" and snap.status_of(n) == "In Progress"})
+
+
+def capacity_history(events: list[dict], limit: int, board_only: set[int] = frozenset()) -> tuple[list[int], list[int]]:
+    """Replays the ledger against the limit. Returns (issues claimed while every slot was
+    occupied, issues whose return from In Review to In Progress took the count over the limit).
+    ``board_only`` (cards In Progress without an active ledger claim) count throughout."""
+    beyond, returned = [], []
+    for e, n, prev, state in _claim_states(events):
+        over = len(_implementing(state) | set(board_only)) > limit
+        if e["kind"] == "CLAIMED" and over:
+            beyond.append(n)
+        elif e["kind"] == "STATE_CHANGED" and prev == "In Review" and e["to_status"] == "In Progress" and over:
+            returned.append(n)
+    return beyond, returned
 
 
 GLOB_CHARS = re.compile(r"[*?\[]")
@@ -283,9 +317,7 @@ def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
     unscheduled = sorted(i.number for i in snap.issues.values()
                          if i.milestone is None and i.state == "open"
                          and not (deferred_labels | tracking) & set(i.labels))
-    active = sorted(set(active_claims or []) | {
-        n for n, i in snap.issues.items()
-        if i.state == "open" and snap.status_of(n) == "In Progress"})
+    active = active_issues(snap, active_claims or [])
     candidates: list[Candidate] = []
     if current:
         missing_preds = [p for p in policy["milestones"][current]["requires"] if not gates[p].passed]

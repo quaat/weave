@@ -222,17 +222,18 @@ def claimed_paths(store: Store, issue: int) -> list[str]:
         return ["**"]
 
 
-def path_refusals(store: Store, repo: Path, issue: int, allowed: list[str], active: list[int]) -> list[str]:
-    """Conflicts between a new claim's allowed paths and those of every active implementation issue
-    (an issue In Progress without a verifiable recorded packet counts as ``**``)."""
+def path_refusals(store: Store, repo: Path, issue: int, allowed: list[str], reserved: list[int]) -> list[str]:
+    """Conflicts between a new claim's allowed paths and those reserved by other issues: every
+    active implementation issue and every held claim, In Review included, so work returned to
+    In Progress never meets an overlapping writer (no verifiable recorded packet counts as ``**``)."""
     docmap = docs_audit.docmap_for(repo)
     reasons = []
-    for other in active:
+    for other in reserved:
         if other == issue:
             continue
         found = path_conflicts(allowed, claimed_paths(store, other), docmap)
         if found:
-            reasons.append(f"allowed paths conflict with active implementation issue #{other}: " + "; ".join(found))
+            reasons.append(f"allowed paths conflict with claimed issue #{other} (In Progress or In Review): " + "; ".join(found))
     return reasons
 
 
@@ -247,7 +248,8 @@ def select_for_claim(args, store: Store, snap, policy: dict):
         return p, cand, {"claimable": False, "issue": args.issue, "reasons": [p.stop_reason or "no task selected"]}
     if p.next.issue != args.issue and not args.override_order:
         return p, cand, {"claimable": False, "reasons": [f"#{p.next.issue} precedes #{args.issue} in the deterministic order"]}
-    conflicts = path_refusals(store, repo_root(), args.issue, args.allowed_path or ["**"], p.active)
+    conflicts = path_refusals(store, repo_root(), args.issue, args.allowed_path or ["**"],
+                              sorted(set(p.active) | held_claims(store)))
     if conflicts:
         return p, cand, {"claimable": False, "issue": args.issue, "reasons": conflicts}
     return p, cand, None

@@ -265,8 +265,37 @@ class ConcurrencyReconcileTests(unittest.TestCase):
         self.assertEqual(rep["active_implementation_issues"], [10, 12])
         self.assertEqual(sorted(c["issue"] for c in rep["claims"]), [10, 11, 12])  # In Review work stays held
         self.assertEqual(rep["conflicts"], [])
-        self.moved(11, "In Review", "In Progress")  # changes requested: implementation again
-        self.assertIn("more active implementation issues than permitted (3 > 2): #10, #11, #12", self.report()["conflicts"])
+        self.moved(11, "In Review", "In Progress")  # changes requested: implementation again, over the limit
+        rep = self.report()
+        self.assertEqual(rep["conflicts"], [])
+        self.assertIn("3 active implementation issues exceed the limit of 2 (#10, #11, #12) because #11 returned from "
+                      "In Review to In Progress; no new claim until the count is back under the limit", rep["notes"])
+
+    def test_work_returned_over_the_limit_is_a_note_and_stops_selection(self):
+        for n in (10, 11, 12):
+            self.claim(n)
+            self.moved(n, "Todo", "In Progress")
+        self.moved(12, "In Progress", "In Review")
+        self.claim(20)
+        self.moved(20, "Todo", "In Progress")
+        self.moved(12, "In Review", "In Progress")
+        rep = self.report()
+        self.assertEqual(rep["conflicts"], [])
+        self.assertTrue(any("because #12 returned from In Review to In Progress" in n for n in rep["notes"]), rep["notes"])
+        p = plan(self.h.snap, self.h.policy, active_claims=active_implementation_issues(self.h.store.events()))
+        self.assertEqual(p.active, rep["active_implementation_issues"])
+        self.assertIsNone(p.next)
+        self.assertIn("all 3 active implementation slot(s) occupied by #10, #11, #12, #20", p.stop_reason)
+
+    def test_reconcile_counts_cards_in_progress_like_the_planner(self):
+        for n in (10, 11, 12, 20):
+            self.h.snap.project.items[n].status = "In Progress"  # no claim events at all
+        rep = self.report()
+        p = plan(self.h.snap, self.h.policy, active_claims=[])
+        self.assertEqual(rep["active_implementation_issues"], p.active)
+        self.assertEqual(p.active, [10, 11, 12, 20])
+        self.assertIsNone(p.next)
+        self.assertIn("more active implementation issues than permitted (4 > 3): #10, #11, #12, #20", rep["conflicts"])
 
     def test_held_claims_end_with_release_or_completion(self):
         for n in (10, 11, 12):

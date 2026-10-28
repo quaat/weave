@@ -13,7 +13,7 @@ from pathlib import Path
 from .github import GitHubError
 from .integration import find_pr
 from .publisher import DeliveryPaused, Publisher, authenticated_events
-from .scheduler import active_implementation_issues
+from .scheduler import active_implementation_issues, active_issues, capacity_history
 from .state import PacketError, Store, run_issues
 from .transitions import TaskView, Transitioner, automation_moved_done
 
@@ -82,12 +82,10 @@ def reconcile(repo: Path, store: Store, adapter, policy: dict, apply: bool = Fal
             report["notes"].append(f"partial operations awaiting recovery: {partial}")
     issues_with_events = {int(e["issue"].split("#")[1]) for e in store.events()}
     managed = {n for n, i in snap.issues.items() if "agent:managed" in i.labels} | issues_with_events
-    all_trusted: list[dict] = []
     for n in sorted(managed):
         if n not in snap.issues:
             continue
         trusted, rejected = authenticated_events(store, snap, coordinators, n)
-        all_trusted += trusted
         for r in rejected:
             report["rejected_envelopes"].append({"issue": n, **r})
         changes = [e for e in trusted if e["kind"] == "STATE_CHANGED"]
@@ -119,12 +117,23 @@ def reconcile(repo: Path, store: Store, adapter, policy: dict, apply: bool = Fal
             report["worktrees"].append({"path": tree.get("worktree"), "branch": branch, "claim_active": active})
             if not active:
                 report["notes"].append(f"worktree {tree.get('worktree')} ({branch}) has no active claim; preserved, not removed")
-    active = active_implementation_issues(all_trusted)
+    # Capacity: exactly the planner's set (ledger plus open cards In Progress).
+    ledger = store.events()
+    ledger_active = active_implementation_issues(ledger)
+    active = active_issues(snap, ledger_active)
     limit = policy["concurrency"]["max_active_implementation_issues"]
     report["active_implementation_issues"] = active
     if len(active) > limit:
-        report["conflicts"].append(f"more active implementation issues than permitted ({len(active)} > {limit}): "
-                                   + ", ".join(f"#{n}" for n in active))
+        beyond, returned = capacity_history(ledger, limit, set(active) - set(ledger_active))
+        returned = sorted({n for n in returned if n in ledger_active})
+        listed = ", ".join(f"#{n}" for n in active)
+        if returned and not beyond:
+            report["notes"].append(
+                f"{len(active)} active implementation issues exceed the limit of {limit} ({listed}) because "
+                f"{', '.join(f'#{n}' for n in returned)} returned from In Review to In Progress; "
+                "no new claim until the count is back under the limit")
+        else:
+            report["conflicts"].append(f"more active implementation issues than permitted ({len(active)} > {limit}): {listed}")
     for issue in run_issues(store.active_run()):
         if not any(c["issue"] == issue for c in report["claims"]):
             report["notes"].append(f"active run names #{issue} but no published claim exists; resume or release explicitly")

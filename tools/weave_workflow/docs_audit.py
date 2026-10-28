@@ -130,23 +130,50 @@ def _narrowed(base_rule: dict, rule: dict) -> list[str]:
     return out
 
 
+FLOORED_KEYS = ("impact_rules", "managed_documents", "generated_documents", "claims", "historical_documents",
+                "protected_vocabulary", "new_or_removed_document_rule", "boundary", "provenance_manifests",
+                "synced_copies", "ignore_path_segments", "diagnostic_code_sources", "path_bases", "commands")
+
+
 def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
-    """The map a change is audited against: the candidate's map united with the base map, so a
-    candidate cannot relax the rules it is audited by. Impact rules, managed-document globs,
-    generated documents, claims, protected labels and required documents of both maps apply;
-    the evidence-vocabulary exemption (``authoritative``) and the historical-record exemption
-    are limited to paths both maps exempt. A claim id in both maps is checked with both
-    definitions. Each impact rule, managed glob or generated document the candidate removes or
-    narrows, each historical path it adds and each claim definition it changes is reported as
-    an error."""
+    """The map a change is audited against: the candidate's map bounded by the base map, so a
+    candidate cannot relax the rules it is audited by. Requirements are united (impact rules,
+    required documents, managed globs, generated documents, claims checked with both definitions,
+    protected labels, provenance manifests, synced copies); exemptions are intersected (vocabulary
+    and historical-record exemptions, ignored path segments, diagnostic-code sources, path bases);
+    the base's commands apply. Every removal or narrowing is reported as an error. Any other
+    top-level key, including future ones, takes the base value and is reported when the candidate
+    changes or removes it; keys only the candidate has are additive and allowed."""
+    cand = copy.deepcopy(candidate)
     eff = copy.deepcopy(candidate)
     found: list[Finding] = []
 
     def flag(what: str) -> None:
         found.append(Finding("error", "docmap-floor", DOCMAP_REL, f"{what} relative to the base map; the change {FLOOR_NOTE}"))
 
-    rules = {r["id"]: r for r in candidate["impact_rules"]}
-    for rule in base["impact_rules"]:
+    for key, value in base.items():
+        if key not in cand:
+            flag(f"top-level key {key!r} removed")
+            cand[key] = copy.deepcopy(value)
+            eff[key] = copy.deepcopy(value)
+        elif key not in FLOORED_KEYS and cand[key] != value:
+            flag(f"top-level key {key!r} changed")
+            eff[key] = copy.deepcopy(value)
+
+    def united(key: str, label: str, show=repr) -> None:
+        for item in base.get(key, []):
+            if item not in cand[key]:
+                flag(f"{label} {show(item)} removed")
+                eff[key].append(copy.deepcopy(item))
+
+    def intersected(key: str, label: str) -> None:
+        for item in cand.get(key, []):
+            if item not in base.get(key, []):
+                flag(f"{label} {item!r} added")
+        eff[key] = [i for i in cand.get(key, []) if i in base.get(key, [])]
+
+    rules = {r["id"]: r for r in cand["impact_rules"]}
+    for rule in base.get("impact_rules", []):
         mine = rules.get(rule["id"])
         if mine is None:
             flag(f"impact rule {rule['id']!r} removed")
@@ -154,38 +181,60 @@ def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
             flag(f"impact rule {rule['id']!r} narrowed ({', '.join(_narrowed(rule, mine))})")
         if mine != rule:
             eff["impact_rules"].append(copy.deepcopy(rule))
-    for glob in base["managed_documents"]:
-        if glob not in candidate["managed_documents"]:
-            flag(f"managed-document glob {glob!r} removed")
-            eff["managed_documents"].append(glob)
-    generated = {p for g in candidate["generated_documents"] for p in g["paths"]}
-    for gen in base["generated_documents"]:
+    united("managed_documents", "managed-document glob")
+    generated = {p for g in cand["generated_documents"] for p in g["paths"]}
+    for gen in base.get("generated_documents", []):
         for path in gen["paths"]:
             if path not in generated:
                 flag(f"generated document {path!r} removed")
-        if gen not in candidate["generated_documents"]:
+        if gen not in cand["generated_documents"]:
             eff["generated_documents"].append(copy.deepcopy(gen))
-    claims = {c["id"]: c for c in candidate["claims"]}
-    for claim in base["claims"]:
+    claims = {c["id"]: c for c in cand["claims"]}
+    for claim in base.get("claims", []):
         mine = claims.get(claim["id"])
-        if mine is not None and mine != claim:
-            flag(f"claim {claim['id']!r} definition changed")
         if mine != claim:
+            flag(f"claim {claim['id']!r} " + ("removed" if mine is None else "definition changed"))
             eff["claims"].append(copy.deepcopy(claim))  # the base definition must hold as well
     historical = base["historical_documents"]["paths"]
-    for path in candidate["historical_documents"]["paths"]:
+    for path in cand["historical_documents"]["paths"]:
         if path not in historical:
             flag(f"historical-document path {path!r} added (it stays audited)")
-    eff["historical_documents"]["paths"] = [h for h in candidate["historical_documents"]["paths"] if h in historical]
-    vocab = eff["protected_vocabulary"]
-    vocab["labels"] += [l for l in base["protected_vocabulary"]["labels"] if l not in vocab["labels"]]
-    vocab["authoritative"] = [a for a in vocab["authoritative"] if a in base["protected_vocabulary"]["authoritative"]]
-    new_or_removed = eff["new_or_removed_document_rule"]["require"]
-    new_or_removed += [d for d in base["new_or_removed_document_rule"]["require"] if d not in new_or_removed]
-    boundary = eff["boundary"]
-    boundary["requires"] += [d for d in base["boundary"]["requires"] if d not in boundary["requires"]]
-    if base["boundary"]["phrases"] != boundary["phrases"]:
-        boundary["phrases"] = f"(?:{boundary['phrases']})|(?:{base['boundary']['phrases']})"
+    eff["historical_documents"]["paths"] = [h for h in cand["historical_documents"]["paths"] if h in historical]
+    vocab, base_vocab = eff["protected_vocabulary"], base["protected_vocabulary"]
+    for label in base_vocab["labels"]:
+        if label not in vocab["labels"]:
+            flag(f"protected label {label!r} removed")
+            vocab["labels"].append(label)
+    for path in cand["protected_vocabulary"]["authoritative"]:
+        if path not in base_vocab["authoritative"]:
+            flag(f"vocabulary exemption {path!r} added")
+    vocab["authoritative"] = [a for a in vocab["authoritative"] if a in base_vocab["authoritative"]]
+    for section, key in (("new_or_removed_document_rule", "require"), ("boundary", "requires")):
+        for doc in base[section][key]:
+            if doc not in eff[section][key]:
+                flag(f"{section} requirement {doc!r} removed")
+                eff[section][key].append(doc)
+    if base["boundary"]["phrases"] != cand["boundary"]["phrases"]:
+        flag("boundary phrases changed")
+        eff["boundary"]["phrases"] = f"(?:{cand['boundary']['phrases']})|(?:{base['boundary']['phrases']})"
+    united("provenance_manifests", "provenance manifest", lambda m: repr(m.get("manifest")))
+    united("synced_copies", "synced copy", lambda c: f"{c.get('b')!r} = {c.get('a')!r}")
+    intersected("ignore_path_segments", "ignored path segment")
+    intersected("diagnostic_code_sources", "diagnostic-code source")
+    bases = {}
+    for pattern, extra in cand["path_bases"].items():
+        allowed = base["path_bases"].get(pattern, [])
+        for e in extra:
+            if e not in allowed:
+                flag(f"path base {e!r} for {pattern!r} added")
+        kept = [e for e in extra if e in allowed]
+        if kept:
+            bases[pattern] = kept
+    eff["path_bases"] = bases
+    for name, spec in base["commands"].items():
+        if cand["commands"].get(name) != spec:
+            flag(f"command source {name!r} " + ("removed" if name not in cand["commands"] else "changed"))
+            eff["commands"][name] = copy.deepcopy(spec)
     return eff, found
 
 

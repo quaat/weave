@@ -32,14 +32,14 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    (`tools/weave_workflow/docmap.json` in that worktree or checkout), so a candidate that
    changes the map is audited against its own map; the running module's map is used only
    when the audited tree has none. In change scope (`--base`) the base revision's map is a
-   floor: the audit applies the union of both maps' impact rules, required documents,
-   managed-document globs, generated documents, claims and protected labels (the
-   vocabulary exemption is limited to paths both maps exempt), and reports an error for
-   every impact rule, managed-document glob or generated document the candidate removes or
-   narrows; such a removal must be justified and approved by the maintainer. Likewise only
-   paths historical in both maps are exempt, and a claim id from the base map is checked
-   with both definitions; an added historical path or a changed claim definition is an
-   error needing the same justification and approval. The generated
+   floor: the audit applies the union of both maps' requirements (impact rules, required
+   documents, managed-document globs, generated documents, protected labels, provenance
+   manifests and synced copies; a claim id from the base map is checked with both
+   definitions), only the exemptions both maps grant (vocabulary and historical-record
+   exemptions, ignored path segments, diagnostic-code sources, path bases), and the base
+   map's command sources. Every removal or narrowing, and any change to another top-level
+   key of the base map, is an error: it must be justified and approved by the maintainer.
+   Keys only the candidate adds are allowed. The generated
    section of `documentation-map.md` is checked against the candidate's own map.
 4. **Boundary statements move with the boundary.** When something documented as
    unimplemented, deferred or not established becomes implemented, every document that stated

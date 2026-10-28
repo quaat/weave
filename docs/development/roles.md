@@ -29,7 +29,8 @@ the orchestrator has published a `DELEGATED` event for that delegation.
   the single coordinator, holding the OS lock, claims and administers all of them
   ([scheduling.md](scheduling.md)).
 - Each task gets its own worktree and `agent/<issue>-<slug>` branch. `claim` refuses a task
-  whose declared allowed paths may overlap those of an active implementation issue,
+  whose declared allowed paths may overlap those of another held claim (In Progress or
+  In Review),
   including shared generated artefacts (conservative rules in
   [scheduling.md](scheduling.md)). The check compares declared allowed paths, not the
   diffs that are eventually written; see [capabilities.md](capabilities.md).

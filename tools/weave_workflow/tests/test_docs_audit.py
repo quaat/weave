@@ -212,6 +212,46 @@ class DriftTests(unittest.TestCase):
         self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json", "claim 'inventory-proof-test-count' "
                        "definition changed relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
 
+    def floor_messages(self, errors):
+        return [m.split(" relative to the base map")[0] for c, _, m in errors if c == "docmap-floor"]
+
+    def test_change_scope_keeps_provenance_manifests(self):
+        self.edit("specification/reference/prototype/checker.py", "\n", "\n# tampered\n")
+        self.candidate_map(lambda m: m.__setitem__(
+            "provenance_manifests", [x for x in m["provenance_manifests"] if x["manifest"] != "specification/PROVENANCE.json"]))
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "provenance"])  # hidden by its own map
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "provenance", "specification/PROVENANCE.json")
+        self.assertEqual(self.floor_messages(errors), ["provenance manifest 'specification/PROVENANCE.json' removed"])
+
+    def test_change_scope_does_not_widen_ignored_path_segments(self):
+        self.edit("docs/development/roles.md", "\n", "\nSee `tools/weave_workflow/no_such_module.py`.\n")
+        self.candidate_map(lambda m: m["ignore_path_segments"].append("weave_workflow"))
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "path"])  # hidden by its own map
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "path", "docs/development/roles.md")
+        self.assertEqual(self.floor_messages(errors), ["ignored path segment 'weave_workflow' added"])
+
+    def test_floor_covers_every_other_key(self):
+        base = docs_audit.load_docmap()
+        cand = json.loads(json.dumps(base))
+        cand["docmap_version"] = 2                                    # not floored: any change is reported
+        del cand["synced_copies"]                                     # a removed key keeps the base value
+        cand["commands"]["make"]["sphinx_builders"].append("everything")
+        cand["path_bases"]["README.md"].append("tools")
+        cand["diagnostic_code_sources"].append("**/*.py")
+        cand["future_key"] = {"anything": True}                       # additive: allowed
+        eff, found = docs_audit.docmap_floor(cand, base)
+        messages = sorted(f.message.split(" relative to the base map")[0] for f in found)
+        self.assertEqual(messages, ["command source 'make' changed", "diagnostic-code source '**/*.py' added",
+                                    "path base 'tools' for 'README.md' added", "top-level key 'docmap_version' changed",
+                                    "top-level key 'synced_copies' removed"])
+        for key in ("docmap_version", "synced_copies", "commands", "path_bases", "diagnostic_code_sources"):
+            self.assertEqual(eff[key], base[key], key)
+        self.assertEqual(eff["future_key"], {"anything": True})
+
     def test_unchanged_map_adds_no_floor_findings(self):
         res, errors = self.findings(base="HEAD")
         self.assertEqual(res.result, "PASS", errors)
@@ -231,7 +271,8 @@ class DriftTests(unittest.TestCase):
         messages = [f.message.split(" relative")[0] for f in found]
         self.assertEqual(messages, ["impact rule 'workflow' narrowed (required document 'README.md')",
                                     "managed-document glob 'AGENTS.md' removed",
-                                    "generated document 'docs/development/documentation-map.md' removed"])
+                                    "generated document 'docs/development/documentation-map.md' removed",
+                                    "protected label 'PROVED' removed"])
         self.assertIn("AGENTS.md", eff["managed_documents"])
         self.assertIn("PROVED", eff["protected_vocabulary"]["labels"])
         self.assertIn("README.md", docs_audit.required_documents(eff, {"tools/weave_workflow/hooks.py": "M"}))
