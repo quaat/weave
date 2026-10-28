@@ -30,7 +30,8 @@ its own licence, the MIT License covers:
   single-page HTML and PDF);
 - examples: every Weave program (`*.weave`) and teaching or demo material;
 - distributed assets: diagrams, the favicon, generated reports, and the Weave-authored content
-  of the specimen and diagram PDFs (embedded fonts excluded; see FU-01).
+  of the specimen and diagram PDFs (embedded fonts excluded; see
+  [Third-party material](#third-party-material)).
 
 The rights holder is the copyright holder named in `LICENSE`, and no separate documentation
 licence is used. Earlier versions of this record took MIT as a working assumption at the
@@ -55,9 +56,49 @@ The recorded decision answers the rights-holder and provenance questions below.
   the MIT License to the extent the holder has rights in AI-generated material."
 - No employer, funder, institution or contract holds rights or sets conditions.
 
-Question 6, about third-party material, stays open: the decision excludes such material
-from the grant, and its inventory continues in `follow-up` (FU-01, FU-03). The sections below
-are the evidence gathered before the decision.
+The decision excludes third-party material from the grant. The maintainer answered question
+6 ("don't know"), so that material was identified from the files themselves; see
+[Third-party material](#third-party-material). The sections that follow it are the evidence
+gathered before the decision.
+
+### Third-party material
+
+The full notices are in the "Third-party notices" section of
+`specification/docs/chapters/provenance.rst`. That section is built into every edition and
+gives version, SPDX licence, holder and the verbatim licence texts. In the repository,
+`REUSE.toml` and `LICENSES/` record the same terms. Evidence is measured at `f39c1cd`; commands
+F0–F5 and R8–R9 are under [Commands run](#commands-run).
+
+- **Fonts in the four committed PDFs and the built PDF.**
+  - DejaVu fonts. The specimen's subsets keep their name tables, which give version 2.35 (2.37
+    for Sans Bold) and a licence string naming the Bitstream Vera licence. DejaVu Sans and Sans
+    Bold also name the Arev licence of Tavmjong Bah.
+  - The diagram subsets have no name table, but every compared glyph is identical to the
+    installed DejaVu Sans 2.37, which names both licences.
+  - Licences: Bitstream-Vera (2003 Bitstream, Inc.) and LicenseRef-Arev-Fonts (2006 Tavmjong
+    Bah). DejaVu's own changes are public domain.
+  - The specimen's Computer Modern fonts are the AMS Type 1 release 003.002 (Notice: 1997, 2009
+    American Mathematical Society, with Reserved Font Names), licensed OFL-1.1-RFN.
+  - A locally compiled specification PDF embeds the same families: DejaVu 2.37 and the AMS
+    fonts CMR, CMMI, CMSY, CMEX and MSBM.
+- **Files in the built HTML editions.** All 40 static files were matched by hash to their
+  packages, or traced to Sphinx and Pygments templates.
+  - Furo 2025.12.19 (MIT, Pradyun Gedam), bundling normalize.css 8.0.1 (MIT) and gumshoe 5.1.2
+    (MIT).
+  - sphinx-basic-ng 1.0.0b2 (MIT).
+  - Sphinx 8.2.3 (BSD-2-Clause).
+  - sphinx-design 0.7.0 (MIT).
+  - sphinx-copybutton 0.5.2 (MIT), shipping clipboard.js 2.0.8 (MIT).
+  - Pygments 2.21.0 (BSD-2-Clause) with accessible-pygments 0.0.5 (BSD-3-Clause).
+  - Only furo.css, furo.js (via furo.js.LICENSE.txt) and clipboard.min.js carry their own
+    notices; for the rest, the notices section supplies them.
+  - MathJax is loaded from a CDN and not redistributed.
+- **Open points** (root `follow-up`):
+  - The gumshoe holder wording differs between Furo's shipped notice ("(c) 2019 Chris
+    Ferdinandi") and the upstream licence file (Go Make Things, LLC; the 5.1.2 tag's file
+    could not be retrieved).
+  - A diagram PDF copied on its own carries no font notice.
+  - The release PDF and the published site have not been checked.
 
 ### What the records show
 
@@ -143,7 +184,8 @@ Third-party material that is or may be distributed:
 
 These are the questions put to the maintainer. Questions 1–5, 7 and 8 are answered (see
 [Maintainer answers](#maintainer-answers) below), and the answers are reflected in the
-decision recorded on #2. Question 6 is still open.
+decision recorded on #2. Question 6 was answered "don't know", and the material was then
+identified from the files (see [Third-party material](#third-party-material)).
 
 1. Who authored or generated each of the four inputs in `specification/PROVENANCE.json`
    (weave-inventory-proof.zip v3, weave-agent-kit.zip, claude-code-weave-merge-sort.md,
@@ -159,7 +201,8 @@ decision recorded on #2. Question 6 is still open.
    author and which as copyright holder? *(Answered.)*
 6. Is any third-party material distributed beyond what is listed above (fonts embedded in
    PDFs, theme assets in built editions, quoted text, diagrams or code adapted from elsewhere),
-   and does any of it need its own notice? *(Still open.)*
+   and does any of it need its own notice? *(Answered "don't know"; identified from the
+   files.)*
 7. 14 of the 15 non-merge commits carry an AI co-author trailer. Does the maintainer want the
    decision to say anything about AI-assisted contributions? *(Answered.)*
 8. Should future contributions be accepted under the same terms by stating so (as
@@ -189,8 +232,9 @@ How this record reads the answers:
 - Answer 5 changes the author name only ("Danio project" becomes Weave). The copyright holder
   stays as named in `LICENSE`, per answer 4.
 - Answer 8 keeps the existing statement in `README.md`.
-- Question 6 remains open. The decision names fonts embedded in PDFs and theme and Sphinx
-  assets, and leaves further items to follow-up.
+- Question 6 was answered "don't know". The decision names fonts embedded in PDFs and theme
+  and Sphinx assets and leaves further items to follow-up; that inventory is now recorded under
+  [Third-party material](#third-party-material).
 
 Separately, the repository's own commits carry AI co-author trailers naming a different
 assistant (see Git history above). The AI statement in the recorded decision covers
@@ -240,15 +284,19 @@ root `README.md` says the licence covers the whole repository.
 Whichever option is chosen, the pinned snapshots must keep their original bytes; any statement
 about them lives outside the snapshot directories.
 
-**Delivered in this change (option 3).** Measured at `f32a168`; the commands are under
-[Commands run](#commands-run).
+**Delivered in this change (option 3).** Measured at `f32a168`; the PDF annotations and
+font licences at `f39c1cd`. The commands are under [Commands run](#commands-run).
 
 - `REUSE.toml` (REUSE Specification 3.3, configuration version 1, from PR #64) annotates 386
   exact paths, each with `precedence = "closest"`, so that a notice in a file or `.license`
   sidecar wins. Every path exists in the tree and none is listed twice (command R1).
   - Weave-authored material carries `SPDX-FileCopyrightText = "2026 Thomas F. Hagelien"` and
     `SPDX-License-Identifier = "MIT"`. This covers code, specification sources, examples,
-    assets other than the four PDFs, both pinned snapshots, this record and `follow-up`.
+    assets, both pinned snapshots, this record and `follow-up`.
+  - The four committed PDFs carry the MIT grant for their Weave-authored content together
+    with their embedded fonts' licences and holders, joined with AND (each PDF is one combined
+    work): MIT, Bitstream-Vera and LicenseRef-Arev-Fonts for the diagrams, plus OFL-1.1-RFN for
+    the specimen. Added in `f39c1cd`; the PDF bytes are unchanged.
   - The adapted Furo search form (`specification/docs/_templates/sidebar/search.html`) carries
     both the upstream notice and Weave's, under MIT.
   - Exact paths mean a new file is not covered until it is reviewed and annotated.
@@ -261,8 +309,24 @@ about them lives outside the snapshot directories.
 - The root `README.md`, `specification/README.md` and
   `specification/docs/chapters/provenance.rst` state that the MIT grant covers Weave-authored
   material, that third-party material keeps its own terms, and where the metadata lives.
-- `reuse lint` (REUSE 5.1.1) at `f32a168` exits 1. Its only findings are the four PDFs that
-  `REUSE.toml` deliberately leaves unannotated until their embedded-font terms are known:
+- `LICENSES/Bitstream-Vera.txt` and `LICENSES/OFL-1.1-RFN.txt` are the canonical SPDX texts
+  from `reuse download`, unedited (command F4). `LICENSES/LicenseRef-Arev-Fonts.txt` is the
+  Arev section of the DejaVu Sans name table, verbatim (command F5). The SPDX list bundled
+  with REUSE 5.1.1 (3.27.0) has `Bitstream-Vera` and `OFL-1.1-RFN` but no Arev or DejaVu
+  identifier.
+- `reuse lint` (REUSE 5.1.1) at `f39c1cd` exits 0 (command R8):
+
+  ```text
+  Bad licenses: 0; Deprecated licenses: 0; Licenses without file extension: 0;
+  Missing licenses: 0; Unused licenses: 0;
+  Used licenses: Bitstream-Vera, LicenseRef-Arev-Fonts, MIT, OFL-1.1-RFN; Read errors: 0;
+  Files with copyright information: 388 / 388; Files with license information: 388 / 388
+  Congratulations! Your project is compliant with version 3.3 of the REUSE Specification :-)
+  ```
+
+  Before the font licences were added (at `f32a168`), it exited 1. Its only findings then were
+  the four PDFs, which `REUSE.toml` deliberately left unannotated until their font terms were
+  known:
 
   ```text
   * specification/design/weave-design-specimen.pdf
@@ -276,10 +340,10 @@ about them lives outside the snapshot directories.
 
 **Remaining (root `follow-up`).**
 
-- FU-01: the fonts embedded in the four PDFs. They stay unannotated; no placeholder licence is
-  assigned to make lint pass.
+- FU-01 residual: a diagram PDF copied on its own carries no font notice. Fixing that means
+  regenerating the diagrams.
 - FU-04: wording in `agent-kit/docs/prototype-status.md`; licence texts in independently
-  shipped archives; a REUSE check in CI once FU-01 is resolved.
+  shipped archives; a pinned REUSE check in CI, now that lint passes.
 - No per-file SPDX headers were added. `REUSE.toml` covers the same files without touching
   pinned or generated bytes.
 
@@ -424,6 +488,23 @@ Python and REUSE 5.1.1 from the workflow's REUSE virtual environment.
 | R6 | `make latex` (in `specification/`) | 0 | generated source carries the cover macro and `\author{Weave}` |
 | R7 | `make validate-offline`, `make singlehtml text`, `python3 scripts/audit_html.py _build/singlehtml` (in `specification/`) | 0, 0, 0 | 33 pages, 3,191 references, 0 errors; 1 page, 491 references, 0 errors |
 
+### Commands for the third-party evidence
+
+Run from the worktree root. F0, F4, F5 and R8 read commit `f39c1cd` (F5 also reads the installed
+font). F0 shows the four PDFs are byte-identical to base, so F1–F3, which read the worktree
+copies, read the committed bytes.
+
+| Ref | Command | Exit | Result |
+| --- | --- | --- | --- |
+| F0 | `git diff --stat 6516e2b f39c1cd -- '*.pdf'` | 0 | empty: PDF bytes unchanged |
+| F1 | `pdffonts FILE`, `pdfinfo FILE` and `mutool extract -a FILE` for each PDF | 0 | font names, producers (xdvipdfmx 20220710; cairo 1.18.4), embedded font programs |
+| F2 | Python with fontTools: name IDs 0, 5, 13 of each TrueType subset, and Notice and version of each CFF font | 0 | DejaVu versions and licence strings; AMS Notice and version 003.002 |
+| F3 | Python with fontTools: glyph coordinates of each diagram subset against `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` | 0 | 42, 49 and 51 glyphs identical, 0 different |
+| F4 | `reuse download Bitstream-Vera OFL-1.1-RFN` in a scratch repository, then `cmp` with `git show f39c1cd:LICENSES/<id>.txt` | 0 | identical |
+| F5 | Python: `git show f39c1cd:LICENSES/LicenseRef-Arev-Fonts.txt` against the Arev section of name ID 13 in the installed DejaVu Sans 2.37 | 0 | identical |
+| R8 | `reuse lint` on a clean worktree at `f39c1cd` | 0 | 388/388, compliant |
+| R9 | Python: SHA-256 of each file in `_build/html/_static` against the installed packages in the specification virtual environment; licence metadata and licence files from each `dist-info` | 0 | package, version, licence and holder per file, as in the notices section |
+
 ## Recorded decision
 
 The maintainer recorded the decision on #2 in [this comment](https://github.com/quaat/weave/issues/2#issuecomment-6480423748) (created
@@ -463,26 +544,30 @@ The root `follow-up` record is the tracker; this list mirrors it. Completed:
 - the author rename in `specification/docs/conf.py` and the cover (FU-02);
 - the third-party wording in `specification/README.md` and
   `specification/docs/chapters/provenance.rst` (FU-04, partly);
-- the REUSE annotation of this record.
+- the REUSE annotation of this record;
+- the embedded fonts' identification, licence texts and REUSE annotations; `reuse lint` passes
+  (FU-01);
+- the third-party notices for every edition (FU-03, partly).
 
 Still open:
 
-1. **FU-01, release blocker.** Identify the fonts embedded in the four committed PDFs and their
-   exact terms, add the licence texts under `LICENSES/` and the notices to `REUSE.toml`,
-   and decide how the notices travel with each standalone PDF. Until then the four PDFs stay
-   unannotated and `reuse lint` fails on them alone.
+1. **FU-01 residual.** A diagram PDF copied on its own carries no font notice; fixing that
+   means regenerating the diagrams. Whether FU-01 still blocks a release is for the maintainer
+   to reassess.
 2. **FU-02.**
    - Identify any further holders.
    - Settle the specimen PDF's "Danio project" author metadata: edit it, regenerate the PDF
      from the original design bundle, or record that it keeps the old name.
-3. **FU-03.** Build both HTML editions and the release PDF from the pinned environment,
-   inventory the redistributed theme, Sphinx and font components, and add a third-party notice
-   inventory. This is also the inventory question 6 needs (answer: "don't know").
+3. **FU-03.**
+   - Build and check the release PDF and the published site.
+   - Review the design templates, CSS and extensions for copied material.
+   - Settle the gumshoe holder wording.
+   - Add a machine-readable SBOM.
 4. **FU-04.**
    - Align `agent-kit/docs/prototype-status.md` and any other component statement with the
      third-party exception.
    - Ship the licence texts with independently distributed archives.
-   - Add a pinned REUSE check to CI after FU-01.
+   - Add a pinned REUSE check to CI.
    - Add the third-party pointer to the HTML footer.
    - Reconcile #2's criteria with the evidence.
 
@@ -492,8 +577,9 @@ Still open:
   quotes it unchanged. It does not tick any criterion of #2 or record maintainer evidence.
 - It does not change the `LICENSE` text or its copyright holder, or the `copyright` string
   the HTML footer prints. It does change the `author` setting and the PDF cover (AC-5).
-- It does not annotate the four committed PDFs, change the bytes of
-  `specification/design/weave-design-specimen.pdf`, or rebuild or publish any edition.
+- It does not change the bytes of the four committed PDFs, including
+  `specification/design/weave-design-specimen.pdf`, and it does not rebuild or publish any
+  edition.
 - Its own findings name no rights holder beyond what the repository records and Git history
   show. The maintainer's answers and decision are quoted as given, and the remaining open
   point is listed as a question.
