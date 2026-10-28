@@ -1,0 +1,9 @@
+# E412: a fork branch cannot use its sibling's result before the join.
+fn chained(xs: IntList) -> IntList:
+    fork:
+        let a = keep(xs)
+        let b = keep(a)
+    return b
+
+fn keep(xs: IntList) -> IntList:
+    return xs

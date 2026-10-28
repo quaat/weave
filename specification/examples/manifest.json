@@ -1,0 +1,320 @@
+{
+  "format": "weave-conformance-v1",
+  "net": "nets/Inventory.weave",
+  "cases": [
+    {
+      "file": "valid/return_hold.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Return moves a handle without changing its type.",
+      "id": "C001",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-BIND-1"
+      ]
+    },
+    {
+      "file": "valid/arm_hold.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "An API changes state and preserves identity indices.",
+      "id": "C002",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-BIND-1"
+      ]
+    },
+    {
+      "file": "valid/finish_paid.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Consume paid evidence by committing the sale.",
+      "id": "C003",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-BIND-1"
+      ]
+    },
+    {
+      "file": "valid/settle.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Exhaustively discharge each outcome.",
+      "id": "C004",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-BIND-1"
+      ]
+    },
+    {
+      "file": "valid/propagate_bound.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Propagate an already bound closed outcome with ?.",
+      "id": "C005",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-TRY-1",
+        "F0-TRY-2",
+        "F0-TRY-3"
+      ]
+    },
+    {
+      "file": "valid/checkout.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Reserve, arm, charge, and settle all outcomes.",
+      "id": "C006",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-BIND-1"
+      ]
+    },
+    {
+      "file": "valid/checkout_composed.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Move handles and enums across helper boundaries.",
+      "id": "C007",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-BIND-1"
+      ]
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Propagate across helpers; caller handles residual obligations.",
+      "id": "C008",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-TRY-1",
+        "F0-TRY-2",
+        "F0-TRY-3"
+      ]
+    },
+    {
+      "file": "invalid/direct_charge.weave",
+      "kind": "flow",
+      "expect": "E201",
+      "lesson": "Foreign dispatch requires a sealed escrow permit.",
+      "id": "C009",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-CALL-1"
+      ]
+    },
+    {
+      "file": "invalid/drop_hold.weave",
+      "kind": "flow",
+      "expect": "E204",
+      "lesson": "A cancellation route does not allow normal dropping.",
+      "id": "C010",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-RETURN-1"
+      ]
+    },
+    {
+      "file": "invalid/forge_escrow.weave",
+      "kind": "flow",
+      "expect": "E205",
+      "lesson": "Clients cannot construct sealed resources.",
+      "id": "C011",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-CALL-1"
+      ]
+    },
+    {
+      "file": "invalid/wrong_order.weave",
+      "kind": "flow",
+      "expect": "E209",
+      "lesson": "Permit identity must match the requested order.",
+      "id": "C012",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-CALL-2"
+      ]
+    },
+    {
+      "file": "invalid/reuse_hold.weave",
+      "kind": "flow",
+      "expect": "E203",
+      "lesson": "Moved handles cannot be reused.",
+      "id": "C013",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-CALL-2"
+      ]
+    },
+    {
+      "file": "invalid/missing_unknown.weave",
+      "kind": "flow",
+      "expect": "E214",
+      "lesson": "Matches must include Unknown.",
+      "id": "C014",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-MATCH-1"
+      ]
+    },
+    {
+      "file": "invalid/paid_release.weave",
+      "kind": "flow",
+      "expect": "E208",
+      "lesson": "Paid evidence cannot be treated as final rejection.",
+      "id": "C015",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-CALL-2"
+      ]
+    },
+    {
+      "file": "invalid/early_return_leak.weave",
+      "kind": "flow",
+      "expect": "E204",
+      "lesson": "? must account for other handles on early-return paths.",
+      "id": "C016",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-TRY-3",
+        "F0-RETURN-1"
+      ]
+    },
+    {
+      "file": "invalid/recursion.weave",
+      "kind": "flow",
+      "expect": "E218",
+      "lesson": "Recursive helper calls are unsupported.",
+      "id": "C017",
+      "profile": "F0/N0",
+      "rules": [
+        "F0-SIGNATURE-1"
+      ]
+    },
+    {
+      "file": "invalid/unsupported_if.weave",
+      "kind": "flow",
+      "expect": "E200",
+      "lesson": "Familiar conditional syntax is not supported Weave syntax.",
+      "id": "C018",
+      "profile": "F0/N0",
+      "rules": [
+        "SYN-14"
+      ]
+    },
+    {
+      "file": "mutations/skim.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state.",
+      "id": "C019",
+      "profile": "N0",
+      "rules": [
+        "N0-SEAL-1"
+      ]
+    },
+    {
+      "file": "mutations/lose_paid.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state.",
+      "id": "C020",
+      "profile": "N0",
+      "rules": [
+        "N0-SEAL-1"
+      ]
+    },
+    {
+      "file": "mutations/bogus_sell.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state.",
+      "id": "C021",
+      "profile": "N0",
+      "rules": [
+        "N0-SEAL-1"
+      ]
+    },
+    {
+      "file": "mutations/quick_recover.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state.",
+      "id": "C022",
+      "profile": "N0",
+      "rules": [
+        "N0-SEAL-1"
+      ]
+    },
+    {
+      "file": "mutations/leak.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state.",
+      "id": "C023",
+      "profile": "N0",
+      "rules": [
+        "N0-SEAL-1"
+      ]
+    },
+    {
+      "file": "mutations/manual_leak.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state.",
+      "id": "C024",
+      "profile": "N0",
+      "rules": [
+        "N0-SEAL-1"
+      ]
+    },
+    {
+      "file": "nets/unsafe_paid_release.weave",
+      "kind": "net",
+      "expect": "E320",
+      "lesson": "Even an authorized cancellation with balanced accounting can violate payment ordering.",
+      "id": "C025",
+      "profile": "N0",
+      "rules": [
+        "N0-ORDER-1"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "file": "valid/checkout_propagating.weave",
+      "entry": "checkout_propagating",
+      "outcome": "Ok",
+      "marking": {
+        "available": 0,
+        "sold": 1,
+        "registrations": 0
+      }
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "entry": "checkout_propagating",
+      "outcome": "Err",
+      "marking": {
+        "available": 1,
+        "sold": 0,
+        "registrations": 0
+      }
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "entry": "checkout_propagating",
+      "outcome": "Unknown",
+      "marking": {
+        "available": 0,
+        "uncertain": 0,
+        "recovery_queue": 1,
+        "registrations": 1
+      }
+    }
+  ],
+  "specification": "0.2-draft"
+}

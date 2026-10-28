@@ -1,0 +1,129 @@
+{
+  "demo": "tiny_shop",
+  "source": "/home/thomas/project/danio/test-proj/weave-agent-kit/demos/tiny_shop/shop.weave",
+  "entry": "checkout",
+  "requested_outcome": "all",
+  "runner_exit": 0,
+  "ok": true,
+  "status": "SCRIPTED",
+  "accounting": {
+    "status": "PROVED",
+    "invariants": [
+      "stock_conservation",
+      "registration_balance"
+    ]
+  },
+  "ordering": {
+    "status": "CHECKED WITHIN BOUNDS",
+    "states": 20,
+    "edges": 43,
+    "orders": 1,
+    "stock": 1,
+    "admission_limit": 1,
+    "place_bound": 1,
+    "max_states": 10000,
+    "properties": [
+      "sold_requires_paid",
+      "dispatched_release_requires_rejection",
+      "paid_never_available",
+      "paid_state_requires_paid",
+      "unpaid_state_requires_rejection",
+      "inflight_has_registration",
+      "uncertain_has_registration",
+      "recovery_has_registration",
+      "manual_has_registration"
+    ],
+    "assumptions": [
+      "One identity, one stock unit, at most one admission; no other orders.",
+      "Payment and final-rejection evidence are abstract witnesses, assumed truthful, consistent, and correlated to this order.",
+      "Independent contradictory/late provider replies and quantitative escalation budgets are not modeled.",
+      "Other guards may enable nondeterministically; no liveness or fairness claim."
+    ]
+  },
+  "scenarios": [
+    {
+      "outcome": "Ok",
+      "result": "Purchase completed",
+      "explanation": "Payment succeeded; Paid evidence was consumed by Inventory.sell.",
+      "return_type": "Unit",
+      "return_tag": null,
+      "net_transitions": [
+        "reserve",
+        "arm",
+        "dispatch",
+        "charge_ok",
+        "sell"
+      ],
+      "final_marking": {
+        "available": 0,
+        "held": 0,
+        "escrow": 0,
+        "inflight": 0,
+        "paid": 0,
+        "unpaid": 0,
+        "uncertain": 0,
+        "recovery_queue": 0,
+        "manual": 0,
+        "sold": 1,
+        "registrations": 0,
+        "charge_requests": 1
+      }
+    },
+    {
+      "outcome": "Err",
+      "result": "Payment rejected; item released",
+      "explanation": "Final rejection; Unpaid was consumed by Inventory.release and the item is available again.",
+      "return_type": "Unit",
+      "return_tag": null,
+      "net_transitions": [
+        "reserve",
+        "arm",
+        "dispatch",
+        "charge_err",
+        "release"
+      ],
+      "final_marking": {
+        "available": 1,
+        "held": 0,
+        "escrow": 0,
+        "inflight": 0,
+        "paid": 0,
+        "unpaid": 0,
+        "uncertain": 0,
+        "recovery_queue": 0,
+        "manual": 0,
+        "sold": 0,
+        "registrations": 0,
+        "charge_requests": 1
+      }
+    },
+    {
+      "outcome": "Unknown",
+      "result": "Payment unresolved; item held for recovery",
+      "explanation": "Outcome unknown; Uncertain was handed off to the recovery queue with its registration intact. Recovery itself is not run by this demo.",
+      "return_type": "Unit",
+      "return_tag": null,
+      "net_transitions": [
+        "reserve",
+        "arm",
+        "dispatch",
+        "charge_unknown",
+        "handoff"
+      ],
+      "final_marking": {
+        "available": 0,
+        "held": 0,
+        "escrow": 0,
+        "inflight": 0,
+        "paid": 0,
+        "unpaid": 0,
+        "uncertain": 0,
+        "recovery_queue": 1,
+        "manual": 0,
+        "sold": 0,
+        "registrations": 1,
+        "charge_requests": 1
+      }
+    }
+  ]
+}

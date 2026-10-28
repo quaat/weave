@@ -1,0 +1,2 @@
+# No third-party dependencies. Tested with CPython 3.12.14.
+# The checker uses only the Python standard library and requires Python >= 3.11.

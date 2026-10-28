@@ -1,0 +1,4 @@
+# E218: recursive flow composition is outside this fragment.
+flow recurse(hold: Hold[t, o]) -> Hold[t, o]:
+    let result = await recurse(hold)
+    return result

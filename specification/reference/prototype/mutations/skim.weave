@@ -1,0 +1,3 @@
+    transition skim:
+        take 1 held
+        put 1 sold

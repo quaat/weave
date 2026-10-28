@@ -1,0 +1,5 @@
+flow lease_roundtrip(tenant: TenantId, order: OrderId):
+    let token = await Lease.acquire(tenant, order)
+    await Lease.release(token)
+    return
+

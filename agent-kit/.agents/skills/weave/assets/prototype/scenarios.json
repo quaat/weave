@@ -1,0 +1,524 @@
+[
+  {
+    "outcome": "Ok",
+    "entry": "checkout_propagating",
+    "return_type": "Unit",
+    "return_tag": null,
+    "marking": {
+      "available": 0,
+      "held": 0,
+      "escrow": 0,
+      "inflight": 0,
+      "paid": 0,
+      "unpaid": 0,
+      "uncertain": 0,
+      "recovery_queue": 0,
+      "manual": 0,
+      "sold": 1,
+      "registrations": 0,
+      "charge_requests": 1
+    },
+    "events": [
+      {
+        "kind": "NET",
+        "name": "reserve",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 1,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 0,
+          "charge_requests": 0
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "arm",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 1,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 0
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "dispatch",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 1,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "charge_ok",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 1,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "pay_with",
+        "tag": "Ok",
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 1,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "sell",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 1,
+          "registrations": 0,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "place_order",
+        "tag": "Ok",
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 1,
+          "registrations": 0,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "checkout_propagating",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 1,
+          "registrations": 0,
+          "charge_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "outcome": "Err",
+    "entry": "checkout_propagating",
+    "return_type": "Unit",
+    "return_tag": null,
+    "marking": {
+      "available": 1,
+      "held": 0,
+      "escrow": 0,
+      "inflight": 0,
+      "paid": 0,
+      "unpaid": 0,
+      "uncertain": 0,
+      "recovery_queue": 0,
+      "manual": 0,
+      "sold": 0,
+      "registrations": 0,
+      "charge_requests": 1
+    },
+    "events": [
+      {
+        "kind": "NET",
+        "name": "reserve",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 1,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 0,
+          "charge_requests": 0
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "arm",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 1,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 0
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "dispatch",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 1,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "charge_err",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 1,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "pay_with",
+        "tag": "Err",
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 1,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "place_order",
+        "tag": "Err",
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 1,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "release",
+        "tag": null,
+        "marking": {
+          "available": 1,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 0,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "checkout_propagating",
+        "tag": null,
+        "marking": {
+          "available": 1,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 0,
+          "charge_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "outcome": "Unknown",
+    "entry": "checkout_propagating",
+    "return_type": "Unit",
+    "return_tag": null,
+    "marking": {
+      "available": 0,
+      "held": 0,
+      "escrow": 0,
+      "inflight": 0,
+      "paid": 0,
+      "unpaid": 0,
+      "uncertain": 0,
+      "recovery_queue": 1,
+      "manual": 0,
+      "sold": 0,
+      "registrations": 1,
+      "charge_requests": 1
+    },
+    "events": [
+      {
+        "kind": "NET",
+        "name": "reserve",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 1,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 0,
+          "charge_requests": 0
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "arm",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 1,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 0
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "dispatch",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 1,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "charge_unknown",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 1,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "pay_with",
+        "tag": "Unknown",
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 1,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "place_order",
+        "tag": "Unknown",
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 1,
+          "recovery_queue": 0,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "NET",
+        "name": "handoff",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 1,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      },
+      {
+        "kind": "RETURN",
+        "name": "checkout_propagating",
+        "tag": null,
+        "marking": {
+          "available": 0,
+          "held": 0,
+          "escrow": 0,
+          "inflight": 0,
+          "paid": 0,
+          "unpaid": 0,
+          "uncertain": 0,
+          "recovery_queue": 1,
+          "manual": 0,
+          "sold": 0,
+          "registrations": 1,
+          "charge_requests": 1
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+# Pure extension: two independent calls joined before the continuation uses either result.
+fn both_lengths_ok(xs: IntList) -> Bool:
+    let halves = split_half(xs)
+    fork:
+        let left = keep(first(halves))
+        let right = keep(second(halves))
+    return length(left) <= length(right)
+
+fn keep(xs: IntList) -> IntList:
+    return xs

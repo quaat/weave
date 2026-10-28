@@ -1,0 +1,57 @@
+{
+  "kit_version": "0.1.0",
+  "snapshot_date": "2026-10-28",
+  "source": {
+    "filename": "weave-inventory-proof.zip",
+    "version": "2",
+    "library_file_id": "libfile_a203cbd1f5648191918d40d6e507f69b"
+  },
+  "prototype_changes": "none",
+  "python_reference": "3.12.14",
+  "original_files_sha256": {
+    "ACTUAL_OUTPUT.txt": "f93b5548fabdd2886cd4c89b03fca91a91c632c3df612c53fa04b0587861a22c",
+    "DESIGN_NOTES.md": "861aa85ae0cc170acd48c3a7c4932a16076f288a4417aa50f02c142d93e96465",
+    "Inventory.weave": "bc1807cd53b9b5bf2465764c2e01f24d916c35cb30ade075787f0351f23b2f70",
+    "LOWERED_PROPAGATION.weave": "a87149d15dca6190815211b374b8a6fc9fc09fc244ac28278aa02528133243ea",
+    "README.md": "90f2aad1addc2dd7a06d346ef66c07e0a867bdd837a58fc795cecfc115544e69",
+    "REPORT.md": "265335a286bc09165e65dd7d583cc383b3a5e1a05fb8fb3d40de9acdf574a5a4",
+    "TEST_OUTPUT.txt": "d12400d9818fff2f8c107b4c5c6c29b4ee302065cbf3e64c3389d9c9b503fd8a",
+    "checker.py": "23d420fcab24a06c114b564794892bb8158eb7dd60de99bd764d1be658ea8d10",
+    "demo.py": "193b3767f5d1c299cdf471ad1f38c44fa61d5545bb16e506f9fe56b579957f4f",
+    "examples/checkout.weave": "9f40d666c39590caf13c7d226c759f94fb2b74d9a95a80fc8678bbaac81e2e2f",
+    "examples/checkout_composed.weave": "4141ad80c19c7c98d29d8f923267327898ca8babac48c7b164263e845d8c6788",
+    "examples/checkout_propagating.weave": "9e25fdc5f695ce8e0712fcc56dc3803a51daabcaa13c9b08c806e6fc5ca12cc4",
+    "examples/direct_charge.weave": "d5e6cad9742566235f3947f982ee12536569f2c83cae5b78dd524d367acea41c",
+    "examples/drop_hold.weave": "c6bded65962c6dfd13371f5269344f3766e946f5134e6a39fd655b3ed3521042",
+    "examples/forge_escrow.weave": "c384d154010c2c2c7f5e5607cebe0de98122f6307543e50aa9a004ef00f40ad7",
+    "examples/wrong_order.weave": "4ed14be1cf0970538f2f63bcbbc80e284499e5a76f9ce9bcd2b28642ae6249c8",
+    "mutations/bogus_sell.weave": "0f907dbd6c9290e0fed28754e76043827edc1ee1209cca9d316ea8ad10dab032",
+    "mutations/leak.weave": "7ab7ec5c07b839fd566660ded1e6524906d363372d982c6f1db342c60dd7cbf5",
+    "mutations/lose_paid.weave": "3b4bca40ddd6cd018b9441c4b258a0e9f74e7a88fbe55178d4504134600ac99a",
+    "mutations/manual_leak.weave": "d0afd9988015906de2774863f9c9341609125fc32751fa6312c1b47e547f2fcd",
+    "mutations/quick_recover.weave": "a45fbd3d6044c8f6a710b4698240faaf4552ca0b47fc9efb56dbfc0edbad9bb8",
+    "mutations/skim.weave": "fffcf758105c9ea67dbf07e3af5e5efa56c207792ed7923f76fe1af3721bce69",
+    "ordering.json": "f5a8b754ed038abdfb1efcc66543a26ad8ece5b065ac89500e6cf17bb0c92790",
+    "proof.json": "c2c741c4ac28ca4f058a0f2f2246643ccdb191dc67b41118e4b3e2e001397d77",
+    "requirements.txt": "e36a2dd41ffd37bf80f215dec62f763da0785cd9b789d519bc7344e6180befd3",
+    "scenarios.json": "4dce9af5ecea9bc2f5ec740951c0589802deb7dad4fcaf569ee2402dc9c22b52",
+    "simulate.py": "611494666ccc75e57f481163287bc244c6a246dddd7170406c0d13820c1c5f58",
+    "tests/test_checker.py": "023ba54b42839becf2f9ab490c06e6770089ad5ec97b0eeb23acce2f3c1aa869",
+    "tests/test_composition.py": "a4a02584196b1253a7fc2b217852c8f4f2c58aa05bfb0cbe36f65e04110823ad",
+    "tests/test_rejection_and_propagation.py": "46b1cf0b5539a6cb11145f4e01dd1f3ba45f6c9433f9d39636a7490973927cba",
+    "verify_certificate.py": "f3db51a4877436565adbf0320f7cc8ce71cafac503822b42125571df13bb8404"
+  },
+  "kit_extensions": [
+    {
+      "name": "pure-functions-fork-join",
+      "date": "2026-10-28",
+      "location": ".agents/skills/weave/scripts/weave_pure/",
+      "runner_commands": [
+        "check-pure",
+        "run-pure"
+      ],
+      "vendored_prototype_modified": false,
+      "summary": "Kit-authored pure fn subset with immutable integer lists, direct self-recursion, and a cooperative fork/join scheduler; not part of the upstream snapshot."
+    }
+  ]
+}

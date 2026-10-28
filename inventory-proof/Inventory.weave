@@ -1,0 +1,186 @@
+# Executable specification for the restricted checker in this package.
+# One stock item per reservation; one SKU per net instance; stock is arbitrary Nat.
+# Invariants check only aggregate counts. The separate one-order model tracks
+# where payment and rejection evidence occur and checks declared safety properties.
+net Inventory(stock: Nat):
+    place available = stock owner domain
+    place held = 0 owner activation
+    place escrow = 0 owner activation
+    place inflight = 0 owner runtime
+    place paid = 0 owner activation
+    place unpaid = 0 owner activation
+    place uncertain = 0 owner activation
+    place recovery_queue = 0 owner runtime
+    place manual = 0 owner runtime
+    place sold = 0 owner domain
+    place registrations = 0 owner runtime
+    place charge_requests = 0 owner adapter
+
+    linear Hold[t, o] at held issuer reserve cancel cancel_held
+    linear Escrow[t, o] at escrow issuer arm cancel cancel_escrow registered registrations
+    linear Paid[t, o] at paid issuer charge_ok cancel cancel_paid
+    linear Unpaid[t, o] at unpaid issuer charge_err cancel cancel_unpaid
+    linear Uncertain[t, o] at uncertain issuer charge_unknown cancel cancel_uncertain
+
+    runtime_state inflight consumers charge_ok, charge_err, charge_unknown, cancel_inflight
+    runtime_state recovery_queue consumers recover_paid, recover_rejected, escalate
+    runtime_state manual consumers manual_paid, manual_rejected
+    runtime_state registrations consumers sell, release, recover_paid, recover_rejected, manual_paid, manual_rejected, cancel_escrow, cancel_paid, cancel_unpaid
+
+    enum ChargeOutcome[t, o]:
+        Ok(Paid[t, o])
+        Err(Unpaid[t, o])
+        Unknown(Uncertain[t, o])
+
+    enum CheckoutOutcome[t, o]:
+        Ok(Unit)
+        Err(Unpaid[t, o])
+        Unknown(Uncertain[t, o])
+
+    invariant stock_conservation:
+        available + held + escrow + inflight + paid + unpaid + uncertain + recovery_queue + manual + sold == stock
+
+    invariant registration_balance:
+        registrations - escrow - inflight - paid - unpaid - uncertain - recovery_queue - manual == 0
+
+    check payment_ordering for one_order:
+        admit reserve once
+        observe dispatch dispatch
+        place_bound 1
+        guard authoritative_paid_evidence establishes_paid
+        guard operator_supplied_paid_evidence establishes_paid
+        guard authoritative_final_rejection establishes_rejected
+        guard operator_supplied_final_rejection establishes_rejected
+        guard outcome_unresolved nondeterministic
+        guard recovery_budget_exhausted nondeterministic
+        guard operation_is_dispatchable nondeterministic
+        property sold_requires_paid: marked sold requires paid_evidence
+        property dispatched_release_requires_rejection: after dispatch marked available requires rejected_evidence
+        property paid_never_available: after paid_evidence forbid available
+        property paid_state_requires_paid: marked paid requires paid_evidence
+        property unpaid_state_requires_rejection: marked unpaid requires rejected_evidence
+        property inflight_has_registration: marked inflight requires marked registrations
+        property uncertain_has_registration: marked uncertain requires marked registrations
+        property recovery_has_registration: marked recovery_queue requires marked registrations
+        property manual_has_registration: marked manual requires marked registrations
+
+    transition reserve:
+        take 1 available
+        put 1 held
+
+    transition arm:
+        take 1 held
+        put 1 escrow
+        put 1 registrations
+
+    transition dispatch:
+        take 1 escrow
+        read 1 registrations
+        put 1 inflight
+        put 1 charge_requests
+
+    transition adapter_dequeue:
+        take 1 charge_requests
+        guard operation_is_dispatchable
+
+    transition charge_ok:
+        take 1 inflight
+        put 1 paid
+        guard authoritative_paid_evidence
+
+    transition charge_err:
+        take 1 inflight
+        put 1 unpaid
+        guard authoritative_final_rejection
+
+    transition charge_unknown:
+        take 1 inflight
+        put 1 uncertain
+        guard outcome_unresolved
+
+    transition sell:
+        take 1 paid
+        take 1 registrations
+        put 1 sold
+
+    transition release:
+        take 1 unpaid
+        take 1 registrations
+        put 1 available
+
+    transition handoff:
+        take 1 uncertain
+        put 1 recovery_queue
+
+    transition recover_paid:
+        take 1 recovery_queue
+        take 1 registrations
+        put 1 sold
+        guard authoritative_paid_evidence
+
+    transition recover_rejected:
+        take 1 recovery_queue
+        take 1 registrations
+        put 1 available
+        guard authoritative_final_rejection
+
+    transition escalate:
+        take 1 recovery_queue
+        put 1 manual
+        guard recovery_budget_exhausted
+
+    transition manual_paid:
+        take 1 manual
+        take 1 registrations
+        put 1 sold
+        guard operator_supplied_paid_evidence
+
+    transition manual_rejected:
+        take 1 manual
+        take 1 registrations
+        put 1 available
+        guard operator_supplied_final_rejection
+
+    transition cancel_held:
+        take 1 held
+        put 1 available
+
+    transition cancel_escrow:
+        take 1 escrow
+        take 1 registrations
+        put 1 available
+
+    transition cancel_inflight:
+        take 1 inflight
+        put 1 recovery_queue
+
+    transition cancel_paid:
+        take 1 paid
+        take 1 registrations
+        put 1 sold
+
+    transition cancel_unpaid:
+        take 1 unpaid
+        take 1 registrations
+        put 1 available
+
+    transition cancel_uncertain:
+        take 1 uncertain
+        put 1 recovery_queue
+
+    runtime_cancel inflight via cancel_inflight
+
+    api reserve(tenant: TenantId, order: OrderId) -> Hold[tenant, order] via reserve
+    api arm(h: Hold[t, o]) -> Escrow[t, o] via arm
+    api sell(h: Paid[t, o]) -> Unit via sell
+    api release(h: Unpaid[t, o]) -> Unit via release
+    api handoff(h: Uncertain[t, o]) -> Unit via handoff
+
+    foreign Payments.charge(tenant: TenantId, order: OrderId, amount: Money, permit: Escrow[tenant, order]) -> ChargeOutcome[tenant, order]:
+        dispatch dispatch
+        pending inflight
+        keyed by tenant, order
+        correlate client_key or provider_reference
+        outcome Ok via charge_ok
+        outcome Err via charge_err
+        outcome Unknown via charge_unknown

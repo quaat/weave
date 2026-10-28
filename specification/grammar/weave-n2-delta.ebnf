@@ -1,0 +1,16 @@
+(* TARGET DELTA ONLY. Not accepted by prototype v3. IDENT is the portable name. *)
+evidence-decl = "evidence", names, NL ;
+correlation-decl = "correlation", names, NL ;
+guard-class = "establishes", IDENT | "nondeterministic" ;
+requirement = "evidence", IDENT | "marked", IDENT ;
+property = "property", IDENT, ":", "marked", IDENT,
+           "requires", requirement, NL
+         | "property", IDENT, ":", "after", "evidence", IDENT,
+           "forbid", IDENT, NL
+         | "property", IDENT, ":", "after", "dispatch", "marked", IDENT,
+           "requires", "evidence", IDENT, NL ;
+correlation-clause = "correlate", IDENT, { "or", IDENT }, NL ;
+(* Add both declarations to common; replace the legacy guard-class, requirement,
+   property and correlate alternative in foreign-clause. Other N1 rules remain.
+   Name resolution and adapter contracts are N2-EVIDENCE/CORRELATION rules. *)
+

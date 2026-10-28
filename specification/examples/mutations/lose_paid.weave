@@ -1,0 +1,4 @@
+    transition lose_paid:
+        take 1 paid
+        take 1 registrations
+        put 1 available

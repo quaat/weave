@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="710" viewBox="0 0 1040 710" role="img"><title>Inventory handle state machine</title><desc>Normal handle transfers and settlement. Runtime pending state is not an activation handle. Recovery may resolve later.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#385b72"/></marker></defs>
+<style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#17364c}.small{font-size:14px}.label{font-size:16px}.title{font-size:26px;font-weight:700}.edge{fill:none;stroke:#385b72;stroke-width:2;marker-end:url(#arrow)}.read{stroke:#167c9a;stroke-dasharray:5 4}.cancel{stroke-dasharray:5 4}</style>
+<rect width="1040" height="710" fill="#fff"/>
+<text x="520" y="35" font-size="27" text-anchor="middle">Inventory · handles and obligations</text>
+<rect x="420" y="65" width="200" height="48" rx="8" fill="#e7f2f0" stroke="#45677a"/>
+<text x="520.0" y="95.0" font-size="16" text-anchor="middle">Hold[t,o]</text>
+<rect x="420" y="175" width="200" height="48" rx="8" fill="#e7f2f0" stroke="#45677a"/>
+<text x="520.0" y="205.0" font-size="16" text-anchor="middle">Escrow[t,o]</text>
+<path class="edge " d="M520,113 L520,175"/>
+<text x="520.0" y="136.0" font-size="14" text-anchor="middle">arm + registration</text>
+<rect x="395" y="285" width="250" height="48" rx="8" fill="#fff0d6" stroke="#45677a"/>
+<text x="520.0" y="315.0" font-size="16" text-anchor="middle">inflight (runtime)</text>
+<path class="edge " d="M520,223 L520,285"/>
+<text x="520.0" y="246.0" font-size="14" text-anchor="middle">foreign dispatch</text>
+<rect x="90" y="410" width="200" height="48" rx="8" fill="#e7f2f0" stroke="#45677a"/>
+<text x="190.0" y="440.0" font-size="16" text-anchor="middle">Paid[t,o]</text>
+<path class="edge " d="M520,333 L190,410"/>
+<text x="355.0" y="363.5" font-size="14" text-anchor="middle">Ok</text>
+<rect x="420" y="410" width="200" height="48" rx="8" fill="#e7f2f0" stroke="#45677a"/>
+<text x="520.0" y="440.0" font-size="16" text-anchor="middle">Unpaid[t,o]</text>
+<path class="edge " d="M520,333 L520,410"/>
+<text x="520.0" y="363.5" font-size="14" text-anchor="middle">Err</text>
+<rect x="750" y="410" width="200" height="48" rx="8" fill="#e7f2f0" stroke="#45677a"/>
+<text x="850.0" y="440.0" font-size="16" text-anchor="middle">Uncertain[t,o]</text>
+<path class="edge " d="M520,333 L850,410"/>
+<text x="685.0" y="363.5" font-size="14" text-anchor="middle">Unknown</text>
+<rect x="90" y="555" width="200" height="55" rx="8" fill="#e4edf6" stroke="#45677a"/>
+<text x="190.0" y="588.5" font-size="16" text-anchor="middle">sold</text>
+<rect x="420" y="555" width="200" height="55" rx="8" fill="#e4edf6" stroke="#45677a"/>
+<text x="520.0" y="588.5" font-size="16" text-anchor="middle">stock returned</text>
+<rect x="750" y="555" width="200" height="55" rx="8" fill="#fff0d6" stroke="#45677a"/>
+<text x="850.0" y="588.5" font-size="16" text-anchor="middle">recovery queue</text>
+<path class="edge " d="M190,458 L190,555"/>
+<text x="190.0" y="498.5" font-size="14" text-anchor="middle">sell</text>
+<path class="edge " d="M520,458 L520,555"/>
+<text x="520.0" y="498.5" font-size="14" text-anchor="middle">release</text>
+<path class="edge " d="M850,458 L850,555"/>
+<text x="850.0" y="498.5" font-size="14" text-anchor="middle">handoff</text>
+<text x="520" y="660" font-size="17" text-anchor="middle">No handle copy or normal drop. Cancellation uses declared state-specific routes.</text>
+<text x="520" y="690" font-size="15" text-anchor="middle">Recovery retains registration until authoritative resolution. N1 also records identity-specific release.</text>
+</svg>

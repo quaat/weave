@@ -1,0 +1,175 @@
+/* Weave: quiet editorial typography on Furo's responsive layout. */
+:root {
+  --sd-color-primary: var(--color-brand-primary);
+  --sd-color-primary-highlight: var(--color-brand-content);
+  --sd-color-primary-text: var(--color-background-primary);
+}
+
+body { line-height: 1.65; }
+.content { padding-top: 2.25rem; }
+.content-icon-container { margin-bottom: .6rem; }
+article { overflow-wrap: break-word; }
+article h1, article h2, article h3, article h4 {
+  font-weight: 650;
+  line-height: 1.22;
+  letter-spacing: -.025em;
+  scroll-margin-top: 5rem;
+}
+article h1 {
+  margin-bottom: 1.5rem;
+  font-size: clamp(2.15rem, 4.4vw, 3.25rem);
+  letter-spacing: -.045em;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+article h1::before {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: .24rem;
+  margin-bottom: 1.4rem;
+  border-radius: 2px;
+  background: var(--color-brand-primary);
+}
+article h2 {
+  margin-top: 2.8rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-background-border);
+}
+article p { margin-top: .8rem; margin-bottom: 1rem; }
+article a:not(.headerlink):not(.sd-stretched-link):not(.sd-btn) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+:where(a, button, input, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-brand-primary);
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+.announcement { font-size: .85rem; letter-spacing: .015em; }
+.weave-announcement-divider { opacity: .65; padding: 0 .6rem; }
+.sidebar-brand { align-items: flex-start; gap: .7rem; }
+.weave-brand-line { display: flex; align-items: center; gap: .7rem; }
+.weave-mark {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid var(--color-brand-primary);
+  border-radius: .65rem;
+  background: var(--weave-accent-soft);
+  color: var(--color-brand-content);
+  font-weight: 750;
+  font-size: 1.15rem;
+}
+.weave-wordmark { font-weight: 750; font-size: 1.45rem; letter-spacing: -.045em; }
+.weave-tagline { font-size: .8rem; color: var(--color-foreground-secondary); }
+.weave-version { font-size: .72rem; letter-spacing: .05em; color: var(--color-brand-content); }
+.sidebar-search-container { border-radius: .6rem; margin: .25rem .75rem .75rem; }
+.sidebar-tree .reference { border-radius: .35rem; }
+.toc-tree { border-left: 1px solid var(--color-background-border); }
+.mobile-header .brand {
+  max-width: calc(100vw - 8rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .9rem;
+}
+
+/* Preserve monospace glyphs, whitespace, and horizontal code scrolling. */
+code, pre { font-variant-ligatures: none; }
+article :not(pre) > code.literal {
+  padding: .1em .32em;
+  border-radius: .3rem;
+  background: var(--weave-accent-soft);
+  color: var(--color-foreground-primary);
+  font-size: .88em;
+}
+article div.highlight {
+  border: 1px solid var(--color-background-border);
+  border-radius: .7rem;
+  box-shadow: var(--weave-shadow);
+  background: var(--weave-code-background);
+}
+article div.highlight pre {
+  padding: 1.15rem 1.2rem;
+  line-height: 1.6;
+  font-size: .87rem;
+  background: transparent;
+}
+article .literal-block-wrapper { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+article .code-block-caption, article figcaption {
+  color: var(--color-foreground-secondary);
+  font-size: .83rem;
+  margin: .6rem 0;
+}
+article .admonition, article details.sd-dropdown {
+  border-radius: .65rem;
+  box-shadow: var(--weave-shadow);
+  overflow: hidden;
+}
+article .admonition { border: 1px solid var(--color-background-border); }
+article .admonition-title { font-size: .9rem; letter-spacing: .01em; }
+article table.docutils { border: 1px solid var(--color-background-border); font-size: .92rem; }
+article table.docutils th { background: var(--color-background-secondary); }
+article table.docutils :is(th, td) { padding: .7rem .9rem; }
+article table.docutils tbody tr:nth-child(even) { background: var(--color-background-secondary); }
+article .sd-card {
+  border: 1px solid var(--color-background-border);
+  border-radius: .8rem;
+  box-shadow: var(--weave-shadow);
+  background: var(--color-background-primary);
+}
+article .sd-card-title { color: var(--color-brand-content); letter-spacing: -.015em; }
+article .sd-card:hover { border-color: var(--color-brand-primary); }
+article .sd-tab-set > input:checked + label {
+  color: var(--color-brand-content);
+  border-color: var(--color-brand-primary);
+}
+/* Standalone SVGs have their own palette: keep diagrams readable in dark mode. */
+article .graphviz { max-width: 100%; background: #fff; border-radius: .65rem; }
+.weave-provenance {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  font-size: .75rem;
+}
+.weave-provenance summary { cursor: pointer; }
+.weave-provenance code { display: block; overflow-wrap: anywhere; margin-top: .65rem; }
+.weave-lead { font-size: 1.18rem; color: var(--color-foreground-secondary); line-height: 1.7; }
+
+@media (max-width: 50rem) {
+  .content { padding-top: 1.25rem; }
+  article h1 { font-size: 2.2rem; }
+  article h2 { margin-top: 2rem; }
+  article div.highlight pre { padding: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+@media print {
+  .announcement, .sidebar-drawer, .toc-drawer, .mobile-header,
+  .content-icon-container, .back-to-top, .copybtn, .related-pages,
+  .weave-provenance { display: none !important; }
+  body { color: #182c32 !important; background: #fff !important; }
+  .main, .content, .article-container { width: 100% !important; max-width: none !important; margin: 0 !important; }
+  .content { padding: 0 !important; }
+  article h1::before { display: none; }
+  article h1, article h2, article h3 { break-after: avoid; }
+  article div.highlight { box-shadow: none; }
+  article div.highlight pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* Include inactive tabs and closed dropdown bodies when printing HTML. */
+  .sd-tab-set > .sd-tab-content { display: block !important; }
+  details.sd-dropdown > :not(summary) { display: block !important; }
+  details.sd-dropdown::details-content { content-visibility: visible !important; }
+}
+
+/* Nodes emitted by the private weave_check extension. */
+.weave-check-status {
+  margin-top: -.4rem;
+  font-size: .78rem;
+  letter-spacing: .02em;
+  color: var(--color-brand-content);
+}
+article figure img { max-width: 100%; height: auto; }

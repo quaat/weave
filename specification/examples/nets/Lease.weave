@@ -1,0 +1,19 @@
+# Local single-slot lease, N0 structural/accounting subset; no payment checker.
+net Lease(stock: Nat):
+    place free = 1 owner domain
+    place leased = 0 owner activation
+    linear LeaseToken[t, o] at leased issuer acquire cancel cancel_lease
+    invariant slot:
+        free + leased == 1
+    transition acquire:
+        take 1 free
+        put 1 leased
+    transition release:
+        take 1 leased
+        put 1 free
+    transition cancel_lease:
+        take 1 leased
+        put 1 free
+    api acquire(tenant: TenantId, order: OrderId) -> LeaseToken[tenant, order] via acquire
+    api release(token: LeaseToken[t, o]) -> Unit via release
+

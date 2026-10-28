@@ -1,0 +1,218 @@
+{
+  "format": "weave-specification-validation-v1",
+  "document": "0.2-draft",
+  "python": "3.12.14",
+  "reference_integrity": "PASS",
+  "lease": "accounting/F0 pass; ordering E300",
+  "counterexamples": [
+    "E320",
+    "E420"
+  ],
+  "cases": [
+    {
+      "file": "valid/return_hold.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/arm_hold.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/finish_paid.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/settle.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/propagate_bound.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/checkout.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/checkout_composed.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "invalid/direct_charge.weave",
+      "expected": "E201",
+      "actual": "E201"
+    },
+    {
+      "file": "invalid/drop_hold.weave",
+      "expected": "E204",
+      "actual": "E204"
+    },
+    {
+      "file": "invalid/forge_escrow.weave",
+      "expected": "E205",
+      "actual": "E205"
+    },
+    {
+      "file": "invalid/wrong_order.weave",
+      "expected": "E209",
+      "actual": "E209"
+    },
+    {
+      "file": "invalid/reuse_hold.weave",
+      "expected": "E203",
+      "actual": "E203"
+    },
+    {
+      "file": "invalid/missing_unknown.weave",
+      "expected": "E214",
+      "actual": "E214"
+    },
+    {
+      "file": "invalid/paid_release.weave",
+      "expected": "E208",
+      "actual": "E208"
+    },
+    {
+      "file": "invalid/early_return_leak.weave",
+      "expected": "E204",
+      "actual": "E204"
+    },
+    {
+      "file": "invalid/recursion.weave",
+      "expected": "E218",
+      "actual": "E218"
+    },
+    {
+      "file": "invalid/unsupported_if.weave",
+      "expected": "E200",
+      "actual": "E200"
+    },
+    {
+      "file": "mutations/skim.weave",
+      "expected": "E101",
+      "actual": "E101"
+    },
+    {
+      "file": "mutations/lose_paid.weave",
+      "expected": "E101",
+      "actual": "E101"
+    },
+    {
+      "file": "mutations/bogus_sell.weave",
+      "expected": "E101",
+      "actual": "E101"
+    },
+    {
+      "file": "mutations/quick_recover.weave",
+      "expected": "E101",
+      "actual": "E101"
+    },
+    {
+      "file": "mutations/leak.weave",
+      "expected": "E101",
+      "actual": "E101"
+    },
+    {
+      "file": "mutations/manual_leak.weave",
+      "expected": "E101",
+      "actual": "E101"
+    },
+    {
+      "file": "nets/unsafe_paid_release.weave",
+      "expected": "E320",
+      "actual": "E320"
+    }
+  ],
+  "accepted_flows_checked_original_and_lowered_against_n0_and_n1": [
+    "valid/return_hold.weave",
+    "valid/arm_hold.weave",
+    "valid/finish_paid.weave",
+    "valid/settle.weave",
+    "valid/propagate_bound.weave",
+    "valid/checkout.weave",
+    "valid/checkout_composed.weave",
+    "valid/checkout_propagating.weave"
+  ],
+  "scenarios": [
+    {
+      "outcome": "Ok",
+      "marking": {
+        "available": 0,
+        "held": 0,
+        "escrow": 0,
+        "inflight": 0,
+        "paid": 0,
+        "unpaid": 0,
+        "uncertain": 0,
+        "recovery_queue": 0,
+        "manual": 0,
+        "sold": 1,
+        "registrations": 0,
+        "charge_requests": 1
+      }
+    },
+    {
+      "outcome": "Err",
+      "marking": {
+        "available": 1,
+        "held": 0,
+        "escrow": 0,
+        "inflight": 0,
+        "paid": 0,
+        "unpaid": 0,
+        "uncertain": 0,
+        "recovery_queue": 0,
+        "manual": 0,
+        "sold": 0,
+        "registrations": 0,
+        "charge_requests": 1
+      }
+    },
+    {
+      "outcome": "Unknown",
+      "marking": {
+        "available": 0,
+        "held": 0,
+        "escrow": 0,
+        "inflight": 0,
+        "paid": 0,
+        "unpaid": 0,
+        "uncertain": 0,
+        "recovery_queue": 1,
+        "manual": 0,
+        "sold": 0,
+        "registrations": 1,
+        "charge_requests": 1
+      }
+    }
+  ],
+  "n0": {
+    "invariants": 2,
+    "states": 20,
+    "edges": 43,
+    "complete": true
+  },
+  "n1": {
+    "aggregate_invariants": 2,
+    "family_invariants": 3,
+    "states": 841,
+    "edges": 3712,
+    "complete": true,
+    "unreached_transitions": [],
+    "cells": 32,
+    "modes": 48
+  },
+  "scope": "Example and snapshot regression evidence, not grammar equivalence or language soundness."
+}

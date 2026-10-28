@@ -1,0 +1,162 @@
+[
+  {
+    "doc": "chapters/declarations",
+    "source": "chapters/declarations:12",
+    "profile": "N1",
+    "context": "net-fragment",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/declarations",
+    "source": "chapters/declarations:46",
+    "profile": "N1",
+    "context": "net-fragment",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/declarations",
+    "source": "chapters/declarations:77",
+    "profile": "N1",
+    "context": "net-fragment",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/declarations",
+    "source": "chapters/declarations:114",
+    "profile": "N1",
+    "context": "net-fragment",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/declarations",
+    "source": "examples/nets/Inventory.coloured.weave",
+    "profile": "N1",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/valid/arm_hold.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/valid/settle.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/valid/checkout_propagating.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/invalid/drop_hold.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "E204",
+    "actual": "E204"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/invalid/early_return_leak.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "E204",
+    "actual": "E204"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/invalid/wrong_order.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "E209",
+    "actual": "E209"
+  },
+  {
+    "doc": "chapters/examples",
+    "source": "examples/nets/Inventory.coloured.weave",
+    "profile": "N1",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/flow-semantics",
+    "source": "chapters/flow-semantics:49",
+    "profile": "F0/N0",
+    "context": "result-body",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/flow-semantics",
+    "source": "chapters/flow-semantics:60",
+    "profile": "F0/N0",
+    "context": "result-body",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/flow-semantics",
+    "source": "chapters/flow-semantics:80",
+    "profile": "F0/N0",
+    "context": "await-body",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/lease-tutorial",
+    "source": "examples/nets/Lease.weave",
+    "profile": "N0",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/lease-tutorial",
+    "source": "examples/valid/lease_roundtrip.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/overview",
+    "source": "examples/valid/arm_hold.weave",
+    "profile": "F0/N0",
+    "context": "file",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/types",
+    "source": "chapters/types:78",
+    "profile": "N1",
+    "context": "net-fragment",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  },
+  {
+    "doc": "chapters/verification",
+    "source": "chapters/verification:68",
+    "profile": "N1",
+    "context": "net-fragment",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT"
+  }
+]

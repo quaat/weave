@@ -1,0 +1,4 @@
+    transition bogus_sell:
+        take 1 escrow
+        take 1 registrations
+        put 1 sold

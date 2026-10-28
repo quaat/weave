@@ -1,0 +1,158 @@
+NET Inventory: 12 places, 21 transitions
+METHOD standard P-invariant induction; aggregate accounting only
+PROVED stock_conservation
+  available + held + escrow + inflight + paid + unpaid + uncertain + recovery_queue + manual + sold == stock
+  Initial marking: equality holds for every stock >= 0.
+  Preservation: w^T C = 0 for all 21 transition columns.
+PROVED registration_balance
+  registrations - escrow - inflight - paid - unpaid - uncertain - recovery_queue - manual == 0
+  Initial marking: equality holds for every stock >= 0.
+  Preservation: w^T C = 0 for all 21 transition columns.
+CHECKED 5 linear resources: sealed production, consumption, and cancellation routes
+CHECKED 4 runtime-owned places: closed consumer lists
+CHECKED foreign dispatch consumes an identity-matched, recovery-registered permit
+  These equalities do not establish payment ordering or per-order recovery coverage.
+NOT ESTABLISHED liveness, provider truthfulness/consistency (including contradictory late replies), escalation budgets, per-order runtime correlation, or implementation refinement
+
+MODEL payment_ordering: orders=1, stock=1, reserve<=1, tokens/place<=1
+  Exhausted 20 states and 43 edges; no successors pruned.
+CHECKED WITHIN BOUNDS sold_requires_paid (premise in 2 states)
+CHECKED WITHIN BOUNDS dispatched_release_requires_rejection (premise in 2 states)
+CHECKED WITHIN BOUNDS paid_never_available (premise in 4 states)
+CHECKED WITHIN BOUNDS paid_state_requires_paid (premise in 2 states)
+CHECKED WITHIN BOUNDS unpaid_state_requires_rejection (premise in 2 states)
+CHECKED WITHIN BOUNDS inflight_has_registration (premise in 2 states)
+CHECKED WITHIN BOUNDS uncertain_has_registration (premise in 2 states)
+CHECKED WITHIN BOUNDS recovery_has_registration (premise in 2 states)
+CHECKED WITHIN BOUNDS manual_has_registration (premise in 2 states)
+  Evidence guards are abstract witnesses; provider truthfulness, consistency, and identity correlation are assumptions.
+
+CHECKED checkout: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED checkout_composed: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED pay_with: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED arm_hold: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED settle: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED checkout_propagating: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED place_order: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+CHECKED pay_with: nominal types, indexed permits, exhaustive outcomes, linear calls/returns, no drops
+
+EXPECTED REJECTION
+examples/direct_charge.weave:2: E201
+  Payments.charge expects 4 arguments; got 3.
+  Missing or invalid arguments: permit: Escrow[tenant, order].
+  Obtain Escrow through Inventory.arm; its constructor is sealed.
+
+EXPECTED REJECTION
+examples/drop_hold.weave:3: E204
+  Linear obligations left at normal return: hold: Hold[tenant, order].
+  Consume or hand off every handle. Cancellation routes do not permit silent normal drops.
+
+EXPECTED REJECTION
+examples/forge_escrow.weave:2: E205
+  Escrow is sealed; it cannot be constructed by client code.
+  Its only minting transition is Inventory.arm.
+
+EXPECTED REJECTION
+examples/wrong_order.weave:4: E209
+  Payments.charge: resource identity mismatch for order.
+  Request uses other; permit belongs to order.
+
+EXPECTED REJECTION (skim)
+mutated-skim.weave:188: E101
+  skim cannot consume sealed Hold at held.
+  Allowed consumers: arm, cancel_held.
+
+EXPECTED REJECTION (lose_paid)
+mutated-lose_paid.weave:188: E101
+  lose_paid cannot consume sealed Paid at paid.
+  Allowed consumers: cancel_paid, sell.
+
+EXPECTED REJECTION (bogus_sell)
+mutated-bogus_sell.weave:188: E101
+  bogus_sell cannot consume sealed Escrow at escrow.
+  Allowed consumers: cancel_escrow, dispatch.
+
+EXPECTED REJECTION (quick_recover)
+mutated-quick_recover.weave:188: E101
+  quick_recover cannot consume sealed runtime state recovery_queue.
+  Allowed consumers: recover_paid, recover_rejected, escalate.
+
+EXPECTED REJECTION (leak)
+mutated-leak.weave:188: E101
+  leak cannot consume sealed runtime state inflight.
+  Allowed consumers: charge_ok, charge_err, charge_unknown, cancel_inflight.
+
+EXPECTED REJECTION (manual_leak)
+mutated-manual_leak.weave:188: E101
+  manual_leak cannot consume sealed runtime state recovery_queue.
+  Allowed consumers: recover_paid, recover_rejected, escalate.
+
+EXPECTED ORDERING FAILURE (quick_recover explicitly authorized; both invariants hold)
+authorized-quick_recover.weave:46: E320
+  VIOLATED sold_requires_paid within one-order model.
+  Trace: reserve -> arm -> dispatch -> cancel_inflight -> quick_recover
+  Marking: sold=1, charge_requests=1; dispatched=true, paid_evidence=false, rejected_evidence=false.
+
+EXPECTED ORDERING FAILURE (leak explicitly authorized; both invariants hold)
+authorized-leak.weave:46: E320
+  VIOLATED dispatched_release_requires_rejection within one-order model.
+  Trace: reserve -> arm -> dispatch -> leak
+  Marking: available=1, charge_requests=1; dispatched=true, paid_evidence=false, rejected_evidence=false.
+
+EXPECTED ORDERING FAILURE (manual_leak explicitly authorized; both invariants hold)
+authorized-manual_leak.weave:46: E320
+  VIOLATED dispatched_release_requires_rejection within one-order model.
+  Trace: reserve -> arm -> dispatch -> cancel_inflight -> manual_leak
+  Marking: available=1, charge_requests=1; dispatched=true, paid_evidence=false, rejected_evidence=false.
+
+EXPECTED ORDERING FAILURE (authorized cancel releases paid stock)
+mutated-cancel.weave:46: E320
+  VIOLATED dispatched_release_requires_rejection within one-order model.
+  Trace: reserve -> arm -> dispatch -> charge_ok -> cancel_paid
+  Marking: available=1, charge_requests=1; dispatched=true, paid_evidence=true, rejected_evidence=false.
+
+EXPECTED CALL-BOUNDARY FAILURE (caller reuses transferred hold)
+mutated-checkout_composed.weave:5: E203
+  hold was already moved; linear handles cannot be reused.
+
+EXPECTED PROPAGATION FAILURE (another handle is live at ?)
+early-drop.weave:2: E204
+  Linear obligations left at normal return: extra: Paid[u, v].
+  Consume or hand off every handle. Cancellation routes do not permit silent normal drops.
+
+EXPECTED INVARIANT FAILURE (mutated release)
+mutated-Inventory.weave:41: E112
+  stock_conservation is NOT PROVED: transition release changes the invariant by +1.
+  See transition at line 106.
+
+SCRIPTED Ok via checkout_propagating (in-memory, one order)
+  NET reserve: held=1
+  NET arm: escrow=1, registrations=1
+  NET dispatch: inflight=1, registrations=1, charge_requests=1
+  NET charge_ok: paid=1, registrations=1, charge_requests=1
+  RETURN pay_with Ok: paid=1, registrations=1, charge_requests=1
+  NET sell: sold=1, charge_requests=1
+  RETURN place_order Ok: sold=1, charge_requests=1
+  RETURN checkout_propagating: sold=1, charge_requests=1
+
+SCRIPTED Err via checkout_propagating (in-memory, one order)
+  NET reserve: held=1
+  NET arm: escrow=1, registrations=1
+  NET dispatch: inflight=1, registrations=1, charge_requests=1
+  NET charge_err: unpaid=1, registrations=1, charge_requests=1
+  RETURN pay_with Err: unpaid=1, registrations=1, charge_requests=1
+  RETURN place_order Err: unpaid=1, registrations=1, charge_requests=1
+  NET release: available=1, charge_requests=1
+  RETURN checkout_propagating: available=1, charge_requests=1
+
+SCRIPTED Unknown via checkout_propagating (in-memory, one order)
+  NET reserve: held=1
+  NET arm: escrow=1, registrations=1
+  NET dispatch: inflight=1, registrations=1, charge_requests=1
+  NET charge_unknown: uncertain=1, registrations=1, charge_requests=1
+  RETURN pay_with Unknown: uncertain=1, registrations=1, charge_requests=1
+  RETURN place_order Unknown: uncertain=1, registrations=1, charge_requests=1
+  NET handoff: recovery_queue=1, registrations=1, charge_requests=1
+  RETURN checkout_propagating: recovery_queue=1, registrations=1, charge_requests=1
+
+RECHECKED 2 source-bound invariant certificates

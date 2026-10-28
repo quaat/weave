@@ -1,0 +1,204 @@
+../.venv-docs/bin/python scripts/validate.py
+PASS: 25 source expectations; 3 scripted scenarios
+PASS: 8 valid flows and their lowerings checked with N0 and N1 APIs
+PASS: N0 20 states / 43 edges; N1 841 states / 3712 edges
+PASS: unchanged reference snapshot; 32 coloured cells / 48 firing modes
+../.venv-docs/bin/python scripts/grammar_audit.py
+PASS: 68 EBNF productions; 25/25 corpus pipeline agreements; N1 and lease syntax parsed
+../.venv-docs/bin/python scripts/refresh_reference_pages.py --check
+PASS: conformance table and rule catalogue current
+../.venv-docs/bin/python -B -m unittest discover -s tests -q
+----------------------------------------------------------------------
+Ran 9 tests in 0.135s
+
+OK
+../.venv-docs/bin/python scripts/test_reference.py
+----------------------------------------------------------------------
+Ran 143 tests in 4.830s
+
+OK
+../.venv-docs/bin/python -m sphinx -n -W --keep-going -b html docs _build/html
+Running Sphinx v8.2.3
+loading translations [en]... done
+loading pickled environment... The configuration has changed (1 option: 'html_css_files')
+done
+building [mo]: targets for 0 po files that are out of date
+writing output... 
+building [html]: targets for 31 source files that are out of date
+updating environment: 0 added, 31 changed, 0 removed
+reading sources... [  3%] chapters/conformance
+reading sources... [  6%] chapters/counterexamples
+reading sources... [ 10%] chapters/declarations
+reading sources... [ 13%] chapters/design-history
+reading sources... [ 16%] chapters/diagnostics
+reading sources... [ 19%] chapters/effects
+reading sources... [ 23%] chapters/evidence-design
+reading sources... [ 26%] chapters/examples
+reading sources... [ 29%] chapters/execution-contract
+reading sources... [ 32%] chapters/flow-semantics
+reading sources... [ 35%] chapters/glossary
+reading sources... [ 39%] chapters/grammar
+reading sources... [ 42%] chapters/lease-tutorial
+reading sources... [ 45%] chapters/lexical
+reading sources... [ 48%] chapters/limitations
+reading sources... [ 52%] chapters/names
+reading sources... [ 55%] chapters/net-semantics
+reading sources... [ 58%] chapters/overview
+reading sources... [ 61%] chapters/proposals
+reading sources... [ 65%] chapters/protocol-diff
+reading sources... [ 68%] chapters/provenance
+reading sources... [ 71%] chapters/rationale
+reading sources... [ 74%] chapters/rule-catalogue
+reading sources... [ 77%] chapters/runtime
+reading sources... [ 81%] chapters/security
+reading sources... [ 84%] chapters/static-semantics
+reading sources... [ 87%] chapters/status
+reading sources... [ 90%] chapters/tooling
+reading sources... [ 94%] chapters/types
+reading sources... [ 97%] chapters/verification
+reading sources... [100%] index
+
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... done
+preparing documents... done
+copying assets... 
+copying static files... 
+Writing evaluated template result to /workspace/scratch/fb4d438d66dc/weave-specification/_build/html/_static/documentation_options.js
+Writing evaluated template result to /workspace/scratch/fb4d438d66dc/weave-specification/_build/html/_static/basic.css
+Writing evaluated template result to /workspace/scratch/fb4d438d66dc/weave-specification/_build/html/_static/language_data.js
+Writing evaluated template result to /workspace/scratch/fb4d438d66dc/weave-specification/_build/html/_static/alabaster.css
+copying static files: done
+copying extra files... 
+copying extra files: done
+copying assets: done
+writing output... [  3%] chapters/conformance
+writing output... [  6%] chapters/counterexamples
+writing output... [ 10%] chapters/declarations
+writing output... [ 13%] chapters/design-history
+writing output... [ 16%] chapters/diagnostics
+writing output... [ 19%] chapters/effects
+writing output... [ 23%] chapters/evidence-design
+writing output... [ 26%] chapters/examples
+writing output... [ 29%] chapters/execution-contract
+writing output... [ 32%] chapters/flow-semantics
+writing output... [ 35%] chapters/glossary
+writing output... [ 39%] chapters/grammar
+writing output... [ 42%] chapters/lease-tutorial
+writing output... [ 45%] chapters/lexical
+writing output... [ 48%] chapters/limitations
+writing output... [ 52%] chapters/names
+writing output... [ 55%] chapters/net-semantics
+writing output... [ 58%] chapters/overview
+writing output... [ 61%] chapters/proposals
+writing output... [ 65%] chapters/protocol-diff
+writing output... [ 68%] chapters/provenance
+writing output... [ 71%] chapters/rationale
+writing output... [ 74%] chapters/rule-catalogue
+writing output... [ 77%] chapters/runtime
+writing output... [ 81%] chapters/security
+writing output... [ 84%] chapters/static-semantics
+writing output... [ 87%] chapters/status
+writing output... [ 90%] chapters/tooling
+writing output... [ 94%] chapters/types
+writing output... [ 97%] chapters/verification
+writing output... [100%] index
+
+generating indices... genindex done
+writing additional pages... search done
+copying images... [ 33%] _static/diagrams/handle-states.svg
+copying images... [ 67%] _static/diagrams/inventory-n0.svg
+copying images... [100%] _static/diagrams/r0-unknown.svg
+
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded.
+
+The HTML pages are in _build/html.
+../.venv-docs/bin/python -m sphinx -n -W --keep-going -b linkcheck docs _build/linkcheck
+Running Sphinx v8.2.3
+loading translations [en]... done
+making output directory... done
+building [mo]: targets for 0 po files that are out of date
+writing output... 
+building [linkcheck]: targets for 31 source files that are out of date
+updating environment: [new config] 31 added, 0 changed, 0 removed
+reading sources... [  3%] chapters/conformance
+reading sources... [  6%] chapters/counterexamples
+reading sources... [ 10%] chapters/declarations
+reading sources... [ 13%] chapters/design-history
+reading sources... [ 16%] chapters/diagnostics
+reading sources... [ 19%] chapters/effects
+reading sources... [ 23%] chapters/evidence-design
+reading sources... [ 26%] chapters/examples
+reading sources... [ 29%] chapters/execution-contract
+reading sources... [ 32%] chapters/flow-semantics
+reading sources... [ 35%] chapters/glossary
+reading sources... [ 39%] chapters/grammar
+reading sources... [ 42%] chapters/lease-tutorial
+reading sources... [ 45%] chapters/lexical
+reading sources... [ 48%] chapters/limitations
+reading sources... [ 52%] chapters/names
+reading sources... [ 55%] chapters/net-semantics
+reading sources... [ 58%] chapters/overview
+reading sources... [ 61%] chapters/proposals
+reading sources... [ 65%] chapters/protocol-diff
+reading sources... [ 68%] chapters/provenance
+reading sources... [ 71%] chapters/rationale
+reading sources... [ 74%] chapters/rule-catalogue
+reading sources... [ 77%] chapters/runtime
+reading sources... [ 81%] chapters/security
+reading sources... [ 84%] chapters/static-semantics
+reading sources... [ 87%] chapters/status
+reading sources... [ 90%] chapters/tooling
+reading sources... [ 94%] chapters/types
+reading sources... [ 97%] chapters/verification
+reading sources... [100%] index
+
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... done
+preparing documents... done
+copying assets... 
+copying assets: done
+writing output... [  3%] chapters/conformance
+writing output... [  6%] chapters/counterexamples
+writing output... [ 10%] chapters/declarations
+writing output... [ 13%] chapters/design-history
+writing output... [ 16%] chapters/diagnostics
+writing output... [ 19%] chapters/effects
+writing output... [ 23%] chapters/evidence-design
+writing output... [ 26%] chapters/examples
+writing output... [ 29%] chapters/execution-contract
+writing output... [ 32%] chapters/flow-semantics
+writing output... [ 35%] chapters/glossary
+writing output... [ 39%] chapters/grammar
+writing output... [ 42%] chapters/lease-tutorial
+writing output... [ 45%] chapters/lexical
+writing output... [ 48%] chapters/limitations
+writing output... [ 52%] chapters/names
+writing output... [ 55%] chapters/net-semantics
+writing output... [ 58%] chapters/overview
+writing output... [ 61%] chapters/proposals
+writing output... [ 65%] chapters/protocol-diff
+writing output... [ 68%] chapters/provenance
+writing output... [ 71%] chapters/rationale
+writing output... [ 74%] chapters/rule-catalogue
+writing output... [ 77%] chapters/runtime
+writing output... [ 81%] chapters/security
+writing output... [ 84%] chapters/static-semantics
+writing output... [ 87%] chapters/status
+writing output... [ 90%] chapters/tooling
+writing output... [ 94%] chapters/types
+writing output... [ 97%] chapters/verification
+writing output... [100%] index
+
+
+(chapters/tooling: line  156) ok        https://lark-parser.readthedocs.io/en/stable/grammar.html
+(chapters/tooling: line  114) ok        https://www.sphinx-doc.org/en/master/man/sphinx-build.html
+(chapters/tooling: line  115) ok        https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+(chapters/tooling: line  116) ok        https://pypi.org/project/Sphinx/8.2.3/
+(chapters/tooling: line  155) ok        https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html
+build succeeded.
+
+Look for any errors in the above output or in _build/linkcheck/output.txt

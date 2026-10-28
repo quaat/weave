@@ -1,0 +1,4 @@
+    transition manual_leak:
+        take 1 recovery_queue
+        take 1 registrations
+        put 1 available

@@ -1,0 +1,3 @@
+flow bypass(tenant: TenantId, order: OrderId, amount: Money):
+    let result = await Payments.charge(tenant, order, amount)
+    return

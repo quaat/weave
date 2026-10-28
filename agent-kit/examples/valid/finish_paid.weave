@@ -1,0 +1,4 @@
+# Paid and Unpaid are different states, not interchangeable handles.
+flow finish_paid(paid: Paid[t, o]):
+    await Inventory.sell(paid)
+    return

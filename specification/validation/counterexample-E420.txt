@@ -1,0 +1,4 @@
+examples/nets/cross_order_read.weave:99: E420
+  VIOLATED token_identity with orders=2.
+  Trace: reserve[t=tenant,o=order1] -> reserve[t=tenant,o=order2] -> arm[t=tenant,o=order1] -> arm[t=tenant,o=order2] -> dispatch[t=tenant,o=order1,other=order2]
+  read registrations[tenant,order2] belongs to another order; firing belongs to ('tenant', 'order1').

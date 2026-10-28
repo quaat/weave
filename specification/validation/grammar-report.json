@@ -1,0 +1,182 @@
+{
+  "productions": 68,
+  "cases": [
+    {
+      "file": "valid/return_hold.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/arm_hold.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/finish_paid.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/settle.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/propagate_bound.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/checkout.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/checkout_composed.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "invalid/direct_charge.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E201",
+      "reference": "E201",
+      "expected": "E201"
+    },
+    {
+      "file": "invalid/drop_hold.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E204",
+      "reference": "E204",
+      "expected": "E204"
+    },
+    {
+      "file": "invalid/forge_escrow.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E205",
+      "reference": "E205",
+      "expected": "E205"
+    },
+    {
+      "file": "invalid/wrong_order.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E209",
+      "reference": "E209",
+      "expected": "E209"
+    },
+    {
+      "file": "invalid/reuse_hold.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E203",
+      "reference": "E203",
+      "expected": "E203"
+    },
+    {
+      "file": "invalid/missing_unknown.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E214",
+      "reference": "E214",
+      "expected": "E214"
+    },
+    {
+      "file": "invalid/paid_release.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E208",
+      "reference": "E208",
+      "expected": "E208"
+    },
+    {
+      "file": "invalid/early_return_leak.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E204",
+      "reference": "E204",
+      "expected": "E204"
+    },
+    {
+      "file": "invalid/recursion.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E218",
+      "reference": "E218",
+      "expected": "E218"
+    },
+    {
+      "file": "invalid/unsupported_if.weave",
+      "syntax": "REJECT",
+      "pipeline": "E200",
+      "reference": "E200",
+      "expected": "E200"
+    },
+    {
+      "file": "mutations/skim.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E101",
+      "reference": "E101",
+      "expected": "E101"
+    },
+    {
+      "file": "mutations/lose_paid.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E101",
+      "reference": "E101",
+      "expected": "E101"
+    },
+    {
+      "file": "mutations/bogus_sell.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E101",
+      "reference": "E101",
+      "expected": "E101"
+    },
+    {
+      "file": "mutations/quick_recover.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E101",
+      "reference": "E101",
+      "expected": "E101"
+    },
+    {
+      "file": "mutations/leak.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E101",
+      "reference": "E101",
+      "expected": "E101"
+    },
+    {
+      "file": "mutations/manual_leak.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E101",
+      "reference": "E101",
+      "expected": "E101"
+    },
+    {
+      "file": "nets/unsafe_paid_release.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "E320",
+      "reference": "E320",
+      "expected": "E320"
+    }
+  ],
+  "agreement": 25,
+  "scope": "Independent generated syntax front end plus shared reference semantic checks; not independent semantic equivalence."
+}

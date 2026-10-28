@@ -1,0 +1,4 @@
+    transition leak:
+        take 1 inflight
+        take 1 registrations
+        put 1 available

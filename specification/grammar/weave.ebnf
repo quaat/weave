@@ -1,0 +1,110 @@
+(* Portable syntax; see lexical and semantic chapters for constraints. *)
+IDENT = ? ASCII letter or "_", followed by ASCII letters, digits or "_" ? ;
+UINT = "0" | POSINT ;
+POSINT = ? nonzero ASCII digit followed by zero or more ASCII digits ? ;
+NL = ? end of a nonblank logical line ? ;
+INDENT = ? increase indentation by four spaces ? ;
+DEDENT = ? return to a preceding indentation level ? ;
+
+qname = IDENT, { ".", IDENT } ;
+names = IDENT, { ",", IDENT } ;
+indices = "[", names, "]" ;
+colour = "[", IDENT, ",", IDENT, "]" ;
+type = IDENT, [ indices ] ;
+parameter = IDENT, ":", type ;
+parameters = parameter, { ",", parameter } ;
+arguments = IDENT, { ",", IDENT } ;
+owner = "domain" | "activation" | "runtime" | "adapter" ;
+initial = UINT | IDENT ;
+
+n0-file = "net", IDENT, "(", IDENT, ":", "Nat", ")", ":", NL,
+          INDENT, n0-item, { n0-item }, DEDENT ;
+n1-file = "net", IDENT, "(", IDENT, ":", "Nat", ")", ":", NL,
+          INDENT, n1-item, { n1-item }, DEDENT ;
+n0-item = place0 | transition0 | aggregate | check0 | common ;
+n1-item = place1 | transition1 | aggregate | family | check1 | common ;
+common = resource | runtime-state | runtime-cancel | enum | api | foreign ;
+
+place0 = "place", IDENT, "=", initial, "owner", owner, NL ;
+place1 = "place", IDENT, [ colour ], "=", initial, "owner", owner, NL ;
+resource = "linear", IDENT, indices, "at", IDENT, "issuer", IDENT,
+           "cancel", IDENT, [ "registered", IDENT ], NL ;
+runtime-state = "runtime_state", IDENT,
+                ( "consumers", names | "terminal" ), NL ;
+runtime-cancel = "runtime_cancel", IDENT, "via", IDENT, NL ;
+enum = "enum", IDENT, indices, ":", NL,
+       INDENT, case-decl, { case-decl }, DEDENT ;
+case-decl = IDENT, "(", type, ")", NL ;
+
+transition0 = "transition", IDENT, ":", NL,
+              INDENT, step0, { step0 }, DEDENT ;
+transition1 = "transition", IDENT, colour, ":", NL,
+              INDENT, step1, { step1 }, DEDENT ;
+step0 = arc0 | guard ;
+step1 = arc1 | guard ;
+arc0 = ( "take" | "put" | "read" ), POSINT, IDENT, NL ;
+arc1 = ( "take" | "put" | "read" ), POSINT, IDENT, [ colour ], NL ;
+guard = "guard", IDENT, NL ;
+
+api = "api", IDENT, "(", [ parameters ], ")", "->", type,
+      "via", IDENT, NL ;
+foreign = "foreign", qname, "(", [ parameters ], ")", "->", type,
+          ":", NL, INDENT, foreign-clause, { foreign-clause }, DEDENT ;
+foreign-clause = "dispatch", IDENT, NL
+               | "pending", IDENT, NL
+               | "keyed", "by", names, NL
+               | "correlate", "client_key", "or", "provider_reference", NL
+               | "outcome", IDENT, "via", IDENT, NL ;
+
+aggregate = "invariant", IDENT, ":", NL, INDENT,
+            expr0, "==", expr0, NL, DEDENT ;
+family = "invariant", IDENT, colour, ":", NL, INDENT,
+         expr1, "==", expr1, NL, DEDENT ;
+expr0 = product0, { ( "+" | "-" ), product0 } ;
+product0 = unary0, { "*", unary0 } ;
+unary0 = "-", unary0 | atom0 ;
+atom0 = UINT | IDENT | "(", expr0, ")" ;
+expr1 = product1, { ( "+" | "-" ), product1 } ;
+product1 = unary1, { "*", unary1 } ;
+unary1 = "-", unary1 | atom1 ;
+atom1 = UINT | IDENT, colour | "(", expr1, ")" ;
+
+check0 = "check", IDENT, "for", "one_order", ":", NL,
+         INDENT, check-clause, { check-clause }, DEDENT ;
+check1 = "check", IDENT, "for", "orders", POSINT, ":", NL,
+         INDENT, coloured-clause, { coloured-clause }, DEDENT ;
+coloured-clause = check-clause
+               | "property", IDENT, ":", "tokens", "match", "firing", NL ;
+check-clause = "admit", IDENT, "once", NL
+             | "observe", "dispatch", IDENT, NL
+             | "place_bound", POSINT, NL
+             | "guard", IDENT, guard-class, NL
+             | property ;
+guard-class = "establishes_paid" | "establishes_rejected"
+            | "nondeterministic" ;
+property = "property", IDENT, ":", "marked", IDENT,
+           "requires", requirement, NL
+         | "property", IDENT, ":", "after", "paid_evidence",
+           "forbid", IDENT, NL
+         | "property", IDENT, ":", "after", "dispatch", "marked", IDENT,
+           "requires", "rejected_evidence", NL ;
+requirement = "paid_evidence" | "rejected_evidence" | "marked", IDENT ;
+
+flow-file = flow, { flow } ;
+flow = "flow", IDENT, "(", [ parameters ], ")", [ "->", type ],
+       ":", NL, INDENT, body, DEDENT ;
+body = { simple }, ending ;
+simple = let-call | unit-call | propagate-bound | propagate-call ;
+call = qname, "(", [ arguments ], ")" ;
+(* Parsing permits a missing await so static checking can diagnose E212/E205. *)
+let-call = "let", IDENT, "=", [ "await" ], call, NL ;
+unit-call = "await", call, NL ;
+propagate-bound = "let", IDENT, "=", IDENT, "?", NL ;
+propagate-call = "let", IDENT, "=", "(", "await", call, ")", "?", NL ;
+ending = return | match ;
+return = "return", [ IDENT, [ "(", [ IDENT ], ")" ] ], NL ;
+match = "match", IDENT, ":", NL,
+        INDENT, branch, { branch }, DEDENT ;
+branch = IDENT, "(", [ IDENT ], ")", ":", NL,
+         INDENT, body, DEDENT ;
+

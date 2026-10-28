@@ -1,0 +1,4 @@
+# E208: release requires Unpaid, but this binding is Paid.
+flow paid_release(paid: Paid[t, o]):
+    await Inventory.release(paid)
+    return

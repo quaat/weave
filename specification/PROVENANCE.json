@@ -1,0 +1,73 @@
+{
+  "document": "0.2-draft",
+  "snapshot_date": "2026-10-28",
+  "sources": [
+    {
+      "filename": "weave-inventory-proof.zip",
+      "library_file_id": "libfile_a203cbd1f5648191918d40d6e507f69b",
+      "version": "3",
+      "sha256": "5f67ee8430b68f3ed970f4484e653acc85c68c72cf59f68929ba1b136a2c4ba2"
+    },
+    {
+      "filename": "weave-agent-kit.zip",
+      "library_file_id": "libfile_2224cb7337048191ae3410ea06ab855b",
+      "version": null,
+      "sha256": "12f473a4e47c989486c02fd1c3ec709faf3c93f8290057edff3777f692a1a147"
+    },
+    {
+      "filename": "claude-code-weave-merge-sort.md",
+      "library_file_id": "libfile_f81b83f6566c81918e01d33ac4951744",
+      "version": null,
+      "sha256": "e834864ac9364bffdc3c64314e411612b99cceba8fa62ac4bafa26e5323c8502"
+    },
+    {
+      "filename": "claude-code-tiny-shop.md",
+      "library_file_id": "libfile_ec29bad98e0081919dd0c5f661c2e4ea",
+      "version": null,
+      "sha256": "850c33032edca330846024644354169b04fb82c58ec17c7cf3af2d76c28aa859"
+    }
+  ],
+  "reference_files": {
+    "reference/prototype/ACTUAL_OUTPUT.txt": "c408216a707b12cf11c74eeb3781d8866d56554c16a4d5f498afad78267a49f2",
+    "reference/prototype/DESIGN_NOTES.md": "05dc37478353f4a466d05275622f2a4a8afa030f91cd7f2f1fc08c1fdabcc6a3",
+    "reference/prototype/Inventory.coloured.weave": "90885a6a7e85b0bed4afc429a0ebe978d24ed580ceb03566f943ec5b4aea3b6c",
+    "reference/prototype/Inventory.weave": "bc1807cd53b9b5bf2465764c2e01f24d916c35cb30ade075787f0351f23b2f70",
+    "reference/prototype/LOWERED_PROPAGATION.weave": "a87149d15dca6190815211b374b8a6fc9fc09fc244ac28278aa02528133243ea",
+    "reference/prototype/README.md": "6ef77f40ccc9a12c130e02659211a5e4ba63fc240bf97ec90020f77891cb616f",
+    "reference/prototype/REPORT.md": "46a1aacea1ab097f228d1926b1cc6c89f03275b74278f927fa87fd6ac3ed7203",
+    "reference/prototype/TEST_OUTPUT.txt": "573c2fc7de8f091b6f7b4741dfd7ec1134148197ebcaf2b7949878a0d57d8a6b",
+    "reference/prototype/checker.py": "5b129240e2687ed5ce7476b31c0690f0def0f9f6de6cff5196fbd92c93623fa1",
+    "reference/prototype/colour-check.json": "d840f7fc893b0c6d8bdfb620a478f4572bf42778a3bd6206960246df99cbf7a3",
+    "reference/prototype/colour-proof.json": "a6b6a0436d153275c899db7b3e02f56c22fbf5788bc3ea3c9e218ebe85619d93",
+    "reference/prototype/coloured.py": "1778b3d4ed66e0f6fed56809feb408aba0b8425336854a09b730273a59eb1421",
+    "reference/prototype/demo.py": "5c30adc6a08825fa212ad5e4b63b89f343239e75a228b1ea1b688b86d9b81dda",
+    "reference/prototype/durable-scenarios.json": "518e561111ddbb77271b98fd27474be259c7c8b6b20e3e51e50e6cf07d785feb",
+    "reference/prototype/durable.py": "e0441b6bf574595890d49d9a6818e3d4cd7240ec73497a77054bf0a413981c4a",
+    "reference/prototype/examples/checkout.weave": "9f40d666c39590caf13c7d226c759f94fb2b74d9a95a80fc8678bbaac81e2e2f",
+    "reference/prototype/examples/checkout_composed.weave": "4141ad80c19c7c98d29d8f923267327898ca8babac48c7b164263e845d8c6788",
+    "reference/prototype/examples/checkout_propagating.weave": "9e25fdc5f695ce8e0712fcc56dc3803a51daabcaa13c9b08c806e6fc5ca12cc4",
+    "reference/prototype/examples/direct_charge.weave": "d5e6cad9742566235f3947f982ee12536569f2c83cae5b78dd524d367acea41c",
+    "reference/prototype/examples/drop_hold.weave": "c6bded65962c6dfd13371f5269344f3766e946f5134e6a39fd655b3ed3521042",
+    "reference/prototype/examples/forge_escrow.weave": "c384d154010c2c2c7f5e5607cebe0de98122f6307543e50aa9a004ef00f40ad7",
+    "reference/prototype/examples/wrong_order.weave": "4ed14be1cf0970538f2f63bcbbc80e284499e5a76f9ce9bcd2b28642ae6249c8",
+    "reference/prototype/mutations/bogus_sell.weave": "0f907dbd6c9290e0fed28754e76043827edc1ee1209cca9d316ea8ad10dab032",
+    "reference/prototype/mutations/leak.weave": "7ab7ec5c07b839fd566660ded1e6524906d363372d982c6f1db342c60dd7cbf5",
+    "reference/prototype/mutations/lose_paid.weave": "3b4bca40ddd6cd018b9441c4b258a0e9f74e7a88fbe55178d4504134600ac99a",
+    "reference/prototype/mutations/manual_leak.weave": "d0afd9988015906de2774863f9c9341609125fc32751fa6312c1b47e547f2fcd",
+    "reference/prototype/mutations/quick_recover.weave": "a45fbd3d6044c8f6a710b4698240faaf4552ca0b47fc9efb56dbfc0edbad9bb8",
+    "reference/prototype/mutations/skim.weave": "fffcf758105c9ea67dbf07e3af5e5efa56c207792ed7923f76fe1af3721bce69",
+    "reference/prototype/ordering.json": "f5a8b754ed038abdfb1efcc66543a26ad8ece5b065ac89500e6cf17bb0c92790",
+    "reference/prototype/proof.json": "c2c741c4ac28ca4f058a0f2f2246643ccdb191dc67b41118e4b3e2e001397d77",
+    "reference/prototype/requirements.txt": "e36a2dd41ffd37bf80f215dec62f763da0785cd9b789d519bc7344e6180befd3",
+    "reference/prototype/scenarios.json": "4dce9af5ecea9bc2f5ec740951c0589802deb7dad4fcaf569ee2402dc9c22b52",
+    "reference/prototype/simulate.py": "611494666ccc75e57f481163287bc244c6a246dddd7170406c0d13820c1c5f58",
+    "reference/prototype/tests/test_checker.py": "023ba54b42839becf2f9ab490c06e6770089ad5ec97b0eeb23acce2f3c1aa869",
+    "reference/prototype/tests/test_coloured.py": "155728a680810d6aae1a3db9507d708b220a71b59cca575a55672ebc5e1cffd3",
+    "reference/prototype/tests/test_composition.py": "a4a02584196b1253a7fc2b217852c8f4f2c58aa05bfb0cbe36f65e04110823ad",
+    "reference/prototype/tests/test_durable.py": "e2922583de12ea79d087b041ee716a99841c2c27829d607c94b7b142037ecb1f",
+    "reference/prototype/tests/test_rejection_and_propagation.py": "46b1cf0b5539a6cb11145f4e01dd1f3ba45f6c9433f9d39636a7490973927cba",
+    "reference/prototype/verify_certificate.py": "f3db51a4877436565adbf0320f7cc8ce71cafac503822b42125571df13bb8404"
+  },
+  "note": "Reference prototype files retain original bytes; source caches excluded. Teaching examples are copied from the older agent kit and validated against version 3.",
+  "revision_note": "Specification and documentation tooling revised after review; original reference files unchanged."
+}

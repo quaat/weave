@@ -1,0 +1,42 @@
+# Tiny Shop: buy the last item in a stock-one Inventory net.
+# Checked against the bundled, unchanged examples/nets/Inventory.weave.
+# tenant, order, and amount are opaque symbolic inputs; nothing is computed or charged.
+#
+# Two outcome enums cross the helper boundary:
+# - ChargeOutcome[t, o] is the payment result. Ok carries Paid evidence, which
+#   still holds the recovery registration and must be consumed by Inventory.sell.
+# - CheckoutOutcome[t, o] is the result of buy_last_item. Ok(Unit) means the sale
+#   is already committed. Err and Unknown carry the same Unpaid and Uncertain
+#   payloads that ? propagated out of ChargeOutcome, unchanged and still owed.
+# ? inserts no cleanup: checkout must release Unpaid or hand off Uncertain itself.
+
+# Entry: handle every residual obligation from the checkout attempt explicitly.
+flow checkout(tenant: TenantId, order: OrderId, amount: Money):
+    let result = await buy_last_item(tenant, order, amount)
+    match result:
+        Ok():
+            return
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            return
+        Unknown(uncertain):
+            await Inventory.handoff(uncertain)
+            return
+
+# Reserve, arm, and charge; commit the sale only on Ok. Err and Unknown return early via ?.
+flow buy_last_item(tenant: TenantId, order: OrderId, amount: Money) -> CheckoutOutcome[tenant, order]:
+    let hold = await Inventory.reserve(tenant, order)
+    let escrow = await arm_reservation(hold)
+    let paid = (await charge_payment(tenant, order, amount, escrow))?
+    await Inventory.sell(paid)
+    return Ok()
+
+# Moves the hold into escrow and creates its recovery registration.
+flow arm_reservation(hold: Hold[t, o]) -> Escrow[t, o]:
+    let escrow = await Inventory.arm(hold)
+    return escrow
+
+# Consumes the escrow permit in the scripted foreign charge.
+flow charge_payment(tenant: TenantId, order: OrderId, amount: Money, escrow: Escrow[tenant, order]) -> ChargeOutcome[tenant, order]:
+    let paid = (await Payments.charge(tenant, order, amount, escrow))?
+    return Ok(paid)

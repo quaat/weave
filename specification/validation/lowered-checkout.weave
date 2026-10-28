@@ -1,0 +1,32 @@
+flow checkout_propagating(tenant: TenantId, order: OrderId, amount: Money):
+    let result = await place_order(tenant, order, amount)
+    match result:
+        Ok():
+            return
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            return
+        Unknown(uncertain):
+            await Inventory.handoff(uncertain)
+            return
+flow place_order(tenant: TenantId, order: OrderId, amount: Money) -> CheckoutOutcome[tenant, order]:
+    let hold = await Inventory.reserve(tenant, order)
+    let _try_1 = await pay_with(tenant, order, amount, hold)
+    match _try_1:
+        Ok(paid):
+            await Inventory.sell(paid)
+            return Ok()
+        Err(_try_2):
+            return Err(_try_2)
+        Unknown(_try_3):
+            return Unknown(_try_3)
+flow pay_with(tenant: TenantId, order: OrderId, amount: Money, hold: Hold[tenant, order]) -> ChargeOutcome[tenant, order]:
+    let escrow = await Inventory.arm(hold)
+    let _try_4 = await Payments.charge(tenant, order, amount, escrow)
+    match _try_4:
+        Ok(paid):
+            return Ok(paid)
+        Err(_try_5):
+            return Err(_try_5)
+        Unknown(_try_6):
+            return Unknown(_try_6)

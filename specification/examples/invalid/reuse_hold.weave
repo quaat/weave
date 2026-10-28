@@ -1,0 +1,5 @@
+# E203: hold was moved by the first call.
+flow reuse_hold(hold: Hold[t, o]) -> Escrow[t, o]:
+    let escrow = await Inventory.arm(hold)
+    let second = await Inventory.arm(hold)
+    return escrow

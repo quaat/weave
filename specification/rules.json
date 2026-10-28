@@ -1,0 +1,242 @@
+{
+  "N0-DECL-1": {
+    "chapter": "declarations",
+    "line": 53
+  },
+  "N0-DECL-2": {
+    "chapter": "declarations",
+    "line": 59
+  },
+  "N0-SEAL-1": {
+    "chapter": "declarations",
+    "line": 68
+  },
+  "N0-DECL-3": {
+    "chapter": "declarations",
+    "line": 86
+  },
+  "N0-DECL-4": {
+    "chapter": "declarations",
+    "line": 121
+  },
+  "N0-DECL-5": {
+    "chapter": "declarations",
+    "line": 143
+  },
+  "N2-EVIDENCE-1": {
+    "chapter": "evidence-design",
+    "line": 13
+  },
+  "N2-EVIDENCE-2": {
+    "chapter": "evidence-design",
+    "line": 32
+  },
+  "N2-CORRELATION-1": {
+    "chapter": "evidence-design",
+    "line": 54
+  },
+  "N2-MIGRATE-1": {
+    "chapter": "evidence-design",
+    "line": 84
+  },
+  "D0-AWAIT-1": {
+    "chapter": "execution-contract",
+    "line": 13
+  },
+  "D0-AWAIT-2": {
+    "chapter": "execution-contract",
+    "line": 29
+  },
+  "D0-COLOR-1": {
+    "chapter": "execution-contract",
+    "line": 44
+  },
+  "D0-COLOR-2": {
+    "chapter": "execution-contract",
+    "line": 62
+  },
+  "D0-ADMIT-1": {
+    "chapter": "execution-contract",
+    "line": 78
+  },
+  "D0-SCHEDULE-1": {
+    "chapter": "execution-contract",
+    "line": 93
+  },
+  "D0-CANCEL-1": {
+    "chapter": "execution-contract",
+    "line": 108
+  },
+  "D0-DEADLOCK-1": {
+    "chapter": "execution-contract",
+    "line": 120
+  },
+  "SYN-01": {
+    "chapter": "grammar",
+    "line": 52
+  },
+  "SYN-02": {
+    "chapter": "grammar",
+    "line": 57
+  },
+  "SYN-03": {
+    "chapter": "grammar",
+    "line": 63
+  },
+  "SYN-04": {
+    "chapter": "grammar",
+    "line": 70
+  },
+  "SYN-05": {
+    "chapter": "grammar",
+    "line": 76
+  },
+  "SYN-06": {
+    "chapter": "grammar",
+    "line": 82
+  },
+  "SYN-07": {
+    "chapter": "grammar",
+    "line": 88
+  },
+  "SYN-08": {
+    "chapter": "grammar",
+    "line": 94
+  },
+  "SYN-09": {
+    "chapter": "grammar",
+    "line": 100
+  },
+  "SYN-10": {
+    "chapter": "grammar",
+    "line": 106
+  },
+  "SYN-11": {
+    "chapter": "grammar",
+    "line": 113
+  },
+  "SYN-12": {
+    "chapter": "grammar",
+    "line": 118
+  },
+  "SYN-13": {
+    "chapter": "grammar",
+    "line": 123
+  },
+  "SYN-14": {
+    "chapter": "grammar",
+    "line": 129
+  },
+  "LEX-REQ-1": {
+    "chapter": "lexical",
+    "line": 21
+  },
+  "LEX-REQ-2": {
+    "chapter": "lexical",
+    "line": 74
+  },
+  "NET-FIRE-1": {
+    "chapter": "net-semantics",
+    "line": 9
+  },
+  "NET-REQ-1": {
+    "chapter": "net-semantics",
+    "line": 106
+  },
+  "PROTO-IDENTITY-1": {
+    "chapter": "protocol-diff",
+    "line": 83
+  },
+  "SEC-CAP-1": {
+    "chapter": "security",
+    "line": 7
+  },
+  "SEC-EVIDENCE-1": {
+    "chapter": "security",
+    "line": 17
+  },
+  "SEC-REPLAY-1": {
+    "chapter": "security",
+    "line": 31
+  },
+  "SEC-FENCE-1": {
+    "chapter": "security",
+    "line": 45
+  },
+  "SEC-MODEL-1": {
+    "chapter": "security",
+    "line": 55
+  },
+  "F0-SIGNATURE-1": {
+    "chapter": "static-semantics",
+    "line": 28
+  },
+  "F0-CALL-1": {
+    "chapter": "static-semantics",
+    "line": 40
+  },
+  "F0-CALL-2": {
+    "chapter": "static-semantics",
+    "line": 50
+  },
+  "F0-CALL-3": {
+    "chapter": "static-semantics",
+    "line": 62
+  },
+  "F0-BIND-1": {
+    "chapter": "static-semantics",
+    "line": 83
+  },
+  "F0-UNITCALL-1": {
+    "chapter": "static-semantics",
+    "line": 103
+  },
+  "F0-RETURN-1": {
+    "chapter": "static-semantics",
+    "line": 118
+  },
+  "F0-TAGRETURN-1": {
+    "chapter": "static-semantics",
+    "line": 132
+  },
+  "F0-MATCH-1": {
+    "chapter": "static-semantics",
+    "line": 151
+  },
+  "F0-TRY-1": {
+    "chapter": "static-semantics",
+    "line": 173
+  },
+  "F0-TRY-2": {
+    "chapter": "static-semantics",
+    "line": 196
+  },
+  "F0-TRY-3": {
+    "chapter": "static-semantics",
+    "line": 213
+  },
+  "CONF-REQ-1": {
+    "chapter": "status",
+    "line": 63
+  },
+  "CONF-REQ-2": {
+    "chapter": "status",
+    "line": 70
+  },
+  "CONF-REQ-3": {
+    "chapter": "status",
+    "line": 84
+  },
+  "TYPE-REQ-1": {
+    "chapter": "types",
+    "line": 60
+  },
+  "N0-ORDER-1": {
+    "chapter": "verification",
+    "line": 129
+  },
+  "CONF-CASE-1": {
+    "chapter": "conformance",
+    "line": 9
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Weave"
+  short_description: "Check and simulate the restricted Weave prototype"
+  default_prompt: "Use $weave to check a Weave flow and explain any diagnostics."

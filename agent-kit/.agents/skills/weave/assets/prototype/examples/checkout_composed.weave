@@ -1,0 +1,27 @@
+# Forward calls are allowed; all bodies must check. Handles move at each call.
+flow checkout_composed(tenant: TenantId, order: OrderId, amount: Money):
+    let hold = await Inventory.reserve(tenant, order)
+    let result = await pay_with(tenant, order, amount, hold)
+    await settle(result)
+    return
+
+flow pay_with(tenant: TenantId, order: OrderId, amount: Money, hold: Hold[tenant, order]) -> ChargeOutcome[tenant, order]:
+    let escrow = await arm_hold(hold)
+    let result = await Payments.charge(tenant, order, amount, escrow)
+    return result
+
+flow arm_hold(hold: Hold[t, o]) -> Escrow[t, o]:
+    let escrow = await Inventory.arm(hold)
+    return escrow
+
+flow settle(result: ChargeOutcome[t, o]):
+    match result:
+        Ok(paid):
+            await Inventory.sell(paid)
+            return
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            return
+        Unknown(uncertain):
+            await Inventory.handoff(uncertain)
+            return

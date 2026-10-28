@@ -1,0 +1,6 @@
+# Pure extension: direct self-recursion with a terminal if/else. Check with `check-pure`.
+fn last(xs: IntList) -> Int:
+    if is_empty(tail(xs)):
+        return head(xs)
+    else:
+        return last(tail(xs))

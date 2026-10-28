@@ -1,0 +1,322 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1860" viewBox="0 0 1480 1860" role="img"><title>Inventory N0 — all 21 transitions</title><desc>Each panel is an exact transition star. Repeated place labels denote the same place across panels. Solid incoming arcs consume, dashed incoming arcs read, outgoing arcs produce.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#385b72"/></marker></defs>
+<style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#17364c}.small{font-size:14px}.label{font-size:16px}.title{font-size:26px;font-weight:700}.edge{fill:none;stroke:#385b72;stroke-width:2;marker-end:url(#arrow)}.read{stroke:#167c9a;stroke-dasharray:5 4}.cancel{stroke-dasharray:5 4}</style>
+<rect width="1480" height="1860" fill="#fff"/>
+<text x="740" y="40" font-size="28" text-anchor="middle">Inventory N0 · complete transition panels</text>
+<text x="740" y="70" font-size="16" text-anchor="middle">Repeated place labels denote the same place. Dashed input = read. All arc multiplicities shown.</text>
+<rect x="20" y="95" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="120" font-size="14" text-anchor="start">01</text>
+<rect x="180" y="185" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="213.5" font-size="16" text-anchor="middle">reserve</text>
+<ellipse cx="92" cy="207.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="92" y="212.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M157,207.0 L180,207"/>
+<text x="168.5" y="199.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="417" cy="207.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="417" y="212.0" font-size="12" text-anchor="middle">held</text>
+<path class="edge " d="M330,207 L352,207.0"/>
+<text x="341.0" y="199.0" font-size="14" text-anchor="middle">1</text>
+<rect x="510" y="95" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="120" font-size="14" text-anchor="start">02</text>
+<rect x="670" y="185" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="213.5" font-size="16" text-anchor="middle">arm</text>
+<ellipse cx="582" cy="207.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="582" y="212.0" font-size="12" text-anchor="middle">held</text>
+<path class="edge " d="M647,207.0 L670,207"/>
+<text x="658.5" y="199.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="177.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="907" y="182.0" font-size="12" text-anchor="middle">escrow</text>
+<path class="edge " d="M820,207 L842,177.0"/>
+<text x="831.0" y="184.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="237.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="907" y="242.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M820,207 L842,237.0"/>
+<text x="831.0" y="214.0" font-size="14" text-anchor="middle">1</text>
+<rect x="1000" y="95" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="120" font-size="14" text-anchor="start">03</text>
+<rect x="1160" y="185" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="213.5" font-size="16" text-anchor="middle">dispatch</text>
+<ellipse cx="1072" cy="177.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="1072" y="182.0" font-size="12" text-anchor="middle">escrow</text>
+<path class="edge " d="M1137,177.0 L1160,207"/>
+<text x="1148.5" y="184.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1072" cy="237.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="242.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge read" d="M1137,237.0 L1160,207"/>
+<text x="1148.5" y="214.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="177.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1397" y="182.0" font-size="12" text-anchor="middle">inflight</text>
+<path class="edge " d="M1310,207 L1332,177.0"/>
+<text x="1321.0" y="184.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="237.0" rx="65" ry="23" fill="#f1e7f7" stroke="#45677a"/>
+<text x="1397" y="242.0" font-size="12" text-anchor="middle">charge_requests</text>
+<path class="edge " d="M1310,207 L1332,237.0"/>
+<text x="1321.0" y="214.0" font-size="14" text-anchor="middle">1</text>
+<rect x="20" y="340" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="365" font-size="14" text-anchor="start">04</text>
+<rect x="180" y="430" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="458.5" font-size="16" text-anchor="middle">adapter_dequeue</text>
+<ellipse cx="92" cy="452.0" rx="65" ry="23" fill="#f1e7f7" stroke="#45677a"/>
+<text x="92" y="457.0" font-size="12" text-anchor="middle">charge_requests</text>
+<path class="edge " d="M157,452.0 L180,452"/>
+<text x="168.5" y="444.0" font-size="14" text-anchor="middle">1</text>
+<text x="255" y="530" font-size="13" text-anchor="middle">guard:</text>
+<text x="255" y="551" font-size="12" text-anchor="middle">operation_is_dispatchable</text>
+<rect x="510" y="340" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="365" font-size="14" text-anchor="start">05</text>
+<rect x="670" y="430" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="458.5" font-size="16" text-anchor="middle">charge_ok</text>
+<ellipse cx="582" cy="452.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="457.0" font-size="12" text-anchor="middle">inflight</text>
+<path class="edge " d="M647,452.0 L670,452"/>
+<text x="658.5" y="444.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="452.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="907" y="457.0" font-size="12" text-anchor="middle">paid</text>
+<path class="edge " d="M820,452 L842,452.0"/>
+<text x="831.0" y="444.0" font-size="14" text-anchor="middle">1</text>
+<text x="745" y="530" font-size="13" text-anchor="middle">guard:</text>
+<text x="745" y="551" font-size="12" text-anchor="middle">authoritative_paid_evidence</text>
+<rect x="1000" y="340" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="365" font-size="14" text-anchor="start">06</text>
+<rect x="1160" y="430" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="458.5" font-size="16" text-anchor="middle">charge_err</text>
+<ellipse cx="1072" cy="452.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="457.0" font-size="12" text-anchor="middle">inflight</text>
+<path class="edge " d="M1137,452.0 L1160,452"/>
+<text x="1148.5" y="444.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="452.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="1397" y="457.0" font-size="12" text-anchor="middle">unpaid</text>
+<path class="edge " d="M1310,452 L1332,452.0"/>
+<text x="1321.0" y="444.0" font-size="14" text-anchor="middle">1</text>
+<text x="1235" y="530" font-size="13" text-anchor="middle">guard:</text>
+<text x="1235" y="551" font-size="12" text-anchor="middle">authoritative_final_rejection</text>
+<rect x="20" y="585" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="610" font-size="14" text-anchor="start">07</text>
+<rect x="180" y="675" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="703.5" font-size="16" text-anchor="middle">charge_unknown</text>
+<ellipse cx="92" cy="697.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="92" y="702.0" font-size="12" text-anchor="middle">inflight</text>
+<path class="edge " d="M157,697.0 L180,697"/>
+<text x="168.5" y="689.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="417" cy="697.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="417" y="702.0" font-size="12" text-anchor="middle">uncertain</text>
+<path class="edge " d="M330,697 L352,697.0"/>
+<text x="341.0" y="689.0" font-size="14" text-anchor="middle">1</text>
+<text x="255" y="775" font-size="13" text-anchor="middle">guard:</text>
+<text x="255" y="796" font-size="12" text-anchor="middle">outcome_unresolved</text>
+<rect x="510" y="585" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="610" font-size="14" text-anchor="start">08</text>
+<rect x="670" y="675" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="703.5" font-size="16" text-anchor="middle">sell</text>
+<ellipse cx="582" cy="667.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="582" y="672.0" font-size="12" text-anchor="middle">paid</text>
+<path class="edge " d="M647,667.0 L670,697"/>
+<text x="658.5" y="674.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="582" cy="727.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="732.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M647,727.0 L670,697"/>
+<text x="658.5" y="704.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="697.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="907" y="702.0" font-size="12" text-anchor="middle">sold</text>
+<path class="edge " d="M820,697 L842,697.0"/>
+<text x="831.0" y="689.0" font-size="14" text-anchor="middle">1</text>
+<rect x="1000" y="585" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="610" font-size="14" text-anchor="start">09</text>
+<rect x="1160" y="675" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="703.5" font-size="16" text-anchor="middle">release</text>
+<ellipse cx="1072" cy="667.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="1072" y="672.0" font-size="12" text-anchor="middle">unpaid</text>
+<path class="edge " d="M1137,667.0 L1160,697"/>
+<text x="1148.5" y="674.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1072" cy="727.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="732.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M1137,727.0 L1160,697"/>
+<text x="1148.5" y="704.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="697.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="1397" y="702.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M1310,697 L1332,697.0"/>
+<text x="1321.0" y="689.0" font-size="14" text-anchor="middle">1</text>
+<rect x="20" y="830" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="855" font-size="14" text-anchor="start">10</text>
+<rect x="180" y="920" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="948.5" font-size="16" text-anchor="middle">handoff</text>
+<ellipse cx="92" cy="942.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="92" y="947.0" font-size="12" text-anchor="middle">uncertain</text>
+<path class="edge " d="M157,942.0 L180,942"/>
+<text x="168.5" y="934.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="417" cy="942.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="417" y="947.0" font-size="12" text-anchor="middle">recovery_queue</text>
+<path class="edge " d="M330,942 L352,942.0"/>
+<text x="341.0" y="934.0" font-size="14" text-anchor="middle">1</text>
+<rect x="510" y="830" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="855" font-size="14" text-anchor="start">11</text>
+<rect x="670" y="920" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="948.5" font-size="16" text-anchor="middle">recover_paid</text>
+<ellipse cx="582" cy="912.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="917.0" font-size="12" text-anchor="middle">recovery_queue</text>
+<path class="edge " d="M647,912.0 L670,942"/>
+<text x="658.5" y="919.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="582" cy="972.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="977.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M647,972.0 L670,942"/>
+<text x="658.5" y="949.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="942.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="907" y="947.0" font-size="12" text-anchor="middle">sold</text>
+<path class="edge " d="M820,942 L842,942.0"/>
+<text x="831.0" y="934.0" font-size="14" text-anchor="middle">1</text>
+<text x="745" y="1020" font-size="13" text-anchor="middle">guard:</text>
+<text x="745" y="1041" font-size="12" text-anchor="middle">authoritative_paid_evidence</text>
+<rect x="1000" y="830" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="855" font-size="14" text-anchor="start">12</text>
+<rect x="1160" y="920" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="948.5" font-size="16" text-anchor="middle">recover_rejected</text>
+<ellipse cx="1072" cy="912.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="917.0" font-size="12" text-anchor="middle">recovery_queue</text>
+<path class="edge " d="M1137,912.0 L1160,942"/>
+<text x="1148.5" y="919.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1072" cy="972.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="977.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M1137,972.0 L1160,942"/>
+<text x="1148.5" y="949.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="942.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="1397" y="947.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M1310,942 L1332,942.0"/>
+<text x="1321.0" y="934.0" font-size="14" text-anchor="middle">1</text>
+<text x="1235" y="1020" font-size="13" text-anchor="middle">guard:</text>
+<text x="1235" y="1041" font-size="12" text-anchor="middle">authoritative_final_rejection</text>
+<rect x="20" y="1075" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="1100" font-size="14" text-anchor="start">13</text>
+<rect x="180" y="1165" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="1193.5" font-size="16" text-anchor="middle">escalate</text>
+<ellipse cx="92" cy="1187.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="92" y="1192.0" font-size="12" text-anchor="middle">recovery_queue</text>
+<path class="edge " d="M157,1187.0 L180,1187"/>
+<text x="168.5" y="1179.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="417" cy="1187.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="417" y="1192.0" font-size="12" text-anchor="middle">manual</text>
+<path class="edge " d="M330,1187 L352,1187.0"/>
+<text x="341.0" y="1179.0" font-size="14" text-anchor="middle">1</text>
+<text x="255" y="1265" font-size="13" text-anchor="middle">guard:</text>
+<text x="255" y="1286" font-size="12" text-anchor="middle">recovery_budget_exhausted</text>
+<rect x="510" y="1075" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="1100" font-size="14" text-anchor="start">14</text>
+<rect x="670" y="1165" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="1193.5" font-size="16" text-anchor="middle">manual_paid</text>
+<ellipse cx="582" cy="1157.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="1162.0" font-size="12" text-anchor="middle">manual</text>
+<path class="edge " d="M647,1157.0 L670,1187"/>
+<text x="658.5" y="1164.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="582" cy="1217.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="1222.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M647,1217.0 L670,1187"/>
+<text x="658.5" y="1194.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="1187.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="907" y="1192.0" font-size="12" text-anchor="middle">sold</text>
+<path class="edge " d="M820,1187 L842,1187.0"/>
+<text x="831.0" y="1179.0" font-size="14" text-anchor="middle">1</text>
+<text x="745" y="1265" font-size="13" text-anchor="middle">guard:</text>
+<text x="745" y="1286" font-size="12" text-anchor="middle">operator_supplied_paid_evidence</text>
+<rect x="1000" y="1075" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="1100" font-size="14" text-anchor="start">15</text>
+<rect x="1160" y="1165" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="1193.5" font-size="16" text-anchor="middle">manual_rejected</text>
+<ellipse cx="1072" cy="1157.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="1162.0" font-size="12" text-anchor="middle">manual</text>
+<path class="edge " d="M1137,1157.0 L1160,1187"/>
+<text x="1148.5" y="1164.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1072" cy="1217.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="1222.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M1137,1217.0 L1160,1187"/>
+<text x="1148.5" y="1194.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="1187.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="1397" y="1192.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M1310,1187 L1332,1187.0"/>
+<text x="1321.0" y="1179.0" font-size="14" text-anchor="middle">1</text>
+<text x="1235" y="1265" font-size="13" text-anchor="middle">guard:</text>
+<text x="1235" y="1286" font-size="12" text-anchor="middle">operator_supplied_final_rejection</text>
+<rect x="20" y="1320" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="1345" font-size="14" text-anchor="start">16</text>
+<rect x="180" y="1410" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="1438.5" font-size="16" text-anchor="middle">cancel_held</text>
+<ellipse cx="92" cy="1432.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="92" y="1437.0" font-size="12" text-anchor="middle">held</text>
+<path class="edge " d="M157,1432.0 L180,1432"/>
+<text x="168.5" y="1424.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="417" cy="1432.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="417" y="1437.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M330,1432 L352,1432.0"/>
+<text x="341.0" y="1424.0" font-size="14" text-anchor="middle">1</text>
+<rect x="510" y="1320" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="1345" font-size="14" text-anchor="start">17</text>
+<rect x="670" y="1410" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="1438.5" font-size="16" text-anchor="middle">cancel_escrow</text>
+<ellipse cx="582" cy="1402.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="582" y="1407.0" font-size="12" text-anchor="middle">escrow</text>
+<path class="edge " d="M647,1402.0 L670,1432"/>
+<text x="658.5" y="1409.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="582" cy="1462.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="1467.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M647,1462.0 L670,1432"/>
+<text x="658.5" y="1439.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="1432.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="907" y="1437.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M820,1432 L842,1432.0"/>
+<text x="831.0" y="1424.0" font-size="14" text-anchor="middle">1</text>
+<rect x="1000" y="1320" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="1345" font-size="14" text-anchor="start">18</text>
+<rect x="1160" y="1410" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="1438.5" font-size="16" text-anchor="middle">cancel_inflight</text>
+<ellipse cx="1072" cy="1432.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1072" y="1437.0" font-size="12" text-anchor="middle">inflight</text>
+<path class="edge " d="M1137,1432.0 L1160,1432"/>
+<text x="1148.5" y="1424.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="1432.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1397" y="1437.0" font-size="12" text-anchor="middle">recovery_queue</text>
+<path class="edge " d="M1310,1432 L1332,1432.0"/>
+<text x="1321.0" y="1424.0" font-size="14" text-anchor="middle">1</text>
+<rect x="20" y="1565" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="35" y="1590" font-size="14" text-anchor="start">19</text>
+<rect x="180" y="1655" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="255.0" y="1683.5" font-size="16" text-anchor="middle">cancel_paid</text>
+<ellipse cx="92" cy="1647.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="92" y="1652.0" font-size="12" text-anchor="middle">paid</text>
+<path class="edge " d="M157,1647.0 L180,1677"/>
+<text x="168.5" y="1654.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="92" cy="1707.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="92" y="1712.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M157,1707.0 L180,1677"/>
+<text x="168.5" y="1684.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="417" cy="1677.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="417" y="1682.0" font-size="12" text-anchor="middle">sold</text>
+<path class="edge " d="M330,1677 L352,1677.0"/>
+<text x="341.0" y="1669.0" font-size="14" text-anchor="middle">1</text>
+<rect x="510" y="1565" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="525" y="1590" font-size="14" text-anchor="start">20</text>
+<rect x="670" y="1655" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="745.0" y="1683.5" font-size="16" text-anchor="middle">cancel_unpaid</text>
+<ellipse cx="582" cy="1647.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="582" y="1652.0" font-size="12" text-anchor="middle">unpaid</text>
+<path class="edge " d="M647,1647.0 L670,1677"/>
+<text x="658.5" y="1654.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="582" cy="1707.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="582" y="1712.0" font-size="12" text-anchor="middle">registrations</text>
+<path class="edge " d="M647,1707.0 L670,1677"/>
+<text x="658.5" y="1684.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="907" cy="1677.0" rx="65" ry="23" fill="#e4edf6" stroke="#45677a"/>
+<text x="907" y="1682.0" font-size="12" text-anchor="middle">available</text>
+<path class="edge " d="M820,1677 L842,1677.0"/>
+<text x="831.0" y="1669.0" font-size="14" text-anchor="middle">1</text>
+<rect x="1000" y="1565" width="470" height="230" rx="10" fill="#f8fafc" stroke="#d6e1e8"/>
+<text x="1015" y="1590" font-size="14" text-anchor="start">21</text>
+<rect x="1160" y="1655" width="150" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1235.0" y="1683.5" font-size="16" text-anchor="middle">cancel_uncertain</text>
+<ellipse cx="1072" cy="1677.0" rx="65" ry="23" fill="#e5f4ee" stroke="#45677a"/>
+<text x="1072" y="1682.0" font-size="12" text-anchor="middle">uncertain</text>
+<path class="edge " d="M1137,1677.0 L1160,1677"/>
+<text x="1148.5" y="1669.0" font-size="14" text-anchor="middle">1</text>
+<ellipse cx="1397" cy="1677.0" rx="65" ry="23" fill="#fff0d6" stroke="#45677a"/>
+<text x="1397" y="1682.0" font-size="12" text-anchor="middle">recovery_queue</text>
+<path class="edge " d="M1310,1677 L1332,1677.0"/>
+<text x="1321.0" y="1669.0" font-size="14" text-anchor="middle">1</text>
+<text x="740" y="1830" font-size="16" text-anchor="middle">Blue: domain · green: activation · amber: runtime · violet: adapter. Source: Inventory.weave (N0).</text>
+</svg>

@@ -1,0 +1,14 @@
+{% extends "!page.html" %}
+{% block linktags %}
+{% if builder != "singlehtml" %}{{ super() }}{% endif %}
+{% endblock %}
+{% block footer %}
+  {{ super() }}
+  {% if reference_snapshot_sha256 %}
+  <details class="weave-provenance">
+    <summary>Reference snapshot · SHA-256</summary>
+    <code>{{ reference_snapshot_sha256 | e }}</code>
+    <p>Reference prototype v3 archive. Specification {{ release | e }} · D0/N2 are unimplemented design targets.</p>
+  </details>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+# E214: an unresolved outcome cannot disappear from the match.
+flow missing_unknown(result: ChargeOutcome[t, o]):
+    match result:
+        Ok(paid):
+            await Inventory.sell(paid)
+            return
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            return

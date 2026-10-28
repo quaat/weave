@@ -1,0 +1,35 @@
+flow checkout(tenant: TenantId, order: OrderId, amount: Money):
+    let result = await buy_last_item(tenant, order, amount)
+    match result:
+        Ok():
+            return
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            return
+        Unknown(uncertain):
+            await Inventory.handoff(uncertain)
+            return
+flow buy_last_item(tenant: TenantId, order: OrderId, amount: Money) -> CheckoutOutcome[tenant, order]:
+    let hold = await Inventory.reserve(tenant, order)
+    let escrow = await arm_reservation(hold)
+    let _try_1 = await charge_payment(tenant, order, amount, escrow)
+    match _try_1:
+        Ok(paid):
+            await Inventory.sell(paid)
+            return Ok()
+        Err(_try_2):
+            return Err(_try_2)
+        Unknown(_try_3):
+            return Unknown(_try_3)
+flow arm_reservation(hold: Hold[t, o]) -> Escrow[t, o]:
+    let escrow = await Inventory.arm(hold)
+    return escrow
+flow charge_payment(tenant: TenantId, order: OrderId, amount: Money, escrow: Escrow[tenant, order]) -> ChargeOutcome[tenant, order]:
+    let _try_4 = await Payments.charge(tenant, order, amount, escrow)
+    match _try_4:
+        Ok(paid):
+            return Ok(paid)
+        Err(_try_5):
+            return Err(_try_5)
+        Unknown(_try_6):
+            return Unknown(_try_6)

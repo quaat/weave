@@ -1,0 +1,225 @@
+{
+  "format": "weave-teaching-examples-v1",
+  "net": "nets/Inventory.weave",
+  "cases": [
+    {
+      "file": "valid/return_hold.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Return moves a handle without changing its type."
+    },
+    {
+      "file": "valid/arm_hold.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "An API changes state and preserves identity indices."
+    },
+    {
+      "file": "valid/finish_paid.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Consume paid evidence by committing the sale."
+    },
+    {
+      "file": "valid/settle.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Exhaustively discharge each outcome."
+    },
+    {
+      "file": "valid/propagate_bound.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Propagate an already bound closed outcome with ?."
+    },
+    {
+      "file": "valid/checkout.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Reserve, arm, charge, and settle all outcomes."
+    },
+    {
+      "file": "valid/checkout_composed.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Move handles and enums across helper boundaries."
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Propagate across helpers; caller handles residual obligations."
+    },
+    {
+      "file": "invalid/direct_charge.weave",
+      "kind": "flow",
+      "expect": "E201",
+      "lesson": "Foreign dispatch requires a sealed escrow permit."
+    },
+    {
+      "file": "invalid/drop_hold.weave",
+      "kind": "flow",
+      "expect": "E204",
+      "lesson": "A cancellation route does not allow normal dropping."
+    },
+    {
+      "file": "invalid/forge_escrow.weave",
+      "kind": "flow",
+      "expect": "E205",
+      "lesson": "Clients cannot construct sealed resources."
+    },
+    {
+      "file": "invalid/wrong_order.weave",
+      "kind": "flow",
+      "expect": "E209",
+      "lesson": "Permit identity must match the requested order."
+    },
+    {
+      "file": "invalid/reuse_hold.weave",
+      "kind": "flow",
+      "expect": "E203",
+      "lesson": "Moved handles cannot be reused."
+    },
+    {
+      "file": "invalid/missing_unknown.weave",
+      "kind": "flow",
+      "expect": "E214",
+      "lesson": "Matches must include Unknown."
+    },
+    {
+      "file": "invalid/paid_release.weave",
+      "kind": "flow",
+      "expect": "E208",
+      "lesson": "Paid evidence cannot be treated as final rejection."
+    },
+    {
+      "file": "invalid/early_return_leak.weave",
+      "kind": "flow",
+      "expect": "E204",
+      "lesson": "? must account for other handles on early-return paths."
+    },
+    {
+      "file": "invalid/recursion.weave",
+      "kind": "flow",
+      "expect": "E218",
+      "lesson": "Recursive helper calls are unsupported."
+    },
+    {
+      "file": "invalid/unsupported_if.weave",
+      "kind": "flow",
+      "expect": "E200",
+      "lesson": "Familiar conditional syntax is not supported Weave syntax."
+    },
+    {
+      "file": "mutations/skim.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state."
+    },
+    {
+      "file": "mutations/lose_paid.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state."
+    },
+    {
+      "file": "mutations/bogus_sell.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state."
+    },
+    {
+      "file": "mutations/quick_recover.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state."
+    },
+    {
+      "file": "mutations/leak.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state."
+    },
+    {
+      "file": "mutations/manual_leak.weave",
+      "kind": "net_append",
+      "expect": "E101",
+      "lesson": "An undeclared transition cannot consume sealed activation/runtime state."
+    },
+    {
+      "file": "nets/unsafe_paid_release.weave",
+      "kind": "net",
+      "expect": "E320",
+      "lesson": "Even an authorized cancellation with balanced accounting can violate payment ordering."
+    },
+    {
+      "file": "valid/pure_last.weave",
+      "kind": "pure",
+      "expect": "ACCEPT",
+      "lesson": "Extension: direct self-recursion in a pure function with terminal if/else."
+    },
+    {
+      "file": "valid/pure_fork.weave",
+      "kind": "pure",
+      "expect": "ACCEPT",
+      "lesson": "Extension: fork results become visible only after the join."
+    },
+    {
+      "file": "invalid/pure_mutual.weave",
+      "kind": "pure",
+      "expect": "E411",
+      "lesson": "Extension: mutual recursion stays unsupported."
+    },
+    {
+      "file": "invalid/pure_hold.weave",
+      "kind": "pure",
+      "expect": "E401",
+      "lesson": "Extension: pure code cannot receive linear handles."
+    },
+    {
+      "file": "invalid/pure_charge.weave",
+      "kind": "pure",
+      "expect": "E409",
+      "lesson": "Extension: pure code cannot perform foreign effects."
+    },
+    {
+      "file": "invalid/pure_fork_sibling.weave",
+      "kind": "pure",
+      "expect": "E412",
+      "lesson": "Extension: fork branches are independent."
+    }
+  ],
+  "scenarios": [
+    {
+      "file": "valid/checkout_propagating.weave",
+      "entry": "checkout_propagating",
+      "outcome": "Ok",
+      "marking": {
+        "available": 0,
+        "sold": 1,
+        "registrations": 0
+      }
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "entry": "checkout_propagating",
+      "outcome": "Err",
+      "marking": {
+        "available": 1,
+        "sold": 0,
+        "registrations": 0
+      }
+    },
+    {
+      "file": "valid/checkout_propagating.weave",
+      "entry": "checkout_propagating",
+      "outcome": "Unknown",
+      "marking": {
+        "available": 0,
+        "uncertain": 0,
+        "recovery_queue": 1,
+        "registrations": 1
+      }
+    }
+  ]
+}

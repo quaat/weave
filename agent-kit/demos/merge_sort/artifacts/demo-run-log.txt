@@ -1,0 +1,197 @@
+$ python3 demos/merge_sort/run_demo.py --values [8,3,5,1,9,2,7,4,6] --mode sequential
+Input:  [8, 3, 5, 1, 9, 2, 7, 4, 6]
+Sorted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+Mode:   sequential (sequential, single activation; schedule=fifo, workers=4, quantum=16)
+Work:   693 instructions, 1 activations, 0 forks, 0 joins, max live 1, max frames 10
+Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+[exit 0]
+
+$ python3 demos/merge_sort/run_demo.py --values [8,3,5,1,9,2,7,4,6] --mode concurrent --trace
+Input:  [8, 3, 5, 1, 9, 2, 7, 4, 6]
+Sorted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
+Work:   677 instructions, 17 activations, 8 forks, 8 joins, max live 15, max frames 10
+Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+Trace:
+      1 activation_created task=1 fn=merge_sort
+      2 fork               task=1 fork=1 line=13
+      3 activation_created task=2 parent=1 fork=1 branch=left fn=merge_sort
+      4 activation_created task=3 parent=1 fork=1 branch=right fn=merge_sort
+      5 wait               task=1 fork=1 left=2 right=3
+      6 run                task=1 steps=13
+      7 fork               task=2 fork=2 line=13
+      8 activation_created task=4 parent=2 fork=2 branch=left fn=merge_sort
+      9 activation_created task=5 parent=2 fork=2 branch=right fn=merge_sort
+     10 wait               task=2 fork=2 left=4 right=5
+     11 run                task=2 steps=13
+     12 fork               task=3 fork=3 line=13
+     13 activation_created task=6 parent=3 fork=3 branch=left fn=merge_sort
+     14 activation_created task=7 parent=3 fork=3 branch=right fn=merge_sort
+     15 wait               task=3 fork=3 left=6 right=7
+     16 run                task=3 steps=13
+     17 fork               task=4 fork=4 line=13
+     18 activation_created task=8 parent=4 fork=4 branch=left fn=merge_sort
+     19 activation_created task=9 parent=4 fork=4 branch=right fn=merge_sort
+     20 wait               task=4 fork=4 left=8 right=9
+     21 run                task=4 steps=13
+     22 fork               task=5 fork=5 line=13
+     23 activation_created task=10 parent=5 fork=5 branch=left fn=merge_sort
+     24 activation_created task=11 parent=5 fork=5 branch=right fn=merge_sort
+     25 wait               task=5 fork=5 left=10 right=11
+     26 run                task=5 steps=13
+     27 fork               task=6 fork=6 line=13
+     28 activation_created task=12 parent=6 fork=6 branch=left fn=merge_sort
+     29 activation_created task=13 parent=6 fork=6 branch=right fn=merge_sort
+     30 wait               task=6 fork=6 left=12 right=13
+     31 run                task=6 steps=13
+     32 fork               task=7 fork=7 line=13
+     33 activation_created task=14 parent=7 fork=7 branch=left fn=merge_sort
+     34 activation_created task=15 parent=7 fork=7 branch=right fn=merge_sort
+     35 wait               task=7 fork=7 left=14 right=15
+     36 run                task=7 steps=13
+     37 child_complete     task=8 parent=4 fork=4 branch=left
+     38 run                task=8 steps=7
+     39 child_complete     task=9 parent=4 fork=4 branch=right
+     40 join               task=4 fork=4 left=8 right=9
+     41 run                task=9 steps=7
+     42 child_complete     task=10 parent=5 fork=5 branch=left
+     43 run                task=10 steps=7
+     44 child_complete     task=11 parent=5 fork=5 branch=right
+     45 join               task=5 fork=5 left=10 right=11
+     46 run                task=11 steps=7
+     47 child_complete     task=12 parent=6 fork=6 branch=left
+     48 run                task=12 steps=7
+     49 child_complete     task=13 parent=6 fork=6 branch=right
+     50 join               task=6 fork=6 left=12 right=13
+     51 run                task=13 steps=7
+     52 child_complete     task=14 parent=7 fork=7 branch=left
+     53 run                task=14 steps=7
+     54 fork               task=15 fork=8 line=13
+     55 activation_created task=16 parent=15 fork=8 branch=left fn=merge_sort
+     56 activation_created task=17 parent=15 fork=8 branch=right fn=merge_sort
+     57 wait               task=15 fork=8 left=16 right=17
+     58 run                task=15 steps=13
+     59 run                task=4 steps=16
+     60 run                task=5 steps=16
+     61 run                task=6 steps=16
+     62 child_complete     task=16 parent=15 fork=8 branch=left
+     63 run                task=16 steps=7
+     64 child_complete     task=17 parent=15 fork=8 branch=right
+     65 join               task=15 fork=8 left=16 right=17
+     66 run                task=17 steps=7
+     67 child_complete     task=4 parent=2 fork=2 branch=left
+     68 run                task=4 steps=16
+     69 child_complete     task=5 parent=2 fork=2 branch=right
+     70 join               task=2 fork=2 left=4 right=5
+     71 run                task=5 steps=16
+     72 child_complete     task=6 parent=3 fork=3 branch=left
+     73 run                task=6 steps=16
+     74 run                task=15 steps=16
+     75 run                task=2 steps=16
+     76 child_complete     task=15 parent=7 fork=7 branch=right
+     77 join               task=7 fork=7 left=14 right=15
+     78 run                task=15 steps=13
+     79 run                task=2 steps=16
+     80 run                task=7 steps=16
+     81 run                task=2 steps=16
+     82 run                task=7 steps=16
+     83 run                task=2 steps=16
+     84 run                task=7 steps=16
+     85 child_complete     task=2 parent=1 fork=1 branch=left
+     86 run                task=2 steps=8
+     87 child_complete     task=7 parent=3 fork=3 branch=right
+     88 join               task=3 fork=3 left=6 right=7
+     89 run                task=7 steps=4
+     90 run                task=3 steps=16
+     91 run                task=3 steps=16
+     92 run                task=3 steps=16
+     93 run                task=3 steps=16
+     94 run                task=3 steps=16
+     95 child_complete     task=3 parent=1 fork=1 branch=right
+     96 join               task=1 fork=1 left=2 right=3
+     97 run                task=3 steps=12
+     98 run                task=1 steps=16
+     99 run                task=1 steps=16
+    100 run                task=1 steps=16
+    101 run                task=1 steps=16
+    102 run                task=1 steps=16
+    103 run                task=1 steps=16
+    104 run                task=1 steps=16
+    105 run                task=1 steps=16
+    106 run                task=1 steps=16
+    107 run                task=1 steps=16
+    108 root_complete      task=1
+    109 run                task=1 steps=9
+[exit 0]
+
+$ python3 demos/merge_sort/run_demo.py --values [] --mode concurrent
+Input:  []
+Sorted: []
+Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
+Work:   7 instructions, 1 activations, 0 forks, 0 joins, max live 1, max frames 1
+Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+[exit 0]
+
+$ python3 demos/merge_sort/run_demo.py --values [5,-2,5,0,-2] --mode concurrent --json
+{"demo": "merge_sort", "ok": true, "source": "/home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/merge_sort.weave", "entry": "merge_sort", "input": [5, -2, 5, 0, -2], "runner_exit": 0, "output": [-2, -2, 0, 5, 5], "status": "EXECUTED", "check": "CHECKED", "execution": {"mode": "concurrent", "scheduler": "cooperative, single OS thread", "schedule": "fifo", "seed": 0, "limits": {"workers": 4, "quantum": 16, "fuel": 10000000, "max_tasks": 4096, "max_depth": 100000}}, "stats": {"tasks_created": 9, "max_live_tasks": 7, "forks": 4, "joins": 4, "slices": 16, "max_frames": 6, "steps": 292, "pending_tasks": 0, "pending_joins": 0, "root_task": 1}, "scope": "CHECKED covers types, terminal branches, effect exclusion, fork scope, and recursion shape; termination is not checked. EXECUTED is one run under the stated resource limits."}
+[exit 0]
+
+$ python3 demos/merge_sort/run_demo.py --help
+usage: run_demo.py [-h] --values VALUES [--mode {sequential,concurrent}]
+                   [--trace] [--json] [--max-values MAX_VALUES]
+                   [--schedule {fifo,lifo,random}] [--seed SEED]
+                   [--workers WORKERS] [--quantum QUANTUM] [--fuel FUEL]
+                   [--max-tasks MAX_TASKS] [--max-depth MAX_DEPTH]
+                   [--source SOURCE]
+
+Sort a JSON list of integers with the recursive fork/join merge sort written
+in Weave. Concurrent mode uses a cooperative scheduler on one OS thread (not
+CPU parallelism).
+
+options:
+  -h, --help            show this help message and exit
+  --values VALUES       JSON list of integers, e.g. '[3,1,2]'
+  --mode {sequential,concurrent}
+  --trace               show scheduler events from the actual run
+  --json                emit one JSON document on stdout
+  --max-values MAX_VALUES
+                        reject longer inputs (default 1000)
+  --schedule {fifo,lifo,random}
+  --seed SEED
+  --workers WORKERS     runner resource limit (default: runner default)
+  --quantum QUANTUM     runner resource limit (default: runner default)
+  --fuel FUEL           runner resource limit (default: runner default)
+  --max-tasks MAX_TASKS
+                        runner resource limit (default: runner default)
+  --max-depth MAX_DEPTH
+                        runner resource limit (default: runner default)
+  --source SOURCE       Weave source (default: merge_sort.weave)
+[exit 0]
+
+$ python3 demos/merge_sort/run_demo.py --values [1,true]
+[stderr]
+error: --values[1] must be an integer, got true
+[exit 2]
+
+$ python3 demos/merge_sort/run_demo.py --values [1.5]
+[stderr]
+error: --values[0] must be an integer, got 1.5
+[exit 2]
+
+$ python3 demos/merge_sort/run_demo.py --values [5,4,3,2,1] --fuel 20
+[stderr]
+FAILED E421 [runtime] /home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/merge_sort.weave:12: Fuel budget of 20 instructions exhausted in `merge_sort` (resource limit; termination is not checked).
+[exit 2]
+
+$ python3 demos/merge_sort/run_demo.py --values [5,4,3,2,1] --max-tasks 2
+[stderr]
+FAILED E423 [runtime] /home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/merge_sort.weave:13: Live activation limit 2 would be exceeded by a fork.
+[exit 2]
+
+$ (cd /tmp) python3 /home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/run_demo.py --values '[3,2,1]'
+Input:  [3, 2, 1]
+Sorted: [1, 2, 3]
+Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
+Work:   131 instructions, 5 activations, 2 forks, 2 joins, max live 4, max frames 4
+Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+[exit 0]

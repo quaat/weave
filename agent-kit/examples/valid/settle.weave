@@ -1,0 +1,12 @@
+# Every outcome is consumed, including unresolved payment.
+flow settle(result: ChargeOutcome[t, o]):
+    match result:
+        Ok(paid):
+            await Inventory.sell(paid)
+            return
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            return
+        Unknown(uncertain):
+            await Inventory.handoff(uncertain)
+            return

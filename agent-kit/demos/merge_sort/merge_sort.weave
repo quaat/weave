@@ -1,0 +1,29 @@
+# Stable ascending merge sort over immutable integer lists.
+# Uses the kit's pure-function extension (`fn`, `if`/`else`, `fork`); check and run it with
+# `check-pure` / `run-pure`, not with the flow `check` command.
+#
+# The two recursive sorts run as independent child activations under `fork`; the parent
+# resumes only after both results are joined, then calls the sequential recursive `merge`.
+
+fn merge_sort(xs: IntList) -> IntList:
+    if length(xs) <= 1:
+        return xs
+    else:
+        let halves = split_half(xs)
+        fork:
+            let left_sorted = merge_sort(first(halves))
+            let right_sorted = merge_sort(second(halves))
+        return merge(left_sorted, right_sorted)
+
+# Takes from `left` on equal keys, so equal elements keep their original relative order.
+fn merge(left: IntList, right: IntList) -> IntList:
+    if is_empty(left):
+        return right
+    else:
+        if is_empty(right):
+            return left
+        else:
+            if head(left) <= head(right):
+                return cons(head(left), merge(tail(left), right))
+            else:
+                return cons(head(right), merge(left, tail(right)))

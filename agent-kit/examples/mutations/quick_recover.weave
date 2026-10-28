@@ -1,0 +1,4 @@
+    transition quick_recover:
+        take 1 recovery_queue
+        take 1 registrations
+        put 1 sold

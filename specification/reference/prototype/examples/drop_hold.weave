@@ -1,0 +1,3 @@
+flow drop_hold(tenant: TenantId, order: OrderId):
+    let hold = await Inventory.reserve(tenant, order)
+    return

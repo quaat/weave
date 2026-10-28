@@ -1,0 +1,5 @@
+# E204: Err and Unknown return before extra is consumed.
+flow early_return_leak(result: ChargeOutcome[t, o], extra: Paid[u, v]) -> ChargeOutcome[t, o]:
+    let paid = result?
+    await Inventory.sell(extra)
+    return Ok(paid)

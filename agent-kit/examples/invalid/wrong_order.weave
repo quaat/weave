@@ -1,0 +1,5 @@
+flow wrong_order(tenant: TenantId, order: OrderId, other: OrderId, amount: Money):
+    let hold = await Inventory.reserve(tenant, order)
+    let escrow = await Inventory.arm(hold)
+    let result = await Payments.charge(tenant, other, amount, escrow)
+    return

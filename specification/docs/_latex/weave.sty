@@ -1,0 +1,82 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{weave}[2026/10/28 Weave specification style]
+\RequirePackage{microtype}
+\RequirePackage{titlesec}
+\definecolor{WeaveInk}{HTML}{182C32}
+\definecolor{WeaveTeal}{HTML}{0B6B63}
+\definecolor{WeaveMuted}{HTML}{465C60}
+\definecolor{WeaveRule}{HTML}{D6E1DC}
+
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+\linespread{1.06}
+\setlength{\emergencystretch}{2em}
+\widowpenalty=10000
+\clubpenalty=10000
+\renewcommand{\arraystretch}{1.18}
+\AtBeginDocument{\color{WeaveInk}}
+\hypersetup{colorlinks=true,breaklinks=true,bookmarksnumbered=true}
+
+\titleformat{\chapter}[display]
+  {\normalfont\sffamily\bfseries\color{WeaveInk}}
+  {\color{WeaveTeal}\small\MakeUppercase{\chaptername}\ \thechapter}
+  {.7em}{\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{1.8em}
+\titleformat{\section}
+  {\normalfont\sffamily\Large\bfseries\color{WeaveInk}}
+  {\thesection}{.65em}{}
+\titleformat{\subsection}
+  {\normalfont\sffamily\large\bfseries\color{WeaveInk}}
+  {\thesubsection}{.65em}{}
+\titlespacing*{\section}{0pt}{2em}{.8em}
+\titlespacing*{\subsection}{0pt}{1.4em}{.6em}
+
+\makeatletter
+\fancypagestyle{normal}{%
+  \fancyhf{}%
+  \fancyhead[L]{\sffamily\small\color{WeaveMuted}\@title}%
+  \fancyhead[R]{\sffamily\small\color{WeaveMuted}\py@release}%
+  \fancyfoot[L]{\sffamily\footnotesize\color{WeaveMuted}Weave / Draft specification}%
+  \fancyfoot[R]{\sffamily\small\color{WeaveTeal}\thepage}%
+  \renewcommand{\headrulewidth}{.4pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[L]{\sffamily\footnotesize\color{WeaveMuted}Weave / Draft specification}%
+  \fancyfoot[R]{\sffamily\small\color{WeaveTeal}\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+\newcommand{\weavemaketitle}{%
+  \let\weaverestorepageanchor\relax
+  \ifHy@pageanchor\def\weaverestorepageanchor{\Hy@pageanchortrue}\fi
+  \hypersetup{pageanchor=false}%
+  \hypersetup{pdfauthor={\@author},pdftitle={\@title}}%
+  \begin{titlepage}
+    \thispagestyle{empty}
+    \raggedright\sffamily\color{WeaveInk}
+    {\small\bfseries\color{WeaveTeal} DANIO PROJECT\par}
+    \vspace{22mm}
+    {\fontsize{82}{88}\selectfont\bfseries W\par}
+    \vspace{8mm}
+    {\color{WeaveTeal}\rule{32mm}{2pt}\par}
+    \vspace{10mm}
+    {\fontsize{34}{40}\selectfont\bfseries\@title\par}
+    \vspace{6mm}
+    {\Large\color{WeaveMuted} Functional Petri nets\par}
+    \vspace{12mm}
+    {\large\color{WeaveTeal} Draft specification\enspace/\enspace\py@release\par}
+    \vfill
+    {\small\@author\par}
+    \vspace{6mm}
+    {\color{WeaveRule}\rule{\linewidth}{.6pt}\par}
+    \vspace{4mm}
+    {\scriptsize\color{WeaveMuted} REFERENCE SNAPSHOT / SHA-256\par}
+    \vspace{2mm}
+    {\fontsize{7.5}{10}\selectfont\ttfamily\WeaveReferenceSnapshot\par}
+  \end{titlepage}
+  \weaverestorepageanchor
+  \setcounter{footnote}{0}%
+}
+\makeatother

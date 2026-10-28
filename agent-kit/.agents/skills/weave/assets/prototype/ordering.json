@@ -1,0 +1,92 @@
+{
+  "format": "weave-one-order-check-v2",
+  "source_sha256": "bc1807cd53b9b5bf2465764c2e01f24d916c35cb30ade075787f0351f23b2f70",
+  "model": "payment_ordering",
+  "stock": 1,
+  "orders": 1,
+  "admission": "reserve",
+  "admission_limit": 1,
+  "dispatch": "dispatch",
+  "place_bound": 1,
+  "max_states": 10000,
+  "states": 20,
+  "edges": 43,
+  "complete": true,
+  "fired_transitions": [
+    "adapter_dequeue",
+    "arm",
+    "cancel_escrow",
+    "cancel_held",
+    "cancel_inflight",
+    "cancel_paid",
+    "cancel_uncertain",
+    "cancel_unpaid",
+    "charge_err",
+    "charge_ok",
+    "charge_unknown",
+    "dispatch",
+    "escalate",
+    "handoff",
+    "manual_paid",
+    "manual_rejected",
+    "recover_paid",
+    "recover_rejected",
+    "release",
+    "reserve",
+    "sell"
+  ],
+  "unreached_transitions": [],
+  "properties": [
+    {
+      "name": "sold_requires_paid",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "dispatched_release_requires_rejection",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "paid_never_available",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 4
+    },
+    {
+      "name": "paid_state_requires_paid",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "unpaid_state_requires_rejection",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "inflight_has_registration",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "uncertain_has_registration",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "recovery_has_registration",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    },
+    {
+      "name": "manual_has_registration",
+      "status": "CHECKED WITHIN BOUNDS",
+      "premise_states": 2
+    }
+  ],
+  "assumptions": [
+    "One identity, one stock unit, at most one admission; no other orders.",
+    "Payment and final-rejection evidence are abstract witnesses, assumed truthful, consistent, and correlated to this order.",
+    "Independent contradictory/late provider replies and quantitative escalation budgets are not modeled.",
+    "Other guards may enable nondeterministically; no liveness or fairness claim."
+  ]
+}

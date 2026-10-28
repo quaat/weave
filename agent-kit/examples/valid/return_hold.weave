@@ -1,0 +1,3 @@
+# A helper may transfer an existing handle back to its caller.
+flow return_hold(hold: Hold[t, o]) -> Hold[t, o]:
+    return hold

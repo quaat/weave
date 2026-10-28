@@ -1,0 +1,5 @@
+# E200: ordinary conditional syntax is not implemented.
+flow unsupported_if(hold: Hold[t, o]) -> Hold[t, o]:
+    if hold:
+        return hold
+    return hold

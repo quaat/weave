@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="1040" viewBox="0 0 1340 1040" role="img"><title>R0 Unknown and late successful resolution</title><desc>Sequence for cancellation after a lost successful reply. The initial Unknown result returns a worker credit; late paid evidence updates the same result identity.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#385b72"/></marker></defs>
+<style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#17364c}.small{font-size:14px}.label{font-size:16px}.title{font-size:26px;font-weight:700}.edge{fill:none;stroke:#385b72;stroke-width:2;marker-end:url(#arrow)}.read{stroke:#167c9a;stroke-dasharray:5 4}.cancel{stroke-dasharray:5 4}</style>
+<rect width="1340" height="1040" fill="#fff"/>
+<text x="670" y="35" font-size="26" text-anchor="middle">R0 · lost reply, cancellation, Unknown, late evidence</text>
+<rect x="10" y="70" width="210" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="115.0" y="98.5" font-size="16" text-anchor="middle">Activation</text>
+<path d="M115,115 L115,970" stroke="#a8bac5" stroke-dasharray="5 5"/>
+<rect x="290" y="70" width="210" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="395.0" y="98.5" font-size="16" text-anchor="middle">Domain transaction</text>
+<path d="M395,115 L395,970" stroke="#a8bac5" stroke-dasharray="5 5"/>
+<rect x="570" y="70" width="210" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="675.0" y="98.5" font-size="16" text-anchor="middle">Provider</text>
+<path d="M675,115 L675,970" stroke="#a8bac5" stroke-dasharray="5 5"/>
+<rect x="850" y="70" width="210" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="955.0" y="98.5" font-size="16" text-anchor="middle">Recovery worker</text>
+<path d="M955,115 L955,970" stroke="#a8bac5" stroke-dasharray="5 5"/>
+<rect x="1115" y="70" width="210" height="45" rx="8" fill="#d8e7ed" stroke="#45677a"/>
+<text x="1220.0" y="98.5" font-size="16" text-anchor="middle">Result record</text>
+<path d="M1220,115 L1220,970" stroke="#a8bac5" stroke-dasharray="5 5"/>
+<path class="edge " d="M115,170 L395,170"/>
+<text x="255.0" y="158" font-size="14" text-anchor="middle">1  start: reserve, arm, dispatch</text>
+<path class="edge " d="M395,260 L675,260"/>
+<text x="535.0" y="248" font-size="14" text-anchor="middle">2  send; provider commits Paid</text>
+<path class="edge cancel" d="M675,340 L395,340"/>
+<text x="535.0" y="328" font-size="14" text-anchor="middle">3  reply lost; ledger still pending</text>
+<path class="edge " d="M115,430 L395,430"/>
+<text x="255.0" y="418" font-size="14" text-anchor="middle">4  cancel: fence activation; recovery_queue</text>
+<path class="edge " d="M395,520 L1220,520"/>
+<text x="807.5" y="508" font-size="14" text-anchor="middle">5  finish Unknown + completion + credit (one domain transaction)</text>
+<path class="edge " d="M955,615 L675,615"/>
+<text x="815.0" y="603" font-size="14" text-anchor="middle">6  lookup same operation key</text>
+<path class="edge " d="M675,690 L955,690"/>
+<text x="815.0" y="678" font-size="14" text-anchor="middle">7  authenticated Paid receipt (scripted provider)</text>
+<path class="edge " d="M955,770 L395,770"/>
+<text x="675.0" y="758" font-size="14" text-anchor="middle">8  receive: record Paid; recover_paid</text>
+<path class="edge " d="M395,860 L1220,860"/>
+<text x="807.5" y="848" font-size="14" text-anchor="middle">9  update existing result to Ok; no second credit/completion</text>
+<text x="670" y="1000" font-size="16" text-anchor="middle">The other order retains its own recovery_queue and registration. Diagram is R0-specific, not a D0 scheduler.</text>
+</svg>

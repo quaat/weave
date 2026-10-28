@@ -1,0 +1,6 @@
+# E411: only direct self-recursion is supported in pure functions.
+fn ping(xs: IntList) -> IntList:
+    return pong(xs)
+
+fn pong(xs: IntList) -> IntList:
+    return ping(xs)

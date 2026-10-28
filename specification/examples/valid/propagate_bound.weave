@@ -1,0 +1,4 @@
+# The enclosing enum accepts exactly the same residual payloads.
+flow propagate_bound(result: ChargeOutcome[t, o]) -> ChargeOutcome[t, o]:
+    let paid = result?
+    return Ok(paid)

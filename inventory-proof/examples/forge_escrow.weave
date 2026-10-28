@@ -1,0 +1,3 @@
+flow forge(tenant: TenantId, order: OrderId):
+    let escrow = Inventory.Escrow(tenant, order)
+    return

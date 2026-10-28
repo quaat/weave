@@ -1,0 +1,9 @@
+{% extends "!sidebar/brand.html" %}
+{% block brand_content %}
+  <span class="weave-brand-line">
+    <span class="weave-mark" aria-hidden="true">W</span>
+    <span class="weave-wordmark">{{ project | e }}</span>
+  </span>
+  <span class="weave-tagline">{{ weave_tagline | e }}</span>
+  <span class="weave-version">{{ release | e }} · LANGUAGE SPECIFICATION</span>
+{% endblock %}

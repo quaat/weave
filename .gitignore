@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build output (regenerate; see each project's README)
+build/
+_build/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Claude Code local state
+**/.claude/.cc-writes/
+**/.claude/settings.local.json

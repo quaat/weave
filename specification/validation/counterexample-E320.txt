@@ -1,0 +1,4 @@
+examples/nets/unsafe_paid_release.weave:46: E320
+  VIOLATED dispatched_release_requires_rejection within one-order model.
+  Trace: reserve -> arm -> dispatch -> charge_ok -> cancel_paid
+  Marking: available=1, charge_requests=1; dispatched=true, paid_evidence=true, rejected_evidence=false.
