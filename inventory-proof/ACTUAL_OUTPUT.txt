@@ -1,3 +1,41 @@
+COLOURED PROTOCOL: Inventory.coloured.weave
+PROVED aggregate stock_conservation
+PROVED aggregate pool_credits
+PROVED per-colour family job_accounting
+PROVED per-colour family registration_balance
+PROVED per-colour family identity_conservation
+CHECKED WITHIN BOUNDS orders=2, stock=2, states=841, edges=3712
+CHECKED token identity on every enabled firing; unique admission per tenant/order
+CHECKED checkout_propagating against the coloured protocol API
+CHECKED place_order against the coloured protocol API
+CHECKED pay_with against the coloured protocol API
+
+EXPECTED CROSS-ORDER REJECTION
+cross-order-sell.weave:124: E412
+  registration_balance is NOT PROVED for every colour: sell has symbolic colour residual {"('t', 'o')": 1, "('t', 'other')": -1}.
+
+EXPECTED CROSS-ORDER REJECTION
+cross-order-sell.weave:124: E420
+  VIOLATED token_identity with orders=2.
+  Trace: reserve[t=tenant,o=order1] -> reserve[t=tenant,o=order2] -> arm[t=tenant,o=order1] -> arm[t=tenant,o=order2] -> dispatch[t=tenant,o=order1] -> charge_ok[t=tenant,o=order1] -> sell[t=tenant,o=order1,other=order2]
+  take registrations[tenant,order2] belongs to another order; firing belongs to ('tenant', 'order1').
+
+DURABLE CRASH CASES (two orders; separate domain/provider SQLite databases)
+PASSED admission_before_ack: process exit=91 at after_admission_commit
+  {"pool_free": 2, "recovery_queue[tenant,order2]": 1, "registrations[tenant,order2]": 1, "results[tenant,order1]": 1, "results[tenant,order2]": 1, "sold[tenant,order1]": 1}
+PASSED result_before_ack: process exit=91 at after_result_commit
+  {"pool_free": 2, "recovery_queue[tenant,order2]": 1, "registrations[tenant,order2]": 1, "results[tenant,order1]": 1, "results[tenant,order2]": 1, "sold[tenant,order1]": 1}
+PASSED lost_success_reply: process exit=91 at after_provider_commit
+  {"pool_free": 2, "recovery_queue[tenant,order2]": 1, "registrations[tenant,order2]": 1, "results[tenant,order1]": 1, "results[tenant,order2]": 1, "sold[tenant,order1]": 1}
+PASSED cancel_after_paid: process exit=91 at after_receipt_commit
+  {"pool_free": 2, "recovery_queue[tenant,order2]": 1, "registrations[tenant,order2]": 1, "results[tenant,order1]": 1, "results[tenant,order2]": 1, "sold[tenant,order1]": 1}
+PASSED late_receipt_after_cancel: process exit=91 at after_cancel_finish
+  {"pool_free": 2, "recovery_queue[tenant,order2]": 1, "registrations[tenant,order2]": 1, "results[tenant,order1]": 1, "results[tenant,order2]": 1, "sold[tenant,order1]": 1}
+PASSED inconclusive_status: process exit=91 at after_receipt_commit
+  {"manual[tenant,order1]": 1, "pool_free": 2, "recovery_queue[tenant,order2]": 1, "registrations[tenant,order1]": 1, "registrations[tenant,order2]": 1, "results[tenant,order1]": 1, "results[tenant,order2]": 1}
+NOT ESTABLISHED orders>2 ordering exploration, a cutoff theorem, real-provider truthfulness/authentication, power-loss durability, distributed consensus, or compiler-to-runtime refinement.
+
+LEGACY UNCOLOURED REGRESSIONS (orders=1 only)
 NET Inventory: 12 places, 21 transitions
 METHOD standard P-invariant induction; aggregate accounting only
 PROVED stock_conservation
@@ -12,7 +50,7 @@ CHECKED 5 linear resources: sealed production, consumption, and cancellation rou
 CHECKED 4 runtime-owned places: closed consumer lists
 CHECKED foreign dispatch consumes an identity-matched, recovery-registered permit
   These equalities do not establish payment ordering or per-order recovery coverage.
-NOT ESTABLISHED liveness, provider truthfulness/consistency (including contradictory late replies), escalation budgets, per-order runtime correlation, or implementation refinement
+NOT ESTABLISHED orders>=2 or cross-order token matching in this uncoloured model; liveness, provider truthfulness/consistency (including contradictory late replies), escalation budgets, or implementation refinement
 
 MODEL payment_ordering: orders=1, stock=1, reserve<=1, tokens/place<=1
   Exhausted 20 states and 43 edges; no successors pruned.
@@ -117,8 +155,8 @@ mutated-checkout_composed.weave:5: E203
 
 EXPECTED PROPAGATION FAILURE (another handle is live at ?)
 early-drop.weave:2: E204
-  Linear obligations left at normal return: extra: Paid[u, v].
-  Consume or hand off every handle. Cancellation routes do not permit silent normal drops.
+  '?' on line 2 may propagate Err/Unknown while these linear handles are still held: extra: Paid[u, v].
+  Consume them before '?', or handle the outcome explicitly and return the obligations.
 
 EXPECTED INVARIANT FAILURE (mutated release)
 mutated-Inventory.weave:41: E112
