@@ -38,10 +38,13 @@ policy baseline and disagreements are reported.
    `agent:blocked` or `agent:needs-human` label, no cycle, and no contradictory dependency.
 4. Roadmap and epic tracking issues (`epic` label) are aggregate gates, not tasks. Deferred
    issues (`deferred` label, currently #49–#53) are excluded unless explicitly activated.
-5. One active implementation issue by default
-   (`concurrency.max_active_implementation_issues` in the policy). An active claim must be
-   resumed before new work is claimed. Subagents may run in parallel inside an issue only on
-   independent files.
+5. At most `concurrency.max_active_implementation_issues` (currently 3) active
+   implementation issues. An issue is active while it holds a claim that has not reached
+   In Review, or while its card is In Progress; an active issue is never selected or
+   claimed again (one claim per issue). When every slot is occupied, the active issues are
+   resumed before new work is claimed. `claim` repeats the selection under the coordinator
+   lock, so one coordinator administers all active issues. Subagents may run in parallel
+   inside an issue only on independent files.
 6. A blocked task does not block independent tasks in the same milestone. If nothing is
    eligible the run records the blockers and stops; it never jumps ahead.
 7. Early-start exceptions are narrow and inactive by default

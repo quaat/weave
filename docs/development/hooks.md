@@ -7,12 +7,12 @@ were checked against the installed Claude Code (see [capabilities.md](capabiliti
 
 | Hook | Behaviour |
 | --- | --- |
-| `SessionStart` | When a run is active or messages are queued: adds the run, last checkpoint and outbox state as context and asks for reconciliation first. Silent otherwise |
+| `SessionStart` | When a run is active or messages are queued: adds the run (with every issue it names), last checkpoint and outbox state as context and asks for reconciliation first. Silent otherwise |
 | `PreToolUse` | Guards (below) |
-| `PostToolUse` / `PostToolUseFailure` | During a run: records tool outcome evidence in the ledger; after an edit to a managed document, queues a documentation-audit check |
+| `PostToolUse` / `PostToolUseFailure` | During a run: records tool outcome evidence in the ledger; after an edit to a document managed by the edited tree's own map, queues a documentation-audit check |
 | `SubagentStart` / `SubagentStop` | During a run: associates the worker's agent id and type with the run |
 | `Stop` | During a run: writes a recoverable checkpoint; blocks at most twice per session when protocol messages are undelivered. Respects `stop_hook_active`, so it cannot recurse |
-| `PreCompact` | Checkpoints the active task, outstanding messages and next action |
+| `PreCompact` | Checkpoints the active issues, outstanding messages and next action |
 | `SessionEnd` | Best-effort checkpoint and a recorded claim-release intent (the claim itself is released only by a RELEASED event) |
 
 ## Guards (`PreToolUse`)

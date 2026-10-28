@@ -24,6 +24,9 @@ the orchestrator has published a `DELEGATED` event for that delegation.
 
 ## Isolation
 
+- Up to `concurrency.max_active_implementation_issues` (currently 3) issues may be active
+  at once, each with exactly one claim; the single coordinator, holding the OS lock, claims
+  and administers all of them ([scheduling.md](scheduling.md)).
 - Each task gets its own worktree and `agent/<issue>-<slug>` branch. Parallel writers never
   edit the same files or shared generated artefacts.
 - The orchestrator owns integration. Any integration change invalidates earlier evidence

@@ -71,7 +71,12 @@ stopping is not Done.
 
 Blocked work stays in its truthful column with `agent:blocked` or `agent:needs-human`;
 there is no fifth column. Approved work awaiting a maintainer merge stays In Review with
-`agent:ready-to-merge`. Gate details: [transitions.md](transitions.md).
+`agent:ready-to-merge`. When the project's "item closed → Done" automation moves the card
+after the merged PR closes the issue, the recorded state is still In Review and
+`transition N Done` records the move through the In Review → Done gate without rewriting the
+Status. Up to `concurrency.max_active_implementation_issues` (currently 3) issues may be
+active at once, each with one claim ([scheduling.md](scheduling.md)). Gate details:
+[transitions.md](transitions.md).
 
 ## Roadmap baseline
 
@@ -119,8 +124,9 @@ relayed this way: only the command that produces their evidence publishes them.
 | Status write half-done | The operation ledger records intent; `reconcile --apply` completes it if the board shows the target, or abandons it and re-evaluates the gate |
 | Codex timeout, crash, silence, prose or invalid JSON | Not a verdict; BLOCKED (review outage); the task stays In Review without approval |
 | Stale review (head, base or requirements moved) | Result rejected; a fresh review of the current candidate is required |
-| Review budget exhausted (3 rounds) | Work preserved, returned to In Progress, `agent:needs-human`, disagreement summarised |
-| Manual card move or edited comment | Reported as a discrepancy by `reconcile`; never overwritten blindly |
+| Review budget exhausted (3 rounds in the current attempt) | Work preserved, returned to In Progress, `agent:needs-human`, disagreement summarised |
+| Card moved to Done by project automation after the merged PR from the claim's branch closed the issue | `reconcile` reports a note, not a conflict; `transition N Done --worktree PATH --apply` evaluates the In Review → Done gate and, on PASS, publishes STATE_CHANGED and COMPLETED without writing the Status |
+| Any other manual card move, or an edited comment | Reported as a discrepancy by `reconcile`; never overwritten blindly |
 | Restart | Reconcile board, events, claims, worktrees, PR heads, outbox and audit state; resume before claiming |
 | Second coordinator | The OS lock rejects concurrent startup; a claim re-runs selection after acquiring the lock; a takeover must be explicit and reconciled |
 

@@ -27,7 +27,11 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    generators. With `--base` it also checks the impact list, the changelog requirement, new or
    removed documents, moved boundary statements and new uses of protected vocabulary. It runs
    in `ci.yml` and at the In Progress → In Review gate as DOCS_AUDIT_RESULT. A failing audit
-   labels the issue `agent:docs-stale` and blocks the transition.
+   labels the issue `agent:docs-stale` and blocks the transition. The audit, `docs-map` and
+   the claim-time impact list read the map from the audited tree
+   (`tools/weave_workflow/docmap.json` in that worktree or checkout), so a candidate that
+   changes the map is audited against its own map; the running module's map is used only
+   when the audited tree has none.
 4. **Boundary statements move with the boundary.** When something documented as
    unimplemented, deferred or not established becomes implemented, every document that stated
    the limitation changes in the same change, including the specification's status profile

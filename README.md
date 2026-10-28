@@ -210,7 +210,7 @@ External link checking (`make linkcheck`) is run locally before a release.
 
 ## Development workflow
 
-Roadmap work runs through an auditable agent workflow: Claude Code orchestrates, narrowly scoped subagents implement and verify, and a fresh read-only Codex session reviews each candidate. The GitHub issue holds the durable record of every handoff, and Projects board #3 holds the canonical status (Todo, In Progress, In Review, Done). Done means accepted, integrated and documented.
+Roadmap work runs through an auditable agent workflow: Claude Code orchestrates, narrowly scoped subagents implement and verify, and a fresh read-only Codex session reviews each candidate. The GitHub issue holds the durable record of every handoff, and Projects board #3 holds the canonical status (Todo, In Progress, In Review, Done). Done means accepted, integrated and documented. One coordinator runs at a time; it may hold up to `concurrency.max_active_implementation_issues` (currently 3, in [`tools/weave_workflow/policy.json`](tools/weave_workflow/policy.json)) active implementation issues, each with one claim.
 
 ```bash
 python3 -m tools.weave_workflow report        # dry run: board mapping, milestone graph, next task, audit
