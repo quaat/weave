@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # Keep workflow actions on supported runtimes (for example Node.js versions).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
