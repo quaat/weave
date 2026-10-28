@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .model import digest
+
 
 def utcnow() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -42,6 +44,10 @@ def state_dir(repo: Path) -> Path:
 
 
 class LockHeld(Exception):
+    pass
+
+
+class PacketError(Exception):
     pass
 
 
@@ -86,6 +92,18 @@ class Store:
 
     def deliveries(self) -> dict[str, dict]:
         return {r["event_id"]: r for r in self.records("delivery")}
+
+    def packet(self, issue: int, run_id: str, attempt: int) -> dict:
+        """The task packet recorded at claim time, verified against its ledger digest."""
+        recs = [r for r in self.records("packet")
+                if r["issue"] == issue and r["run_id"] == run_id and r["attempt"] == attempt]
+        if not recs:
+            raise PacketError(f"no recorded packet for #{issue} run {run_id} attempt {attempt}")
+        rec = recs[-1]
+        text = Path(rec["path"]).read_text(encoding="utf-8")
+        if digest(text) != rec["digest"]:
+            raise PacketError(f"packet {rec['path']} was modified after the claim")
+        return json.loads(text)
 
     def operations(self) -> dict[str, list[dict]]:
         ops: dict[str, list[dict]] = {}

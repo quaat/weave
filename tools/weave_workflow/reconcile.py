@@ -11,13 +11,33 @@ import subprocess
 from pathlib import Path
 
 from .github import GitHubError
+from .integration import find_pr
 from .publisher import DeliveryPaused, Publisher, authenticated_events
-from .state import Store
-from .transitions import TaskView, Transitioner
+from .state import PacketError, Store
+from .transitions import TaskView, Transitioner, automation_moved_done
 
 
 def review_round(view: TaskView) -> int:
     return 1 + len(view.all("REVIEW_REQUESTED", attempt=view.attempt))
+
+
+def automation_done_pr(store: Store, snap, n: int, trusted: list[dict]) -> int | None:
+    """The merged PR whose closure of #n let project automation move the card to Done, when the
+    recorded state is still In Review (see ``transitions.automation_moved_done``); else None."""
+    plan = next((e for e in reversed(trusted) if e["kind"] == "PLAN"), None)
+    if plan is None:
+        return None
+    try:
+        branch = store.packet(n, plan["run_id"], plan["attempt"])["branch"]
+    except (PacketError, OSError, KeyError):
+        return None
+    pr = find_pr(snap, n, None, branch)
+    if pr is None:
+        return None
+    view = TaskView(issue=snap.issues[n], status=snap.status_of(n), events=trusted,
+                    integration={"pr": pr.number, "merged": pr.merged, "head_ref": pr.head_ref,
+                                 "claim_branch": branch, "closes_issue": n in pr.closes})
+    return pr.number if automation_moved_done(view) else None
 
 
 def _worktrees(repo: Path) -> list[dict]:
@@ -70,9 +90,14 @@ def reconcile(repo: Path, store: Store, adapter, policy: dict, apply: bool = Fal
         changes = [e for e in trusted if e["kind"] == "STATE_CHANGED"]
         board = snap.status_of(n)
         if changes and snap.project is not None and board != changes[-1]["to_status"]:
-            report["conflicts"].append(
-                f"#{n}: board status {board!r} differs from last recorded transition {changes[-1]['to_status']!r} "
-                f"(manual change?); record the discrepancy and confirm with the maintainer before acting")
+            pr = automation_done_pr(store, snap, n, trusted)
+            if pr is not None:
+                report["notes"].append(f"#{n}: board moved to Done by project automation after merged PR #{pr}; "
+                                       f"run `transition {n} Done` to record it")
+            else:
+                report["conflicts"].append(
+                    f"#{n}: board status {board!r} differs from last recorded transition {changes[-1]['to_status']!r} "
+                    f"(manual change?); record the discrepancy and confirm with the maintainer before acting")
         claimed = [e for e in trusted if e["kind"] == "CLAIMED"]
         released = [e for e in trusted if e["kind"] in ("RELEASED", "COMPLETED")]
         if claimed and (not released or released[-1]["created_at"] < claimed[-1]["created_at"]):

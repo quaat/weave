@@ -46,7 +46,8 @@ def integration_evidence(repo: Path, snap: Snapshot, policy: dict, issue: int, h
     pr = find_pr(snap, issue, head, branch)
     if pr is None:
         return None
-    ev = {"pr": pr.number, "merged": pr.merged, "pr_head_sha": pr.head_sha, "merge_sha": pr.merge_sha,
+    ev = {"pr": pr.number, "merged": pr.merged, "head_ref": pr.head_ref, "claim_branch": branch,
+          "closes_issue": issue in pr.closes, "pr_head_sha": pr.head_sha, "merge_sha": pr.merge_sha,
           "merged_by": pr.merged_by, "checks": pr.checks, "integration_ref": base_ref,
           "pr_base_ref": pr.base_ref}
     required, error = required_checks(snap, policy)

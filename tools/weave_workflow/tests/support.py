@@ -150,7 +150,8 @@ class Harness:
 
 
 def integration(**overrides) -> dict:
-    data = {"pr": 1, "merged": True, "pr_head_sha": HEAD, "merge_sha": MERGE, "checks_passed": True,
+    data = {"pr": 1, "merged": True, "head_ref": "agent/10-task-10", "claim_branch": "agent/10-task-10",
+            "closes_issue": True, "pr_head_sha": HEAD, "merge_sha": MERGE, "checks_passed": True,
             "merge_in_base": True, "tree_matches_candidate": True, "required_reviews_passed": True}
     data.update(overrides)
     return data

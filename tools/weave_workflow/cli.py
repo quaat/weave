@@ -15,7 +15,7 @@ from .model import (acceptance_criteria, digest, requirements_digest, snapshot_f
                     snapshot_to_dict)
 from .publisher import DeliveryPaused, Publisher, authenticated_events, maintainer_decisions
 from .scheduler import plan as make_plan
-from .state import LockHeld, Store, new_id, utcnow
+from .state import LockHeld, PacketError, Store, new_id, utcnow
 from .transitions import TaskView, Transitioner, evaluate
 
 POLICY_PATH = Path(__file__).resolve().parent / "policy.json"
@@ -391,15 +391,10 @@ def _task_context(store: Store, snap, policy: dict, number: int) -> dict:
 def recorded_packet(store: Store, snap, policy: dict, number: int) -> dict:
     """The packet recorded when the issue was claimed, verified against its ledger digest."""
     ctx = _task_context(store, snap, policy, number)
-    recs = [r for r in store.records("packet")
-            if r["issue"] == number and r["run_id"] == ctx["run_id"] and r["attempt"] == ctx["attempt"]]
-    if not recs:
-        raise SystemExit(f"no recorded packet for #{number} run {ctx['run_id']} attempt {ctx['attempt']}")
-    rec = recs[-1]
-    text = Path(rec["path"]).read_text(encoding="utf-8")
-    if digest(text) != rec["digest"]:
-        raise SystemExit(f"packet {rec['path']} was modified after the claim")
-    return json.loads(text)
+    try:
+        return store.packet(number, ctx["run_id"], ctx["attempt"])
+    except PacketError as exc:
+        raise SystemExit(str(exc)) from exc
 
 
 def _publish_task_event(args, number: int, kind: str, origin: str, body: str = "", **fields) -> dict | None:

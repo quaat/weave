@@ -2,7 +2,9 @@
 
 Gates are pure functions of authenticated events, maintainer decisions, the
 issue's current requirements, the candidate head and integration evidence.
-Manual card moves, labels or issue closure never satisfy a gate.
+Manual card moves, labels or issue closure never satisfy a gate. The one board move made by
+project automation that is recognised (Done after the merged PR from the claim's branch
+closed the issue) is still evaluated through the In Review -> Done gate.
 """
 from __future__ import annotations
 
@@ -28,7 +30,7 @@ class TaskView:
     decisions: list[dict] = field(default_factory=list)
     candidate_head: str | None = None      # current head of the task branch
     clean_tree: bool = False
-    integration: dict | None = None        # {"pr", "merged", "pr_head_sha", "merge_sha", "checks_passed", "merge_in_base", "required_reviews_passed"}
+    integration: dict | None = None        # {"pr", "merged", "head_ref", "claim_branch", "closes_issue", "pr_head_sha", "merge_sha", "checks_passed", "merge_in_base", "required_reviews_passed"}
     packet_valid: bool = False
     exclusive_claim: bool = False
     worktree: str | None = None
@@ -49,6 +51,17 @@ class TaskView:
         return max([e["attempt"] for e in self.events] or [1])
 
 
+def automation_moved_done(view: TaskView) -> bool:
+    """True when the board shows Done only because project automation moved the card: the last
+    recorded transition is to In Review, the issue is closed as completed, and the merged PR from
+    the claim's recorded branch closes it. Any other unrecorded status stays a discrepancy."""
+    changes = view.all("STATE_CHANGED")
+    integ = view.integration or {}
+    return (view.status == "Done" and bool(changes) and changes[-1]["to_status"] == "In Review"
+            and view.issue.completed and bool(integ.get("merged")) and bool(integ.get("closes_issue"))
+            and integ.get("claim_branch") is not None and integ.get("head_ref") == integ.get("claim_branch"))
+
+
 @dataclass
 class Gate:
     from_status: str | None
@@ -56,12 +69,16 @@ class Gate:
     passed: bool
     reasons: list[str]
     docs_stale: bool = False
+    automation_moved: bool = False   # the board already shows to_status (project automation)
 
 
 def evaluate(view: TaskView, to_status: str) -> Gate:
     frm = view.status
+    moved = to_status == "Done" and automation_moved_done(view)
+    if moved:
+        frm = "In Review"  # evaluate from the recorded state; the automation move satisfies nothing
     reasons: list[str] = []
-    gate = Gate(frm, to_status, False, reasons)
+    gate = Gate(frm, to_status, False, reasons, automation_moved=moved)
     if (frm, to_status) not in ALLOWED:
         reasons.append(f"transition {frm!r} -> {to_status!r} is not permitted")
         return gate
@@ -218,8 +235,11 @@ class Transitioner:
         if item is None:
             return {"applied": False, "gate": gate.__dict__, "operations": ["blocked: issue not on the board"]}
         op_id = new_id("op")
-        plan_ops = [f"publish TRANSITION_INTENT {op_id}", f"set Status {view.status} -> {to_status} on item {item.item_id}",
-                    "read back Status", "publish STATE_CHANGED", *self._label_ops(to_status, view.status)]
+        frm = gate.from_status
+        write = (f"Status already {to_status} on item {item.item_id} (moved by project automation); no write"
+                 if gate.automation_moved else f"set Status {frm} -> {to_status} on item {item.item_id}")
+        plan_ops = [f"publish TRANSITION_INTENT {op_id}", write,
+                    "read back Status", "publish STATE_CHANGED", *self._label_ops(to_status, frm)]
         if self.dry_run:
             return {"applied": False, "dry_run": True, "gate": gate.__dict__, "operations": plan_ops}
         observed = self.adapter.read_status(item.item_id)
@@ -227,12 +247,14 @@ class Transitioner:
             return {"applied": False, "gate": gate.__dict__,
                     "operations": [f"refused: observed status {observed!r} differs from expected {view.status!r}; reconcile first"]}
         intent = events.build("TRANSITION_INTENT", sender="orchestrator", recipient="orchestrator",
-                              operation_id=op_id, from_status=view.status, to_status=to_status, **ctx)
+                              operation_id=op_id, from_status=frm, to_status=to_status, **ctx)
         self.publisher.publish(intent, origin="transition")
         self.store.append({"type": "operation", "operation_id": op_id, "phase": "intent",
                            "issue": view.issue.number, "item_id": item.item_id,
-                           "from_status": view.status, "to_status": to_status, "intent_event": intent["event_id"],
+                           "from_status": frm, "to_status": to_status, "intent_event": intent["event_id"],
                            "integration": view.integration if to_status == "Done" else None})
+        if gate.automation_moved:
+            return self.complete(op_id, ctx)  # Status already written by automation; read back only
         try:
             self.adapter.set_status(self.project, item.item_id, to_status)
         except AmbiguousWrite:
