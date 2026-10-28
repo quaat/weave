@@ -256,4 +256,15 @@ Weave language specification, draft 0.2, with prototype v3. https://github.com/q
 
 Weave is released under the [MIT License](LICENSE). Copyright (c) 2026 Thomas F. Hagelien.
 
-The license covers the whole repository: the prototype and its vendored copies, the agent kit, and the specification sources and their built editions (HTML, single page and PDF).
+The MIT grant covers Weave-authored material: the prototype and its vendored
+copies, the agent kit, and the specification sources and Weave-authored portions
+of their built editions (HTML, single page and PDF). Third-party material,
+including theme code and embedded fonts, retains its own copyright and terms.
+
+[`REUSE.toml`](REUSE.toml) records path-specific licensing without modifying pinned
+snapshot bytes; [`LICENSES/MIT.txt`](LICENSES/MIT.txt) supplies the license text for
+REUSE tooling. The adapted Furo search template retains its upstream attribution.
+[`follow-up`](follow-up) records the embedded-font exceptions and remaining
+provenance and release checks. The four committed PDFs remain unannotated while
+their complete font terms are unresolved, so the repository is not yet fully
+REUSE compliant. Run `python3 -m reuse lint` to inspect the remaining gaps.
