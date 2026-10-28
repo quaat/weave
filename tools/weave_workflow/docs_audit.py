@@ -7,6 +7,7 @@ new uses of the protected evidence vocabulary.
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
@@ -104,6 +105,76 @@ def docmap_for(repo: Path) -> dict:
     only when that tree has none."""
     own = repo / DOCMAP_REL
     return load_docmap(own if own.is_file() else DOCMAP_PATH)
+
+
+def base_docmap(repo: Path, base: str) -> dict | None:
+    """The map recorded at the base revision of a change, if that revision has one."""
+    try:
+        return json.loads(git(repo, "show", f"{base}:{DOCMAP_REL}"))
+    except subprocess.CalledProcessError:
+        return None
+
+
+FLOOR_NOTE = ("must be justified in the change and approved by the maintainer; "
+              "the base map's entry still applies to this audit")
+
+
+def _narrowed(base_rule: dict, rule: dict) -> list[str]:
+    """What a candidate's version of an impact rule dropped from the base version."""
+    out = [f"trigger {w!r}" for w in base_rule["when"] if w not in rule.get("when", [])]
+    out += [f"required document {d!r}" for d in base_rule["require"] if d not in rule.get("require", [])]
+    for doc, when in base_rule.get("conditional", {}).items():
+        out += [f"conditional {doc!r} on {w!r}" for w in when if w not in rule.get("conditional", {}).get(doc, [])]
+    if base_rule.get("changelog") and base_rule.get("changelog") != rule.get("changelog"):
+        out.append(f"changelog {base_rule['changelog']!r}")
+    return out
+
+
+def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
+    """The map a change is audited against: the candidate's map united with the base map, so a
+    candidate cannot relax the rules it is audited by. Impact rules, managed-document globs,
+    generated documents, claims, protected labels and required documents of both maps apply;
+    the evidence-vocabulary exemption (``authoritative``) is limited to paths both maps exempt.
+    Each impact rule, managed glob or generated document the candidate removes or narrows is
+    reported as an error."""
+    eff = copy.deepcopy(candidate)
+    found: list[Finding] = []
+
+    def flag(what: str) -> None:
+        found.append(Finding("error", "docmap-floor", DOCMAP_REL, f"{what} relative to the base map; the change {FLOOR_NOTE}"))
+
+    rules = {r["id"]: r for r in candidate["impact_rules"]}
+    for rule in base["impact_rules"]:
+        mine = rules.get(rule["id"])
+        if mine is None:
+            flag(f"impact rule {rule['id']!r} removed")
+        elif _narrowed(rule, mine):
+            flag(f"impact rule {rule['id']!r} narrowed ({', '.join(_narrowed(rule, mine))})")
+        if mine != rule:
+            eff["impact_rules"].append(copy.deepcopy(rule))
+    for glob in base["managed_documents"]:
+        if glob not in candidate["managed_documents"]:
+            flag(f"managed-document glob {glob!r} removed")
+            eff["managed_documents"].append(glob)
+    generated = {p for g in candidate["generated_documents"] for p in g["paths"]}
+    for gen in base["generated_documents"]:
+        for path in gen["paths"]:
+            if path not in generated:
+                flag(f"generated document {path!r} removed")
+        if gen not in candidate["generated_documents"]:
+            eff["generated_documents"].append(copy.deepcopy(gen))
+    claim_ids = {c["id"] for c in candidate["claims"]}
+    eff["claims"] += [copy.deepcopy(c) for c in base["claims"] if c["id"] not in claim_ids]
+    vocab = eff["protected_vocabulary"]
+    vocab["labels"] += [l for l in base["protected_vocabulary"]["labels"] if l not in vocab["labels"]]
+    vocab["authoritative"] = [a for a in vocab["authoritative"] if a in base["protected_vocabulary"]["authoritative"]]
+    new_or_removed = eff["new_or_removed_document_rule"]["require"]
+    new_or_removed += [d for d in base["new_or_removed_document_rule"]["require"] if d not in new_or_removed]
+    boundary = eff["boundary"]
+    boundary["requires"] += [d for d in base["boundary"]["requires"] if d not in boundary["requires"]]
+    if base["boundary"]["phrases"] != boundary["phrases"]:
+        boundary["phrases"] = f"(?:{boundary['phrases']})|(?:{base['boundary']['phrases']})"
+    return eff, found
 
 
 def managed_docs(repo: Path, docmap: dict, files: list[str]) -> list[str]:
@@ -342,7 +413,10 @@ def check_synced(repo: Path, docmap: dict, findings: list[Finding]) -> int:
     return checked
 
 
-def check_generated(repo: Path, docmap: dict, findings: list[Finding], only: set[str] | None = None) -> int:
+def check_generated(repo: Path, docmap: dict, findings: list[Finding], only: set[str] | None = None,
+                    section_map: dict | None = None) -> int:
+    """``section_map``: the map the generated section of documentation-map.md is rendered from
+    (the audited tree's own map; ``docmap`` may be the change-scope floor)."""
     checked = 0
     for gen in docmap["generated_documents"]:
         if only is not None and not set(gen["paths"]) & only:
@@ -371,7 +445,7 @@ def check_generated(repo: Path, docmap: dict, findings: list[Finding], only: set
                 findings.append(Finding("error", "generated", gen["paths"][0], f"differs from {check['source']}; regenerate with `{gen['generator']}`"))
         elif check["type"] == "docs-map":
             doc = repo / gen["paths"][0]
-            if not doc.exists() or render_docs_map(docmap) not in doc.read_text(encoding="utf-8"):
+            if not doc.exists() or render_docs_map(section_map or docmap) not in doc.read_text(encoding="utf-8"):
                 findings.append(Finding("error", "generated", gen["paths"][0], f"generated section is stale; regenerate with `{gen['generator']}`"))
     return checked
 
@@ -465,6 +539,12 @@ def required_documents(docmap: dict, changes: dict[str, str]) -> dict[str, list[
 
 def audit(repo: Path, docmap: dict | None = None, base: str | None = None, impact: list[dict] | None = None) -> AuditResult:
     docmap = docmap or docmap_for(repo)
+    section_map = docmap
+    floor: list[Finding] = []
+    if base:
+        base_map = base_docmap(repo, base)
+        if base_map is not None:
+            docmap, floor = docmap_floor(docmap, base_map)
     head = None
     try:
         head = git(repo, "rev-parse", "HEAD").strip()
@@ -480,7 +560,8 @@ def audit(repo: Path, docmap: dict | None = None, base: str | None = None, impac
     result.counts["diagnostic_codes"] = check_codes(repo, docmap, docs, files, f)
     result.counts["claims"] = check_claims(repo, docmap, f)
     result.counts["synced_and_provenance"] = check_synced(repo, docmap, f)
-    result.counts["generated"] = check_generated(repo, docmap, f)
+    result.counts["generated"] = check_generated(repo, docmap, f, section_map=section_map)
+    f.extend(floor)
     if base:
         _change_checks(repo, docmap, base, impact, result)
     return result
