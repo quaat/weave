@@ -441,11 +441,47 @@ SPDX-FileCopyrightText = [
 ]
 SPDX-License-Identifier = "MIT"
 
-# Intentionally unannotated pending embedded-font provenance and terms (FU-01):
-# - specification/design/weave-design-specimen.pdf
-# - specification/docs/_static/diagrams/handle-states.pdf
-# - specification/docs/_static/diagrams/inventory-n0.pdf
-# - specification/docs/_static/diagrams/r0-unknown.pdf
-# These files remain in REUSE's audit scope and cause lint to fail until resolved.
-# Do not substitute MIT, NONE, NOASSERTION or a fabricated LicenseRef to hide them.
+# PDFs with embedded third-party font programs (FU-01, resolved).
+# Each PDF is one file that combines Weave-authored content (MIT) with subsets
+# of font programs under their own licences. All of these terms apply to the
+# file at once, so the expression joins them with AND, not OR.
+# Evidence (see docs/decisions/0002-licence-terms.md and the "Third-party
+# notices" section of specification/docs/chapters/provenance.rst):
+# - DejaVu fonts: identified from pdffonts names, the subsets' own name tables
+#   (specimen) and glyph outlines identical to DejaVu Sans 2.37 (diagrams).
+#   Their licence string names the Bitstream Vera licence (SPDX Bitstream-Vera)
+#   and, for DejaVu Sans, the Arev fonts licence of Tavmjong Bah. The SPDX list
+#   bundled with REUSE 5.1.1 (3.27.0) has no DejaVu or Arev identifier, so the
+#   Arev text is LicenseRef-Arev-Fonts, copied verbatim from the font's name
+#   table. DejaVu's own changes are public domain and add no terms.
+# - Computer Modern (specimen only): AMS Type 1 fonts, version 003.002. Their
+#   embedded Notice reads "Copyright (c) 1997, 2009 American Mathematical
+#   Society ..., with Reserved Font Name ..."; the AMS release is under SIL OFL
+#   1.1, and SPDX OFL-1.1-RFN is the identifier for OFL 1.1 with Reserved Font
+#   Names.
+# The bytes of these PDFs are unchanged.
+[[annotations]]
+path = "specification/design/weave-design-specimen.pdf"
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2026 Thomas F. Hagelien",
+    "2003 Bitstream, Inc.",
+    "2006 Tavmjong Bah",
+    "1997, 2009 American Mathematical Society",
+]
+SPDX-License-Identifier = "MIT AND Bitstream-Vera AND LicenseRef-Arev-Fonts AND OFL-1.1-RFN"
+
+[[annotations]]
+path = [
+    "specification/docs/_static/diagrams/handle-states.pdf",
+    "specification/docs/_static/diagrams/inventory-n0.pdf",
+    "specification/docs/_static/diagrams/r0-unknown.pdf",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2026 Thomas F. Hagelien",
+    "2003 Bitstream, Inc.",
+    "2006 Tavmjong Bah",
+]
+SPDX-License-Identifier = "MIT AND Bitstream-Vera AND LicenseRef-Arev-Fonts"
 

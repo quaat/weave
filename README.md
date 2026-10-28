@@ -266,7 +266,9 @@ including theme code and embedded fonts, retains its own copyright and terms.
 snapshot bytes; [`LICENSES/MIT.txt`](LICENSES/MIT.txt) supplies the license text for
 REUSE tooling. `REUSE.toml` records the adapted Furo search template's upstream
 attribution (Pradyun Gedam, MIT).
-[`follow-up`](follow-up) records the embedded-font exceptions and remaining
-provenance and release checks. The four committed PDFs remain unannotated while
-their complete font terms are unresolved, so the repository is not yet fully
-REUSE compliant. Run `python3 -m reuse lint` to inspect the remaining gaps.
+The four committed PDFs are annotated with their embedded fonts' terms
+(Bitstream Vera, Arev and SIL OFL 1.1 with Reserved Font Names, texts under
+`LICENSES/`), and `python3 -m reuse lint` reports the repository as compliant.
+The third-party notices for the built editions, with their licence texts, are in
+the specification's provenance chapter (`specification/docs/chapters/provenance.rst`).
+[`follow-up`](follow-up) records the remaining release checks.

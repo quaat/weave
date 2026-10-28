@@ -96,5 +96,7 @@ License; see [`LICENSE`](../LICENSE) at the repository root. The PDF cover and
 the HTML footer print the same copyright line, from the `copyright` setting in
 `docs/conf.py`. Third-party material, including theme code and fonts embedded in
 PDF files, keeps its own copyright and terms. [`REUSE.toml`](../REUSE.toml)
-records licensing per path, and [`follow-up`](../follow-up) lists the open
-items, including the four committed PDFs that are not yet annotated.
+records licensing per path, including the fonts embedded in the committed PDFs.
+The "Third-party notices" section of `docs/chapters/provenance.rst` lists the
+third-party material in each edition with its licence texts, and
+[`follow-up`](../follow-up) lists the remaining release items.

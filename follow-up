@@ -50,7 +50,7 @@ See docs/decisions/0002-licence-terms.md for the evidence.
   and point to REUSE.toml and this file.
 - REUSE.toml annotates docs/decisions/0002-licence-terms.md.
 
-## FU-01 — Embedded fonts in committed PDFs [OPEN; release blocker]
+## FU-01 — Embedded fonts in committed PDFs [RESOLVED except one residual item]
 
 Owner: maintainer / documentation release owner.
 
@@ -63,32 +63,65 @@ Observed with pdffonts on the committed bytes:
 | specification/docs/_static/diagrams/inventory-n0.pdf | DejaVuSans |
 | specification/docs/_static/diagrams/r0-unknown.pdf | DejaVuSans |
 
-All listed fonts are embedded subsets. These four composite files are deliberately
-absent from the MIT annotations. They are not excluded from lint or from review.
+All listed fonts are embedded subsets. The four files were left out of the MIT
+annotations until their font terms were established; they are now annotated
+(see below). The release-blocker status is for the maintainer to reassess.
 The SVG companions are separate files covered by the existing project grant;
 font-family references in SVG text do not themselves embed font programs.
 
-- [ ] Identify the exact font packages, versions and original font files used
+- [x] Identify the exact font packages, versions and original font files used
   by each producer. Preserve upstream notices and the full applicable terms.
   The DejaVu upstream licence page records Bitstream and Arev notices; determine
   which notices apply to the actual embedded fonts rather than assuming MIT or
   treating the whole family as public domain.
   Reference: https://dejavu-fonts.github.io/License.html
-- [ ] Trace the Computer Modern outlines in the specimen to their actual
+  Done:
+  - Specimen. The DejaVu subsets keep their name tables: version 2.35 (2.37 for
+    Sans Bold). The licence string names the Bitstream Vera licence, and for
+    DejaVu Sans and Sans Bold also the Arev licence (Tavmjong Bah). Sans Mono and
+    the Serif faces name Bitstream only.
+  - Diagrams. cairo dropped the name tables, but head.fontRevision is 2.37, and
+    every glyph compared (42, 49 and 51) is identical to the installed DejaVu
+    Sans 2.37, which names Bitstream and Arev.
+- [x] Trace the Computer Modern outlines in the specimen to their actual
   distribution. A CMR/CMMI/CMEX name alone does not distinguish METAFONT sources,
   AMS outlines or BaKoMa outlines and cannot establish the correct licence.
   Starting references: https://ctan.org/pkg/cm and
   https://ctan.org/pkg/bakoma-fonts
-- [ ] Add verified licence texts under LICENSES/ and the corresponding notices
+  Done: each embedded CFF font has version 003.002 and the Notice "Copyright (c)
+  1997, 2009 American Mathematical Society ..., with Reserved Font Name ...". That
+  is the AMS Type 1 release. TeX Live's cmr10.pfb (amsfonts) carries the same
+  version and notice and states SIL Open Font License 1.1.
+- [x] Add verified licence texts under LICENSES/ and the corresponding notices
   and SPDX expressions to REUSE.toml (or appropriate sidecars). If an SPDX-listed
   licence does not fit the actual terms, use a documented LicenseRef with the
   real text, never a placeholder intended to make lint green.
+  Done:
+  - LICENSES/Bitstream-Vera.txt and LICENSES/OFL-1.1-RFN.txt come from
+    reuse download, unedited. They match the fonts' own text and TeX Live's
+    amsfonts OFL.txt apart from typography.
+  - LICENSES/LicenseRef-Arev-Fonts.txt is the Arev section of the DejaVu Sans
+    name table, verbatim. The SPDX list bundled with REUSE 5.1.1 (3.27.0) has no
+    Arev or DejaVu identifier.
+  - REUSE.toml annotates the specimen as MIT AND Bitstream-Vera AND
+    LicenseRef-Arev-Fonts AND OFL-1.1-RFN, and the diagrams as MIT AND
+    Bitstream-Vera AND LicenseRef-Arev-Fonts.
 - [ ] Decide how the notices travel with each standalone PDF; a root TOML file
   alone will not accompany a PDF downloaded separately. Rebuild the PDFs or
   distribute the required notices with them, and inspect the release packaging.
+  Partly done:
+  - The repository carries REUSE.toml and LICENSES/.
+  - Every edition carries the notices and licence texts in the "Third-party
+    notices" section of specification/docs/chapters/provenance.rst. The editions
+    include the diagram PDFs.
+  - The specimen's embedded fonts keep their own notices.
+  Residual: the diagram PDFs' font subsets carry no notice, so a diagram PDF
+  copied on its own has none. Fixing that means regenerating the diagrams, which
+  changes their bytes.
 
 Close when every embedded component has recorded provenance, applicable terms,
-required notices and verified distribution packaging; rerun REUSE lint.
+required notices and verified distribution packaging; rerun REUSE lint. REUSE
+lint now exits 0 (388/388); only the standalone-diagram residual remains.
 
 ## FU-02 — Imported sources and rights-holder confirmation [OPEN]
 
@@ -160,14 +193,35 @@ Observed configuration and dependency pins:
 
 - [ ] Build both HTML editions and a release PDF from the pinned environment;
   inventory the actual JS, CSS, icons, fonts and other redistributed resources.
+  Partly done:
+  - Both HTML editions were built from the pinned environment. Their 40 static
+    files (identical in both) were matched by hash to Furo, sphinx-basic-ng,
+    Sphinx, sphinx-design and sphinx-copybutton. Five files are generated:
+    basic.css, documentation_options.js, language_data.js, copybutton.js and
+    pygments.css.
+  - Fonts in a locally compiled PDF were inventoried: DejaVu 2.37 and the AMS
+    Type 1 fonts.
+  - No release PDF was built.
 - [ ] Preserve each component's upstream licence/notice files and any required
   attribution in published output. Review the exact pinned distributions, not
   licence guesses based on package names or a different release.
+  Partly done:
+  - The "Third-party notices" section of provenance.rst, in every edition, lists
+    each component with its version, SPDX licence and holder. It reproduces the
+    licence texts from the installed packages, or from LICENSES/.
+  - Shipped files with their own notices: furo.css (normalize.css), furo.js with
+    furo.js.LICENSE.txt (gumshoe), and clipboard.min.js. The others carry none.
+  - Open question: the gumshoe holder. The shipped notice says "(c) 2019 Chris
+    Ferdinandi"; the upstream licence file (default branch; the 5.1.2 tag's file
+    could not be retrieved) names Go Make Things, LLC.
+  - The published site was not checked.
 - [ ] Review the remaining design templates, CSS and extensions for copied
   material, with upstream file/version evidence for each match.
 - [ ] Add a release third-party notice inventory/SBOM with component version,
   source, distributed paths, copyright, SPDX expression and included notices.
   Downloaded or generated build output is outside this source-tree lint result.
+  Partly done: the notice inventory is in provenance.rst. No machine-readable
+  SBOM exists yet.
 
 Close when every redistributed component of HTML, single-page and PDF releases
 is accounted for. Source-tree REUSE success alone does not close this item.
@@ -209,10 +263,11 @@ Use Python 3.11+ and REUSE 5.1.1 for the validation baseline:
     python3 -m reuse lint
     python3 -m tools.weave_workflow docs-audit
 
-REUSE configuration parses, but full compliance is intentionally incomplete:
-the four PDFs in FU-01 still need complete copyright/licensing annotations.
-No fictitious licence or copyright holder has been assigned to their fonts.
-Validation performed for this change with REUSE 5.1.1:
+At the REUSE metadata change, full compliance was intentionally incomplete: the
+four PDFs in FU-01 still needed complete copyright and licensing annotations, and
+no fictitious licence or copyright holder was assigned to their fonts. They are
+now annotated (FU-01). Validation performed for the REUSE metadata change with
+REUSE 5.1.1:
 
 - REUSE lint exits 1 only for the four PDFs above; 383 of 387 covered files have
   both notices, with zero bad/missing/unused licence texts and zero read errors.
@@ -225,6 +280,9 @@ Validation for the issue #2 licence change (REUSE 5.1.1, same command):
 
 - REUSE lint exits 1 only for the same four PDFs; 384 of 388 covered files have
   both notices, with zero bad/missing/unused licence texts and zero read errors.
+- After the font licences were added, REUSE lint exits 0: 388 of 388 files have
+  both notices. Used licences are MIT, Bitstream-Vera, LicenseRef-Arev-Fonts and
+  OFL-1.1-RFN, with zero bad, missing or unused licence texts.
 
 The review inspected every tracked filename, repository notices and provenance,
 the identified upstream Furo files and PDF font inventories. It is not an
