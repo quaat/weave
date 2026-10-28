@@ -39,12 +39,24 @@ policy baseline and disagreements are reported.
 4. Roadmap and epic tracking issues (`epic` label) are aggregate gates, not tasks. Deferred
    issues (`deferred` label, currently #49–#53) are excluded unless explicitly activated.
 5. At most `concurrency.max_active_implementation_issues` (currently 3) active
-   implementation issues. An issue is active while it holds a claim that has not reached
-   In Review, or while its card is In Progress; an active issue is never selected or
-   claimed again (one claim per issue). When every slot is occupied, the active issues are
-   resumed before new work is claimed. `claim` repeats the selection under the coordinator
-   lock, so one coordinator administers all active issues. Subagents may run in parallel
-   inside an issue only on independent files.
+   implementation issues. An issue is an **active implementation issue** while its claim
+   is CLAIMED, neither RELEASED nor COMPLETED, and not recorded as In Review (work returned
+   from In Review to In Progress is active again), or while its card is In Progress. Work
+   In Review waits for review or merge, so it does not count against the limit, but its
+   claim is still held: an issue with an active or held claim is never selected or claimed
+   again (one claim per issue). `plan`, `claim` and `reconcile`'s limit check use this one
+   definition (`active_implementation_issues` in `scheduler.py`). When every slot is
+   occupied, the active issues are resumed before new work is claimed.
+   `claim` also refuses an issue whose allowed paths may overlap those of any active
+   implementation issue, naming the issue and paths. Overlap is conservative: `**` (the
+   default when no `--allowed-path` is given) overlaps everything; two patterns overlap
+   when either matches the other's literal path or one's fixed directory prefix contains
+   the other's; and both claims conflict when each may touch the same shared generated
+   artefact (`docs/development/documentation-map.md` and the map's generated documents,
+   including the inputs their generators read). An active issue whose recorded packet
+   cannot be verified counts as `**`. `claim` repeats the selection and both checks under
+   the coordinator lock, so one coordinator administers all active issues. Subagents may
+   run in parallel inside an issue only on independent files.
 6. A blocked task does not block independent tasks in the same milestone. If nothing is
    eligible the run records the blockers and stops; it never jumps ahead.
 7. Early-start exceptions are narrow and inactive by default

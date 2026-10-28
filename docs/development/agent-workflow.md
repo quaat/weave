@@ -75,7 +75,8 @@ there is no fifth column. Approved work awaiting a maintainer merge stays In Rev
 after the merged PR closes the issue, the recorded state is still In Review and
 `transition N Done` records the move through the In Review → Done gate without rewriting the
 Status. Up to `concurrency.max_active_implementation_issues` (currently 3) issues may be
-active at once, each with one claim ([scheduling.md](scheduling.md)). Gate details:
+in implementation at once (In Review work does not count), each with one claim and with
+allowed paths that do not overlap ([scheduling.md](scheduling.md)). Gate details:
 [transitions.md](transitions.md).
 
 ## Roadmap baseline

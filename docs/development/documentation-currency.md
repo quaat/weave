@@ -31,7 +31,13 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    the claim-time impact list read the map from the audited tree
    (`tools/weave_workflow/docmap.json` in that worktree or checkout), so a candidate that
    changes the map is audited against its own map; the running module's map is used only
-   when the audited tree has none.
+   when the audited tree has none. In change scope (`--base`) the base revision's map is a
+   floor: the audit applies the union of both maps' impact rules, required documents,
+   managed-document globs, generated documents, claims and protected labels (the
+   vocabulary exemption is limited to paths both maps exempt), and reports an error for
+   every impact rule, managed-document glob or generated document the candidate removes or
+   narrows; such a removal must be justified and approved by the maintainer. The generated
+   section of `documentation-map.md` is checked against the candidate's own map.
 4. **Boundary statements move with the boundary.** When something documented as
    unimplemented, deferred or not established becomes implemented, every document that stated
    the limitation changes in the same change, including the specification's status profile
