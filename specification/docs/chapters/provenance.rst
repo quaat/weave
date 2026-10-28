@@ -164,6 +164,34 @@ or in whole, must be distributed entirely under this license, and must not be
 distributed under any other license. The requirement for fonts to remain under
 this license does not apply to any document created using the Font Software."
 
+Adapted files in the repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A review of the templates, stylesheets, LaTeX style, extensions, configuration,
+scripts and design bundle against the installed upstream packages and TeX Live
+found two files that adapt upstream code. Both keep the upstream licence
+alongside Weave's MIT grant in ``REUSE.toml``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 34 14 22
+
+   * - File
+     - Adapted from
+     - Licence (SPDX)
+     - Copyright
+   * - ``docs/_templates/sidebar/search.html``
+     - Furo 2025.12.19, sidebar/search.html (the search form)
+     - MIT
+     - 2020 Pradyun Gedam
+   * - ``docs/_latex/weave.sty``
+     - Sphinx 8.2.3, texinputs/sphinxmanual.cls (the page-anchor handling,
+       PDF title and author line and footnote reset of the title macro)
+     - BSD-2-Clause
+     - 2007-2025 by the Sphinx team
+
+Their licence texts are the Furo and Sphinx texts below.
+
 Theme and Sphinx files in the HTML editions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -283,7 +283,6 @@ path = [
     "specification/docs/_ext/weave_check.py",
     "specification/docs/_ext/weave_lexer.py",
     "specification/docs/_ext/weave_singlehtml.py",
-    "specification/docs/_latex/weave.sty",
     "specification/docs/_static/diagrams/handle-states.svg",
     "specification/docs/_static/diagrams/inventory-n0.svg",
     "specification/docs/_static/diagrams/r0-unknown.svg",
@@ -440,6 +439,20 @@ SPDX-FileCopyrightText = [
     "2026 Thomas F. Hagelien",
 ]
 SPDX-License-Identifier = "MIT"
+
+# Weave PDF style. \weavemaketitle adapts the page-anchor handling, the
+# pdfauthor/pdftitle line and the footnote reset of \sphinxmaketitle in Sphinx
+# 8.2.3's texinputs/sphinxmanual.cls (BSD-2-Clause; holder from Sphinx's
+# LICENSE.rst). The rest of the file is Weave-authored. Found by the
+# copied-material review in docs/decisions/0002-licence-terms.md.
+[[annotations]]
+path = "specification/docs/_latex/weave.sty"
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2026 Thomas F. Hagelien",
+    "2007-2025 by the Sphinx team",
+]
+SPDX-License-Identifier = "MIT AND BSD-2-Clause"
 
 # PDFs with embedded third-party font programs (FU-01, resolved).
 # Each PDF is one file that combines Weave-authored content (MIT) with subsets
