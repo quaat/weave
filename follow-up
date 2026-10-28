@@ -126,7 +126,7 @@ Close when every embedded component has recorded provenance, applicable terms,
 required notices and verified distribution packaging; rerun REUSE lint. REUSE
 lint now exits 0 (388/388); only the standalone-diagram residual remains.
 
-## FU-02 — Imported sources and rights-holder confirmation [OPEN]
+## FU-02 — Imported sources and rights-holder confirmation [OPEN: specimen metadata only]
 
 Owner: maintainer / rights holder.
 
@@ -151,8 +151,18 @@ material: https://github.com/quaat/weave/issues/2#issuecomment-6480423748
   copyright holder releases them under the MIT License to the extent the holder
   has rights in AI-generated material." Copied third-party material is still to
   be inventoried under FU-01 and FU-03.
-- [ ] Identify additional human or organisational copyright holders and any
+- [x] Identify additional human or organisational copyright holders and any
   pre-existing terms; add them at the affected paths without erasing notices.
+  Done; there are none beyond those recorded:
+  - The decision on #2 names the LICENSE holder and excludes employer, funder,
+    institution and contract rights.
+  - Git history on all refs (38 commits) shows only the maintainer as author,
+    GitHub as committer for web-created commits, and Co-Authored-By trailers
+    naming an AI assistant, which is a tool, not a rights holder.
+  - PR #64's commit is under the maintainer's identity.
+  - The third-party holders (fonts, HTML components, and the Furo and Sphinx
+    code adapted in search.html and weave.sty) are recorded at their paths.
+  See docs/decisions/0002-licence-terms.md, "Further rights holders".
 - [x] Check whether the Danio project author/branding in docs/conf.py and the
   PDF cover needs a clarification alongside the legal copyright holder. Done in
   the issue #2 licence change: the author is "Weave" and the cover label is gone.
@@ -220,8 +230,20 @@ Observed configuration and dependency pins:
     Ferdinandi"; the upstream licence file (default branch; the 5.1.2 tag's file
     could not be retrieved) names Go Make Things, LLC.
   - The published site was not checked.
-- [ ] Review the remaining design templates, CSS and extensions for copied
+- [x] Review the remaining design templates, CSS and extensions for copied
   material, with upstream file/version evidence for each match.
+  Done.
+  - Scope: every template, static file, the LaTeX style, the extensions,
+    conf.py, the scripts and the design bundle.
+  - Method: compared by 8-token shingle overlap with 6,115 upstream files
+    (spec venv site-packages and TeX Live tex/latex), and searched for
+    attribution markers.
+  - Found: Furo's search form (search.html, already annotated) and Sphinx's
+    title-macro page-anchor handling (weave.sty, now MIT AND BSD-2-Clause).
+    Everything else is Weave-authored or overrides an upstream template
+    through extends and blocks.
+  Per-file results: docs/decisions/0002-licence-terms.md, "Copied-material
+  review".
 - [ ] Add a release third-party notice inventory/SBOM with component version,
   source, distributed paths, copyright, SPDX expression and included notices.
   Downloaded or generated build output is outside this source-tree lint result.
@@ -259,6 +281,15 @@ Owner: maintainer / release owner.
   or dummy grants. Review exact-path annotations when files move or are added.
 - [ ] Reconcile issue #2's remaining criteria with the completed evidence. This
   change does not close that issue or establish readiness to announce a release.
+
+## Open items and AC-1
+
+None of the items still open above is part of AC-1's rights and provenance
+review. They cover packaging and presentation of notices (FU-01 standalone
+diagrams, FU-04 HTML footer and shipped archives), maintainer judgements (FU-01
+release status and OFL acceptability), a metadata rename (FU-02 specimen), and
+release, CI and wording work (FU-03, FU-04). The reason for each is in
+docs/decisions/0002-licence-terms.md, "AC-1 status".
 
 ## Validation and limits
 
