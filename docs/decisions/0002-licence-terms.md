@@ -6,8 +6,8 @@
 - **Status:** Decided — recorded by the maintainer on #2 (link above), 28 October 2026
 - **Prepared against:** base revision `6564a0399f10cea02a7274a9e67ce98efd75af14`, 28 October 2026
 - **Implemented on:** base `6516e2b23834aa8b9f036a9370a935b6c176a3a0`. The REUSE metadata from
-  draft PR #64 (`7b2cb65`, cherry-picked as `64a0828`) plus the cover and author change in
-  `1bc8154`.
+  draft PR #64 (`7b2cb65`, cherry-picked as `cf1e3b6`) plus the cover and author change in
+  `f32a168`.
 - **Decision owner:** the maintainer. The decision text is the maintainer's; this record
   quotes it and does not add to it.
 
@@ -240,7 +240,7 @@ root `README.md` says the licence covers the whole repository.
 Whichever option is chosen, the pinned snapshots must keep their original bytes; any statement
 about them lives outside the snapshot directories.
 
-**Delivered in this change (option 3).** Measured at `1bc8154`; the commands are under
+**Delivered in this change (option 3).** Measured at `f32a168`; the commands are under
 [Commands run](#commands-run).
 
 - `REUSE.toml` (REUSE Specification 3.3, configuration version 1, from PR #64) annotates 386
@@ -261,7 +261,7 @@ about them lives outside the snapshot directories.
 - The root `README.md`, `specification/README.md` and
   `specification/docs/chapters/provenance.rst` state that the MIT grant covers Weave-authored
   material, that third-party material keeps its own terms, and where the metadata lives.
-- `reuse lint` (REUSE 5.1.1) at `1bc8154` exits 1. Its only findings are the four PDFs that
+- `reuse lint` (REUSE 5.1.1) at `f32a168` exits 1. Its only findings are the four PDFs that
   `REUSE.toml` deliberately leaves unannotated until their embedded-font terms are known:
 
   ```text
@@ -326,7 +326,8 @@ the PDF, the MIT statement appears only in the body, in the "Distribution status
 `specification/docs/chapters/provenance.rst`. No built PDF was available to inspect; this
 assessment comes from the style file and `conf.py`.
 
-**Delivered in this change.** Measured at `1bc8154`; the commands are under
+**Delivered in this change.** Measured at `f32a168`, except the cover-geometry and
+fail-closed points, which come from the review fixes in `6233a78`; the commands are under
 [Commands run](#commands-run).
 
 - `specification/docs/conf.py` sets `author = "Weave"` (answer 5), which is also the PDF
@@ -345,7 +346,7 @@ assessment comes from the style file and `conf.py`.
   label's place is taken by an empty box, which keeps the monogram's baseline exactly where
   it was. Measured with `\pdfsavepos` in a minimal XeLaTeX cover built from the real
   `\weavemaketitle`, the baseline sits 39,782,916 sp (607.0391 pt) above the page bottom at
-  base `6516e2b` and with this change. The earlier version (`f2557a3`), which used a starred
+  base `6516e2b` and with this change. The earlier version (`9e5f6c8`), which used a starred
   space instead, put it at 38,838,151 sp (592.6232 pt), 14.4159 pt lower.
 - If `\WeaveCopyright` is undefined, the cover raises a `\PackageError` instead of omitting
   the notice, so the PDF build fails loudly.
@@ -409,16 +410,16 @@ git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been grant
 
 ### Commands for this change
 
-Run from the worktree root. R1–R4 read commit `1bc8154`. The other commands ran on a clean
+Run from the worktree root. R1–R4 read commit `f32a168`. The other commands ran on a clean
 worktree at that commit, with the pinned toolchains: the specification virtual environment's
 Python and REUSE 5.1.1 from the workflow's REUSE virtual environment.
 
 | Ref | Command | Exit | Result |
 | --- | --- | --- | --- |
-| R1 | Python: parse `git show 1bc8154:REUSE.toml` with `tomllib` and compare its paths with `git ls-tree -r --name-only 1bc8154` | 0 | 386 paths, 0 duplicates, 0 missing. Not annotated: `LICENSE`, `LICENSES/MIT.txt`, `REUSE.toml` and the four PDFs |
-| R2 | `diff <(git show 1bc8154:LICENSE) <(git show 1bc8154:LICENSES/MIT.txt)` | 0 | identical |
-| R3 | `git grep -n -i 'danio' 1bc8154 -- .` | 0 | no author-name use left. Hits: local paths recorded in `agent-kit/demos/*/artifacts`, this record and `follow-up` |
-| R4 | `git grep -n 'WeaveCopyright' 1bc8154 -- specification/docs` | 0 | defined in `specification/docs/conf.py`, used in `specification/docs/_latex/weave.sty` |
+| R1 | Python: parse `git show f32a168:REUSE.toml` with `tomllib` and compare its paths with `git ls-tree -r --name-only f32a168` | 0 | 386 paths, 0 duplicates, 0 missing. Not annotated: `LICENSE`, `LICENSES/MIT.txt`, `REUSE.toml` and the four PDFs |
+| R2 | `diff <(git show f32a168:LICENSE) <(git show f32a168:LICENSES/MIT.txt)` | 0 | identical |
+| R3 | `git grep -n -i 'danio' f32a168 -- .` | 0 | no author-name use left. Hits: local paths recorded in `agent-kit/demos/*/artifacts`, this record and `follow-up` |
+| R4 | `git grep -n 'WeaveCopyright' f32a168 -- specification/docs` | 0 | defined in `specification/docs/conf.py`, used in `specification/docs/_latex/weave.sty` |
 | R5 | `reuse lint` | 1 | four PDFs only; summary under AC-3 |
 | R6 | `make latex` (in `specification/`) | 0 | generated source carries the cover macro and `\author{Weave}` |
 | R7 | `make validate-offline`, `make singlehtml text`, `python3 scripts/audit_html.py _build/singlehtml` (in `specification/`) | 0, 0, 0 | 33 pages, 3,191 references, 0 errors; 1 page, 491 references, 0 errors |
