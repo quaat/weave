@@ -66,6 +66,9 @@ Observed with pdffonts on the committed bytes:
 All listed fonts are embedded subsets. The four files were left out of the MIT
 annotations until their font terms were established; they are now annotated
 (see below). The release-blocker status is for the maintainer to reassess.
+Whether the PDFs' embedding of the AMS fonts' subsets under their Reserved Font
+Names is acceptable under the OFL is the maintainer's call (condition 5 is quoted
+in specification/docs/chapters/provenance.rst).
 The SVG companions are separate files covered by the existing project grant;
 font-family references in SVG text do not themselves embed font programs.
 
@@ -194,9 +197,11 @@ Observed configuration and dependency pins:
 - [ ] Build both HTML editions and a release PDF from the pinned environment;
   inventory the actual JS, CSS, icons, fonts and other redistributed resources.
   Partly done:
-  - Both HTML editions were built from the pinned environment. Their 40 static
-    files (identical in both) were matched by hash to Furo, sphinx-basic-ng,
-    Sphinx, sphinx-design and sphinx-copybutton. Five files are generated:
+  - Both HTML editions were built from the pinned environment into empty
+    directories. Each holds 37 static files (29 third-party, 8 Weave-authored),
+    identical apart from the generated builder name in documentation_options.js.
+    The third-party files were matched by hash to Furo, sphinx-basic-ng, Sphinx,
+    sphinx-design and sphinx-copybutton. Five files are generated:
     basic.css, documentation_options.js, language_data.js, copybutton.js and
     pygments.css.
   - Fonts in a locally compiled PDF were inventoried: DejaVu 2.37 and the AMS

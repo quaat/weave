@@ -127,19 +127,51 @@ come from a local build with DejaVu 2.37 and TeX Live 2024.
      - design specimen PDF, the built PDF
      - Bitstream-Vera
      - 2003 Bitstream, Inc.; DejaVu changes are in the public domain
-   * - Computer Modern and AMS symbol fonts, AMS Type 1 release (CMR, CMMI,
-       CMSY, CMEX, MSBM)
+   * - Computer Modern, AMS Type 1 release: CMR8, CMR10, CMMI8, CMMI10, CMEX10
      - 003.002
      - design specimen PDF, the built PDF
+     - OFL-1.1-RFN
+     - 1997, 2009 American Mathematical Society, with Reserved Font Names
+   * - Computer Modern and AMS symbol fonts, AMS Type 1 release: CMMI6, CMSY6,
+       CMSY8, CMSY10, MSBM10
+     - 003.002
+     - the built PDF only
      - OFL-1.1-RFN
      - 1997, 2009 American Mathematical Society, with Reserved Font Names
 
 Bitstream Vera is a trademark of Bitstream, Inc.
 
+Each AMS font carries this notice in its embedded font program, verbatim, with
+its own name as the Reserved Font Name:
+
+.. code-block:: text
+
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMR8.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMR10.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMMI6.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMMI8.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMMI10.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMSY6.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMSY8.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMSY10.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMEX10.
+   Copyright (c) 1997, 2009 American Mathematical Society (<http://www.ams.org>), with Reserved Font Name MSBM10.
+
+The PDFs embed subsets of these fonts under their original names, each with a
+six-letter subset prefix (for example ``MVQLIB+CMMI8``). Condition 5 of the SIL
+Open Font License 1.1 reads: "The Font Software, modified or unmodified, in part
+or in whole, must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to remain under
+this license does not apply to any document created using the Font Software."
+
 Theme and Sphinx files in the HTML editions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Both HTML editions copy these files into their static directories. Versions are
+Each HTML edition's static directory holds 37 files: the 29 third-party files
+below and 8 Weave-authored ones (the stylesheet, the favicon and the three
+diagrams as SVG and PDF). The two editions are identical apart from the generated
+builder name in documentation_options.js; sphinx-design's two files are also
+copied into a second static directory. Versions are
 pinned in ``requirements.txt``; licences and holders are from each package's
 installed licence file. "Notice in file" says whether the shipped file itself
 carries its notice.
@@ -311,9 +343,14 @@ sphinx-design:
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
    THE SOFTWARE.
 
-Sphinx:
+Sphinx (its whole LICENSE.rst file, the only licence file in its distribution; it
+has no section on incorporated third-party software, and none of the Sphinx files
+listed above carries a copyright or licence notice of its own):
 
 .. code-block:: text
+
+   License for Sphinx
+   ==================
 
    Unless otherwise indicated, all code in the Sphinx project is licenced under the
    two clause BSD licence below.

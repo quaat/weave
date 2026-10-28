@@ -77,12 +77,19 @@ F0–F5 and R8–R9 are under [Commands run](#commands-run).
     installed DejaVu Sans 2.37, which names both licences.
   - Licences: Bitstream-Vera (2003 Bitstream, Inc.) and LicenseRef-Arev-Fonts (2006 Tavmjong
     Bah). DejaVu's own changes are public domain.
-  - The specimen's Computer Modern fonts are the AMS Type 1 release 003.002 (Notice: 1997, 2009
-    American Mathematical Society, with Reserved Font Names), licensed OFL-1.1-RFN.
-  - A locally compiled specification PDF embeds the same families: DejaVu 2.37 and the AMS
-    fonts CMR, CMMI, CMSY, CMEX and MSBM.
-- **Files in the built HTML editions.** All 40 static files were matched by hash to their
-  packages, or traced to Sphinx and Pygments templates.
+  - The specimen's Computer Modern fonts (CMR8, CMR10, CMMI8, CMMI10, CMEX10) are the AMS Type 1
+    release 003.002, licensed OFL-1.1-RFN. Each carries the Notice "Copyright (c) 1997, 2009
+    American Mathematical Society (<http://www.ams.org>), with Reserved Font Name CMR10."
+    (with its own name). The notices section quotes all ten verbatim, together with OFL
+    condition 5 on documents created using the Font Software.
+  - A locally compiled specification PDF embeds DejaVu 2.37 and, from the same AMS release,
+    CMR8, CMR10, CMMI6, CMMI8, CMMI10, CMSY6, CMSY8, CMSY10, CMEX10 and MSBM10. CMSY and MSBM
+    appear only there, not in the specimen.
+- **Files in the built HTML editions.** Each edition's static directory holds 37 files (29
+  third-party, 8 Weave-authored), identical apart from the generated builder name in
+  documentation_options.js. The 29 were matched by hash to their packages, or traced to Sphinx
+  and Pygments templates. Sphinx's licence file has no third-party section, and its shipped
+  files carry no notices of their own.
   - Furo 2025.12.19 (MIT, Pradyun Gedam), bundling normalize.css 8.0.1 (MIT) and gumshoe 5.1.2
     (MIT).
   - sphinx-basic-ng 1.0.0b2 (MIT).
@@ -503,7 +510,7 @@ copies, read the committed bytes.
 | F4 | `reuse download Bitstream-Vera OFL-1.1-RFN` in a scratch repository, then `cmp` with `git show f39c1cd:LICENSES/<id>.txt` | 0 | identical |
 | F5 | Python: `git show f39c1cd:LICENSES/LicenseRef-Arev-Fonts.txt` against the Arev section of name ID 13 in the installed DejaVu Sans 2.37 | 0 | identical |
 | R8 | `reuse lint` on a clean worktree at `f39c1cd` | 0 | 388/388, compliant |
-| R9 | Python: SHA-256 of each file in `_build/html/_static` against the installed packages in the specification virtual environment; licence metadata and licence files from each `dist-info` | 0 | package, version, licence and holder per file, as in the notices section |
+| R9 | Clean `html` and `singlehtml` builds into empty scratch directories; then Python: SHA-256 of each static file against the installed packages in the specification virtual environment, with licence metadata and licence files from each `dist-info` | 0 | 37 static files per edition (29 third-party), identical apart from `BUILDER` in documentation_options.js; package, version, licence and holder per file, as in the notices section |
 
 ## Recorded decision
 
