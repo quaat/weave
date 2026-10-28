@@ -13,6 +13,7 @@ Weave programs and the kit, and wins inside `agent-kit/`.
 | `agent-kit/` | Kit for writing Weave with agents, vendoring the v3 prototype |
 | `tools/weave_workflow/` | Development workflow tooling: scheduler, protocol events, gates, review, documentation audit |
 | `docs/development/` | Workflow policy, documentation map, capabilities |
+| `docs/decisions/` | Decision records and proposals awaiting or recording maintainer decisions |
 
 ## Rules that apply everywhere
 
