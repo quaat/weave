@@ -62,13 +62,16 @@ def _pre_decision(decision: str, reason: str, updated: dict | None = None) -> in
     return _out({"hookSpecificOutput": hso})
 
 
+def _toplevel(cwd: str) -> str:
+    return subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=cwd, capture_output=True, text=True).stdout.strip()
+
+
 def _rel(path: str, cwd: str) -> str:
     p = Path(path)
     if not p.is_absolute():
         p = Path(cwd) / p
     try:
-        top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=cwd, capture_output=True, text=True).stdout.strip()
-        return str(p.resolve().relative_to(Path(top).resolve()))
+        return str(p.resolve().relative_to(Path(_toplevel(cwd)).resolve()))
     except Exception:  # noqa: BLE001
         return str(p)
 
@@ -129,8 +132,13 @@ def post_tool_use(payload: dict, failed: bool) -> int:
     if path:
         rel = _rel(path, payload.get("cwd") or ".")
         rec["path"] = rel
-        from .docs_audit import load_docmap, matches
-        if not failed and matches(rel, load_docmap()["managed_documents"]):
+        from .docs_audit import docmap_for, load_docmap, matches
+        try:
+            top = _toplevel(payload.get("cwd") or ".")
+        except OSError:
+            top = ""
+        docmap = docmap_for(Path(top)) if top else load_docmap()  # the edited tree's own map
+        if not failed and matches(rel, docmap["managed_documents"]):
             pending = store.root / "docs-audit-pending.json"
             items = json.loads(pending.read_text()) if pending.exists() else []
             if rel not in items:

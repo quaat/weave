@@ -135,6 +135,26 @@ class DriftTests(unittest.TestCase):
         _, errors = self.findings(base="HEAD")
         self.assertFinding(errors, "doc-map")
 
+    def test_audited_tree_uses_its_own_documentation_map(self):
+        rel = "tools/weave_workflow/docmap.json"
+        docmap = json.loads((self.repo / rel).read_text())
+        docmap["managed_documents"].append("notes/*.md")
+        (self.repo / rel).write_text(json.dumps(docmap, indent=2))
+        (self.repo / "notes").mkdir()
+        (self.repo / "notes/guide.md").write_text("See `notes/missing-page.md`.\n")
+        gen = self.repo / "docs/development/documentation-map.md"
+        text = gen.read_text()
+        start, end = text.index(docs_audit.GEN_BEGIN), text.index(docs_audit.GEN_END) + len(docs_audit.GEN_END)
+        gen.write_text(text[:start] + docs_audit.render_docs_map(docmap) + text[end:])  # regenerated from the tree's map
+        self.assertEqual(docs_audit.docmap_for(self.repo), docmap)
+        _, errors = self.findings()
+        self.assertFinding(errors, "path", "notes/guide.md")       # managed only by the tree's own map
+        self.assertFalse([e for e in errors if e[0] == "generated"], errors)  # current against the tree's map
+
+    def test_tree_without_a_map_falls_back_to_the_module_map(self):
+        (self.repo / "tools/weave_workflow/docmap.json").unlink()
+        self.assertEqual(docs_audit.docmap_for(self.repo), docs_audit.load_docmap())
+
     def test_protected_vocabulary_is_flagged_for_review(self):
         self.edit("agent-kit/README.md", "\n", "\nThe merge sort is PROVED correct.\n")
         res, warnings = self.findings(base="HEAD", severity="warning")

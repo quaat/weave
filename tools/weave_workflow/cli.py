@@ -247,7 +247,7 @@ def cmd_claim(args) -> int:
     worktree = str(repo / ".worktrees" / branch.replace("/", "-"))
     allowed = args.allowed_path or ["**"]
     impact = [{"path": d, "reason": f"required by {', '.join(sorted(set(r)))}", "status": "required"}
-              for d, r in sorted(docs_audit.required_documents(docs_audit.load_docmap(), {a: "M" for a in allowed if "*" not in a}).items())]
+              for d, r in sorted(docs_audit.required_documents(docs_audit.docmap_for(repo), {a: "M" for a in allowed if "*" not in a}).items())]
     if not args.allowed_path:
         impact.append({"path": "(computed from the final diff)", "reason": "allowed paths unrestricted; impact recomputed at the In Review gate", "status": "required"})
     deps = [f"#{e.blocker} completed ({'; '.join(e.provenance)})" for e in p.graph.blockers_of(args.issue)]
@@ -594,7 +594,7 @@ def cmd_docs_audit(args) -> int:
 
 def cmd_docs_map(args) -> int:
     repo = repo_root()
-    docmap = docs_audit.load_docmap()
+    docmap = docs_audit.docmap_for(repo)
     path = repo / "docs/development/documentation-map.md"
     text = path.read_text(encoding="utf-8")
     start, end = text.find(docs_audit.GEN_BEGIN), text.find(docs_audit.GEN_END)

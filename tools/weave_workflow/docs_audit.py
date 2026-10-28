@@ -19,6 +19,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 DOCMAP_PATH = Path(__file__).resolve().parent / "docmap.json"
+DOCMAP_REL = "tools/weave_workflow/docmap.json"
 DOC_EXTS = {".md", ".rst", ".txt", ".py", ".json", ".weave", ".yml", ".yaml", ".toml", ".lark",
             ".sty", ".svg", ".pdf", ".html", ".css", ".bat", ".cfg", ".ini", ".sh", ".jsonl"}
 MARKER_RE = re.compile(r"docs-audit:\s*(planned|external)\s+(.+?)(?:\s--\s.*?)?\s*(?:-->|$)", re.M)
@@ -96,6 +97,13 @@ def sha256(path: Path) -> str:
 
 def load_docmap(path: Path = DOCMAP_PATH) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def docmap_for(repo: Path) -> dict:
+    """The audited tree's own map (a candidate worktree may change it); the running module's map
+    only when that tree has none."""
+    own = repo / DOCMAP_REL
+    return load_docmap(own if own.is_file() else DOCMAP_PATH)
 
 
 def managed_docs(repo: Path, docmap: dict, files: list[str]) -> list[str]:
@@ -456,7 +464,7 @@ def required_documents(docmap: dict, changes: dict[str, str]) -> dict[str, list[
 
 
 def audit(repo: Path, docmap: dict | None = None, base: str | None = None, impact: list[dict] | None = None) -> AuditResult:
-    docmap = docmap or load_docmap()
+    docmap = docmap or docmap_for(repo)
     head = None
     try:
         head = git(repo, "rev-parse", "HEAD").strip()
