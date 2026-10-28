@@ -7,7 +7,9 @@ from pathlib import Path
 from tools.weave_workflow.cli import held_claims
 from tools.weave_workflow.model import milestone_key, milestone_order
 from tools.weave_workflow.reconcile import reconcile
-from tools.weave_workflow.scheduler import build_graph, milestone_gate, plan
+from tools.weave_workflow.docs_audit import load_docmap
+from tools.weave_workflow.scheduler import (active_implementation_issues, build_graph, milestone_gate,
+                                            path_conflicts, patterns_overlap, plan)
 
 from .support import Harness, mini_policy, mini_snapshot
 
@@ -235,9 +237,9 @@ class ConcurrencyReconcileTests(unittest.TestCase):
             self.claim(n)
         rep = self.report()
         self.assertEqual(sorted(c["issue"] for c in rep["claims"]), [10, 11, 12])
-        self.assertFalse(any("more active claims" in c for c in rep["conflicts"]), rep["conflicts"])
+        self.assertFalse(any("more active implementation issues" in c for c in rep["conflicts"]), rep["conflicts"])
         self.claim(20)
-        self.assertTrue(any("more active claims than permitted" in c for c in self.report()["conflicts"]))
+        self.assertTrue(any("more active implementation issues than permitted (4 > 3)" in c for c in self.report()["conflicts"]))
 
     def test_run_names_each_issue_without_a_claim(self):
         self.claim(10)
@@ -248,12 +250,63 @@ class ConcurrencyReconcileTests(unittest.TestCase):
         self.h.store.set_active_run({"run_id": "run-test-0001", "active_issue": 12})  # record from before the change
         self.assertIn("active run names #12 but no published claim exists; resume or release explicitly", self.report()["notes"])
 
+    def moved(self, n, frm, to):
+        self.h.publish("STATE_CHANGED", n, operation_id=f"op-test-{n}-{to.replace(' ', '')}", from_status=frm, to_status=to)
+        self.h.snap.project.items[n].status = to
+
+    def test_in_review_work_is_not_counted_against_the_limit(self):
+        self.h.policy["concurrency"]["max_active_implementation_issues"] = 2
+        for n in (10, 11):
+            self.claim(n)
+            self.moved(n, "Todo", "In Progress")
+        self.moved(11, "In Progress", "In Review")
+        self.claim(12)
+        rep = self.report()
+        self.assertEqual(rep["active_implementation_issues"], [10, 12])
+        self.assertEqual(sorted(c["issue"] for c in rep["claims"]), [10, 11, 12])  # In Review work stays held
+        self.assertEqual(rep["conflicts"], [])
+        self.moved(11, "In Review", "In Progress")  # changes requested: implementation again
+        self.assertIn("more active implementation issues than permitted (3 > 2): #10, #11, #12", self.report()["conflicts"])
+
     def test_held_claims_end_with_release_or_completion(self):
         for n in (10, 11, 12):
             self.claim(n)
         self.h.publish("RELEASED", 11, reason="returned")
         self.h.publish("COMPLETED", 12, head_sha="a" * 40, merge_sha="c" * 40)
         self.assertEqual(held_claims(self.h.store), {10})
+
+
+class ActiveIssueTests(unittest.TestCase):
+    def ev(self, kind, n, **fields):
+        return {"kind": kind, "issue": f"quaat/weave#{n}", **fields}
+
+    def test_one_definition_of_an_active_implementation_issue(self):
+        evs = [self.ev("CLAIMED", 10), self.ev("CLAIMED", 11), self.ev("CLAIMED", 12), self.ev("CLAIMED", 13),
+               self.ev("STATE_CHANGED", 10, to_status="In Progress"), self.ev("STATE_CHANGED", 11, to_status="In Review"),
+               self.ev("RELEASED", 12), self.ev("STATE_CHANGED", 13, to_status="In Review"),
+               self.ev("STATE_CHANGED", 13, to_status="In Progress"), self.ev("STATE_CHANGED", 14, to_status="In Progress")]
+        self.assertEqual(active_implementation_issues(evs), [10, 13])  # 11 In Review, 12 released, 14 unclaimed
+        self.assertEqual(active_implementation_issues(evs + [self.ev("COMPLETED", 10)]), [13])
+
+
+class PathOverlapTests(unittest.TestCase):
+    def test_overlap_rules_are_conservative_and_symmetric(self):
+        cases = [("**", "README.md", True), ("agent-kit/**", "inventory-proof/**", False),
+                 ("agent-kit/**", "agent-kit/docs/weave.md", True), ("docs/development/*.md", "docs/development/roles.md", True),
+                 ("docs/development/*.md", "docs/decisions/*.md", False), ("README.md", "README.md", True),
+                 ("README.md", "docs/**", False), ("tools/weave_workflow", "tools/weave_workflow/cli.py", True),
+                 ("*.md", "agent-kit/x.py", True), ("tools/a.py", "tools/ab.py", False)]
+        for p, q, expected in cases:
+            with self.subTest(p=p, q=q):
+                self.assertEqual((patterns_overlap(p, q), patterns_overlap(q, p)), (expected, expected))
+
+    def test_shared_generated_artefacts_conflict(self):
+        docmap = load_docmap()
+        found = path_conflicts(["agent-kit/docs/weave.md"], ["agent-kit/.agents/skills/weave/references/weave.md"], docmap)
+        self.assertEqual(found, ["both may touch generated agent-kit/.agents/skills/weave/references/weave.md"])
+        found = path_conflicts(["tools/weave_workflow/docmap.json"], ["docs/development/*.md"], docmap)
+        self.assertIn("both may touch generated docs/development/documentation-map.md", found)
+        self.assertEqual(path_conflicts(["agent-kit/**"], ["specification/grammar/**"], docmap), [])
 
 
 if __name__ == "__main__":

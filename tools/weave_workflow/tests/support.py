@@ -174,3 +174,26 @@ def repo_copy() -> Path:
     for args in (["init", "-q"], ["add", "-A"], ["commit", "-q", "-m", "fixture"]):
         subprocess.run(["git", *args], cwd=tmp, check=True, env=env, capture_output=True)
     return tmp
+
+
+GIT_ENV = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
+
+
+def temp_git_repo(parent: Path) -> Path:
+    """An empty Git repository with one commit, for commands that create branches and worktrees."""
+    repo = parent / "repo"
+    repo.mkdir()
+    for args in (["init", "-q"], ["commit", "-q", "--allow-empty", "-m", "base"]):
+        subprocess.run(["git", *args], cwd=repo, check=True, env=GIT_ENV, capture_output=True)
+    return repo
+
+
+def real_repo_refs() -> tuple[list[str], list[str]]:
+    """The real repository's agent/* branches and worktrees (tests must leave them unchanged)."""
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+    branches = git("branch", "--list", "agent/*", "--format=%(refname)")
+    worktrees = [l for l in git("worktree", "list", "--porcelain") if l.startswith(("worktree ", "branch "))]
+    return branches, worktrees
+

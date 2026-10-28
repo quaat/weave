@@ -8,15 +8,16 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
-from tools.weave_workflow import events
+from tools.weave_workflow import cli, events
 from tools.weave_workflow.cli import main, relay_problems
 from tools.weave_workflow.integration import integration_evidence
-from tools.weave_workflow.model import Issue, ProjectItem, PullRequest, snapshot_to_dict
+from tools.weave_workflow.model import Issue, ProjectItem, PullRequest, digest, snapshot_to_dict
 from tools.weave_workflow.publisher import Publisher, authenticated_events
 from tools.weave_workflow.state import Store
 
-from .support import REPO, Harness, mini_snapshot, policy
+from .support import REPO, Harness, mini_snapshot, policy, real_repo_refs, temp_git_repo
 
 
 def run_cli(argv):
@@ -27,78 +28,174 @@ def run_cli(argv):
 
 
 class ClaimSlotTests(unittest.TestCase):
-    """F-001: the claim command enforces the planner's stop reason, not only candidate eligibility."""
+    """F-001 and #67: claims honour the planner's stop reason, the concurrency limit, one claim per
+    issue and disjoint allowed paths. Every claim runs against a temporary Git repository."""
 
     def setUp(self):
+        self.refs_before = real_repo_refs()
         self.tmp = Path(tempfile.mkdtemp())
         os.environ["WEAVE_WORKFLOW_STATE"] = str(self.tmp / "state")
+        (self.tmp / "state").mkdir()
+        self.store = Store(self.tmp / "state")
+        self.repo = temp_git_repo(self.tmp)
+        self.patches = [mock.patch.object(cli, "repo_root", return_value=self.repo)]
+        for patch in self.patches:
+            patch.start()
+        self.sequence = 0
 
     def tearDown(self):
+        for patch in self.patches:
+            patch.stop()
         del os.environ["WEAVE_WORKFLOW_STATE"]
         shutil.rmtree(self.tmp, ignore_errors=True)
+        self.assertEqual(real_repo_refs(), self.refs_before)  # no agent/* branch or worktree leaked
+
+    def limit(self, n: int) -> None:
+        pol = policy()
+        pol["concurrency"]["max_active_implementation_issues"] = n
+        patch = mock.patch.object(cli, "load_policy", return_value=pol)
+        patch.start()
+        self.patches.append(patch)
 
     def fixture(self, snap) -> str:
         path = self.tmp / "snap.json"
         path.write_text(json.dumps(snapshot_to_dict(snap)))
         return str(path)
 
-    def claimed_elsewhere(self, n: int) -> None:
-        """Record a published claim for #n in the ledger (another task of this run holds it)."""
-        ev = events.build("CLAIMED", run_id="run-other-0001", attempt=1, issue=f"{REPO}#{n}", milestone="M0",
-                          sender="orchestrator", recipient="orchestrator", claim_expires_at="2026-10-29T00:00:00Z",
-                          coordinator_host="other", work_type="implementation")
-        root = Path(os.environ["WEAVE_WORKFLOW_STATE"])
-        root.mkdir(parents=True, exist_ok=True)
-        Store(root).append({"type": "event", "event": ev, "sequence": 1, "origin": "claim"})
+    def snap(self, **statuses):
+        snap = mini_snapshot()  # its "M0 Start" milestone is the live policy's current milestone M0
+        snap.issues[13] = Issue(13, "Task 13", snap.issues[10].body, labels=["roadmap"], milestone=snap.issues[10].milestone)
+        snap.project.items[13] = ProjectItem("item-13", 13, "Todo", "opt-todo")
+        for key, status in statuses.items():
+            snap.project.items[int(key[1:])].status = status
+        return snap
+
+    def record(self, kind: str, n: int, run_id: str = "run-other-0001", **fields) -> None:
+        """Append an event to the ledger as another claim of the coordinator would have."""
+        ev = events.build(kind, run_id=run_id, attempt=1, issue=f"{REPO}#{n}", milestone="M0",
+                          sender="orchestrator", recipient="orchestrator", **fields)
+        self.sequence += 1
+        self.store.append({"type": "event", "event": ev, "sequence": self.sequence, "origin": "claim"})
+
+    def claimed_elsewhere(self, n: int, paths: list[str] | None = None, status: str | None = None) -> None:
+        """A claim of #n by this coordinator: CLAIMED, its packet's allowed paths, optionally a transition."""
+        self.record("CLAIMED", n, claim_expires_at="2026-10-29T00:00:00Z", coordinator_host="other",
+                    work_type="implementation")
+        if paths is not None:
+            path = self.tmp / f"packet-{n}.json"
+            path.write_text(json.dumps({"allowed_paths": paths}))
+            self.store.append({"type": "packet", "issue": n, "run_id": "run-other-0001", "attempt": 1,
+                               "path": str(path), "digest": digest(path.read_text())})
+        if status:
+            self.moved(n, "Todo", status)
+
+    def moved(self, n: int, frm: str, to: str) -> None:
+        self.record("STATE_CHANGED", n, operation_id=f"op-test-{n}-{to.replace(' ', '')}", from_status=frm, to_status=to)
+
+    def claim(self, snap, n, *extra):
+        return run_cli(["--fixture", self.fixture(snap), "claim", str(n), "--base", "HEAD", "--json", *extra])
 
     def test_claims_up_to_the_concurrency_limit(self):
         self.assertEqual(policy()["concurrency"]["max_active_implementation_issues"], 3)
-        snap = mini_snapshot()  # its "M0 Start" milestone is the live policy's current milestone M0
-        ms = snap.issues[10].milestone
-        snap.issues[13] = Issue(13, "Task 13", snap.issues[10].body, labels=["roadmap"], milestone=ms)
-        snap.project.items[13] = ProjectItem("item-13", 13, "Todo", "opt-todo")
-        snap.project.items[10].status = "In Progress"
-        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "11", "--base", "HEAD", "--json"])
+        self.claimed_elsewhere(10, ["inventory-proof/**"], "In Progress")
+        rc, out = self.claim(self.snap(n10="In Progress"), 11, "--allowed-path", "agent-kit/**")
         self.assertEqual(rc, 0, out)  # a second claim is allowed while one is active
-        self.claimed_elsewhere(11)
-        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "12", "--base", "HEAD", "--json"])
+        self.claimed_elsewhere(11, ["agent-kit/**"], "In Progress")
+        rc, out = self.claim(self.snap(n10="In Progress", n11="In Progress"), 12, "--allowed-path", "specification/**")
         self.assertEqual(rc, 0, out)  # and a third
-        snap.project.items[12].status = "In Progress"
-        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "13", "--base", "HEAD", "--json"])
+        self.claimed_elsewhere(12, ["specification/**"], "In Progress")
+        rc, out = self.claim(self.snap(n10="In Progress", n11="In Progress", n12="In Progress"), 13,
+                             "--allowed-path", "docs/decisions/**")
         self.assertEqual(rc, 2)  # a fourth is refused with the limit at 3
         self.assertFalse(out["claimable"])
         self.assertIn("all 3 active implementation slot(s) occupied by #10, #11, #12", out["reasons"][0])
 
+    def test_in_review_work_frees_its_slot(self):
+        self.limit(2)
+        self.claimed_elsewhere(10, ["inventory-proof/**"], "In Progress")
+        self.claimed_elsewhere(11, ["agent-kit/**"], "In Progress")
+        snap = self.snap(n10="In Progress", n11="In Progress")
+        rc, out = self.claim(snap, 12, "--allowed-path", "specification/**")
+        self.assertEqual(rc, 2)
+        self.assertIn("all 2 active implementation slot(s) occupied by #10, #11", out["reasons"][0])
+        self.moved(11, "In Progress", "In Review")
+        snap = self.snap(n10="In Progress", n11="In Review")
+        rc, out = run_cli(["--fixture", self.fixture(snap), "plan", "--json"])
+        self.assertEqual((out["active"], out["next"]["issue"]), ([10], 12))
+        rc, out = self.claim(snap, 11, "--allowed-path", "docs/decisions/**")
+        self.assertEqual(rc, 2)  # its claim is still held: never claimed twice
+        self.assertIn("claim still held (In Review or not yet released); not claimed again", out["reasons"])
+        rc, out = self.claim(snap, 12, "--allowed-path", "specification/**", "--apply")
+        self.assertEqual(rc, 0, out)
+        self.assertTrue(out["applied"])
+        self.assertTrue((self.repo / ".worktrees" / "agent-12-task-12").is_dir())
+        self.assertEqual(self.store.active_run()["active_issues"], [12])
+
     def test_same_issue_cannot_be_claimed_twice(self):
         self.claimed_elsewhere(10)  # claimed, but the card has not left Todo yet
-        rc, out = run_cli(["--fixture", self.fixture(mini_snapshot()), "claim", "10", "--base", "HEAD", "--json"])
+        rc, out = self.claim(self.snap(), 10)
         self.assertEqual(rc, 2)
         self.assertIn("already an active implementation issue (claimed or In Progress)", out["reasons"])
+
+    def test_overlapping_paths_are_refused_while_the_other_issue_is_active(self):
+        self.claimed_elsewhere(10, ["agent-kit/**", "docs/development/documentation-map.md"], "In Progress")
+        snap = self.snap(n10="In Progress")
+        for paths in (["agent-kit/docs/**"], [], ["tools/weave_workflow/docmap.json"]):
+            with self.subTest(paths=paths):
+                rc, out = self.claim(snap, 11, *[a for p in paths for a in ("--allowed-path", p)])
+                self.assertEqual(rc, 2)
+                self.assertTrue(out["reasons"][0].startswith("allowed paths conflict with active implementation issue #10"),
+                                out["reasons"])
+        self.assertIn("'**' overlaps 'agent-kit/**'", self.claim(snap, 11)[1]["reasons"][0])
+        self.assertIn("both may touch generated docs/development/documentation-map.md",
+                      self.claim(snap, 11, "--allowed-path", "tools/weave_workflow/docmap.json")[1]["reasons"][0])
+        rc, out = self.claim(snap, 11, "--allowed-path", "specification/**")
+        self.assertEqual(rc, 0, out)  # disjoint paths are admitted
+        self.moved(10, "In Progress", "In Review")
+        rc, out = self.claim(self.snap(n10="In Review"), 11, "--allowed-path", "agent-kit/docs/**")
+        self.assertEqual(rc, 0, out)  # admitted again once the other issue is In Review
+
+    def test_in_progress_card_without_a_recorded_claim_blocks_every_path(self):
+        rc, out = self.claim(self.snap(n10="In Progress"), 11, "--allowed-path", "specification/**")
+        self.assertEqual(rc, 2)
+        self.assertIn("'specification/**' overlaps '**'", out["reasons"][0])
 
     def test_missing_base_is_reported_not_raised(self):
         rc, out = run_cli(["--fixture", self.fixture(mini_snapshot()), "claim", "10", "--base", "no-such-ref", "--json"])
         self.assertEqual(rc, 2)
         self.assertIn("no-such-ref", out["reasons"][0])
 
-    def test_selection_is_repeated_under_the_lock(self):
+    def race(self, during_lock):
+        """Run ``during_lock`` as another claim finishing while this process waits for the lock."""
         from tools.weave_workflow import state
-        snap = mini_snapshot()
-        fixture = self.fixture(snap)
         original = state.Store.coordinator_lock
-        store = Store(Path(os.environ["WEAVE_WORKFLOW_STATE"]))
 
         def racing_lock(self_, run_id):
-            # Another coordinator finished claiming #10 itself while this process waited for the lock.
-            self.claimed_elsewhere(10)
+            during_lock()
             return original(self_, run_id)
-        state.Store.coordinator_lock = racing_lock
-        try:
-            rc, out = run_cli(["--fixture", fixture, "claim", "10", "--base", "HEAD", "--apply", "--json"])
-        finally:
-            state.Store.coordinator_lock = original
+        patch = mock.patch.object(state.Store, "coordinator_lock", racing_lock)
+        patch.start()
+        self.patches.append(patch)
+
+    def test_selection_is_repeated_under_the_lock(self):
+        self.race(lambda: self.claimed_elsewhere(10))  # the same issue, claimed while this one waited
+        rc, out = self.claim(mini_snapshot(), 10, "--apply")
         self.assertEqual(rc, 2)
         self.assertIn("selection changed", out["note"])
-        self.assertEqual(store.pending(), [])  # nothing was published
+        self.assertEqual(self.store.pending(), [])  # nothing was published
+        self.assertFalse((self.repo / ".worktrees").exists())
+
+    def test_run_record_is_reread_under_the_lock(self):
+        self.claimed_elsewhere(10, ["inventory-proof/**"], "In Progress")
+        self.store.set_active_run({"run_id": "run-other-0001", "active_issues": [10]})
+
+        def other_claim():
+            self.claimed_elsewhere(12, ["specification/**"])
+            self.store.set_active_run({"run_id": "run-other-0001", "active_issues": [10, 12]})
+        self.race(other_claim)
+        rc, out = self.claim(self.snap(n10="In Progress"), 11, "--allowed-path", "agent-kit/**", "--apply")
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.store.active_run()["active_issues"], [10, 11, 12])
 
     def test_claim_refused_when_board_unreadable(self):
         rc, out = run_cli(["--fixture", self.fixture(mini_snapshot(with_project=False)), "claim", "11", "--json"])

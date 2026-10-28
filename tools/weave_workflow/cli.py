@@ -14,6 +14,7 @@ from .github import FakeGitHub, GhCli, GitHubError
 from .model import (acceptance_criteria, digest, requirements_digest, snapshot_from_dict,
                     snapshot_to_dict)
 from .publisher import DeliveryPaused, Publisher, authenticated_events, maintainer_decisions
+from .scheduler import active_implementation_issues, path_conflicts
 from .scheduler import plan as make_plan
 from .state import LockHeld, PacketError, Store, new_id, run_issues, utcnow
 from .transitions import TaskView, Transitioner, evaluate
@@ -59,20 +60,13 @@ def claim_expiry(policy: dict) -> str:
 
 
 def active_claims(store: Store) -> list[int]:
-    claimed: dict[int, bool] = {}
-    for e in store.events():
-        n = int(e["issue"].split("#")[1])
-        if e["kind"] == "CLAIMED":
-            claimed[n] = True
-        elif e["kind"] in ("RELEASED", "COMPLETED"):
-            claimed[n] = False
-        elif e["kind"] == "STATE_CHANGED" and e["to_status"] in ("In Review", "Done", "Todo"):
-            claimed[n] = False
-    return sorted(n for n, v in claimed.items() if v)
+    """Active implementation issues in the ledger (``scheduler.active_implementation_issues``)."""
+    return active_implementation_issues(store.events())
 
 
 def held_claims(store: Store) -> set[int]:
-    """Issues whose latest claim is neither released nor completed (work In Review stays held)."""
+    """Issues whose latest claim is neither released nor completed (work In Review stays held).
+    Held claims block claiming the same issue again; they do not all count against the limit."""
     last: dict[int, str] = {}
     for e in store.events():
         if e["kind"] in ("CLAIMED", "RELEASED", "COMPLETED"):
@@ -118,7 +112,7 @@ def cmd_plan(args) -> int:
     policy = load_policy()
     store = Store.for_repo(repo_root())
     snap = adapter_for(args, policy).snapshot()
-    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store), sorted(held_claims(store)))
     data = {
         "current_milestone": p.current, "next": p.next.__dict__ if p.next else None,
         "stop_reason": p.stop_reason, "active": p.active,
@@ -217,9 +211,34 @@ def derive_checks(repo: Path, paths: list[str]) -> list[dict]:
     return checks
 
 
+def claimed_paths(store: Store, issue: int) -> list[str]:
+    """Allowed paths of the issue's latest recorded packet; ``**`` when none can be verified."""
+    recs = [r for r in store.records("packet") if r["issue"] == issue]
+    if not recs:
+        return ["**"]
+    try:
+        return store.packet(issue, recs[-1]["run_id"], recs[-1]["attempt"]).get("allowed_paths") or ["**"]
+    except (PacketError, OSError, ValueError):
+        return ["**"]
+
+
+def path_refusals(store: Store, repo: Path, issue: int, allowed: list[str], active: list[int]) -> list[str]:
+    """Conflicts between a new claim's allowed paths and those of every active implementation issue
+    (an issue In Progress without a verifiable recorded packet counts as ``**``)."""
+    docmap = docs_audit.docmap_for(repo)
+    reasons = []
+    for other in active:
+        if other == issue:
+            continue
+        found = path_conflicts(allowed, claimed_paths(store, other), docmap)
+        if found:
+            reasons.append(f"allowed paths conflict with active implementation issue #{other}: " + "; ".join(found))
+    return reasons
+
+
 def select_for_claim(args, store: Store, snap, policy: dict):
     """Returns (plan, candidate, refusal); refusal is None when the issue may be claimed now."""
-    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store), sorted(held_claims(store)))
     cand = next((c for c in p.candidates if c.issue == args.issue), None)
     if cand is None or not cand.eligible:
         return p, cand, {"claimable": False, "issue": args.issue, "stop_reason": p.stop_reason,
@@ -228,6 +247,9 @@ def select_for_claim(args, store: Store, snap, policy: dict):
         return p, cand, {"claimable": False, "issue": args.issue, "reasons": [p.stop_reason or "no task selected"]}
     if p.next.issue != args.issue and not args.override_order:
         return p, cand, {"claimable": False, "reasons": [f"#{p.next.issue} precedes #{args.issue} in the deterministic order"]}
+    conflicts = path_refusals(store, repo_root(), args.issue, args.allowed_path or ["**"], p.active)
+    if conflicts:
+        return p, cand, {"claimable": False, "issue": args.issue, "reasons": conflicts}
     return p, cand, None
 
 
@@ -278,7 +300,10 @@ def cmd_claim(args) -> int:
                 refusal["note"] = "selection changed while waiting for the coordinator lock"
                 emit(args, refusal)
                 return 2
-            # The run names every issue it holds a claim on (at most the policy's concurrency limit).
+            # The run names every issue it holds a claim on, In Review work included; only active
+            # implementation issues count against the concurrency limit. Re-read the record under
+            # the lock so a claim made while this one waited is not dropped.
+            run = store.active_run() or run
             held = held_claims(store)
             active_issues = sorted({n for n in run_issues(run) if n in held} | {args.issue})
             store.set_active_run({**{k: v for k, v in run.items() if k != "active_issue"}, "run_id": run_id,
