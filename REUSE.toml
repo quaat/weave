@@ -1,2 +1,501 @@
-Contributions are accepted under the same terms, as stated in `README.md`
+# REUSE Specification 3.3; configuration schema version 1.
+# REUSE tools read REUSE.toml, not REUSE.yaml.
+# Reflects the MIT grant and copyright notice already recorded in LICENSE and
+# README.md. Contributions use the same terms, as stated in README.md.
+# Exact paths deliberately prevent future third-party imports inheriting MIT.
+# New files need reviewed annotations or SPDX headers of their own.
+# "closest" preserves licensing/copyright in file headers or .license sidecars.
+# Pinned snapshots are annotated here without changing their bytes or hashes.
+# This metadata is not a completed provenance audit; see follow-up.
+version = 1
+
+SPDX-PackageName = "Weave"
+SPDX-PackageDownloadLocation = "https://github.com/quaat/weave"
+
+# Repository metadata and development workflow.
+[[annotations]]
+path = [
+    ".claude/agents/weave-docs-editor.md",
+    ".claude/agents/weave-implementer.md",
+    ".claude/agents/weave-investigator.md",
+    ".claude/agents/weave-local-reviewer.md",
+    ".claude/agents/weave-safety-reviewer.md",
+    ".claude/agents/weave-verifier.md",
+    ".claude/hooks/weave_hook.py",
+    ".claude/settings.json",
+    ".claude/skills/weave-docs/SKILL.md",
+    ".claude/skills/weave-project/SKILL.md",
+    ".claude/skills/weave-review/SKILL.md",
+    ".claude/skills/weave-task/SKILL.md",
+    ".editorconfig",
+    ".gitattributes",
+    ".github/dependabot.yml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/docs.yml",
+    ".github/workflows/pdf.yml",
+    ".gitignore",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "docs/decisions/0002-licence-terms.md",
+    "docs/development/agent-workflow.md",
+    "docs/development/capabilities.md",
+    "docs/development/communication-protocol.md",
+    "docs/development/conventions.md",
+    "docs/development/documentation-currency.md",
+    "docs/development/documentation-map.md",
+    "docs/development/github-adapter.md",
+    "docs/development/hooks.md",
+    "docs/development/implementation-language.md",
+    "docs/development/orchestration-requirements.md",
+    "docs/development/review.md",
+    "docs/development/roles.md",
+    "docs/development/scheduling.md",
+    "docs/development/transitions.md",
+    "follow-up",
+    "tools/__init__.py",
+    "tools/weave_workflow/__init__.py",
+    "tools/weave_workflow/__main__.py",
+    "tools/weave_workflow/capabilities.py",
+    "tools/weave_workflow/cli.py",
+    "tools/weave_workflow/docmap.json",
+    "tools/weave_workflow/docs_audit.py",
+    "tools/weave_workflow/events.py",
+    "tools/weave_workflow/github.py",
+    "tools/weave_workflow/hooks.py",
+    "tools/weave_workflow/integration.py",
+    "tools/weave_workflow/model.py",
+    "tools/weave_workflow/policy.json",
+    "tools/weave_workflow/publisher.py",
+    "tools/weave_workflow/reconcile.py",
+    "tools/weave_workflow/report.py",
+    "tools/weave_workflow/review.py",
+    "tools/weave_workflow/scheduler.py",
+    "tools/weave_workflow/schema.py",
+    "tools/weave_workflow/schemas/event.v1.schema.json",
+    "tools/weave_workflow/schemas/review-result.v1.schema.json",
+    "tools/weave_workflow/schemas/task-packet.v1.schema.json",
+    "tools/weave_workflow/state.py",
+    "tools/weave_workflow/tests/__init__.py",
+    "tools/weave_workflow/tests/support.py",
+    "tools/weave_workflow/tests/test_docs_audit.py",
+    "tools/weave_workflow/tests/test_github_adapter.py",
+    "tools/weave_workflow/tests/test_hooks.py",
+    "tools/weave_workflow/tests/test_protocol.py",
+    "tools/weave_workflow/tests/test_review_findings.py",
+    "tools/weave_workflow/tests/test_scheduler.py",
+    "tools/weave_workflow/tests/test_transitions.py",
+    "tools/weave_workflow/transitions.py",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Thomas F. Hagelien"
+SPDX-License-Identifier = "MIT"
+
+# Working prototype.
+[[annotations]]
+path = [
+    "inventory-proof/ACTUAL_OUTPUT.txt",
+    "inventory-proof/DESIGN_NOTES.md",
+    "inventory-proof/Inventory.coloured.weave",
+    "inventory-proof/Inventory.weave",
+    "inventory-proof/LOWERED_PROPAGATION.weave",
+    "inventory-proof/README.md",
+    "inventory-proof/REPORT.md",
+    "inventory-proof/TEST_OUTPUT.txt",
+    "inventory-proof/checker.py",
+    "inventory-proof/colour-check.json",
+    "inventory-proof/colour-proof.json",
+    "inventory-proof/coloured.py",
+    "inventory-proof/demo.py",
+    "inventory-proof/durable-scenarios.json",
+    "inventory-proof/durable.py",
+    "inventory-proof/examples/checkout.weave",
+    "inventory-proof/examples/checkout_composed.weave",
+    "inventory-proof/examples/checkout_propagating.weave",
+    "inventory-proof/examples/direct_charge.weave",
+    "inventory-proof/examples/drop_hold.weave",
+    "inventory-proof/examples/forge_escrow.weave",
+    "inventory-proof/examples/wrong_order.weave",
+    "inventory-proof/mutations/bogus_sell.weave",
+    "inventory-proof/mutations/leak.weave",
+    "inventory-proof/mutations/lose_paid.weave",
+    "inventory-proof/mutations/manual_leak.weave",
+    "inventory-proof/mutations/quick_recover.weave",
+    "inventory-proof/mutations/skim.weave",
+    "inventory-proof/ordering.json",
+    "inventory-proof/proof.json",
+    "inventory-proof/requirements.txt",
+    "inventory-proof/scenarios.json",
+    "inventory-proof/simulate.py",
+    "inventory-proof/tests/test_checker.py",
+    "inventory-proof/tests/test_coloured.py",
+    "inventory-proof/tests/test_composition.py",
+    "inventory-proof/tests/test_durable.py",
+    "inventory-proof/tests/test_rejection_and_propagation.py",
+    "inventory-proof/verify_certificate.py",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Thomas F. Hagelien"
+SPDX-License-Identifier = "MIT"
+
+# Agent kit, including its byte-preserved prototype snapshot.
+[[annotations]]
+path = [
+    "agent-kit/.agents/skills/weave/SKILL.md",
+    "agent-kit/.agents/skills/weave/agents/openai.yaml",
+    "agent-kit/.agents/skills/weave/assets/prototype/ACTUAL_OUTPUT.txt",
+    "agent-kit/.agents/skills/weave/assets/prototype/DESIGN_NOTES.md",
+    "agent-kit/.agents/skills/weave/assets/prototype/Inventory.coloured.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/Inventory.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/LOWERED_PROPAGATION.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/README.md",
+    "agent-kit/.agents/skills/weave/assets/prototype/REPORT.md",
+    "agent-kit/.agents/skills/weave/assets/prototype/TEST_OUTPUT.txt",
+    "agent-kit/.agents/skills/weave/assets/prototype/checker.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/colour-check.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/colour-proof.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/coloured.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/demo.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/durable-scenarios.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/durable.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/checkout.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/checkout_composed.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/checkout_propagating.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/direct_charge.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/drop_hold.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/forge_escrow.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/examples/wrong_order.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/mutations/bogus_sell.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/mutations/leak.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/mutations/lose_paid.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/mutations/manual_leak.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/mutations/quick_recover.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/mutations/skim.weave",
+    "agent-kit/.agents/skills/weave/assets/prototype/ordering.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/proof.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/requirements.txt",
+    "agent-kit/.agents/skills/weave/assets/prototype/scenarios.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/simulate.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/tests/test_checker.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/tests/test_coloured.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/tests/test_composition.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/tests/test_durable.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/tests/test_rejection_and_propagation.py",
+    "agent-kit/.agents/skills/weave/assets/prototype/verify_certificate.py",
+    "agent-kit/.agents/skills/weave/references/weave.md",
+    "agent-kit/.agents/skills/weave/scripts/weave.py",
+    "agent-kit/.agents/skills/weave/scripts/weave_pure/__init__.py",
+    "agent-kit/.agents/skills/weave/scripts/weave_pure/check.py",
+    "agent-kit/.agents/skills/weave/scripts/weave_pure/cli.py",
+    "agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py",
+    "agent-kit/.agents/skills/weave/scripts/weave_pure/syntax.py",
+    "agent-kit/.agents/skills/weave/scripts/weave_pure/values.py",
+    "agent-kit/.claude/skills/weave/SKILL.md",
+    "agent-kit/.gitignore",
+    "agent-kit/.python-version",
+    "agent-kit/AGENTS.md",
+    "agent-kit/CHANGELOG.md",
+    "agent-kit/CLAUDE.md",
+    "agent-kit/PROVENANCE.json",
+    "agent-kit/README.md",
+    "agent-kit/claude-code-tiny-shop.md",
+    "agent-kit/claude-code-weave-merge-sort.md",
+    "agent-kit/demos/merge_sort/README.md",
+    "agent-kit/demos/merge_sort/TEST_REPORT.md",
+    "agent-kit/demos/merge_sort/artifacts/demo-run-log.txt",
+    "agent-kit/demos/merge_sort/artifacts/mixed-sign.json",
+    "agent-kit/demos/merge_sort/artifacts/trace-concurrent-quantum1.json",
+    "agent-kit/demos/merge_sort/artifacts/trace-concurrent.json",
+    "agent-kit/demos/merge_sort/artifacts/trace-concurrent.txt",
+    "agent-kit/demos/merge_sort/artifacts/trace-sequential.json",
+    "agent-kit/demos/merge_sort/merge_sort.weave",
+    "agent-kit/demos/merge_sort/requirements.txt",
+    "agent-kit/demos/merge_sort/run_demo.py",
+    "agent-kit/demos/merge_sort/tests/test_merge_sort.py",
+    "agent-kit/demos/tiny_shop/README.md",
+    "agent-kit/demos/tiny_shop/TEST_REPORT.md",
+    "agent-kit/demos/tiny_shop/artifacts/inventory-proof.json",
+    "agent-kit/demos/tiny_shop/artifacts/lowered-trace.json",
+    "agent-kit/demos/tiny_shop/artifacts/scenarios.json",
+    "agent-kit/demos/tiny_shop/artifacts/shop.lowered.weave",
+    "agent-kit/demos/tiny_shop/artifacts/source-trace.json",
+    "agent-kit/demos/tiny_shop/requirements.txt",
+    "agent-kit/demos/tiny_shop/run_demo.py",
+    "agent-kit/demos/tiny_shop/shop.weave",
+    "agent-kit/demos/tiny_shop/tests/test_tiny_shop.py",
+    "agent-kit/docs/commands.md",
+    "agent-kit/docs/prototype-status.md",
+    "agent-kit/docs/validation.md",
+    "agent-kit/docs/weave.md",
+    "agent-kit/examples/README.md",
+    "agent-kit/examples/invalid/direct_charge.weave",
+    "agent-kit/examples/invalid/drop_hold.weave",
+    "agent-kit/examples/invalid/early_return_leak.weave",
+    "agent-kit/examples/invalid/forge_escrow.weave",
+    "agent-kit/examples/invalid/missing_unknown.weave",
+    "agent-kit/examples/invalid/paid_release.weave",
+    "agent-kit/examples/invalid/pure_charge.weave",
+    "agent-kit/examples/invalid/pure_fork_sibling.weave",
+    "agent-kit/examples/invalid/pure_hold.weave",
+    "agent-kit/examples/invalid/pure_mutual.weave",
+    "agent-kit/examples/invalid/recursion.weave",
+    "agent-kit/examples/invalid/reuse_hold.weave",
+    "agent-kit/examples/invalid/unsupported_if.weave",
+    "agent-kit/examples/invalid/wrong_order.weave",
+    "agent-kit/examples/manifest.json",
+    "agent-kit/examples/mutations/bogus_sell.weave",
+    "agent-kit/examples/mutations/leak.weave",
+    "agent-kit/examples/mutations/lose_paid.weave",
+    "agent-kit/examples/mutations/manual_leak.weave",
+    "agent-kit/examples/mutations/quick_recover.weave",
+    "agent-kit/examples/mutations/skim.weave",
+    "agent-kit/examples/nets/Inventory.weave",
+    "agent-kit/examples/nets/unsafe_paid_release.weave",
+    "agent-kit/examples/valid/arm_hold.weave",
+    "agent-kit/examples/valid/checkout.weave",
+    "agent-kit/examples/valid/checkout_composed.weave",
+    "agent-kit/examples/valid/checkout_propagating.weave",
+    "agent-kit/examples/valid/finish_paid.weave",
+    "agent-kit/examples/valid/propagate_bound.weave",
+    "agent-kit/examples/valid/pure_fork.weave",
+    "agent-kit/examples/valid/pure_last.weave",
+    "agent-kit/examples/valid/return_hold.weave",
+    "agent-kit/examples/valid/settle.weave",
+    "agent-kit/requirements.txt",
+    "agent-kit/scripts/sync_skill_reference.py",
+    "agent-kit/scripts/weave.py",
+    "agent-kit/tests/test_pure_language.py",
+    "agent-kit/tests/test_pure_runtime.py",
+    "agent-kit/tests/test_runner.py",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Thomas F. Hagelien"
+SPDX-License-Identifier = "MIT"
+
+# Specification sources, examples, evidence and byte-preserved reference snapshot.
+[[annotations]]
+path = [
+    "specification/.gitignore",
+    "specification/Makefile",
+    "specification/PROVENANCE.json",
+    "specification/README.md",
+    "specification/design/README.md",
+    "specification/docs/_ext/weave_check.py",
+    "specification/docs/_ext/weave_lexer.py",
+    "specification/docs/_ext/weave_singlehtml.py",
+    "specification/docs/_static/diagrams/handle-states.svg",
+    "specification/docs/_static/diagrams/inventory-n0.svg",
+    "specification/docs/_static/diagrams/r0-unknown.svg",
+    "specification/docs/_static/weave-favicon.svg",
+    "specification/docs/_static/weave.css",
+    "specification/docs/_templates/page.html",
+    "specification/docs/_templates/sidebar/brand.html",
+    "specification/docs/chapters/conformance.rst",
+    "specification/docs/chapters/counterexamples.rst",
+    "specification/docs/chapters/declarations.rst",
+    "specification/docs/chapters/design-history.rst",
+    "specification/docs/chapters/diagnostics.rst",
+    "specification/docs/chapters/effects.rst",
+    "specification/docs/chapters/evidence-design.rst",
+    "specification/docs/chapters/examples.rst",
+    "specification/docs/chapters/execution-contract.rst",
+    "specification/docs/chapters/flow-semantics.rst",
+    "specification/docs/chapters/glossary.rst",
+    "specification/docs/chapters/grammar.rst",
+    "specification/docs/chapters/lease-tutorial.rst",
+    "specification/docs/chapters/lexical.rst",
+    "specification/docs/chapters/limitations.rst",
+    "specification/docs/chapters/names.rst",
+    "specification/docs/chapters/net-semantics.rst",
+    "specification/docs/chapters/overview.rst",
+    "specification/docs/chapters/proposals.rst",
+    "specification/docs/chapters/protocol-diff.rst",
+    "specification/docs/chapters/provenance.rst",
+    "specification/docs/chapters/rationale.rst",
+    "specification/docs/chapters/rule-catalogue.rst",
+    "specification/docs/chapters/runtime.rst",
+    "specification/docs/chapters/security.rst",
+    "specification/docs/chapters/static-semantics.rst",
+    "specification/docs/chapters/status.rst",
+    "specification/docs/chapters/tooling.rst",
+    "specification/docs/chapters/types.rst",
+    "specification/docs/chapters/verification.rst",
+    "specification/docs/conf.py",
+    "specification/docs/index.rst",
+    "specification/examples/README.md",
+    "specification/examples/invalid/direct_charge.weave",
+    "specification/examples/invalid/drop_hold.weave",
+    "specification/examples/invalid/early_return_leak.weave",
+    "specification/examples/invalid/forge_escrow.weave",
+    "specification/examples/invalid/missing_unknown.weave",
+    "specification/examples/invalid/paid_release.weave",
+    "specification/examples/invalid/recursion.weave",
+    "specification/examples/invalid/reuse_hold.weave",
+    "specification/examples/invalid/unsupported_if.weave",
+    "specification/examples/invalid/wrong_order.weave",
+    "specification/examples/manifest.json",
+    "specification/examples/mutations/bogus_sell.weave",
+    "specification/examples/mutations/leak.weave",
+    "specification/examples/mutations/lose_paid.weave",
+    "specification/examples/mutations/manual_leak.weave",
+    "specification/examples/mutations/quick_recover.weave",
+    "specification/examples/mutations/skim.weave",
+    "specification/examples/nets/Inventory.coloured.weave",
+    "specification/examples/nets/Inventory.weave",
+    "specification/examples/nets/Lease.weave",
+    "specification/examples/nets/cross_order_read.weave",
+    "specification/examples/nets/unsafe_paid_release.weave",
+    "specification/examples/valid/arm_hold.weave",
+    "specification/examples/valid/checkout.weave",
+    "specification/examples/valid/checkout_composed.weave",
+    "specification/examples/valid/checkout_propagating.weave",
+    "specification/examples/valid/finish_paid.weave",
+    "specification/examples/valid/lease_roundtrip.weave",
+    "specification/examples/valid/propagate_bound.weave",
+    "specification/examples/valid/return_hold.weave",
+    "specification/examples/valid/settle.weave",
+    "specification/grammar/weave-n2-delta.ebnf",
+    "specification/grammar/weave.ebnf",
+    "specification/make.bat",
+    "specification/reference/prototype/ACTUAL_OUTPUT.txt",
+    "specification/reference/prototype/DESIGN_NOTES.md",
+    "specification/reference/prototype/Inventory.coloured.weave",
+    "specification/reference/prototype/Inventory.weave",
+    "specification/reference/prototype/LOWERED_PROPAGATION.weave",
+    "specification/reference/prototype/README.md",
+    "specification/reference/prototype/REPORT.md",
+    "specification/reference/prototype/TEST_OUTPUT.txt",
+    "specification/reference/prototype/checker.py",
+    "specification/reference/prototype/colour-check.json",
+    "specification/reference/prototype/colour-proof.json",
+    "specification/reference/prototype/coloured.py",
+    "specification/reference/prototype/demo.py",
+    "specification/reference/prototype/durable-scenarios.json",
+    "specification/reference/prototype/durable.py",
+    "specification/reference/prototype/examples/checkout.weave",
+    "specification/reference/prototype/examples/checkout_composed.weave",
+    "specification/reference/prototype/examples/checkout_propagating.weave",
+    "specification/reference/prototype/examples/direct_charge.weave",
+    "specification/reference/prototype/examples/drop_hold.weave",
+    "specification/reference/prototype/examples/forge_escrow.weave",
+    "specification/reference/prototype/examples/wrong_order.weave",
+    "specification/reference/prototype/mutations/bogus_sell.weave",
+    "specification/reference/prototype/mutations/leak.weave",
+    "specification/reference/prototype/mutations/lose_paid.weave",
+    "specification/reference/prototype/mutations/manual_leak.weave",
+    "specification/reference/prototype/mutations/quick_recover.weave",
+    "specification/reference/prototype/mutations/skim.weave",
+    "specification/reference/prototype/ordering.json",
+    "specification/reference/prototype/proof.json",
+    "specification/reference/prototype/requirements.txt",
+    "specification/reference/prototype/scenarios.json",
+    "specification/reference/prototype/simulate.py",
+    "specification/reference/prototype/tests/test_checker.py",
+    "specification/reference/prototype/tests/test_coloured.py",
+    "specification/reference/prototype/tests/test_composition.py",
+    "specification/reference/prototype/tests/test_durable.py",
+    "specification/reference/prototype/tests/test_rejection_and_propagation.py",
+    "specification/reference/prototype/verify_certificate.py",
+    "specification/requirements.txt",
+    "specification/rules.json",
+    "specification/scripts/audit_html.py",
+    "specification/scripts/diagrams_to_pdf.py",
+    "specification/scripts/grammar_audit.py",
+    "specification/scripts/refresh_reference_pages.py",
+    "specification/scripts/render_diagrams.py",
+    "specification/scripts/spec_checks.py",
+    "specification/scripts/test_reference.py",
+    "specification/scripts/validate.py",
+    "specification/tests/test_documentation.py",
+    "specification/validation/BUILD_REPORT.md",
+    "specification/validation/REVIEW_RESPONSE.md",
+    "specification/validation/build-output.txt",
+    "specification/validation/counterexample-E320.txt",
+    "specification/validation/counterexample-E420.txt",
+    "specification/validation/generated-weave.lark",
+    "specification/validation/grammar-report.json",
+    "specification/validation/html-audit.json",
+    "specification/validation/linkcheck-output.json",
+    "specification/validation/lowered-checkout.weave",
+    "specification/validation/regression-output.txt",
+    "specification/validation/report.json",
+    "specification/validation/singlehtml-audit.json",
+    "specification/validation/singlehtml-final-output.txt",
+    "specification/validation/validate-output.txt",
+    "specification/validation/weave-check-report.json",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Thomas F. Hagelien"
+SPDX-License-Identifier = "MIT"
+
+# Furo 2025.12.19 search form, adapted for Weave's single-page search target.
+# Upstream: https://github.com/pradyunsg/furo/blob/2025.12.19/src/furo/theme/furo/sidebar/search.html
+# Copyright verified against that release's LICENSE.
+[[annotations]]
+path = "specification/docs/_templates/sidebar/search.html"
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2020 Pradyun Gedam <mail@pradyunsg.me>",
+    "2026 Thomas F. Hagelien",
+]
+SPDX-License-Identifier = "MIT"
+
+# Weave PDF style. \weavemaketitle adapts the page-anchor handling, the
+# pdfauthor/pdftitle line and the footnote reset of \sphinxmaketitle in Sphinx
+# 8.2.3's texinputs/sphinxmanual.cls (BSD-2-Clause; holder from Sphinx's
+# LICENSE.rst). The rest of the file is Weave-authored. Found by the
+# copied-material review in docs/decisions/0002-licence-terms.md.
+[[annotations]]
+path = "specification/docs/_latex/weave.sty"
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2026 Thomas F. Hagelien",
+    "2007-2025 by the Sphinx team",
+]
+SPDX-License-Identifier = "MIT AND BSD-2-Clause"
+
+# PDFs with embedded third-party font programs (FU-01, resolved).
+# Each PDF is one file that combines Weave-authored content (MIT) with subsets
+# of font programs under their own licences. All of these terms apply to the
+# file at once, so the expression joins them with AND, not OR.
+# Evidence (see docs/decisions/0002-licence-terms.md and the "Third-party
+# notices" section of specification/docs/chapters/provenance.rst):
+# - DejaVu fonts: identified from pdffonts names, the subsets' own name tables
+#   (specimen) and glyph outlines identical to DejaVu Sans 2.37 (diagrams).
+#   Their licence string names the Bitstream Vera licence (SPDX Bitstream-Vera)
+#   and, for DejaVu Sans, the Arev fonts licence of Tavmjong Bah. The SPDX list
+#   bundled with REUSE 5.1.1 (3.27.0) has no DejaVu or Arev identifier, so the
+#   Arev text is LicenseRef-Arev-Fonts, copied verbatim from the font's name
+#   table. DejaVu's own changes are public domain and add no terms.
+# - Computer Modern (specimen only: CMR8, CMR10, CMMI8, CMMI10, CMEX10): AMS
+#   Type 1 fonts, version 003.002. Their
+#   embedded Notice reads "Copyright (c) 1997, 2009 American Mathematical
+#   Society ..., with Reserved Font Name ..."; the AMS release is under SIL OFL
+#   1.1, and SPDX OFL-1.1-RFN is the identifier for OFL 1.1 with Reserved Font
+#   Names.
+# The bytes of these PDFs are unchanged.
+[[annotations]]
+path = "specification/design/weave-design-specimen.pdf"
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2026 Thomas F. Hagelien",
+    "2003 Bitstream, Inc.",
+    "2006 Tavmjong Bah",
+    "1997, 2009 American Mathematical Society",
+]
+SPDX-License-Identifier = "MIT AND Bitstream-Vera AND LicenseRef-Arev-Fonts AND OFL-1.1-RFN"
+
+[[annotations]]
+path = [
+    "specification/docs/_static/diagrams/handle-states.pdf",
+    "specification/docs/_static/diagrams/inventory-n0.pdf",
+    "specification/docs/_static/diagrams/r0-unknown.pdf",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = [
+    "2026 Thomas F. Hagelien",
+    "2003 Bitstream, Inc.",
+    "2006 Tavmjong Bah",
+]
+SPDX-License-Identifier = "MIT AND Bitstream-Vera AND LicenseRef-Arev-Fonts"
 

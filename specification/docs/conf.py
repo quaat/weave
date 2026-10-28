@@ -18,7 +18,7 @@ sys.path.insert(0, str(DOCS_DIR / "_ext"))
 
 # Project metadata ------------------------------------------------------------
 project = "Weave"
-author = "Danio project"
+author = "Weave"
 copyright = "2026, Thomas F. Hagelien. MIT License"
 version = "0.2"
 release = "0.2-draft"
@@ -226,3 +226,34 @@ linkcheck_timeout = 15
 linkcheck_retries = 2
 linkcheck_workers = 3
 linkcheck_anchors = True
+
+
+# PDF cover notice from the same `copyright` value the HTML footer prints -----
+# Read in config-inited after Sphinx's SOURCE_DATE_EPOCH year correction
+# (priority 800), so the PDF cover and the HTML footer cannot disagree.
+# Sphinx's own LaTeX escape tables are only filled when the LaTeX builder
+# starts, after this hook, so the few LaTeX specials are escaped here.
+_LATEX_SPECIALS = {
+    "\\": r"\textbackslash{}", "{": r"\{", "}": r"\}", "#": r"\#", "$": r"\$",
+    "%": r"\%", "&": r"\&", "_": r"\_", "~": r"\textasciitilde{}",
+    "^": r"\textasciicircum{}",
+}
+
+
+def _latex_escape(text):
+    return "".join(_LATEX_SPECIALS.get(ch, ch) for ch in text)
+
+
+def _pdf_cover_copyright(_app, config):
+    value = config.copyright
+    lines = [value] if isinstance(value, str) else list(value)
+    if not lines or not all(isinstance(line, str) and line for line in lines):
+        raise ConfigError("copyright must be a nonempty string or a list of them.")
+    notice = r"\\".join(_latex_escape(line) for line in lines)
+    config.latex_elements["preamble"] += (
+        r"\newcommand{\WeaveCopyright}{" + notice + "}\n"
+    )
+
+
+def setup(app):
+    app.connect("config-inited", _pdf_cover_copyright, priority=900)

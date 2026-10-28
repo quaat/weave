@@ -123,6 +123,7 @@ Each directory is self-contained with its own README, tests and requirements. Ru
 | [`inventory-proof/`](inventory-proof) | The prototype (v3): net parser, ownership validator, P-invariant prover with certificates, bounded order explorer, linear flow checker with `?` lowering, scripted executor, coloured nets, and a SQLite-backed process-crash model. Standard library only. | [`inventory-proof/REPORT.md`](inventory-proof/REPORT.md) |
 | [`agent-kit/`](agent-kit) | A starter kit for working on Weave with Codex or Claude Code: `AGENTS.md`, a portable `weave` skill with a vendored prototype and CLI, teaching examples with expected diagnostics, and demos (`tiny_shop`, `merge_sort`). Includes an explicitly separate pure-`fn` extension with integer lists, recursion and a cooperative fork/join scheduler. | [`agent-kit/README.md`](agent-kit/README.md) |
 | [`tools/weave_workflow/`](tools/weave_workflow) · [`docs/development/`](docs/development) | The development workflow: a deterministic GitHub adapter, scheduler, protocol events, transition gates, independent Codex review and a documentation drift audit, driven by Claude Code skills (`.claude/skills/`) and subagents (`.claude/agents/`). Standard library only. | [`docs/development/agent-workflow.md`](docs/development/agent-workflow.md) |
+| [`docs/decisions/`](docs/decisions) | Decision records and proposals awaiting or recording maintainer decisions, such as the licence-terms proposal for issue #2. | [`docs/decisions/0002-licence-terms.md`](docs/decisions/0002-licence-terms.md) |
 
 ## Quick start
 
@@ -256,4 +257,18 @@ Weave language specification, draft 0.2, with prototype v3. https://github.com/q
 
 Weave is released under the [MIT License](LICENSE). Copyright (c) 2026 Thomas F. Hagelien.
 
-The license covers the whole repository: the prototype and its vendored copies, the agent kit, and the specification sources and their built editions (HTML, single page and PDF).
+The MIT grant covers Weave-authored material: the prototype and its vendored
+copies, the agent kit, and the specification sources and Weave-authored portions
+of their built editions (HTML, single page and PDF). Third-party material,
+including theme code and embedded fonts, retains its own copyright and terms.
+
+[`REUSE.toml`](REUSE.toml) records path-specific licensing without modifying pinned
+snapshot bytes; [`LICENSES/MIT.txt`](LICENSES/MIT.txt) supplies the license text for
+REUSE tooling. `REUSE.toml` records the adapted Furo search template's upstream
+attribution (Pradyun Gedam, MIT).
+The four committed PDFs are annotated with their embedded fonts' terms
+(Bitstream Vera, Arev and SIL OFL 1.1 with Reserved Font Names, texts under
+`LICENSES/`), and `python3 -m reuse lint` reports the repository as compliant.
+The third-party notices for the built editions, with their licence texts, are in
+the specification's provenance chapter (`specification/docs/chapters/provenance.rst`).
+[`follow-up`](follow-up) records the remaining release checks.

@@ -48,6 +48,7 @@ Notes on the bootstrap seed:
 - `CLAUDE.md`
 - `AGENTS.md`
 - `docs/development/*.md`
+- `docs/decisions/*.md`
 - `.claude/skills/*/SKILL.md`
 - `.claude/agents/*.md`
 - `inventory-proof/README.md`
