@@ -122,6 +122,7 @@ Each directory is self-contained with its own README, tests and requirements. Ru
 | [`specification/`](specification) | The language specification, draft 0.2: lexical rules, EBNF, inference rules, net and flow semantics, the dynamic execution contract (D0), declared evidence (N2), verification semantics, conformance appendix, rationale and design history. Every displayed example is re-checked at build time. | [`specification/README.md`](specification/README.md) · [site](https://quaat.github.io/weave/) |
 | [`inventory-proof/`](inventory-proof) | The prototype (v3): net parser, ownership validator, P-invariant prover with certificates, bounded order explorer, linear flow checker with `?` lowering, scripted executor, coloured nets, and a SQLite-backed process-crash model. Standard library only. | [`inventory-proof/REPORT.md`](inventory-proof/REPORT.md) |
 | [`agent-kit/`](agent-kit) | A starter kit for working on Weave with Codex or Claude Code: `AGENTS.md`, a portable `weave` skill with a vendored prototype and CLI, teaching examples with expected diagnostics, and demos (`tiny_shop`, `merge_sort`). Includes an explicitly separate pure-`fn` extension with integer lists, recursion and a cooperative fork/join scheduler. | [`agent-kit/README.md`](agent-kit/README.md) |
+| [`tools/weave_workflow/`](tools/weave_workflow) · [`docs/development/`](docs/development) | The development workflow: a deterministic GitHub adapter, scheduler, protocol events, transition gates, independent Codex review and a documentation drift audit, driven by Claude Code skills (`.claude/skills/`) and subagents (`.claude/agents/`). Standard library only. | [`docs/development/agent-workflow.md`](docs/development/agent-workflow.md) |
 
 ## Quick start
 
@@ -200,11 +201,22 @@ Tracked as milestones and epics; the plan is [#61](https://github.com/quaat/weav
 
 | Workflow | Runs on | What it does |
 |---|---|---|
-| [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, `demo.py` reproduces committed outputs, `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, demo tests (3.11–3.13). `specification`: `make validate-offline`, single-page and text builds, HTML link audit |
+| [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, `demo.py` reproduces committed outputs, `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, demo tests (3.11–3.13). `specification`: `make validate-offline`, single-page and text builds, HTML link audit. Workflow: offline workflow tests, whole-repository documentation drift audit, documentation map currency |
 | [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; PRs touching `specification/` | Builds the multi-page and single-page editions, audits links, form targets and assets; only `main` deploys to GitHub Pages |
 | [`pdf.yml`](.github/workflows/pdf.yml) | Manual runs; `spec-v*` tags | Builds the XeLaTeX PDF; tag pushes attach it to the release |
 
 External link checking (`make linkcheck`) is run locally before a release.
+
+## Development workflow
+
+Roadmap work runs through an auditable agent workflow: Claude Code orchestrates, narrowly scoped subagents implement and verify, and a fresh read-only Codex session reviews each candidate. The GitHub issue holds the durable record of every handoff, and Projects board #3 holds the canonical status (Todo, In Progress, In Review, Done). Done means accepted, integrated and documented.
+
+```bash
+python3 -m tools.weave_workflow report        # dry run: board mapping, milestone graph, next task, audit
+python3 -m tools.weave_workflow docs-audit    # documentation drift audit (also in CI)
+```
+
+A development run starts only when asked (`/weave-project` in Claude Code). See [`CLAUDE.md`](CLAUDE.md), the [operator guide](docs/development/agent-workflow.md) and the [documentation map](docs/development/documentation-map.md).
 
 ## Prototype snapshots
 
@@ -213,7 +225,7 @@ The v3 prototype lives in three places. Keep them identical unless you also upda
 | Location | Role | Pinned by |
 |---|---|---|
 | `inventory-proof/` | Working copy for further development | Started byte-identical to the specification snapshot |
-| `agent-kit/.agents/skills/weave/assets/prototype/` | Vendored, unchanged; the pure `fn` extension lives beside it in `scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
+| `agent-kit/.agents/skills/weave/assets/prototype/` | Vendored, unchanged; the pure `fn` extension lives beside it in `.agents/skills/weave/scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
 | `specification/reference/prototype/` | Snapshot the specification is grounded in | `specification/PROVENANCE.json`, verified by `scripts/validate.py` |
 
 Changes in `inventory-proof/` reach the specification only through a deliberate snapshot refresh and a new `PROVENANCE.json`.

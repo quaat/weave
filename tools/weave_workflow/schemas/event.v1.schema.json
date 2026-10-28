@@ -1,0 +1,806 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/quaat/weave/tools/weave_workflow/schemas/event.v1.schema.json",
+  "title": "Weave agent protocol event, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "run_id",
+    "attempt",
+    "issue",
+    "milestone",
+    "sender",
+    "recipient",
+    "kind",
+    "correlation_id",
+    "causation_id",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "issue": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+$"
+    },
+    "milestone": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^M[0-9]+$"
+    },
+    "sender": {
+      "enum": [
+        "orchestrator",
+        "implementer",
+        "verifier",
+        "docs-editor",
+        "local-reviewer",
+        "safety-reviewer",
+        "investigator",
+        "codex-reviewer",
+        "maintainer"
+      ]
+    },
+    "recipient": {
+      "enum": [
+        "orchestrator",
+        "implementer",
+        "verifier",
+        "docs-editor",
+        "local-reviewer",
+        "safety-reviewer",
+        "investigator",
+        "codex-reviewer",
+        "maintainer"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "CLAIMED",
+        "PLAN",
+        "DELEGATED",
+        "QUESTION",
+        "ANSWER",
+        "PROGRESS",
+        "IMPLEMENTATION_READY",
+        "VERIFICATION_RESULT",
+        "DOCS_IMPACT",
+        "DOCS_AUDIT_RESULT",
+        "LOCAL_REVIEW_RESULT",
+        "REVIEW_REQUESTED",
+        "REVIEW_RESULT",
+        "FINDING_DISPOSITION",
+        "CHANGES_REQUESTED",
+        "BLOCKED",
+        "RESUMED",
+        "TRANSITION_INTENT",
+        "STATE_CHANGED",
+        "READY_TO_MERGE",
+        "COMPLETED",
+        "RELEASED",
+        "DECISION_RECORDED",
+        "GATE_EVALUATED"
+      ]
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$"
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "redacted": {
+      "type": "boolean"
+    },
+    "claim_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "coordinator_host": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requirements_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/criterion"
+      }
+    },
+    "delegate": {
+      "enum": [
+        "orchestrator",
+        "implementer",
+        "verifier",
+        "docs-editor",
+        "local-reviewer",
+        "safety-reviewer",
+        "investigator",
+        "codex-reviewer",
+        "maintainer"
+      ]
+    },
+    "packet_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "worktree": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "docs_updated": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "docs_audit_event_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$"
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/check"
+      }
+    },
+    "docs_impact": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/impact"
+      }
+    },
+    "error_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "scope": {
+      "enum": [
+        "change",
+        "repository"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "REQUEST_CHANGES",
+        "BLOCKED"
+      ]
+    },
+    "review_kind": {
+      "enum": [
+        "local",
+        "safety"
+      ]
+    },
+    "review_round": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "review_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "finding_id": {
+      "type": "string",
+      "pattern": "^F-[0-9]+$"
+    },
+    "disposition": {
+      "enum": [
+        "fixed",
+        "rejected",
+        "accepted_by_maintainer"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "finding_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^F-[0-9]+$"
+      }
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "blocker": {
+      "enum": [
+        "dependency",
+        "decision",
+        "maintainer-action",
+        "review-outage",
+        "github-outage",
+        "budget-exhausted",
+        "permissions",
+        "other"
+      ]
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$"
+    },
+    "from_status": {
+      "enum": [
+        "Todo",
+        "In Progress",
+        "In Review",
+        "Done"
+      ]
+    },
+    "to_status": {
+      "enum": [
+        "Todo",
+        "In Progress",
+        "In Review",
+        "Done"
+      ]
+    },
+    "merge_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "decision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "criteria_map": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/criterion_evidence"
+      }
+    },
+    "work_type": {
+      "enum": [
+        "implementation",
+        "decision-preparation",
+        "documentation",
+        "early-start"
+      ]
+    },
+    "review_request_id": {
+      "type": "string"
+    },
+    "reviewer_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cli",
+        "version",
+        "session"
+      ],
+      "properties": {
+        "cli": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "session": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "CLAIMED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "claim_expires_at",
+          "coordinator_host",
+          "work_type"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "PLAN"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "criteria",
+          "requirements_digest"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "DELEGATED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "base_sha",
+          "delegate",
+          "packet_digest",
+          "worktree"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "QUESTION"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "question"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "ANSWER"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "answer"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "IMPLEMENTATION_READY"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "criteria_map",
+          "docs_audit_event_id",
+          "docs_updated",
+          "head_sha"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "VERIFICATION_RESULT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "checks",
+          "head_sha",
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "DOCS_IMPACT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "docs_impact"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "DOCS_AUDIT_RESULT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error_count",
+          "head_sha",
+          "result",
+          "scope"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "LOCAL_REVIEW_RESULT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "head_sha",
+          "review_kind",
+          "verdict"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "REVIEW_REQUESTED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "base_sha",
+          "head_sha",
+          "requirements_digest",
+          "review_round"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "REVIEW_RESULT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "base_sha",
+          "head_sha",
+          "requirements_digest",
+          "review_digest",
+          "review_request_id",
+          "review_round",
+          "reviewer_provenance",
+          "verdict"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "FINDING_DISPOSITION"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "disposition",
+          "evidence",
+          "finding_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "CHANGES_REQUESTED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "finding_ids"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "BLOCKED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "blocker",
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "TRANSITION_INTENT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "from_status",
+          "operation_id",
+          "to_status"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "STATE_CHANGED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "from_status",
+          "operation_id",
+          "to_status"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "READY_TO_MERGE"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "head_sha"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "COMPLETED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "head_sha",
+          "merge_sha"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "RELEASED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "DECISION_RECORDED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "decision"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "GATE_EVALUATED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "gate",
+          "result"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text_digest",
+        "verification"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^AC-[0-9]+$"
+        },
+        "text_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "verification": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "command",
+        "cwd",
+        "exit_code"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "log": {
+          "type": "string"
+        }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "reason",
+        "status"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "required",
+            "not-applicable",
+            "added-by-implementer"
+          ]
+        },
+        "justification": {
+          "type": "string"
+        }
+      }
+    },
+    "criterion_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "location",
+        "check",
+        "evidence",
+        "docs_location"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^AC-[0-9]+$"
+        },
+        "location": {
+          "type": "string"
+        },
+        "check": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "docs_location": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

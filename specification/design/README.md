@@ -21,11 +21,14 @@ The bundle is installed in `specification/docs/`. Paths below are relative to
 | `requirements.txt` | merged into `requirements.txt` | Complete pinned dependency set |
 | `preview/weave-design-specimen.pdf` | `design/weave-design-specimen.pdf` | Synthetic design specimen (not specification content) |
 
+<!-- docs-audit: external preview/weave-design-specimen.pdf -- the bundle's own layout, left column of the table -->
+
 Integration changes beyond copying:
 
 - The Alabaster `docs/_templates/layout.html` was removed; Furo does not
   render pages through `layout.html`. Its footer and single-page link-tag
   override moved into `page.html`.
+  <!-- docs-audit: external docs/_templates/layout.html layout.html -- removed during integration; named as history -->
 - `docs/_ext/weave_singlehtml.py` only replaces the single-page sidebar when the
   theme is Alabaster; Furo's sidebar is used as is.
 - The three SVG figures gained PDF companions and are referenced as
@@ -142,6 +145,7 @@ pages containing equations. An offline site or a restrictive CSP needs a
 locally hosted copy. Download the official `mathjax@3.2.2` package, copy its
 entire `es5/` directory (including fonts and dynamically loaded modules) to
 `docs/_static/mathjax/es5/`, and retain its license. Then change:
+<!-- docs-audit: planned docs/_static/mathjax/es5/ -- only exists if MathJax is vendored -->
 
 ```python
 mathjax_path = "mathjax/es5/tex-mml-chtml.js"

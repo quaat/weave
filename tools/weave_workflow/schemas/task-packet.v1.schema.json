@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/quaat/weave/tools/weave_workflow/schemas/task-packet.v1.schema.json",
+  "title": "Worker task packet, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "issue_url",
+    "issue",
+    "milestone",
+    "run_id",
+    "attempt",
+    "role",
+    "dependency_evidence",
+    "criteria",
+    "docs_impact",
+    "allowed_paths",
+    "non_goals",
+    "base_sha",
+    "worktree",
+    "branch",
+    "checks",
+    "reporting_contract",
+    "escalation_conditions",
+    "requirements_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "issue_url": {
+      "type": "string",
+      "pattern": "^https://github.com/"
+    },
+    "issue": {
+      "type": "string"
+    },
+    "milestone": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "role": {
+      "enum": [
+        "implementer",
+        "verifier",
+        "docs-editor",
+        "local-reviewer",
+        "safety-reviewer",
+        "investigator"
+      ]
+    },
+    "dependency_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "text_digest",
+          "verification"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AC-[0-9]+$"
+          },
+          "text": {
+            "type": "string"
+          },
+          "text_digest": {
+            "type": "string"
+          },
+          "verification": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "docs_impact": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "allowed_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "worktree": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "reporting_contract": {
+      "type": "string"
+    },
+    "escalation_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requirements_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}
