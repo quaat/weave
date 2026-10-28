@@ -43,6 +43,11 @@ class TaskView:
     def all(self, kind: str, **match) -> list[dict]:
         return [e for e in self.events if e["kind"] == kind and all(e.get(k) == v for k, v in match.items())]
 
+    @property
+    def attempt(self) -> int:
+        """The current attempt: the highest attempt among the issue's events."""
+        return max([e["attempt"] for e in self.events] or [1])
+
 
 @dataclass
 class Gate:
@@ -152,7 +157,7 @@ def _gate_done(view: TaskView, plan: dict | None, req_now: str, reasons: list[st
         later = [e for e in view.events[idx + 1:] if e["kind"] in ("REVIEW_RESULT", "REVIEW_REQUESTED")]
         if later:
             reasons.append("a newer review result supersedes the passing one")
-    rounds = len(view.all("REVIEW_REQUESTED"))
+    rounds = len(view.all("REVIEW_REQUESTED", attempt=view.attempt))
     budget = policy.get("review", {}).get("max_rounds_per_attempt", 3)
     if rounds > budget:
         reasons.append(f"review budget exhausted ({rounds} > {budget} rounds); maintainer decision required")

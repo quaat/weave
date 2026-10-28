@@ -17,8 +17,7 @@ from .transitions import TaskView, Transitioner
 
 
 def review_round(view: TaskView) -> int:
-    attempt = max([e["attempt"] for e in view.events] or [1])
-    return 1 + len([e for e in view.all("REVIEW_REQUESTED") if e["attempt"] == attempt])
+    return 1 + len(view.all("REVIEW_REQUESTED", attempt=view.attempt))
 
 
 def _worktrees(repo: Path) -> list[dict]:

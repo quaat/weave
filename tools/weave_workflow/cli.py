@@ -507,7 +507,7 @@ def cmd_transition(args) -> int:
     view = _view(store, snap, policy, args.issue, head=head, clean=clean, integration=integration,
                  worktree=str(worktree) if worktree else None)
     run = store.active_run() or {}
-    ctx = {"run_id": run.get("run_id") or "run-unset", "attempt": max([e["attempt"] for e in view.events] or [1]),
+    ctx = {"run_id": run.get("run_id") or "run-unset", "attempt": view.attempt,
            "issue": f"{policy['repository']}#{args.issue}", "milestone": view.issue.milestone_key}
     if not args.apply:
         g = evaluate(view, args.to)

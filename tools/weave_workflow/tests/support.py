@@ -95,12 +95,13 @@ class Harness:
         self.policy = pol or mini_policy()
         self.gh = FakeGitHub(self.snap)
         self.publisher = Publisher(self.store, self.gh, REPO, self.policy["actors"]["coordinator_logins"])
+        self.attempt = 1  # attempt of the events published next (a new claim starts a new attempt)
 
     def close(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def ctx(self, n: int, attempt: int = 1) -> dict:
-        return {"run_id": "run-test-0001", "attempt": attempt, "issue": f"{REPO}#{n}",
+    def ctx(self, n: int, attempt: int | None = None) -> dict:
+        return {"run_id": "run-test-0001", "attempt": attempt or self.attempt, "issue": f"{REPO}#{n}",
                 "milestone": self.snap.issues[n].milestone_key}
 
     def publish(self, kind: str, n: int, sender="orchestrator", recipient="orchestrator", body="", origin=None, **fields) -> dict:

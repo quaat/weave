@@ -131,6 +131,24 @@ class DoneGateTests(unittest.TestCase):
         self.h.review_result(N, self.req, "PASS")
         self.assertTrue(any("budget exhausted" in r for r in self.gate().reasons))
 
+    def second_attempt(self, rounds: int) -> dict:
+        """Release attempt 1 (one round, from setUp), claim again and run `rounds` review rounds."""
+        self.h.publish("RELEASED", N, reason="returned for rework")
+        self.h.attempt = 2
+        self.h.ready_for_review(N)
+        for rnd in range(1, rounds + 1):
+            self.req = self.h.request_review(N, rnd=rnd)
+        return self.h.review_result(N, self.req, "PASS")
+
+    def test_review_budget_counts_the_current_attempt_only(self):
+        self.second_attempt(3)  # 1 + 3 rounds overall, 3 in the current attempt
+        g = self.gate()
+        self.assertTrue(g.passed, g.reasons)
+
+    def test_review_budget_exhausted_within_the_current_attempt(self):
+        self.second_attempt(4)
+        self.assertIn("review budget exhausted (4 > 3 rounds); maintainer decision required", self.gate().reasons)
+
     def test_approved_but_unmerged_stays_in_review(self):
         self.h.review_result(N, self.req, "PASS")
         g = self.gate(integration=integration(merged=False))
