@@ -260,11 +260,12 @@ git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been grant
 The maintainer can adapt this text and record it on #2 using the maintainer decision form.
 Bracketed parts need the maintainer's answers; the licence itself is one of them.
 
-> Weave is distributed under [the MIT License]. This covers all code (prototype, vendored and
-> reference prototype snapshots, agent kit, build scripts and workflow tooling), the
-> specification text and its built editions, all examples, and distributed assets, unless a
-> file states otherwise. [No separate documentation licence is used / The specification text
-> is distributed under [terms]].
+> Weave is distributed under [the MIT License]. Except for the third-party material named
+> below, this covers all code (prototype, agent kit, build scripts and workflow tooling, and,
+> [subject to the answer on the four `specification/PROVENANCE.json` inputs], the vendored and
+> reference prototype snapshots), the specification text and its built editions, all examples,
+> and distributed assets authored for Weave, unless a file states otherwise. [No separate
+> documentation licence is used / The specification text is distributed under [terms]].
 >
 > Rights holders: [holder or holders]. The four inputs recorded in
 > `specification/PROVENANCE.json` and the design bundle were [authored by / obtained from]
@@ -272,11 +273,14 @@ Bracketed parts need the maintainer's answers; the licence itself is one of them
 > licence]. [No / The following] employer,
 > funder, institution or contract holds rights in the work: [details].
 >
-> Third-party material: [fonts embedded in PDFs, theme assets in built editions, other]
-> remain under their own licences [and are acknowledged in …].
+> Third-party material distributed with or embedded in Weave, including [fonts embedded in
+> PDFs, theme and Sphinx assets in built editions, other], is not covered by this grant and
+> remains under its own licence. Its terms and notices will be recorded in [a third-party
+> notices file at the repository root / the REUSE-style metadata of AC-3 option 3 / other].
 >
-> Follow-up: per-file or per-directory licence identification, PDF cover and colophon, and a
-> check of the copyright line, as listed in decision record 0002.
+> Follow-up: per-file or per-directory licence identification, a record of third-party terms
+> and notices, PDF cover and colophon, and a check of the copyright line, as listed in decision
+> record 0002.
 
 ## Follow-up work
 
@@ -288,7 +292,10 @@ After the decision is recorded, one implementation issue should:
    directories (AC-3);
 3. add the copyright and licence line to the PDF cover or a colophon and settle the cover's
    author name (AC-5);
-4. add notices for any third-party material the maintainer identifies (question 6);
+4. record the terms and notices of the third-party material excluded from the grant (fonts
+   embedded in PDFs, theme and Sphinx assets in built editions, and anything else the
+   maintainer identifies under question 6), in the place the decision names: a third-party
+   notices file or the REUSE-style metadata of AC-3 option 3;
 5. rebuild the HTML, single-page and PDF editions and check the footer, cover and published
    site;
 6. update this record's status to point at the recorded decision.
