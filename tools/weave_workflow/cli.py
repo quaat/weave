@@ -189,17 +189,37 @@ def derive_checks(repo: Path, paths: list[str]) -> list[dict]:
                    {"name": "agent-kit tests", "cwd": "agent-kit", "argv": ["python3", "-B", "-m", "unittest", "discover", "-s", "tests"]},
                    {"name": "agent-kit examples", "cwd": "agent-kit", "argv": ["python3", "scripts/weave.py", "examples"]},
                    {"name": "agent-kit bundled regressions", "cwd": "agent-kit", "argv": ["python3", "scripts/weave.py", "test"]}]
+        for demo in sorted(p for p in (repo / "agent-kit/demos").glob("*/") if (p / "tests").is_dir()):
+            checks.append({"name": f"agent-kit demo {demo.name} tests", "cwd": f"agent-kit/demos/{demo.name}",
+                           "argv": ["python3", "-B", "-m", "unittest", "discover", "-s", "tests"]})
     if touched("specification"):
         checks += [{"name": "specification offline validation", "cwd": "specification", "argv": ["make", "validate-offline"]},
-                   {"name": "specification single-page and text", "cwd": "specification", "argv": ["make", "singlehtml", "text"]}]
-    if touched("tools") or touched(".claude") or touched(".github"):
-        checks += [{"name": "workflow tests", "cwd": ".", "argv": ["python3", "-m", "unittest", "discover", "-s", "tools/weave_workflow/tests", "-t", "."]}]
+                   {"name": "specification single-page and text", "cwd": "specification", "argv": ["make", "singlehtml", "text"]},
+                   {"name": "specification single-page HTML audit", "cwd": "specification",
+                    "argv": ["python3", "scripts/audit_html.py", "_build/singlehtml"]}]
+    if touched("tools") or touched(".claude") or touched(".github") or touched("docs/development"):
+        checks += [{"name": "workflow tests", "cwd": ".", "argv": ["python3", "-m", "unittest", "discover", "-s", "tools/weave_workflow/tests", "-t", "."]},
+                   {"name": "documentation map current", "cwd": ".", "argv": ["python3", "-m", "tools.weave_workflow", "docs-map"]}]
     if (repo / "Cargo.toml").exists():
         checks += [{"name": "cargo fmt", "cwd": ".", "argv": ["cargo", "fmt", "--all", "--check"]},
                    {"name": "cargo clippy", "cwd": ".", "argv": ["cargo", "clippy", "--all-targets", "--", "-D", "warnings"]},
                    {"name": "cargo test", "cwd": ".", "argv": ["cargo", "test", "--all"]}]
     checks.append({"name": "documentation audit", "cwd": ".", "argv": ["python3", "-m", "tools.weave_workflow", "docs-audit"]})
     return checks
+
+
+def select_for_claim(args, store: Store, snap, policy: dict):
+    """Returns (plan, candidate, refusal); refusal is None when the issue may be claimed now."""
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    cand = next((c for c in p.candidates if c.issue == args.issue), None)
+    if cand is None or not cand.eligible:
+        return p, cand, {"claimable": False, "issue": args.issue, "stop_reason": p.stop_reason,
+                         "reasons": cand.reasons if cand else [f"#{args.issue} is not a candidate in {p.current}"]}
+    if p.next is None:
+        return p, cand, {"claimable": False, "issue": args.issue, "reasons": [p.stop_reason or "no task selected"]}
+    if p.next.issue != args.issue and not args.override_order:
+        return p, cand, {"claimable": False, "reasons": [f"#{p.next.issue} precedes #{args.issue} in the deterministic order"]}
+    return p, cand, None
 
 
 def cmd_claim(args) -> int:
@@ -209,18 +229,9 @@ def cmd_claim(args) -> int:
     store = Store.for_repo(repo)
     adapter = adapter_for(args, policy)
     snap = adapter.snapshot()
-    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
-    cand = next((c for c in p.candidates if c.issue == args.issue), None)
-    if cand is None or not cand.eligible:
-        emit(args, {"claimable": False, "issue": args.issue,
-                    "reasons": cand.reasons if cand else [f"#{args.issue} is not a candidate in {p.current}"],
-                    "stop_reason": p.stop_reason})
-        return 2
-    if p.next is None:
-        emit(args, {"claimable": False, "issue": args.issue, "reasons": [p.stop_reason or "no task selected"]})
-        return 2
-    if p.next.issue != args.issue and not args.override_order:
-        emit(args, {"claimable": False, "reasons": [f"#{p.next.issue} precedes #{args.issue} in the deterministic order"]})
+    p, cand, refusal = select_for_claim(args, store, snap, policy)
+    if refusal:
+        emit(args, refusal)
         return 2
     issue = snap.issues[args.issue]
     run = store.active_run() or {}
@@ -252,6 +263,12 @@ def cmd_claim(args) -> int:
     publisher = Publisher(store, adapter, policy["repository"], policy["actors"]["coordinator_logins"])
     try:
         with store.coordinator_lock(run_id):
+            # Another coordinator may have claimed between selection and the lock: select again.
+            _, _, refusal = select_for_claim(args, store, adapter.snapshot(), policy)
+            if refusal:
+                refusal["note"] = "selection changed while waiting for the coordinator lock"
+                emit(args, refusal)
+                return 2
             store.set_active_run({**run, "run_id": run_id, "active_issue": args.issue, "since": run.get("since", utcnow())})
             claimed = publisher.publish(events.build("CLAIMED", sender="orchestrator", recipient="orchestrator",
                                                      claim_expires_at=claim_expiry(policy), coordinator_host=socket.gethostname(),
@@ -484,7 +501,8 @@ def cmd_transition(args) -> int:
     integration = None
     if args.to == "Done" and head:
         from .integration import integration_evidence
-        integration = integration_evidence(repo, snap, policy, args.issue, head)
+        packet = recorded_packet(store, snap, policy, args.issue)
+        integration = integration_evidence(repo, snap, policy, args.issue, head, packet["branch"])
     clean = bool(worktree) and _git(worktree, "status", "--porcelain") == ""
     view = _view(store, snap, policy, args.issue, head=head, clean=clean, integration=integration,
                  worktree=str(worktree) if worktree else None)
@@ -652,7 +670,7 @@ def cmd_review(args) -> int:
         mode="delta" if args.delta else "full")
     if live:
         packet["additional_evidence"] = live
-    pr = find_pr(snap, args.issue, head)
+    pr = find_pr(snap, args.issue, head, recorded_packet(store, snap, policy, args.issue)["branch"])
     if not args.apply:
         emit(args, {"dry_run": True, "packet": packet, "mirror_to_pr": pr.number if pr else None})
         return 0

@@ -6,7 +6,9 @@
   criteria addressed (`AC-n`) and the documents updated. No "fix" commits that silently
   alter previously reviewed evidence: any change after a review request moves the candidate
   head and requires a fresh review.
-- **Pull requests:** scope; the criteria matrix (criterion → location → check → result →
+- **Pull requests:** opened from the claim's `agent/<issue>-<slug>` branch, with `Closes #<issue>`
+  in the description (the Done gate only accepts a PR from the recorded branch that closes the
+  claimed issue); scope; the criteria matrix (criterion → location → check → result →
   evidence → documentation); checks run with results; documentation impact and audit
   result; limitations; a link to the issue's summary comment.
 - **Merges:** by the maintainer. The coordinator never merges unless the policy explicitly

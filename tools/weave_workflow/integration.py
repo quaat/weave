@@ -6,7 +6,6 @@ equality are recomputed with Git.
 """
 from __future__ import annotations
 
-import re
 import subprocess
 from pathlib import Path
 
@@ -20,9 +19,9 @@ def _git(repo: Path, *args: str) -> tuple[int, str]:
     return proc.returncode, proc.stdout.strip()
 
 
-def find_pr(snap: Snapshot, issue: int, head: str | None = None) -> PullRequest | None:
-    """The task's PR: head branch ``agent/<issue>-…``, preferring the one at ``head``."""
-    prs = [p for p in snap.pulls if re.match(rf"agent/{issue}-", p.head_ref)]
+def find_pr(snap: Snapshot, issue: int, head: str | None, branch: str) -> PullRequest | None:
+    """The task's PR: from the claim's exact branch and declaring that it closes the issue."""
+    prs = [p for p in snap.pulls if p.head_ref == branch and issue in p.closes]
     if head:
         exact = [p for p in prs if p.head_sha == head]
         prs = exact or prs
@@ -42,9 +41,9 @@ def required_checks(snap: Snapshot, policy: dict) -> tuple[set[str], str | None]
     return names, None
 
 
-def integration_evidence(repo: Path, snap: Snapshot, policy: dict, issue: int, head: str) -> dict | None:
+def integration_evidence(repo: Path, snap: Snapshot, policy: dict, issue: int, head: str, branch: str) -> dict | None:
     base_ref = policy["integration"]["ref"]
-    pr = find_pr(snap, issue, head)
+    pr = find_pr(snap, issue, head, branch)
     if pr is None:
         return None
     ev = {"pr": pr.number, "merged": pr.merged, "pr_head_sha": pr.head_sha, "merge_sha": pr.merge_sha,

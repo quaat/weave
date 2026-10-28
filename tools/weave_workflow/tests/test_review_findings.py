@@ -57,6 +57,29 @@ class ClaimSlotTests(unittest.TestCase):
         self.assertEqual(rc, 2)
         self.assertIn("no-such-ref", out["reasons"][0])
 
+    def test_selection_is_repeated_under_the_lock(self):
+        from tools.weave_workflow import state
+        snap = mini_snapshot()
+        fixture = self.fixture(snap)
+        original = state.Store.coordinator_lock
+        store = Store(Path(os.environ["WEAVE_WORKFLOW_STATE"]))
+
+        def racing_lock(self_, run_id):
+            # Another coordinator finished claiming #11 while this process waited for the lock.
+            ev = events.build("CLAIMED", run_id="run-other-0001", attempt=1, issue=f"{REPO}#11", milestone="M0",
+                              sender="orchestrator", recipient="orchestrator", claim_expires_at="2026-10-29T00:00:00Z",
+                              coordinator_host="other", work_type="implementation")
+            store.append({"type": "event", "event": ev, "sequence": 1, "origin": "claim"})
+            return original(self_, run_id)
+        state.Store.coordinator_lock = racing_lock
+        try:
+            rc, out = run_cli(["--fixture", fixture, "claim", "10", "--base", "HEAD", "--apply", "--json"])
+        finally:
+            state.Store.coordinator_lock = original
+        self.assertEqual(rc, 2)
+        self.assertIn("selection changed", out["note"])
+        self.assertEqual(store.pending(), [])  # nothing was published
+
     def test_claim_refused_when_board_unreadable(self):
         rc, out = run_cli(["--fixture", self.fixture(mini_snapshot(with_project=False)), "claim", "11", "--json"])
         self.assertEqual(rc, 2)
@@ -154,7 +177,7 @@ class IntegrationEvidenceTests(unittest.TestCase):
     def test_clean_merge_is_accepted(self):
         self.git("merge", "-q", "--no-ff", "-m", "merge", "agent/10-task")
         merge = self.git("rev-parse", "HEAD")
-        ev = integration_evidence(self.repo, self.snap_with(merge), self.pol(), 10, self.head)
+        ev = integration_evidence(self.repo, self.snap_with(merge), self.pol(), 10, self.head, "agent/10-task")
         self.assertTrue(ev["merged"] and ev["checks_passed"] and ev["merge_in_base"])
         self.assertTrue(ev["tree_matches_candidate"])
         self.assertTrue(ev["required_reviews_passed"])
@@ -165,7 +188,7 @@ class IntegrationEvidenceTests(unittest.TestCase):
         self.git("add", "-A"); self.git("commit", "-q", "-m", "merge with edits")
         merge = self.git("rev-parse", "HEAD")
         ev = integration_evidence(self.repo, self.snap_with(merge, checks=(("ci", "FAILURE"),), merged_by="someone"),
-                                  self.pol(), 10, self.head)
+                                  self.pol(), 10, self.head, "agent/10-task")
         self.assertFalse(ev["tree_matches_candidate"])
         self.assertFalse(ev["checks_passed"])
         self.assertFalse(ev["required_reviews_passed"])
@@ -174,7 +197,7 @@ class IntegrationEvidenceTests(unittest.TestCase):
         self.git("switch", "-q", "-c", "elsewhere")
         self.git("merge", "-q", "--no-ff", "-m", "merge", "agent/10-task")
         merge = self.git("rev-parse", "HEAD")
-        ev = integration_evidence(self.repo, self.snap_with(merge), self.pol(), 10, self.head)
+        ev = integration_evidence(self.repo, self.snap_with(merge), self.pol(), 10, self.head, "agent/10-task")
         self.assertFalse(ev["merge_in_base"])
 
     def test_required_checks_must_all_be_present_complete_and_passing(self):
@@ -192,10 +215,18 @@ class IntegrationEvidenceTests(unittest.TestCase):
         cases["unreadable protection"] = snap
         for name, s in cases.items():
             with self.subTest(name):
-                self.assertFalse(integration_evidence(self.repo, s, self.pol(), 10, self.head)["checks_passed"])
+                self.assertFalse(integration_evidence(self.repo, s, self.pol(), 10, self.head, "agent/10-task")["checks_passed"])
+
+    def test_pr_must_come_from_the_claim_branch_and_close_the_issue(self):
+        merge = self.merged()
+        snap = self.snap_with(merge)
+        snap.pulls[0].closes = []
+        self.assertIsNone(integration_evidence(self.repo, snap, self.pol(), 10, self.head, "agent/10-task"))
+        snap = self.snap_with(merge)
+        self.assertIsNone(integration_evidence(self.repo, snap, self.pol(), 10, self.head, "agent/10-other"))
 
     def test_no_pr_means_no_evidence(self):
-        self.assertIsNone(integration_evidence(self.repo, mini_snapshot(), self.pol(), 10, self.head))
+        self.assertIsNone(integration_evidence(self.repo, mini_snapshot(), self.pol(), 10, self.head, "agent/10-task"))
 
 
 class BoundEvidenceTests(unittest.TestCase):
@@ -276,6 +307,41 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(restarted.flush(), 1)  # lookup succeeds: recorded, not re-posted
         self.assertEqual(len(self.h.snap.issues[10].comments), 1)
         self.assertEqual(len(authenticated_events(self.h.store, self.h.snap, ["quaat"], 10)[0]), 1)
+
+
+class DerivedChecksTests(unittest.TestCase):
+    """F-002 (round 3): derived checks cover every CI step for the touched components."""
+
+    def test_derived_checks_cover_ci(self):
+        from tools.weave_workflow.cli import derive_checks
+        from .support import ROOT
+        checks = derive_checks(ROOT, ["inventory-proof/x.py", "agent-kit/scripts/weave.py",
+                                      "specification/docs/chapters/status.rst", "tools/weave_workflow/cli.py"])
+        commands = [" ".join(c["argv"]) + " @" + c["cwd"] for c in checks]
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        expected = {
+            "unittest discover -s tests @inventory-proof": "python -m unittest discover -s tests",
+            "demo.py @inventory-proof": "python demo.py",
+            "durable.py @inventory-proof": "python durable.py",
+            "weave.py doctor @agent-kit": "weave.py doctor",
+            "unittest discover -s tests @agent-kit": "-m unittest discover -s tests -v",
+            "weave.py examples @agent-kit": "weave.py examples",
+            "weave.py test @agent-kit": "weave.py test",
+            "unittest discover -s tests @agent-kit/demos/": "for demo in demos/*/",
+            "make validate-offline @specification": "make validate-offline",
+            "make singlehtml text @specification": "make singlehtml text",
+            "audit_html.py _build/singlehtml @specification": "audit_html.py _build/singlehtml",
+            "tools/weave_workflow/tests": "tools/weave_workflow/tests",
+            "tools.weave_workflow docs-audit": "tools.weave_workflow docs-audit",
+            "tools.weave_workflow docs-map": "tools.weave_workflow docs-map",
+        }
+        for needle, ci_text in expected.items():
+            with self.subTest(needle):
+                self.assertIn(ci_text, ci)  # the step exists in CI ...
+                self.assertTrue(any(needle.split(" @")[0] in c and ("@" not in needle or needle.split(" @")[1] in c)
+                                    for c in commands), commands)  # ... and is derived
+        demos = sorted(p.name for p in (ROOT / "agent-kit/demos").glob("*/") if (p / "tests").is_dir())
+        self.assertEqual(sorted(c["cwd"].split("/")[-1] for c in checks if c["name"].startswith("agent-kit demo ")), demos)
 
 
 class ReviewPacketTests(unittest.TestCase):

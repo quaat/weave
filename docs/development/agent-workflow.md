@@ -122,7 +122,7 @@ relayed this way: only the command that produces their evidence publishes them.
 | Review budget exhausted (3 rounds) | Work preserved, returned to In Progress, `agent:needs-human`, disagreement summarised |
 | Manual card move or edited comment | Reported as a discrepancy by `reconcile`; never overwritten blindly |
 | Restart | Reconcile board, events, claims, worktrees, PR heads, outbox and audit state; resume before claiming |
-| Second coordinator | The OS lock rejects concurrent startup; a takeover must be explicit and reconciled |
+| Second coordinator | The OS lock rejects concurrent startup; a claim re-runs selection after acquiring the lock; a takeover must be explicit and reconciled |
 
 ## Limitations
 
