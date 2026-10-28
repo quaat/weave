@@ -30,8 +30,8 @@ jobs:
       run:
         working-directory: specification
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -60,16 +60,15 @@ jobs:
           cp -r _build/singlehtml _site
           cp -r _build/html _site/multipage
           cp _build/latex/weave-specification.pdf _site/weave-specification.pdf
-          touch _site/.nojekyll
       - name: Audit links, anchors and assets
         run: python scripts/audit_html.py _site
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: weave-specification-pdf
           path: specification/_build/latex/weave-specification.pdf
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         if: github.event_name != 'pull_request'
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: specification/_site
 
@@ -79,6 +78,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       pages: write
       id-token: write
     environment:
@@ -86,4 +86,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
