@@ -264,7 +264,8 @@ including theme code and embedded fonts, retains its own copyright and terms.
 
 [`REUSE.toml`](REUSE.toml) records path-specific licensing without modifying pinned
 snapshot bytes; [`LICENSES/MIT.txt`](LICENSES/MIT.txt) supplies the license text for
-REUSE tooling. The adapted Furo search template retains its upstream attribution.
+REUSE tooling. `REUSE.toml` records the adapted Furo search template's upstream
+attribution (Pradyun Gedam, MIT).
 [`follow-up`](follow-up) records the embedded-font exceptions and remaining
 provenance and release checks. The four committed PDFs remain unannotated while
 their complete font terms are unresolved, so the repository is not yet fully

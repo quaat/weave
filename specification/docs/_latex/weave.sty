@@ -57,9 +57,11 @@
     \thispagestyle{empty}
     \raggedright\sffamily\color{WeaveInk}
     % The former project label is omitted: the monogram, the title and the
-    % author line already name Weave. The starred space keeps the monogram
-    % where it was (label line plus 22mm) at the top of the page.
-    \vspace*{\dimexpr\baselineskip+22mm\relax}
+    % author line already name Weave. An empty box takes the label's place as
+    % the first line, so \topskip, the 22mm space and the monogram's
+    % baselineskip apply as before and the monogram's baseline does not move.
+    \null
+    \vspace{22mm}
     {\fontsize{82}{88}\selectfont\bfseries W\par}
     \vspace{8mm}
     {\color{WeaveTeal}\rule{32mm}{2pt}\par}
@@ -72,8 +74,14 @@
     \vfill
     {\small\@author\par}
     % Licence notice. \WeaveCopyright is defined by conf.py from the Sphinx
-    % `copyright` setting, the value the HTML footer prints.
-    \@ifundefined{WeaveCopyright}{}{%
+    % `copyright` setting, the value the HTML footer prints. Without it the
+    % cover would carry no licence line, so the build stops instead.
+    \@ifundefined{WeaveCopyright}{%
+      \PackageError{weave}{\string\WeaveCopyright\space is not defined}{%
+        The PDF cover prints the copyright and licence line from
+        \string\WeaveCopyright, which docs/conf.py defines from the Sphinx
+        copyright setting. Build through Sphinx with that conf.py.}%
+    }{%
       \vspace{3mm}
       {\footnotesize\color{WeaveMuted} Copyright \textcopyright\ \WeaveCopyright\par}
       \vspace{1mm}

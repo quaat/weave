@@ -29,7 +29,8 @@ its own licence, the MIT License covers:
 - specification text: the Sphinx sources and the built editions (multi-page HTML,
   single-page HTML and PDF);
 - examples: every Weave program (`*.weave`) and teaching or demo material;
-- distributed assets: diagrams, the favicon, the design specimen PDF and generated reports.
+- distributed assets: diagrams, the favicon, generated reports, and the Weave-authored content
+  of the specimen and diagram PDFs (embedded fonts excluded; see FU-01).
 
 The rights holder is the copyright holder named in `LICENSE`, and no separate documentation
 licence is used. Earlier versions of this record took MIT as a working assumption at the
@@ -50,7 +51,8 @@ below say what remains in the root `follow-up` record.
 The recorded decision answers the rights-holder and provenance questions below.
 - The rights holder is the copyright holder named in `LICENSE`.
 - The four `specification/PROVENANCE.json` inputs and the design bundle were generated with
-  ChatGPT for this project and are released under MIT.
+  ChatGPT for this project. In the decision's words: "The copyright holder releases them under
+  the MIT License to the extent the holder has rights in AI-generated material."
 - No employer, funder, institution or contract holds rights or sets conditions.
 
 Question 6, about third-party material, stays open: the decision excludes such material
@@ -59,7 +61,12 @@ are the evidence gathered before the decision.
 
 ### What the records show
 
-**Git history.** The base revision has 18 commits, all dated 28 October 2026: 15 non-merge
+**Git history.** This paragraph describes history up to the first base, `6564a03`. The later
+base `6516e2b` adds one more non-merge commit (the first `REUSE.toml`), created through the
+GitHub web interface under the second identity below, with no AI co-author trailer. The
+commits of this candidate are not described here.
+
+The first base has 18 commits, all dated 28 October 2026: 15 non-merge
 commits and 3 merges. Every commit was authored under one of two Git identities, each carrying
 a form of the same personal name as the copyright line in `LICENSE` (one includes a middle
 initial, the other does not). 15 commits were authored locally under the first identity. 3 were
@@ -294,9 +301,8 @@ copyright = "2026, Thomas F. Hagelien. MIT License"
 
 This change sets `author = "Weave"` and leaves the `copyright` string unchanged (AC-5).
 
-**Follow-up.** None for removal. If the answers to questions 4 and 5 change the holder, update
-`LICENSE`, the licence sections of `README.md` and `specification/docs/chapters/provenance.rst`,
-and the `copyright` string together.
+**Follow-up.** None. No "no licence" statement remains, and the decision keeps the holder named
+in `LICENSE`, so the `copyright` string and the licence sections need no change.
 
 ## AC-5 Specification footer and PDF cover
 
@@ -336,7 +342,13 @@ assessment comes from the style file and `conf.py`.
   in the project repository.
 - The "DANIO PROJECT" label is removed rather than replaced with "WEAVE". The monogram, the
   title and the author line already say Weave, so a fourth instance would add nothing. The
-  starred space keeps the monogram where it was.
+  label's place is taken by an empty box, which keeps the monogram's baseline exactly where
+  it was. Measured with `\pdfsavepos` in a minimal XeLaTeX cover built from the real
+  `\weavemaketitle`, the baseline sits 39,782,916 sp (607.0391 pt) above the page bottom at
+  base `6516e2b` and with this change. The earlier version (`f2557a3`), which used a starred
+  space instead, put it at 38,838,151 sp (592.6232 pt), 14.4159 pt lower.
+- If `\WeaveCopyright` is undefined, the cover raises a `\PackageError` instead of omitting
+  the notice, so the PDF build fails loudly.
 - Evidence:
   - `make latex` (exit 0) writes the line
     `\newcommand{\WeaveCopyright}{2026, Thomas F. Hagelien. MIT License}` and `\author{Weave}`
@@ -443,7 +455,9 @@ below).
 
 ## Follow-up work
 
-The root `follow-up` record is the tracker; this list mirrors it. This change completed:
+The root `follow-up` record is the tracker; this list mirrors it. Completed:
+- the rights-holder confirmation and the decision, recorded by the maintainer on #2 (FU-02);
+- this record's status, which points at the recorded decision;
 - the PDF cover notice (FU-04);
 - the author rename in `specification/docs/conf.py` and the cover (FU-02);
 - the third-party wording in `specification/README.md` and
@@ -457,7 +471,6 @@ Still open:
    and decide how the notices travel with each standalone PDF. Until then the four PDFs stay
    unannotated and `reuse lint` fails on them alone.
 2. **FU-02.**
-   - Rights-holder confirmation: recorded in the decision on #2.
    - Identify any further holders.
    - Settle the specimen PDF's "Danio project" author metadata: edit it, regenerate the PDF
      from the original design bundle, or record that it keeps the old name.
@@ -471,7 +484,6 @@ Still open:
    - Add a pinned REUSE check to CI after FU-01.
    - Add the third-party pointer to the HTML footer.
    - Reconcile #2's criteria with the evidence.
-5. This record's status points at the recorded decision; this item is done.
 
 ## What this record does not do
 

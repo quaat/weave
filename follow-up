@@ -111,9 +111,10 @@ material: https://github.com/quaat/weave/issues/2#issuecomment-6480423748
 - [x] Record the maintainer's rights-holder confirmation for these inputs and
   the design bundle, including any copied snippets, illustrations or examples.
   Recorded in the decision on #2. The four inputs and the design bundle were
-  generated with ChatGPT for this project and are released under MIT by the
-  holder named in LICENSE. Copied third-party material is still to be
-  inventoried under FU-01 and FU-03.
+  generated with ChatGPT for this project. In the decision's words: "The
+  copyright holder releases them under the MIT License to the extent the holder
+  has rights in AI-generated material." Copied third-party material is still to
+  be inventoried under FU-01 and FU-03.
 - [ ] Identify additional human or organisational copyright holders and any
   pre-existing terms; add them at the affected paths without erasing notices.
 - [x] Check whether the Danio project author/branding in docs/conf.py and the
