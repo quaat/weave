@@ -189,6 +189,34 @@ class DriftTests(unittest.TestCase):
         self.assertIn("notes/guide.md", docs_audit.managed_docs(self.repo, docs_audit.docmap_for(self.repo),
                                                                 docs_audit.repo_files(self.repo)))
 
+    def test_change_scope_audits_a_path_the_candidate_marks_historical(self):
+        self.edit("agent-kit/README.md", "\n", "\nSee `agent-kit/docs/no-such-page.md`.\n")
+        self.candidate_map(lambda m: m["historical_documents"]["paths"].append("agent-kit/README.md"))
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "path"])  # exempt by its own map
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "path", "agent-kit/README.md")   # still audited in change scope
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json", "historical-document path 'agent-kit/README.md' "
+                       "added (it stays audited) relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+
+    def test_change_scope_checks_a_changed_claim_with_both_definitions(self):
+        self.edit("README.md", "# 143 tests, including", "# 144 tests, including")
+        def drop_readme(m):
+            claim = next(c for c in m["claims"] if c["id"] == "inventory-proof-test-count")
+            claim["occurrences"] = []  # the README occurrence is no longer checked
+        self.candidate_map(drop_readme)
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "claim"])  # own map: unchecked
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "claim", "README.md")             # the base definition still holds
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json", "claim 'inventory-proof-test-count' "
+                       "definition changed relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+
+    def test_unchanged_map_adds_no_floor_findings(self):
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "PASS", errors)
+        self.assertFalse([e for e in errors if e[0] == "docmap-floor"])
+
     def test_floor_reports_removed_or_narrowed_entries_and_unites_the_maps(self):
         base = docs_audit.load_docmap()
         cand = json.loads(json.dumps(base))

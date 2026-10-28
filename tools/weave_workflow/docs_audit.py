@@ -134,9 +134,11 @@ def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
     """The map a change is audited against: the candidate's map united with the base map, so a
     candidate cannot relax the rules it is audited by. Impact rules, managed-document globs,
     generated documents, claims, protected labels and required documents of both maps apply;
-    the evidence-vocabulary exemption (``authoritative``) is limited to paths both maps exempt.
-    Each impact rule, managed glob or generated document the candidate removes or narrows is
-    reported as an error."""
+    the evidence-vocabulary exemption (``authoritative``) and the historical-record exemption
+    are limited to paths both maps exempt. A claim id in both maps is checked with both
+    definitions. Each impact rule, managed glob or generated document the candidate removes or
+    narrows, each historical path it adds and each claim definition it changes is reported as
+    an error."""
     eff = copy.deepcopy(candidate)
     found: list[Finding] = []
 
@@ -163,8 +165,18 @@ def docmap_floor(candidate: dict, base: dict) -> tuple[dict, list[Finding]]:
                 flag(f"generated document {path!r} removed")
         if gen not in candidate["generated_documents"]:
             eff["generated_documents"].append(copy.deepcopy(gen))
-    claim_ids = {c["id"] for c in candidate["claims"]}
-    eff["claims"] += [copy.deepcopy(c) for c in base["claims"] if c["id"] not in claim_ids]
+    claims = {c["id"]: c for c in candidate["claims"]}
+    for claim in base["claims"]:
+        mine = claims.get(claim["id"])
+        if mine is not None and mine != claim:
+            flag(f"claim {claim['id']!r} definition changed")
+        if mine != claim:
+            eff["claims"].append(copy.deepcopy(claim))  # the base definition must hold as well
+    historical = base["historical_documents"]["paths"]
+    for path in candidate["historical_documents"]["paths"]:
+        if path not in historical:
+            flag(f"historical-document path {path!r} added (it stays audited)")
+    eff["historical_documents"]["paths"] = [h for h in candidate["historical_documents"]["paths"] if h in historical]
     vocab = eff["protected_vocabulary"]
     vocab["labels"] += [l for l in base["protected_vocabulary"]["labels"] if l not in vocab["labels"]]
     vocab["authoritative"] = [a for a in vocab["authoritative"] if a in base["protected_vocabulary"]["authoritative"]]

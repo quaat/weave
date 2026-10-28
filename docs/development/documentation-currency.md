@@ -36,7 +36,10 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    managed-document globs, generated documents, claims and protected labels (the
    vocabulary exemption is limited to paths both maps exempt), and reports an error for
    every impact rule, managed-document glob or generated document the candidate removes or
-   narrows; such a removal must be justified and approved by the maintainer. The generated
+   narrows; such a removal must be justified and approved by the maintainer. Likewise only
+   paths historical in both maps are exempt, and a claim id from the base map is checked
+   with both definitions; an added historical path or a changed claim definition is an
+   error needing the same justification and approval. The generated
    section of `documentation-map.md` is checked against the candidate's own map.
 4. **Boundary statements move with the boundary.** When something documented as
    unimplemented, deferred or not established becomes implemented, every document that stated
