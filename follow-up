@@ -181,6 +181,10 @@ Owner: maintainer / release owner.
   agent-kit/docs/prototype-status.md ("The kit and the vendored prototype are
   released under the MIT License") and any statement added to other component
   READMEs.
+- [ ] Add the same third-party pointer to the HTML footer
+  (specification/docs/_templates/page.html). The footer prints the Sphinx
+  copyright line, but unlike the PDF cover it does not point to LICENSE,
+  REUSE.toml and this file.
 - [ ] Ensure independently shipped agent-kit, portable skill, prototype and
   specification archives include the licence texts and annotations applicable
   to their contents. Root REUSE.toml will not cover a directory copied alone.

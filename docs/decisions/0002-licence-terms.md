@@ -3,12 +3,17 @@
 - **Status:** Proposed (awaiting maintainer decision)
 - **Issue:** [quaat/weave#2](https://github.com/quaat/weave/issues/2), milestone M0
 - **Prepared against:** base revision `6564a0399f10cea02a7274a9e67ce98efd75af14`, 28 October 2026
+- **Implemented on:** base `6516e2b23834aa8b9f036a9370a935b6c176a3a0`. The REUSE metadata from
+  draft PR #64 (`7b2cb65`, cherry-picked as `64a0828`) plus the cover and author change in
+  `1bc8154`.
 - **Decision owner:** the maintainer. This document proposes; it does not decide.
 
-This is a decision-preparation record. It assesses the current state against each acceptance
-criterion of #2, lists the rights questions that only the maintainer can answer, and gives
-draft decision text. It changes no licence file, licence statement, SPDX identifier, build
-configuration, provenance record or pinned snapshot, and it does not tick any criterion.
+This is a decision record in preparation, together with the implementation that goes with it.
+It assesses each acceptance criterion of #2, records the rights questions and the maintainer's
+relayed answers, and gives draft decision text for the maintainer to post. The change it
+documents adds per-path licence metadata (AC-3), and a copyright and licence line on the PDF
+cover plus the author rename (AC-5). It does not change the `LICENSE` text or its copyright
+holder, any provenance record or any pinned snapshot byte, and it does not tick any criterion.
 
 ## Summary and assumed terms
 
@@ -32,8 +37,9 @@ license and expand the README") replaced the earlier "no licence" notes in
 `agent-kit/docs/prototype-status.md` and the `copyright` string in
 `specification/docs/conf.py`. The Context paragraph of #2, which describes the material as
 having no licence granted, predates that commit and is out of date. What #2 still needs is
-the maintainer's recorded decision and confirmation of rights holders (AC-1), plus the
-remaining per-file and PDF work (AC-3, AC-5).
+the maintainer's recorded decision and confirmation of rights holders (AC-1). This change
+delivers the per-path licence metadata (AC-3) and the PDF cover notice (AC-5); the sections
+below say what remains in the root `follow-up` record.
 
 ## AC-1 Provenance and rights holders
 
@@ -66,8 +72,12 @@ SHA-256 digest. There is no author, rights-holder or licence field:
 | --- | --- | --- | --- |
 | weave-inventory-proof.zip | 3 | Primary implementation baseline | `specification/reference/prototype/`, vendored into `agent-kit/.agents/skills/weave/assets/prototype/`; `inventory-proof/` started byte-identical |
 | weave-agent-kit.zip | none recorded | Older teaching guide, examples, manifest, runner conventions | `agent-kit/`, teaching examples in `specification/examples/` |
-| claude-code-weave-merge-sort.md | none recorded | Proposed pure-function and fork/join task | No record says; its subject matches `agent-kit/demos/merge_sort/` and the kit's pure-function extension |
-| claude-code-tiny-shop.md | none recorded | Application brief | No record says; its subject matches `agent-kit/demos/tiny_shop/` |
+| claude-code-weave-merge-sort.md | none recorded | Proposed pure-function and fork/join task | Distributed as `agent-kit/claude-code-weave-merge-sort.md`, whose SHA-256 equals the recorded digest; its subject matches `agent-kit/demos/merge_sort/` and the kit's pure-function extension |
+| claude-code-tiny-shop.md | none recorded | Application brief | Distributed as `agent-kit/claude-code-tiny-shop.md`, whose SHA-256 equals the recorded digest; its subject matches `agent-kit/demos/tiny_shop/` |
+
+Correction: an earlier version of this table said no record shows where the two briefs are
+used. Both are tracked files in `agent-kit/`, and their digests match `specification/PROVENANCE.json`
+(`sha256sum` on the two files).
 
 `agent-kit/PROVENANCE.json` records `kit_version` 0.1.0, the same prototype archive as its
 `source` (same digest), per-file digests of the vendored snapshot, one kit-authored extension
@@ -175,7 +185,8 @@ prose, and Creative Commons Attribution 4.0 (CC BY 4.0) is the usual choice for
 documentation. Whether MIT suits the specification text is for the maintainer to confirm.
 
 **Follow-up.** Answer 4 ("correct") confirms the copyright line. Once that is recorded on
-#2, `LICENSE` needs no change; answer 5 renames the author only (see Follow-up work).
+#2, `LICENSE` needs no change. Answer 5 renames the author only; this change does that (see
+AC-5). `LICENSES/MIT.txt`, added for REUSE tooling, is byte-identical to `LICENSE` (command R2).
 
 ## AC-3 SPDX identifiers or per-directory statement
 
@@ -185,8 +196,7 @@ statements are prose sentences in `specification/README.md` and
 `agent-kit/docs/prototype-status.md`. `inventory-proof/` has no statement of its own; the
 root `README.md` says the licence covers the whole repository.
 
-**Recommended follow-up** (separate implementation issue, after the decision is recorded).
-Options, not mutually exclusive:
+**Options considered before this change** (not mutually exclusive):
 
 1. **SPDX headers in authored source files.** Add `SPDX-License-Identifier: MIT` and an
    `SPDX-FileCopyrightText` line to Python, Sphinx extension, LaTeX style, CSS, template and
@@ -207,6 +217,49 @@ Options, not mutually exclusive:
 Whichever option is chosen, the pinned snapshots must keep their original bytes; any statement
 about them lives outside the snapshot directories.
 
+**Delivered in this change (option 3).** Measured at `1bc8154`; the commands are under
+[Commands run](#commands-run).
+
+- `REUSE.toml` (REUSE Specification 3.3, configuration version 1, from PR #64) annotates 386
+  exact paths, each with `precedence = "closest"`, so that a notice in a file or `.license`
+  sidecar wins. Every path exists in the tree and none is listed twice (command R1).
+  - Weave-authored material carries `SPDX-FileCopyrightText = "2026 Thomas F. Hagelien"` and
+    `SPDX-License-Identifier = "MIT"`. This covers code, specification sources, examples,
+    assets other than the four PDFs, both pinned snapshots, this record and `follow-up`.
+  - The adapted Furo search form (`specification/docs/_templates/sidebar/search.html`) carries
+    both the upstream notice and Weave's, under MIT.
+  - Exact paths mean a new file is not covered until it is reviewed and annotated.
+- The pinned snapshots are annotated from `REUSE.toml` without changing their bytes. Both
+  provenance manifests still verify; that is the documentation audit's synced and provenance
+  check.
+- `LICENSES/MIT.txt` holds the licence text for REUSE tooling and is byte-identical to
+  `LICENSE`, including its copyright line (command R2). REUSE does not need the generic
+  template form; the per-file holder comes from `REUSE.toml`, and it is the same holder.
+- The root `README.md`, `specification/README.md` and
+  `specification/docs/chapters/provenance.rst` state that the MIT grant covers Weave-authored
+  material, that third-party material keeps its own terms, and where the metadata lives.
+- `reuse lint` (REUSE 5.1.1) at `1bc8154` exits 1. Its only findings are the four PDFs that
+  `REUSE.toml` deliberately leaves unannotated until their embedded-font terms are known:
+
+  ```text
+  * specification/design/weave-design-specimen.pdf
+  * specification/docs/_static/diagrams/handle-states.pdf
+  * specification/docs/_static/diagrams/inventory-n0.pdf
+  * specification/docs/_static/diagrams/r0-unknown.pdf
+  Bad licenses: 0; Deprecated licenses: 0; Licenses without file extension: 0;
+  Missing licenses: 0; Unused licenses: 0; Used licenses: MIT; Read errors: 0;
+  Files with copyright information: 384 / 388; Files with license information: 384 / 388
+  ```
+
+**Remaining (root `follow-up`).**
+
+- FU-01: the fonts embedded in the four PDFs. They stay unannotated; no placeholder licence is
+  assigned to make lint pass.
+- FU-04: wording in `agent-kit/docs/prototype-status.md`; licence texts in independently
+  shipped archives; a REUSE check in CI once FU-01 is resolved.
+- No per-file SPDX headers were added. `REUSE.toml` covers the same files without touching
+  pinned or generated bytes.
+
 ## AC-4 "No licence" statements
 
 **Measured state.** At base `6564a03`, no tracked file outside the pinned snapshots contains a
@@ -223,11 +276,15 @@ author = "Danio project"
 copyright = "2026, Thomas F. Hagelien. MIT License"
 ```
 
+This change sets `author = "Weave"` and leaves the `copyright` string unchanged (AC-5).
+
 **Follow-up.** None for removal. If the answers to questions 4 and 5 change the holder, update
 `LICENSE`, the licence sections of `README.md` and `specification/docs/chapters/provenance.rst`,
 and the `copyright` string together.
 
 ## AC-5 Specification footer and PDF cover
+
+The first two paragraphs describe the state at base, before this change.
 
 **HTML footer.** `specification/docs/_templates/page.html` extends the theme footer
 (`super()`), which prints the `copyright` setting, and adds the reference-snapshot digest. A
@@ -247,10 +304,46 @@ the PDF, the MIT statement appears only in the body, in the "Distribution status
 `specification/docs/chapters/provenance.rst`. No built PDF was available to inspect; this
 assessment comes from the style file and `conf.py`.
 
-**Follow-up.** Add a copyright and licence line to the PDF cover, or a short colophon page
-after it, driven from the `copyright` setting so HTML and PDF cannot drift. Settle the
-author name on the cover and in the PDF metadata according to question 5. Then rebuild both
-editions and confirm the footer, the cover and the published site.
+**Delivered in this change.** Measured at `1bc8154`; the commands are under
+[Commands run](#commands-run).
+
+- `specification/docs/conf.py` sets `author = "Weave"` (answer 5), which is also the PDF
+  metadata author. `copyright` is unchanged.
+- A `config-inited` hook in `conf.py` runs at priority 900, after Sphinx's own
+  `SOURCE_DATE_EPOCH` year correction at 800. It appends `\WeaveCopyright`, defined from the
+  final `copyright` value with LaTeX specials escaped, to the LaTeX preamble. The PDF cover
+  and the HTML footer therefore print one value. An empty `copyright` stops the build with a
+  `ConfigError`.
+- `specification/docs/_latex/weave.sty` prints "Copyright ©" and `\WeaveCopyright` on the
+  cover, below the author line. Under it, a line says that third-party material, including
+  embedded fonts, keeps its own terms, and points to `LICENSE`, `REUSE.toml` and `follow-up`
+  in the project repository.
+- The "DANIO PROJECT" label is removed rather than replaced with "WEAVE". The monogram, the
+  title and the author line already say Weave, so a fourth instance would add nothing. The
+  starred space keeps the monogram where it was.
+- Evidence:
+  - `make latex` (exit 0) writes the line
+    `\newcommand{\WeaveCopyright}{2026, Thomas F. Hagelien. MIT License}` and `\author{Weave}`
+    into the generated `weave-specification.tex`.
+  - With `SOURCE_DATE_EPOCH` set to 1 January 2025, the macro reads "2025, …", the same year
+    Sphinx uses for the HTML footer.
+  - `-D 'copyright=2026 A & B_C 100% #1'` yields `2026 A \& B\_C 100\% \#1`.
+  - `-D 'copyright='` exits 2 with the `ConfigError`.
+  - A local `xelatex` compile of the generated source (one pass; `latexmk` is not installed)
+    exits 0, with 0 missing characters. `pdftotext` on page 1 reads the author "Weave", the line
+    "Copyright © 2026, Thomas F. Hagelien. MIT License" and the third-party line, and
+    `pdfinfo` reports Author "Weave". The cover was rendered and inspected.
+  - The single-page HTML build prints the same "Copyright © 2026, Thomas F. Hagelien. MIT
+    License" in its footer.
+- No edition was rebuilt for release or published.
+
+**Remaining (root `follow-up`).**
+
+- FU-03: build and inspect the release PDF and both HTML editions from the pinned environment.
+- FU-02: the specimen PDF's author metadata still says "Danio project". Its bytes are
+  unchanged; it has no tracked source.
+- FU-04: the HTML footer prints the copyright line but not the third-party pointer the PDF
+  cover now has. `specification/docs/_templates/page.html` is outside this change.
 
 ## Commands run
 
@@ -286,6 +379,22 @@ git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been grant
 git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been granted|no licence has been granted|all rights reserved|licen[cs]e (was|has been) not|did not supply a (source )?licen|distribution terms not|no new licen|without a licen' 2faeef8^ -- .
 ```
 
+### Commands for this change
+
+Run from the worktree root. R1–R4 read commit `1bc8154`. The other commands ran on a clean
+worktree at that commit, with the pinned toolchains: the specification virtual environment's
+Python and REUSE 5.1.1 from the workflow's REUSE virtual environment.
+
+| Ref | Command | Exit | Result |
+| --- | --- | --- | --- |
+| R1 | Python: parse `git show 1bc8154:REUSE.toml` with `tomllib` and compare its paths with `git ls-tree -r --name-only 1bc8154` | 0 | 386 paths, 0 duplicates, 0 missing. Not annotated: `LICENSE`, `LICENSES/MIT.txt`, `REUSE.toml` and the four PDFs |
+| R2 | `diff <(git show 1bc8154:LICENSE) <(git show 1bc8154:LICENSES/MIT.txt)` | 0 | identical |
+| R3 | `git grep -n -i 'danio' 1bc8154 -- .` | 0 | no author-name use left. Hits: local paths recorded in `agent-kit/demos/*/artifacts`, this record and `follow-up` |
+| R4 | `git grep -n 'WeaveCopyright' 1bc8154 -- specification/docs` | 0 | defined in `specification/docs/conf.py`, used in `specification/docs/_latex/weave.sty` |
+| R5 | `reuse lint` | 1 | four PDFs only; summary under AC-3 |
+| R6 | `make latex` (in `specification/`) | 0 | generated source carries the cover macro and `\author{Weave}` |
+| R7 | `make validate-offline`, `make singlehtml text`, `python3 scripts/audit_html.py _build/singlehtml` (in `specification/`) | 0, 0, 0 | 33 pages, 3,191 references, 0 errors; 1 page, 491 references, 0 errors |
+
 ## Draft decision text
 
 This text reflects the maintainer answers above and is written for the maintainer to post on
@@ -314,8 +423,7 @@ This text reflects the maintainer answers above and is written for the maintaine
 > Third-party material distributed with or embedded in Weave, including [fonts embedded in
 > PDFs, theme and Sphinx assets in built editions; further items to be identified in
 > follow-up], is not covered by this grant and remains under its own licence. Its terms and
-> notices will be recorded in [a third-party notices file at the repository root / the
-> REUSE-style metadata of AC-3 option 3].
+> notices will be recorded in `REUSE.toml`, with the licence texts under `LICENSES/`.
 >
 > Contributions are accepted under the same terms, as stated in `README.md`.
 >
@@ -331,33 +439,44 @@ holder may have; this is orientation, not legal advice.
 
 ## Follow-up work
 
-After the decision is recorded, one implementation issue should:
+The root `follow-up` record is the tracker; this list mirrors it. This change completed:
+- the PDF cover notice (FU-04);
+- the author rename in `specification/docs/conf.py` and the cover (FU-02);
+- the third-party wording in `specification/README.md` and
+  `specification/docs/chapters/provenance.rst` (FU-04, partly);
+- the REUSE annotation of this record.
 
-1. rename the author from "Danio project" to Weave (or the Weave project, if the maintainer
-   picks that option): the `author` setting in `specification/docs/conf.py` (which also feeds
-   the PDF metadata) and the "DANIO PROJECT" cover label in
-   `specification/docs/_latex/weave.sty`. `specification/design/weave-design-specimen.pdf` has
-   no tracked source, so its metadata cannot be regenerated from this repository; edit the
-   metadata in place, regenerate the PDF from the original design bundle, or record that it
-   keeps the old name. `LICENSE` keeps its copyright line (answer 4);
-2. add SPDX identifiers or per-directory statements, or REUSE-style metadata, covering code,
-   specification, examples and assets, with the pinned snapshots covered from outside their
-   directories (AC-3);
-3. add the copyright and licence line to the PDF cover or a colophon (AC-5);
-4. inventory the third-party material, since question 6 is still open (answer: "don't
-   know"). Start from the fonts embedded in PDFs and the theme and Sphinx assets in built
-   editions. Record its terms and notices where the decision names: a third-party notices
-   file or the REUSE-style metadata of AC-3 option 3;
-5. rebuild the HTML, single-page and PDF editions and check the footer, cover, author name and
-   published site;
-6. update this record's status to point at the recorded decision.
+Still open:
+
+1. **FU-01, release blocker.** Identify the fonts embedded in the four committed PDFs and their
+   exact terms, add the licence texts under `LICENSES/` and the notices to `REUSE.toml`,
+   and decide how the notices travel with each standalone PDF. Until then the four PDFs stay
+   unannotated and `reuse lint` fails on them alone.
+2. **FU-02.**
+   - Record the rights-holder confirmation on #2; the answers are relayed above.
+   - Identify any further holders.
+   - Settle the specimen PDF's "Danio project" author metadata: edit it, regenerate the PDF
+     from the original design bundle, or record that it keeps the old name.
+3. **FU-03.** Build both HTML editions and the release PDF from the pinned environment,
+   inventory the redistributed theme, Sphinx and font components, and add a third-party notice
+   inventory. This is also the inventory question 6 needs (answer: "don't know").
+4. **FU-04.**
+   - Align `agent-kit/docs/prototype-status.md` and any other component statement with the
+     third-party exception.
+   - Ship the licence texts with independently distributed archives.
+   - Add a pinned REUSE check to CI after FU-01.
+   - Add the third-party pointer to the HTML footer.
+   - Reconcile #2's criteria with the evidence.
+5. Update this record's status to point at the recorded decision.
 
 ## What this proposal does not do
 
 - It does not choose or record the licence, and it does not tick any criterion of #2 or record
   maintainer evidence.
-- It does not change `LICENSE`, any licence statement, any SPDX identifier,
-  `specification/docs/conf.py`, the HTML footer or the PDF cover.
+- It does not change the `LICENSE` text or its copyright holder, or the `copyright` string
+  the HTML footer prints. It does change the `author` setting and the PDF cover (AC-5).
+- It does not annotate the four committed PDFs, change the bytes of
+  `specification/design/weave-design-specimen.pdf`, or rebuild or publish any edition.
 - Its own findings name no rights holder beyond what the repository records and Git history
   show. The maintainer's answers are quoted as relayed, and the remaining open point is
   listed as a question.
