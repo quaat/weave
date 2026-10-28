@@ -25,13 +25,13 @@ anything remembered or documented elsewhere.
 | Hook events in the installed Claude Code | The 2.1.312 binary contains `SessionStart`, `SessionEnd`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`, `Stop`, `PreCompact`, and the output fields `hookSpecificOutput`, `permissionDecision`, `permissionDecisionReason`, `updatedInput`, `additionalContext`, `stop_hook_active` |
 | Issues and milestones | Live read: 60 issues (#2–#61), 7 open milestones M0–M6, one pull request; no native blocked-by or sub-issue relationships yet |
 | Branch protection | `main` is not protected (HTTP 404 from the protection endpoint) |
+| Project board (Projects v2 #3) | After `gh auth refresh -s project` (2026-10-28): project "Weave" `PVT_kwHOAAi_6c4BpKJl`, Status field `PVTSSF_lAHOAAi_6c4BpKJlzhnnAgg`, options Todo `f75ad846`, In Progress `47fc9ee4`, In Review `22ef89ec`, Done `98236657`; no missing or extra options; all 61 open issues are on the board. IDs are rediscovered on every run, never hard-coded |
 
 ## Not verified or unavailable
 
 | Capability | Status | Consequence and remedy |
 | --- | --- | --- |
-| Project board (Projects v2 #3) | **Blocked:** the gh token has scopes `admin:public_key`, `gist`, `read:org`, `repo`, without `read:project` or `project` | Status field and option IDs, item IDs and board order are unknown; claims and transitions refuse to run. Maintainer: `gh auth refresh -s project`, then `discover` |
-| Built-in project automations | Not readable through the API | Inspect the project's workflow settings by hand; disable rules that move items to Done or In Review automatically |
+| Built-in project automations | Not readable through the API. Observed effect: bootstrap issue #62 was added to the board and set to In Progress without any workflow write, so automations are active | Inspect the project's workflow settings by hand; disable rules that move items to Done or In Review automatically. `reconcile` reports any status change it did not record |
 | `agent_type` in subagent `PreToolUse` payloads, and `updatedInput` being honoured | **Unverified live.** A headless probe session was refused by the session's permission classifier | Worker guards depend on it. The evidence hooks log payload key names during a run, so the first real run verifies it; until then treat worker credential removal as best effort |
 | autonomous-development controller | Not installed as a plugin (`~/.claude/plugins/installed_plugins.json` lists codex, duckdb-skills, example-skills, document-skills and agent-sparring). A local checkout of v0.3.0 exists outside this repository | The review gate uses the built-in `codex exec` adapter, which follows the same principles (fresh read-only Codex, schema-validated output, fail-closed gates). Installing the plugin and mapping its review gate is a follow-up, not a second controller |
 | Codex ChatGPT login refresh | Codex logged `invalid_refresh_token` errors, but the configured provider still answered | Run `codex login` if reviews start failing with authentication errors |
