@@ -1,25 +1,28 @@
 # 0002: Licence terms for implementation, specification and assets
 
-- **Status:** Proposed (awaiting maintainer decision)
 - **Issue:** [quaat/weave#2](https://github.com/quaat/weave/issues/2), milestone M0
+- **Recorded decision:** [maintainer comment on #2](https://github.com/quaat/weave/issues/2#issuecomment-6480423748), created
+  2026-10-28T20:52:50Z: "Licence terms: MIT for all of Weave; rights holder as in LICENSE"
+- **Status:** Decided — recorded by the maintainer on #2 (link above), 28 October 2026
 - **Prepared against:** base revision `6564a0399f10cea02a7274a9e67ce98efd75af14`, 28 October 2026
 - **Implemented on:** base `6516e2b23834aa8b9f036a9370a935b6c176a3a0`. The REUSE metadata from
   draft PR #64 (`7b2cb65`, cherry-picked as `64a0828`) plus the cover and author change in
   `1bc8154`.
-- **Decision owner:** the maintainer. This document proposes; it does not decide.
+- **Decision owner:** the maintainer. The decision text is the maintainer's; this record
+  quotes it and does not add to it.
 
-This is a decision record in preparation, together with the implementation that goes with it.
-It assesses each acceptance criterion of #2, records the rights questions and the maintainer's
-relayed answers, and gives draft decision text for the maintainer to post. The change it
-documents adds per-path licence metadata (AC-3), and a copyright and licence line on the PDF
-cover plus the author rename (AC-5). It does not change the `LICENSE` text or its copyright
-holder, any provenance record or any pinned snapshot byte, and it does not tick any criterion.
+This is the decision record for #2, together with the implementation that goes with it. It
+assesses each acceptance criterion, records the rights questions and the maintainer's answers,
+and quotes the decision the maintainer recorded on #2. The change it documents adds per-path
+licence metadata (AC-3), and a copyright and licence line on the PDF cover plus the author
+rename (AC-5). It does not change the `LICENSE` text or its copyright holder, any provenance
+record or any pinned snapshot byte, and it does not tick any criterion.
 
-## Summary and assumed terms
+## Summary and decided terms
 
-Commit `2faeef8` added an MIT `LICENSE` to the repository. At the orchestrator's request, this
-proposal takes as its working assumption **one licence, the MIT License, for everything
-distributed from this repository**, pending the maintainer's recorded decision:
+The maintainer decided **"Licence terms: MIT for all of Weave; rights holder as in LICENSE"**
+(see [Recorded decision](#recorded-decision)). Except for third-party material, which keeps
+its own licence, the MIT License covers:
 
 - code: the prototype working copy, the vendored and reference prototype snapshots, the agent
   kit, the specification's build scripts and Sphinx extensions, and the workflow tooling;
@@ -28,20 +31,31 @@ distributed from this repository**, pending the maintainer's recorded decision:
 - examples: every Weave program (`*.weave`) and teaching or demo material;
 - distributed assets: diagrams, the favicon, the design specimen PDF and generated reports.
 
-This is an assumption, not a decision. Which terms apply, and who the rights holders are, is
-for the maintainer to decide and record.
+The rights holder is the copyright holder named in `LICENSE`, and no separate documentation
+licence is used. Earlier versions of this record took MIT as a working assumption at the
+orchestrator's request; the recorded decision replaces that assumption.
 
 The repository already contains MIT text. Besides adding `LICENSE`, commit `2faeef8` ("Add MIT
 license and expand the README") replaced the earlier "no licence" notes in
 `README.md`, `specification/README.md`, `specification/docs/chapters/provenance.rst`,
 `agent-kit/docs/prototype-status.md` and the `copyright` string in
 `specification/docs/conf.py`. The Context paragraph of #2, which describes the material as
-having no licence granted, predates that commit and is out of date. What #2 still needs is
-the maintainer's recorded decision and confirmation of rights holders (AC-1). This change
+having no licence granted, predates that commit and is out of date. The maintainer has
+now recorded the decision, including the rights-holder confirmation (AC-1). This change
 delivers the per-path licence metadata (AC-3) and the PDF cover notice (AC-5); the sections
 below say what remains in the root `follow-up` record.
 
 ## AC-1 Provenance and rights holders
+
+The recorded decision answers the rights-holder and provenance questions below.
+- The rights holder is the copyright holder named in `LICENSE`.
+- The four `specification/PROVENANCE.json` inputs and the design bundle were generated with
+  ChatGPT for this project and are released under MIT.
+- No employer, funder, institution or contract holds rights or sets conditions.
+
+Question 6, about third-party material, stays open: the decision excludes such material
+from the grant, and its inventory continues in `follow-up` (FU-01, FU-03). The sections below
+are the evidence gathered before the decision.
 
 ### What the records show
 
@@ -120,9 +134,9 @@ Third-party material that is or may be distributed:
 
 ### Open rights questions for the maintainer
 
-These are questions, not findings. This proposal does not answer them. The maintainer has
-since answered questions 1–5, 7 and 8, and question 6 is still open; see
-[Maintainer answers](#maintainer-answers) below. The answers are not yet recorded on #2.
+These are the questions put to the maintainer. Questions 1–5, 7 and 8 are answered (see
+[Maintainer answers](#maintainer-answers) below), and the answers are reflected in the
+decision recorded on #2. Question 6 is still open.
 
 1. Who authored or generated each of the four inputs in `specification/PROVENANCE.json`
    (weave-inventory-proof.zip v3, weave-agent-kit.zip, claude-code-weave-merge-sort.md,
@@ -147,8 +161,9 @@ since answered questions 1–5, 7 and 8, and question 6 is still open; see
 ### Maintainer answers
 
 The maintainer gave these answers to the orchestrator in conversation on 28 October 2026, and
-the orchestrator relayed them for this record. They are not yet recorded on #2, so they are
-not a decision. Each answer is quoted verbatim.
+the orchestrator relayed them for this record. The maintainer then recorded the decision on #2
+(see [Recorded decision](#recorded-decision)), which reflects them. Each answer is quoted
+verbatim as relayed.
 
 | Question (short form) | Answer |
 | --- | --- |
@@ -167,10 +182,11 @@ How this record reads the answers:
 - Answer 5 changes the author name only ("Danio project" becomes Weave). The copyright holder
   stays as named in `LICENSE`, per answer 4.
 - Answer 8 keeps the existing statement in `README.md`.
-- Question 6 remains open, so the third-party list in the draft stays a placeholder.
+- Question 6 remains open. The decision names fonts embedded in PDFs and theme and Sphinx
+  assets, and leaves further items to follow-up.
 
 Separately, the repository's own commits carry AI co-author trailers naming a different
-assistant (see Git history above). The AI statement in the draft below is worded to cover
+assistant (see Git history above). The AI statement in the recorded decision covers
 AI-generated material generally.
 
 ## AC-2 LICENSE
@@ -179,13 +195,13 @@ AI-generated material generally.
 the standard MIT License text with one copyright line for 2026. It was added in `2faeef8`. No
 other licence file is tracked at base (command D below).
 
-**Assessment under the working assumption.** If MIT covers code and prose alike, one `LICENSE`
-satisfies AC-2 and no `LICENSE-docs` is needed. Note for the decision: MIT is uncommon for
-prose, and Creative Commons Attribution 4.0 (CC BY 4.0) is the usual choice for
-documentation. Whether MIT suits the specification text is for the maintainer to confirm.
+**Assessment.** The decision applies MIT to code and prose alike and uses no separate
+documentation licence, so one `LICENSE` satisfies AC-2 and no `LICENSE-docs` is needed. During
+preparation this record noted that MIT is uncommon for prose and that Creative Commons
+Attribution 4.0 (CC BY 4.0) is the usual choice for documentation; the maintainer chose MIT.
 
-**Follow-up.** Answer 4 ("correct") confirms the copyright line. Once that is recorded on
-#2, `LICENSE` needs no change. Answer 5 renames the author only; this change does that (see
+**Follow-up.** None. The decision keeps the rights holder as named in `LICENSE`, so
+`LICENSE` needs no change. Answer 5 renames the author only; this change does that (see
 AC-5). `LICENSES/MIT.txt`, added for REUSE tooling, is byte-identical to `LICENSE` (command R2).
 
 ## AC-3 SPDX identifiers or per-directory statement
@@ -395,47 +411,35 @@ Python and REUSE 5.1.1 from the workflow's REUSE virtual environment.
 | R6 | `make latex` (in `specification/`) | 0 | generated source carries the cover macro and `\author{Weave}` |
 | R7 | `make validate-offline`, `make singlehtml text`, `python3 scripts/audit_html.py _build/singlehtml` (in `specification/`) | 0, 0, 0 | 33 pages, 3,191 references, 0 errors; 1 page, 491 references, 0 errors |
 
-## Draft decision text
+## Recorded decision
 
-This text reflects the maintainer answers above and is written for the maintainer to post on
-#2 using the maintainer decision form. Bracketed parts are optional or still open.
+The maintainer recorded the decision on #2 in [this comment](https://github.com/quaat/weave/issues/2#issuecomment-6480423748) (created
+2026-10-28T20:52:50Z). Below is its text, verbatim, after the line that identifies it as a
+decision:
 
-> **Licence terms for Weave (#2)**
+> Weave is distributed under the MIT License. Except for the third-party material named below, this covers all code (the prototype, the vendored and reference prototype snapshots, the agent kit, build scripts and workflow tooling), the specification text and its built editions, all examples, and assets authored for Weave, unless a file states otherwise. No separate documentation licence is used.
 >
-> Weave is distributed under the MIT License. Except for the third-party material named
-> below, this covers all code (the prototype, the vendored and reference prototype snapshots,
-> the agent kit, build scripts and workflow tooling), the specification text and its built editions, all examples, and assets authored
-> for Weave, unless a file states otherwise. No separate documentation licence is used.
+> The rights holder is the copyright holder named in `LICENSE`. The four inputs recorded in `specification/PROVENANCE.json` (weave-inventory-proof.zip v3, weave-agent-kit.zip, claude-code-weave-merge-sort.md and claude-code-tiny-shop.md) and the design bundle were generated with ChatGPT for this project. The copyright holder releases them under the MIT License to the extent the holder has rights in AI-generated material. No employer, funder, institution or contract holds rights in the work or sets conditions on it.
 >
-> The rights holder is the copyright holder named in `LICENSE`. The four inputs recorded in
-> `specification/PROVENANCE.json` (weave-inventory-proof.zip v3, weave-agent-kit.zip,
-> claude-code-weave-merge-sort.md and claude-code-tiny-shop.md) and the design bundle were
-> generated with ChatGPT for this project. The copyright holder releases them under the MIT
-> License [optional: to the extent the holder has rights in AI-generated material]. No
-> employer, funder, institution or contract holds rights in the work or sets conditions on it.
+> Weave is developed with AI assistance, and the AI-generated material is released under the same terms.
 >
-> Weave is developed with AI assistance, and the AI-generated material is released under the
-> same terms.
+> The author name is "Weave", replacing "Danio project". The copyright holder is unchanged.
 >
-> The author name is "Weave" [option: "the Weave project"], replacing "Danio project". The
-> copyright holder is unchanged.
->
-> Third-party material distributed with or embedded in Weave, including [fonts embedded in
-> PDFs, theme and Sphinx assets in built editions; further items to be identified in
-> follow-up], is not covered by this grant and remains under its own licence. Its terms and
-> notices will be recorded in `REUSE.toml`, with the licence texts under `LICENSES/`.
+> Third-party material distributed with or embedded in Weave, including fonts embedded in PDFs, theme and Sphinx assets in built editions, and further items to be identified in follow-up, is not covered by this grant and remains under its own licence. Its terms and notices will be recorded in REUSE-style metadata (REUSE.toml) at the repository root.
 >
 > Contributions are accepted under the same terms, as stated in `README.md`.
 >
-> Follow-up: per-file or per-directory licence identification; an inventory and record of
-> third-party terms and notices; a copyright and licence line on the PDF cover or a colophon;
-> and renaming the author from "Danio project" to Weave in `specification/docs/conf.py`, in
-> the cover label in `specification/docs/_latex/weave.sty` and in the metadata of
-> `specification/design/weave-design-specimen.pdf`, as listed in decision record 0002.
+> Follow-up: path-based licence identification through REUSE metadata, covering code, specification, examples and assets without changing the pinned snapshots; an inventory and record of third-party terms and notices; a copyright and licence line on the PDF cover or a colophon; and renaming the author from "Danio project" to Weave in `specification/docs/conf.py`, the cover label in `specification/docs/_latex/weave.sty` and the metadata of `specification/design/weave-design-specimen.pdf`, as listed in decision record 0002.
 
-The bracketed clause in the second paragraph is optional. Whether copyright exists in purely
-AI-generated material varies by jurisdiction, and the clause avoids claiming more than the
-holder may have; this is orientation, not legal advice.
+Its follow-up paragraph was written before this change. This change delivers:
+- the REUSE metadata (AC-3);
+- the copyright and licence line on the PDF cover;
+- the author rename in `specification/docs/conf.py` and in the cover in
+  `specification/docs/_latex/weave.sty`, where the label was removed.
+
+The remaining items, including the third-party inventory and the metadata of
+`specification/design/weave-design-specimen.pdf`, stay in the root `follow-up` record (see
+below).
 
 ## Follow-up work
 
@@ -453,7 +457,7 @@ Still open:
    and decide how the notices travel with each standalone PDF. Until then the four PDFs stay
    unannotated and `reuse lint` fails on them alone.
 2. **FU-02.**
-   - Record the rights-holder confirmation on #2; the answers are relayed above.
+   - Rights-holder confirmation: recorded in the decision on #2.
    - Identify any further holders.
    - Settle the specimen PDF's "Danio project" author metadata: edit it, regenerate the PDF
      from the original design bundle, or record that it keeps the old name.
@@ -467,18 +471,18 @@ Still open:
    - Add a pinned REUSE check to CI after FU-01.
    - Add the third-party pointer to the HTML footer.
    - Reconcile #2's criteria with the evidence.
-5. Update this record's status to point at the recorded decision.
+5. This record's status points at the recorded decision; this item is done.
 
-## What this proposal does not do
+## What this record does not do
 
-- It does not choose or record the licence, and it does not tick any criterion of #2 or record
-  maintainer evidence.
+- It does not choose the licence. The maintainer recorded the decision on #2, and this record
+  quotes it unchanged. It does not tick any criterion of #2 or record maintainer evidence.
 - It does not change the `LICENSE` text or its copyright holder, or the `copyright` string
   the HTML footer prints. It does change the `author` setting and the PDF cover (AC-5).
 - It does not annotate the four committed PDFs, change the bytes of
   `specification/design/weave-design-specimen.pdf`, or rebuild or publish any edition.
 - Its own findings name no rights holder beyond what the repository records and Git history
-  show. The maintainer's answers are quoted as relayed, and the remaining open point is
-  listed as a question.
+  show. The maintainer's answers and decision are quoted as given, and the remaining open
+  point is listed as a question.
 - It does not modify either `PROVENANCE.json` or the pinned prototype snapshots.
 - It gives no legal advice; the trade-offs noted are for orientation only.

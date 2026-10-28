@@ -96,7 +96,9 @@ Owner: maintainer / rights holder.
 
 The current MIT annotations reflect the project's published grant. They do not
 resolve the earlier rights questions in issue #2. These inputs are not asserted
-to be third-party works merely because they were imported:
+to be third-party works merely because they were imported. The maintainer's
+decision on #2 has since answered those questions, except third-party
+material: https://github.com/quaat/weave/issues/2#issuecomment-6480423748
 
 | Recorded input | Evidence / affected paths |
 | --- | --- |
@@ -106,10 +108,12 @@ to be third-party works merely because they were imported:
 | claude-code-tiny-shop.md | specification/PROVENANCE.json; agent-kit/claude-code-tiny-shop.md and related demo |
 | Documentation design bundle | specification/design/README.md lists installed config, CSS, templates, favicon, LaTeX style and specimen PDF; bundle source rights are not established by that inventory |
 
-- [ ] Record the maintainer's rights-holder confirmation for these inputs and
+- [x] Record the maintainer's rights-holder confirmation for these inputs and
   the design bundle, including any copied snippets, illustrations or examples.
-  The maintainer's answers, relayed through the orchestrator, are quoted in
-  docs/decisions/0002-licence-terms.md; they are not yet recorded on #2.
+  Recorded in the decision on #2. The four inputs and the design bundle were
+  generated with ChatGPT for this project and are released under MIT by the
+  holder named in LICENSE. Copied third-party material is still to be
+  inventoried under FU-01 and FU-03.
 - [ ] Identify additional human or organisational copyright holders and any
   pre-existing terms; add them at the affected paths without erasing notices.
 - [x] Check whether the Danio project author/branding in docs/conf.py and the
@@ -119,8 +123,10 @@ to be third-party works merely because they were imported:
   as its PDF author. The file has no tracked source, and its bytes are left
   unchanged until FU-01 settles its fonts. Edit its metadata, regenerate it
   from the original design bundle, or record that it keeps the old name.
-- [ ] Record the decision on issue #2. Do not mark its rights-review criterion
+- [x] Record the decision on issue #2. Do not mark its rights-review criterion
   complete solely because an annotation or the root MIT licence exists.
+  Recorded by the maintainer on 28 October 2026; see
+  docs/decisions/0002-licence-terms.md.
 
 Close when the source-to-path rights record is complete. Any non-project material
 discovered must be removed from the project-only annotation group and annotated
