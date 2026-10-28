@@ -37,6 +37,7 @@ path = [
     "AGENTS.md",
     "CLAUDE.md",
     "README.md",
+    "docs/decisions/0002-licence-terms.md",
     "docs/development/agent-workflow.md",
     "docs/development/capabilities.md",
     "docs/development/communication-protocol.md",

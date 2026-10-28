@@ -10,7 +10,7 @@ The existing LICENSE and README.md supply the Weave MIT grant and the notice
 "2026 Thomas F. Hagelien"; REUSE.toml records that existing policy. Imported-file
 hashes establish identity, not ownership or permission to redistribute.
 
-## Completed in this change
+## Completed in the REUSE metadata change
 
 - Replaced the invalid prose in REUSE.toml with schema-version-1 TOML. REUSE.yaml
   is not a supported REUSE configuration filename.
@@ -28,6 +28,27 @@ hashes establish identity, not ownership or permission to redistribute.
   https://github.com/pradyunsg/furo/blob/2025.12.19/LICENSE
 - Clarified the root README: MIT covers Weave-authored content, while third-party
   code and fonts retain their own terms, including in built distributions.
+
+## Completed in the issue #2 licence change
+
+See docs/decisions/0002-licence-terms.md for the evidence.
+
+- PDF cover notice (FU-04, first item): specification/docs/_latex/weave.sty
+  prints "Copyright © <copyright>" on the cover, with a line saying that
+  third-party material, including embedded fonts, keeps its own terms and
+  pointing to LICENSE, REUSE.toml and this file. specification/docs/conf.py
+  supplies the value from the Sphinx copyright setting (the one the HTML footer
+  prints) after Sphinx's SOURCE_DATE_EPOCH year correction, so the two cannot
+  drift. The cover was compiled locally with xelatex and inspected; no edition
+  was rebuilt or published.
+- Author name (FU-02, Danio item, partly): author = "Weave" in
+  specification/docs/conf.py, which also sets the PDF metadata author, and the
+  "DANIO PROJECT" cover label removed from weave.sty. The specimen PDF's
+  metadata is unchanged; see FU-02.
+- Wording (FU-04, second item, partly): specification/README.md and
+  specification/docs/chapters/provenance.rst now state the third-party exception
+  and point to REUSE.toml and this file.
+- REUSE.toml annotates docs/decisions/0002-licence-terms.md.
 
 ## FU-01 — Embedded fonts in committed PDFs [OPEN; release blocker]
 
@@ -87,10 +108,17 @@ to be third-party works merely because they were imported:
 
 - [ ] Record the maintainer's rights-holder confirmation for these inputs and
   the design bundle, including any copied snippets, illustrations or examples.
+  The maintainer's answers, relayed through the orchestrator, are quoted in
+  docs/decisions/0002-licence-terms.md; they are not yet recorded on #2.
 - [ ] Identify additional human or organisational copyright holders and any
   pre-existing terms; add them at the affected paths without erasing notices.
-- [ ] Check whether the Danio project author/branding in docs/conf.py and the
-  PDF cover needs a clarification alongside the legal copyright holder.
+- [x] Check whether the Danio project author/branding in docs/conf.py and the
+  PDF cover needs a clarification alongside the legal copyright holder. Done in
+  the issue #2 licence change: the author is "Weave" and the cover label is gone.
+- [ ] specification/design/weave-design-specimen.pdf still names "Danio project"
+  as its PDF author. The file has no tracked source, and its bytes are left
+  unchanged until FU-01 settles its fonts. Edit its metadata, regenerate it
+  from the original design bundle, or record that it keeps the old name.
 - [ ] Record the decision on issue #2. Do not mark its rights-review criterion
   complete solely because an annotation or the root MIT licence exists.
 
@@ -141,12 +169,18 @@ is accounted for. Source-tree REUSE success alone does not close this item.
 
 Owner: maintainer / release owner.
 
-- [ ] Add the chosen project copyright and licence statement, plus appropriate
+- [x] Add the chosen project copyright and licence statement, plus appropriate
   third-party notice references, to the specification PDF cover or colophon in
   specification/docs/_latex/weave.sty. Build and visually inspect the result;
   the existing Sphinx HTML copyright string does not establish a PDF cover notice.
+  Done in the issue #2 licence change (local xelatex compile, cover inspected).
+  The release PDF still needs its own check under FU-03.
 - [ ] Review component READMEs and specification/docs/chapters/provenance.rst
-  for wording consistent with the root third-party exception.
+  for wording consistent with the root third-party exception. Done for
+  specification/README.md and provenance.rst. Still open:
+  agent-kit/docs/prototype-status.md ("The kit and the vendored prototype are
+  released under the MIT License") and any statement added to other component
+  READMEs.
 - [ ] Ensure independently shipped agent-kit, portable skill, prototype and
   specification archives include the licence texts and annotations applicable
   to their contents. Root REUSE.toml will not cover a directory copied alone.
@@ -175,6 +209,11 @@ Validation performed for this change with REUSE 5.1.1:
   occur once (two zero-byte Python files are not covered files in REUSE).
 - Both sets of 39 pinned prototype SHA-256 records verify unchanged.
 - Repository-scope documentation audit passes; git diff --check passes.
+
+Validation for the issue #2 licence change (REUSE 5.1.1, same command):
+
+- REUSE lint exits 1 only for the same four PDFs; 384 of 388 covered files have
+  both notices, with zero bad/missing/unused licence texts and zero read errors.
 
 The review inspected every tracked filename, repository notices and provenance,
 the identified upstream Furo files and PDF font inventories. It is not an

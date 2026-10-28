@@ -76,10 +76,18 @@ Python API. This package's scripts import them solely for reproducibility.
 Distribution status
 -------------------------
 
-The specification, the reference prototype snapshot and the teaching kit are
+The Weave-authored specification sources and the Weave-authored portions of its
+built editions, the reference prototype snapshot and the teaching kit are
 released under the MIT License, Copyright (c) 2026 Thomas F. Hagelien. The
 license text is in ``LICENSE`` at the root of the
-`project repository <https://github.com/quaat/weave>`_.
+`project repository <https://github.com/quaat/weave>`_. The PDF cover and the
+HTML footer print the same copyright line, taken from one Sphinx setting.
+
+Third-party material, including theme code in the HTML editions and fonts
+embedded in PDF files, keeps its own copyright and terms. ``REUSE.toml`` at the
+repository root records licensing per path without changing the bytes of the
+reference snapshot; the repository's ``follow-up`` record lists the open
+embedded-font, provenance and release-notice items.
 
 Change history
 --------------------

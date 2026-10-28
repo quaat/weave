@@ -90,6 +90,11 @@ The primary source is `weave-inventory-proof.zip`, version 3. Teaching examples
 originate in the older `weave-agent-kit.zip` and are rechecked against version 3.
 Draft/profile identifiers are editorial identifiers, not upstream release numbers.
 
-The specification sources, the built editions and the reference prototype
-snapshot are released under the MIT License; see [`LICENSE`](../LICENSE) at the
-repository root.
+The Weave-authored specification sources and the Weave-authored portions of the
+built editions, and the reference prototype snapshot, are released under the MIT
+License; see [`LICENSE`](../LICENSE) at the repository root. The PDF cover and
+the HTML footer print the same copyright line, from the `copyright` setting in
+`docs/conf.py`. Third-party material, including theme code and fonts embedded in
+PDF files, keeps its own copyright and terms. [`REUSE.toml`](../REUSE.toml)
+records licensing per path, and [`follow-up`](../follow-up) lists the open
+items, including the four committed PDFs that are not yet annotated.

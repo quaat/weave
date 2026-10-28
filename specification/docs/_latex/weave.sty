@@ -56,8 +56,10 @@
   \begin{titlepage}
     \thispagestyle{empty}
     \raggedright\sffamily\color{WeaveInk}
-    {\small\bfseries\color{WeaveTeal} DANIO PROJECT\par}
-    \vspace{22mm}
+    % The former project label is omitted: the monogram, the title and the
+    % author line already name Weave. The starred space keeps the monogram
+    % where it was (label line plus 22mm) at the top of the page.
+    \vspace*{\dimexpr\baselineskip+22mm\relax}
     {\fontsize{82}{88}\selectfont\bfseries W\par}
     \vspace{8mm}
     {\color{WeaveTeal}\rule{32mm}{2pt}\par}
@@ -69,6 +71,16 @@
     {\large\color{WeaveTeal} Draft specification\enspace/\enspace\py@release\par}
     \vfill
     {\small\@author\par}
+    % Licence notice. \WeaveCopyright is defined by conf.py from the Sphinx
+    % `copyright` setting, the value the HTML footer prints.
+    \@ifundefined{WeaveCopyright}{}{%
+      \vspace{3mm}
+      {\footnotesize\color{WeaveMuted} Copyright \textcopyright\ \WeaveCopyright\par}
+      \vspace{1mm}
+      {\scriptsize\color{WeaveMuted} Third-party material, including embedded fonts,
+        keeps its own terms; see \texttt{LICENSE}, \texttt{REUSE.toml} and
+        \texttt{follow-up} in the project repository.\par}
+    }
     \vspace{6mm}
     {\color{WeaveRule}\rule{\linewidth}{.6pt}\par}
     \vspace{4mm}
