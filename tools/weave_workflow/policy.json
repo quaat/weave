@@ -1,0 +1,270 @@
+{
+  "policy_version": 1,
+  "repository": "quaat/weave",
+  "project": {
+    "owner": "quaat",
+    "owner_type": "user",
+    "number": 3,
+    "url": "https://github.com/users/quaat/projects/3/",
+    "status_field": "Status",
+    "status_options": [
+      "Todo",
+      "In Progress",
+      "In Review",
+      "Done"
+    ]
+  },
+  "actors": {
+    "coordinator_logins": [
+      "quaat"
+    ],
+    "maintainer_logins": [
+      "quaat"
+    ],
+    "note": "The coordinator currently posts with the maintainer's own account, so GitHub actor identity alone cannot tell them apart. Coordinator events are authenticated by the local run ledger (comment id + event digest); maintainer decisions are comments by a maintainer login that are absent from the ledger. A dedicated bot account removes this ambiguity; see docs/development/github-adapter.md."
+  },
+  "roadmap_issue": 61,
+  "milestones": {
+    "M0": {
+      "epic": 54,
+      "requires": [],
+      "source": "#54 body 'Depends on: Start'; #61 milestone table"
+    },
+    "M1": {
+      "epic": 55,
+      "requires": [
+        "M0"
+      ],
+      "source": "#55 body 'Depends on: M0'; #61 milestone table"
+    },
+    "M2": {
+      "epic": 56,
+      "requires": [
+        "M1"
+      ],
+      "source": "#56 body 'Depends on: M1'; #61 milestone table"
+    },
+    "M3": {
+      "epic": 57,
+      "requires": [
+        "M1",
+        "M2"
+      ],
+      "source": "#57 body 'Depends on: M1 and M2'; #61 milestone table"
+    },
+    "M4": {
+      "epic": 58,
+      "requires": [
+        "M3"
+      ],
+      "source": "#58 body 'Depends on: M3'; #61 milestone table"
+    },
+    "M5": {
+      "epic": 59,
+      "requires": [
+        "M3",
+        "M4"
+      ],
+      "source": "#59 body 'Depends on: M3 and M4'; #61 milestone table"
+    },
+    "M6": {
+      "epic": 60,
+      "requires": [
+        "M5"
+      ],
+      "requires_note": "M5 is required for durable variants; non-durable M6 work follows numeric ordering, which already places it after M5.",
+      "source": "#60 body 'Depends on: M5 for durable variants'; #61 milestone table"
+    }
+  },
+  "dependencies": [
+    {
+      "issue": 14,
+      "blocked_by": 9,
+      "kind": "blocking",
+      "source": "#14 body section 'Depends on: #9'"
+    }
+  ],
+  "cross_milestone_requirements": [
+    {
+      "issue": 14,
+      "owner_milestone": "M1",
+      "required_by": "M4",
+      "source": "#14 'start in M1, complete before M4'; #58 work items",
+      "note": "Owned by M1; M4's exit gate cites its completion. Never scheduled twice."
+    }
+  ],
+  "early_start_exceptions": [
+    {
+      "milestone": "M2",
+      "issues": [
+        18
+      ],
+      "allowed_scope": "adapter design only (design notes, ABI draft); no integration",
+      "allowed_during": "M0",
+      "source": "#56 body 'adapter design may start during M0'; #18 'adapter design may start during M0'"
+    },
+    {
+      "milestone": "M4",
+      "issues": [
+        28,
+        30
+      ],
+      "allowed_scope": "independent arithmetic verifier (#28) and editor/language-server groundwork (#30)",
+      "allowed_during": "any",
+      "source": "#58 body 'the arithmetic verifier and editor work can begin earlier'; #28 'before M4 (can start early)'"
+    }
+  ],
+  "early_start_exceptions_active": false,
+  "decision_tasks": [
+    {
+      "issue": 2,
+      "decision": "Licence terms and rights-holder confirmation",
+      "maintainer_evidence": [
+        "rights holders and provenance reviewed and recorded",
+        "chosen terms recorded on the issue"
+      ],
+      "source": "#2 'a project decision, not a language feature'"
+    },
+    {
+      "issue": 5,
+      "decision": "Core semantics: integers, pure errors, identity naming and the durable state inventory",
+      "maintainer_evidence": [
+        "each decision recorded by the designated maintainer"
+      ],
+      "source": "#5 title and 'Decisions to record'"
+    },
+    {
+      "issue": 35,
+      "decision": "Continuation representation",
+      "maintainer_evidence": [
+        "chosen option recorded by the designated maintainer"
+      ],
+      "source": "#35 'Options' section"
+    }
+  ],
+  "maintainer_actions": [
+    {
+      "issue": 4,
+      "action": "Publish the baseline tag",
+      "source": "#4 scope; orchestration requirements section 13"
+    },
+    {
+      "issue": 26,
+      "action": "Run formative usability sessions with real participants",
+      "source": "#26 scope"
+    },
+    {
+      "issue": 34,
+      "action": "Run the five-person usability study and publish its report",
+      "source": "#34 protocol"
+    }
+  ],
+  "unscheduled_issues": [
+    {
+      "issue": 48,
+      "reason": "No milestone at bootstrap; reported, not assigned",
+      "source": "orchestration requirements section 4"
+    }
+  ],
+  "labels": {
+    "tracking": [
+      "epic"
+    ],
+    "deferred": [
+      "deferred"
+    ],
+    "agent": {
+      "agent:managed": [
+        "0e8a16",
+        "Managed by the Weave development orchestrator"
+      ],
+      "agent:blocked": [
+        "b60205",
+        "Blocked: see the latest BLOCKED event on the issue"
+      ],
+      "agent:needs-human": [
+        "d93f0b",
+        "Waiting for a maintainer decision or action"
+      ],
+      "agent:review-requested": [
+        "1d76db",
+        "Independent review requested for the current candidate"
+      ],
+      "agent:changes-requested": [
+        "e99695",
+        "Review or gate returned findings to fix"
+      ],
+      "agent:ready-to-merge": [
+        "0052cc",
+        "Accepted by review; waiting for a maintainer merge"
+      ],
+      "agent:docs-stale": [
+        "fbca04",
+        "Documentation audit failing for the candidate"
+      ]
+    },
+    "exclusive_groups": [
+      [
+        "agent:review-requested",
+        "agent:changes-requested",
+        "agent:ready-to-merge"
+      ]
+    ]
+  },
+  "concurrency": {
+    "max_active_implementation_issues": 1,
+    "claim_ttl_hours": 8
+  },
+  "review": {
+    "max_rounds_per_attempt": 3,
+    "timeout_seconds": 1800,
+    "codex": {
+      "sandbox": "read-only",
+      "extra_args": [
+        "--ephemeral"
+      ],
+      "config_overrides": [
+        "mcp_servers={}"
+      ]
+    }
+  },
+  "branch_prefix": "agent/",
+  "merge": {
+    "delegated_to_coordinator": false,
+    "strategy": "maintainer"
+  },
+  "protected_paths": [
+    ".github/",
+    ".claude/",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "tools/weave_workflow/policy.json",
+    "specification/reference/prototype/",
+    "specification/PROVENANCE.json",
+    "agent-kit/.agents/skills/weave/assets/prototype/",
+    "agent-kit/PROVENANCE.json"
+  ],
+  "worker_agent_types": [
+    "weave-implementer",
+    "weave-verifier",
+    "weave-docs-editor",
+    "weave-local-reviewer",
+    "weave-safety-reviewer",
+    "weave-investigator"
+  ],
+  "integration": {
+    "branch": "main",
+    "ref": "origin/main",
+    "required_checks": [
+      "inventory-proof (Python 3.11)",
+      "inventory-proof (Python 3.12)",
+      "inventory-proof (Python 3.13)",
+      "agent-kit (Python 3.11)",
+      "agent-kit (Python 3.12)",
+      "agent-kit (Python 3.13)",
+      "specification (validate)",
+      "workflow tooling and documentation audit"
+    ],
+    "note": "Required checks are the union of these CI jobs and any status checks required by branch protection on the integration branch."
+  }
+}

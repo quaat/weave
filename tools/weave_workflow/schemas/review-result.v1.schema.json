@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/quaat/weave/tools/weave_workflow/schemas/review-result.v1.schema.json",
+  "title": "Independent review result, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "attempt",
+    "request_id",
+    "base_sha",
+    "head_sha",
+    "requirements_digest",
+    "verdict",
+    "criteria",
+    "findings",
+    "checks_run",
+    "limitations",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "attempt": {
+      "type": "integer"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "requirements_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "REQUEST_CHANGES",
+        "BLOCKED"
+      ]
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(AC-[0-9]+|DOC-[0-9]+)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "satisfied",
+              "partially_satisfied",
+              "not_satisfied",
+              "not_verifiable"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "severity",
+          "blocking",
+          "location",
+          "description",
+          "reproduction",
+          "required_correction"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^F-[0-9]+$"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "location": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reproduction": {
+            "type": "string"
+          },
+          "required_correction": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "checks_run": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "exit_code",
+          "observation"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "exit_code": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "observation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,441 @@
+{
+  "docmap_version": 1,
+  "managed_documents": [
+    "README.md",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "docs/development/*.md",
+    ".claude/skills/*/SKILL.md",
+    ".claude/agents/*.md",
+    "inventory-proof/README.md",
+    "inventory-proof/DESIGN_NOTES.md",
+    "agent-kit/README.md",
+    "agent-kit/AGENTS.md",
+    "agent-kit/CHANGELOG.md",
+    "agent-kit/docs/commands.md",
+    "agent-kit/docs/weave.md",
+    "agent-kit/docs/prototype-status.md",
+    "agent-kit/.agents/skills/weave/SKILL.md",
+    "specification/README.md",
+    "specification/design/README.md",
+    "specification/docs/chapters/status.rst",
+    "specification/docs/chapters/limitations.rst",
+    "specification/docs/chapters/tooling.rst",
+    "specification/docs/chapters/provenance.rst"
+  ],
+  "historical_documents": {
+    "note": "Dated records of a past run or decision. They are kept as written; claim checks do not apply, and they are excluded from the path audit because they may name artefacts that existed at the time.",
+    "paths": [
+      "docs/development/orchestration-requirements.md",
+      "agent-kit/docs/validation.md",
+      "agent-kit/demos/*/TEST_REPORT.md",
+      "specification/validation/*.md",
+      "specification/docs/chapters/design-history.rst"
+    ]
+  },
+  "generated_documents": [
+    {
+      "paths": [
+        "inventory-proof/REPORT.md",
+        "inventory-proof/ACTUAL_OUTPUT.txt",
+        "inventory-proof/LOWERED_PROPAGATION.weave",
+        "inventory-proof/proof.json",
+        "inventory-proof/ordering.json",
+        "inventory-proof/scenarios.json",
+        "inventory-proof/colour-proof.json",
+        "inventory-proof/colour-check.json",
+        "inventory-proof/durable-scenarios.json"
+      ],
+      "generator": "cd inventory-proof && python3 demo.py",
+      "check": {
+        "type": "regenerate-in-copy",
+        "dir": "inventory-proof",
+        "argv": [
+          "demo.py"
+        ]
+      }
+    },
+    {
+      "paths": [
+        "specification/docs/chapters/rule-catalogue.rst",
+        "specification/docs/chapters/conformance.rst"
+      ],
+      "generator": "cd specification && python3 scripts/refresh_reference_pages.py",
+      "check": {
+        "type": "command",
+        "cwd": "specification",
+        "argv": [
+          "scripts/refresh_reference_pages.py",
+          "--check"
+        ]
+      }
+    },
+    {
+      "paths": [
+        "docs/development/documentation-map.md"
+      ],
+      "generator": "python3 -m tools.weave_workflow docs-map --write",
+      "check": {
+        "type": "docs-map"
+      }
+    },
+    {
+      "paths": [
+        "agent-kit/.agents/skills/weave/references/weave.md"
+      ],
+      "generator": "cd agent-kit && python3 scripts/sync_skill_reference.py",
+      "check": {
+        "type": "identical",
+        "source": "agent-kit/docs/weave.md"
+      }
+    }
+  ],
+  "synced_copies": [
+    {
+      "a": "agent-kit/docs/weave.md",
+      "b": "agent-kit/.agents/skills/weave/references/weave.md"
+    }
+  ],
+  "provenance_manifests": [
+    {
+      "manifest": "specification/PROVENANCE.json",
+      "key": "reference_files",
+      "base": "specification"
+    },
+    {
+      "manifest": "agent-kit/PROVENANCE.json",
+      "key": "original_files_sha256",
+      "base": "agent-kit/.agents/skills/weave/assets/prototype"
+    }
+  ],
+  "diagnostic_code_sources": [
+    "inventory-proof/*.py",
+    "agent-kit/.agents/skills/weave/scripts/**/*.py",
+    "specification/rules.json"
+  ],
+  "commands": {
+    "weave.py": {
+      "argv": [
+        "agent-kit/scripts/weave.py",
+        "--help"
+      ]
+    },
+    "make": {
+      "makefile": "specification/Makefile",
+      "sphinx_builders": [
+        "html",
+        "dirhtml",
+        "singlehtml",
+        "text",
+        "latex",
+        "latexpdf",
+        "linkcheck",
+        "man",
+        "epub",
+        "json",
+        "xml",
+        "dummy"
+      ]
+    },
+    "tools.weave_workflow": {
+      "module": "tools.weave_workflow"
+    }
+  },
+  "claims": [
+    {
+      "id": "inventory-proof-test-count",
+      "source": {
+        "type": "unittest-count",
+        "dir": "inventory-proof",
+        "start": "tests"
+      },
+      "occurrences": [
+        {
+          "doc": "README.md",
+          "regex": "# (\\d+) tests, including process-crash cases"
+        }
+      ]
+    },
+    {
+      "id": "kit-prototype-test-count",
+      "source": {
+        "type": "unittest-count",
+        "dir": "agent-kit/.agents/skills/weave/assets/prototype",
+        "start": "tests"
+      },
+      "occurrences": [
+        {
+          "doc": "README.md",
+          "regex": "bundled prototype suite \\((\\d+) tests\\)"
+        },
+        {
+          "doc": "agent-kit/docs/prototype-status.md",
+          "regex": "This snapshot has \\*\\*(\\d+) regression tests\\*\\*"
+        }
+      ]
+    },
+    {
+      "id": "spec-reference-test-count",
+      "source": {
+        "type": "unittest-count",
+        "dir": "specification/reference/prototype",
+        "start": "tests"
+      },
+      "occurrences": [
+        {
+          "doc": "specification/docs/chapters/tooling.rst",
+          "regex": "(?m)^(\\d+) tests\\. Expected rejection"
+        }
+      ]
+    },
+    {
+      "id": "two-order-exploration",
+      "source": {
+        "type": "file-regex",
+        "path": "inventory-proof/ACTUAL_OUTPUT.txt",
+        "regex": "orders=2, stock=2, states=(\\d+), edges=(\\d+)"
+      },
+      "occurrences": [
+        {
+          "doc": "README.md",
+          "regex": "orders=2, stock=2, states=(\\d+), edges=(\\d+)"
+        },
+        {
+          "doc": "inventory-proof/README.md",
+          "regex": "\\*\\*([\\d,]+) states and ([\\d,]+) edges\\*\\*"
+        }
+      ]
+    },
+    {
+      "id": "spec-two-order-exploration",
+      "source": {
+        "type": "file-regex",
+        "path": "specification/reference/prototype/ACTUAL_OUTPUT.txt",
+        "regex": "orders=2, stock=2, states=(\\d+), edges=(\\d+)"
+      },
+      "occurrences": [
+        {
+          "doc": "specification/docs/chapters/protocol-diff.rst",
+          "regex": "Two orders, stock two: ([\\d,]+) states / ([\\d,]+) edges"
+        },
+        {
+          "doc": "specification/docs/chapters/verification.rst",
+          "regex": "explores ([\\d,]+) states and ([\\d,]+) edges"
+        }
+      ]
+    },
+    {
+      "id": "one-order-exploration",
+      "source": {
+        "type": "command-regex",
+        "cwd": "agent-kit",
+        "argv": [
+          "scripts/weave.py",
+          "analyze"
+        ],
+        "regex": "CHECKED WITHIN BOUNDS (\\d+) states/(\\d+) edges"
+      },
+      "occurrences": [
+        {
+          "doc": "agent-kit/docs/weave.md",
+          "regex": "explores (\\d+) states and (\\d+)\\s+edges"
+        },
+        {
+          "doc": "specification/docs/chapters/protocol-diff.rst",
+          "regex": "One order, stock one: (\\d+) states / (\\d+) edges"
+        },
+        {
+          "doc": "specification/docs/chapters/verification.rst",
+          "regex": "legacy net has (\\d+) states and (\\d+) edges"
+        }
+      ]
+    }
+  ],
+  "impact_rules": [
+    {
+      "id": "user-visible",
+      "artefact": "Any user-visible behaviour, command, or layout",
+      "when": [
+        "inventory-proof/*.py",
+        "agent-kit/scripts/**",
+        "agent-kit/.agents/skills/weave/scripts/**",
+        "specification/Makefile",
+        "specification/scripts/**",
+        "tools/weave_workflow/cli.py",
+        "Cargo.toml",
+        "crates/**",
+        "rust-toolchain.toml"
+      ],
+      "require": [
+        "README.md",
+        "{component}/README.md"
+      ],
+      "verified_by": "manual review; command and path audit"
+    },
+    {
+      "id": "prototype",
+      "artefact": "Prototype semantics, diagnostics, or limits (inventory-proof/)",
+      "when": [
+        "inventory-proof/**"
+      ],
+      "require": [
+        "inventory-proof/REPORT.md",
+        "inventory-proof/DESIGN_NOTES.md",
+        "inventory-proof/ACTUAL_OUTPUT.txt",
+        "inventory-proof/TEST_OUTPUT.txt"
+      ],
+      "verified_by": "REPORT.md and ACTUAL_OUTPUT.txt regenerated by demo.py and compared; TEST_OUTPUT.txt and DESIGN_NOTES.md manually reviewed"
+    },
+    {
+      "id": "spec-snapshot",
+      "artefact": "Specification reference snapshot refresh",
+      "when": [
+        "specification/reference/prototype/**"
+      ],
+      "require": [
+        "specification/PROVENANCE.json",
+        "specification/docs/chapters/limitations.rst",
+        "specification/docs/chapters/status.rst",
+        "specification/docs/chapters/provenance.rst",
+        "specification/docs/chapters/design-history.rst"
+      ],
+      "verified_by": "provenance hashes recomputed; discrepancy register manually reviewed"
+    },
+    {
+      "id": "agent-kit",
+      "artefact": "Agent kit runner, skills, examples, or policy",
+      "when": [
+        "agent-kit/**"
+      ],
+      "require": [
+        "agent-kit/README.md",
+        "agent-kit/AGENTS.md",
+        "agent-kit/docs/commands.md",
+        "agent-kit/docs/weave.md",
+        "agent-kit/.agents/skills/weave/references/weave.md",
+        "agent-kit/docs/prototype-status.md",
+        "agent-kit/docs/validation.md",
+        "agent-kit/CHANGELOG.md"
+      ],
+      "changelog": "agent-kit/CHANGELOG.md",
+      "conditional": {
+        "agent-kit/PROVENANCE.json": [
+          "agent-kit/.agents/skills/weave/assets/prototype/**"
+        ]
+      },
+      "verified_by": "synced copy compared; provenance hashes recomputed; CHANGELOG entry required; others manually reviewed"
+    },
+    {
+      "id": "specification",
+      "artefact": "Specification source or grammar",
+      "when": [
+        "specification/docs/**",
+        "specification/grammar/**",
+        "specification/rules.json"
+      ],
+      "require": [
+        "specification/rules.json",
+        "specification/docs/chapters/rule-catalogue.rst",
+        "specification/docs/chapters/conformance.rst",
+        "specification/docs/chapters/status.rst",
+        "specification/docs/chapters/limitations.rst",
+        "specification/docs/chapters/design-history.rst",
+        "specification/docs/chapters/provenance.rst",
+        "specification/validation/BUILD_REPORT.md"
+      ],
+      "verified_by": "rule catalogue and conformance appendix regenerated (--check); examples re-checked by the Sphinx build; others manually reviewed"
+    },
+    {
+      "id": "workflow",
+      "artefact": "Workflow tooling, skills, hooks, settings, CI",
+      "when": [
+        "tools/weave_workflow/**",
+        ".claude/**",
+        ".github/**",
+        "CLAUDE.md",
+        "AGENTS.md"
+      ],
+      "require": [
+        "CLAUDE.md",
+        "docs/development/agent-workflow.md",
+        "docs/development/capabilities.md",
+        "README.md"
+      ],
+      "verified_by": "command and path audit; workflow unit tests; manual review"
+    },
+    {
+      "id": "roadmap",
+      "artefact": "Roadmap, milestones, dependencies",
+      "when": [
+        "tools/weave_workflow/policy.json"
+      ],
+      "require": [
+        "README.md",
+        "docs/development/agent-workflow.md",
+        "docs/development/scheduling.md"
+      ],
+      "verified_by": "epic checklists on GitHub updated by the orchestrator; dependency graph rebuilt by `plan`"
+    }
+  ],
+  "new_or_removed_document_rule": {
+    "artefact": "New or removed document",
+    "require": [
+      "docs/development/documentation-map.md",
+      "tools/weave_workflow/docmap.json"
+    ]
+  },
+  "boundary": {
+    "phrases": "(?i)(not implemented|unimplemented|specified, not implemented|is not here|no general|not established|not yet|deferred|not part of the specified fragment)",
+    "requires": [
+      "specification/docs/chapters/status.rst",
+      "specification/docs/chapters/limitations.rst",
+      "specification/docs/chapters/design-history.rst"
+    ]
+  },
+  "protected_vocabulary": {
+    "labels": [
+      "PROVED",
+      "CHECKED WITHIN BOUNDS",
+      "CHECKED flow",
+      "SCRIPTED",
+      "VIOLATED",
+      "NOT ESTABLISHED"
+    ],
+    "authoritative": [
+      "specification/**",
+      "inventory-proof/**"
+    ]
+  },
+  "ignore_path_segments": [
+    "_build",
+    "_site",
+    ".venv",
+    "venv",
+    "build",
+    "__pycache__",
+    "node_modules",
+    "target"
+  ],
+  "path_bases": {
+    "README.md": [
+      "inventory-proof",
+      "agent-kit",
+      "specification"
+    ],
+    "specification/**": [
+      "specification",
+      "specification/docs",
+      "specification/reference/prototype"
+    ],
+    "agent-kit/**": [
+      "agent-kit",
+      "agent-kit/.agents/skills/weave"
+    ],
+    ".claude/**": [
+      "."
+    ],
+    "docs/development/**": [
+      "."
+    ]
+  }
+}

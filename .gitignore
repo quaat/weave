@@ -18,3 +18,6 @@ Thumbs.db
 # Claude Code local state
 **/.claude/.cc-writes/
 **/.claude/settings.local.json
+
+# Agent task worktrees (weave workflow)
+.worktrees/

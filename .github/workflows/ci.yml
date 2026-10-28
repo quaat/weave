@@ -93,3 +93,18 @@ jobs:
         run: |
           make singlehtml text PYTHON=python
           python scripts/audit_html.py _build/singlehtml
+
+  workflow:
+    name: workflow tooling and documentation audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Workflow tests (offline; fake GitHub and Codex adapters)
+        run: python -m unittest discover -s tools/weave_workflow/tests -t . -v
+      - name: Documentation drift audit (whole repository)
+        run: python -m tools.weave_workflow docs-audit
+      - name: Documentation map is current
+        run: python -m tools.weave_workflow docs-map
