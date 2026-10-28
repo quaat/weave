@@ -70,6 +70,6 @@ followed by static and dynamic semantics. For reviewers, use
 
    Use your browser's Find command to search this single-page edition. The
    published site also offers a `multi-page edition with full-text search
-   <https://quaat.github.io/weave/multipage/>`_ and a `PDF
-   <https://quaat.github.io/weave/weave-specification.pdf>`_.
+   <https://quaat.github.io/weave/multipage/>`_; PDF editions are attached to
+   the project's `releases <https://github.com/quaat/weave/releases>`_.
 

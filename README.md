@@ -5,7 +5,7 @@
 
 **Specification:** [single page](https://quaat.github.io/weave/) ·
 [multi-page with search](https://quaat.github.io/weave/multipage/) ·
-[PDF](https://quaat.github.io/weave/weave-specification.pdf)
+PDF on [releases](https://github.com/quaat/weave/releases)
 
 Weave is an experimental, purely functional language that combines Petri nets
 with nominal, linear flows. It aims at correctness, distributability,
@@ -44,6 +44,7 @@ python3 -m venv .venv && . .venv/bin/activate
 python -m pip install -r requirements.txt
 make html              # _build/html/index.html
 make latexpdf          # _build/latex/weave-specification.pdf (needs XeLaTeX + latexmk)
+                       # CI: run pdf.yml manually, or push a spec-v* tag to publish it on a release
 make validate-offline  # examples, grammar audit, tests, strict HTML build, link audit
 ```
 
@@ -52,7 +53,8 @@ make validate-offline  # examples, grammar audit, tests, strict HTML build, link
 | Workflow | Runs on | What it does |
 | --- | --- | --- |
 | [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, checks that `demo.py` regenerates the committed outputs, runs `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, and demo tests (Python 3.11–3.13). `specification`: `make validate-offline`, single-page and text builds, HTML link audit |
-| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the single-page edition (site root), the multi-page edition (`/multipage/`) and the XeLaTeX PDF, then audits links in the assembled site. The PDF is also uploaded as a build artifact. Only `main` deploys to GitHub Pages; this is the repository's only Pages workflow |
+| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the single-page edition (site root) and the multi-page edition (`/multipage/`), then audits links, form targets and assets in the assembled site. Only `main` deploys to GitHub Pages; this is the repository's only Pages workflow |
+| [`pdf.yml`](.github/workflows/pdf.yml) | Manual runs; `spec-v*` tags | Installs TeX Live and builds the XeLaTeX PDF. Manual runs upload it as an artifact. Tag pushes also attach it to that tag's GitHub release |
 
 External link checking (`make linkcheck`) needs network access to many hosts,
 so CI doesn't run it; run it locally before a release.

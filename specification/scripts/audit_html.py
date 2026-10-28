@@ -22,6 +22,7 @@ class Page(HTMLParser):
         if tag=="a" and "name" in attrs:self.ids.add(attrs["name"])
         for attr in ("href","src"):
             if attr in attrs:self.links.append(attrs[attr])
+        if tag=="form" and attrs.get("action"):self.links.append(attrs["action"])
 
 def audit(folder):
     pages={}

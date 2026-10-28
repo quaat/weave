@@ -1,0 +1,57 @@
+name: Specification PDF
+
+# The PDF needs a large TeX Live installation, so it is not part of every push.
+# Run it manually (artifact only) or push a spec-v* tag to attach the PDF to
+# that tag's GitHub release.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["spec-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  pdf:
+    name: Build PDF
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # attach the PDF to the release on tag pushes
+    defaults:
+      run:
+        working-directory: specification
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: specification/requirements.txt
+      - name: Install TeX Live and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends make latexmk \
+            texlive-xetex texlive-latex-extra texlive-fonts-recommended \
+            texlive-lang-english fonts-dejavu
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build PDF
+        run: make latexpdf PYTHON=python
+      - name: Report LaTeX warnings
+        run: |
+          grep -E "Missing character|undefined|LaTeX Warning" _build/latex/weave-specification.log \
+            | sed 's/^/::warning title=LaTeX::/' || true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: weave-specification-pdf
+          path: specification/_build/latex/weave-specification.pdf
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "Weave specification $TAG" --generate-notes
+          gh release upload "$TAG" _build/latex/weave-specification.pdf --clobber

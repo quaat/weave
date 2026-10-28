@@ -1,0 +1,15 @@
+{#- Single-page output has no search page. Search the multi-page edition when
+    WEAVE_SINGLEHTML_SEARCH_URL names it; otherwise omit the box. -#}
+{%- if builder == "singlehtml" -%}
+  {%- set search_action = weave_singlehtml_search_url -%}
+{%- else -%}
+  {%- set search_action = pathto('search') -%}
+{%- endif -%}
+{%- if search_action -%}
+<form class="sidebar-search-container" method="get" action="{{ search_action }}" role="search">
+  <input class="sidebar-search" placeholder="{{ _("Search") }}" name="q" aria-label="{{ _("Search" ) }}">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div>
+{%- endif -%}
