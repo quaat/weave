@@ -69,7 +69,7 @@ followed by static and dynamic semantics. For reviewers, use
 .. only:: singlehtml
 
    Use your browser's Find command to search this single-page edition. The
-   published site also offers a `multi-page edition with full-text search
-   <https://quaat.github.io/weave/multipage/>`_; PDF editions are attached to
-   the project's `releases <https://github.com/quaat/weave/releases>`_.
+   published site's default is the `multi-page edition with full-text search
+   <https://quaat.github.io/weave/>`_; PDF editions are attached to the
+   project's `releases <https://github.com/quaat/weave/releases>`_.
 

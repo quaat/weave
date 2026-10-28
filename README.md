@@ -3,8 +3,8 @@
 [![CI](https://github.com/quaat/weave/actions/workflows/ci.yml/badge.svg)](https://github.com/quaat/weave/actions/workflows/ci.yml)
 [![Specification site](https://github.com/quaat/weave/actions/workflows/docs.yml/badge.svg)](https://github.com/quaat/weave/actions/workflows/docs.yml)
 
-**Specification:** [single page](https://quaat.github.io/weave/) ·
-[multi-page with search](https://quaat.github.io/weave/multipage/) ·
+**Specification:** [HTML](https://quaat.github.io/weave/) ·
+[single page](https://quaat.github.io/weave/single-page/) ·
 PDF on [releases](https://github.com/quaat/weave/releases)
 
 Weave is an experimental, purely functional language that combines Petri nets
@@ -53,7 +53,7 @@ make validate-offline  # examples, grammar audit, tests, strict HTML build, link
 | Workflow | Runs on | What it does |
 | --- | --- | --- |
 | [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, checks that `demo.py` regenerates the committed outputs, runs `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, and demo tests (Python 3.11–3.13). `specification`: `make validate-offline`, single-page and text builds, HTML link audit |
-| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the single-page edition (site root) and the multi-page edition (`/multipage/`), then audits links, form targets and assets in the assembled site. Only `main` deploys to GitHub Pages; this is the repository's only Pages workflow |
+| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the multi-page edition (site root, with search) and the single-page edition (`/single-page/`), then audits links, form targets and assets in the assembled site. Only `main` deploys to GitHub Pages; this is the repository's only Pages workflow |
 | [`pdf.yml`](.github/workflows/pdf.yml) | Manual runs; `spec-v*` tags | Installs TeX Live and builds the XeLaTeX PDF. Manual runs upload it as an artifact. Tag pushes also attach it to that tag's GitHub release |
 
 External link checking (`make linkcheck`) needs network access to many hosts,

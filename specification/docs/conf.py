@@ -152,7 +152,7 @@ html_context = {
     "reference_snapshot_sha256": _reference_sha256,
     "weave_tagline": "Functional Petri nets",
     # Search target for the single-page edition's sidebar box, relative to its
-    # index.html. The published site sets "multipage/search.html"; empty hides it.
+    # index.html. The published site sets "../search.html"; empty hides it.
     "weave_singlehtml_search_url": os.environ.get("WEAVE_SINGLEHTML_SEARCH_URL", ""),
 }
 
