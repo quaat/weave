@@ -1,6 +1,6 @@
 # Prototype status and provenance
 
-Snapshot date: 2026-10-28. Source: `weave-inventory-proof.zip`, version 2.
+Snapshot date: 2026-10-28. Source: `weave-inventory-proof.zip`, version 3.
 Original files are preserved byte-for-byte under
 `.agents/skills/weave/assets/prototype/`. `PROVENANCE.json` records source identity
 and original-file integrity. The runner calls the existing Python API without
@@ -17,8 +17,25 @@ changing language rules.
 - Synchronous reference execution with stock one, scalar entry parameters, and
   at most one scripted foreign operation; no external service is contacted.
 
-This snapshot has **107 regression tests**. Earlier descriptions with fewer tests
+This snapshot has **143 regression tests**. Earlier descriptions with fewer tests
 or `?` listed as unimplemented refer to an older snapshot.
+
+### Changes from version 2
+
+- `E204` raised on a `?` early-return branch now names the `?` line and the
+  handles still held, instead of the generic "obligations left at normal
+  return" message. The code and the accepted/rejected programs are unchanged.
+- The accounting report's `NOT ESTABLISHED` line now names `orders>=2` and
+  cross-order token matching as outside the uncoloured model.
+- New bundled modules, not wired into `scripts/weave.py`:
+  `coloured.py` (tenant/order-indexed coloured nets over
+  `Inventory.coloured.weave`, with per-family invariants and two-order
+  exploration) and `durable.py` (the R0 process-crash reference driver and
+  `durable-scenarios.json`). Run them directly from
+  `.agents/skills/weave/assets/prototype/`, for example
+  `python3 coloured.py analyze Inventory.coloured.weave` or `python3 durable.py`.
+  The runner's `check`, `simulate`, and `verify` still use the uncoloured N0
+  net, so the boundaries below describe the runner.
 
 ## Kit extension: pure functions with fork/join
 

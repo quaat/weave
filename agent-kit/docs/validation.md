@@ -61,3 +61,22 @@ hashes still match.
 
 Details and limits are in `demos/merge_sort/TEST_REPORT.md`. Termination is not
 checked. The scheduler's pairing and cleanup properties are tested, not proved.
+
+## Addendum: prototype version 3 (2026-10-28)
+
+Environment: Python 3.13.5 on Linux. The vendored prototype was replaced in full
+with version 3, copied from the specification's reference snapshot and
+hash-verified against `specification/PROVENANCE.json`. `PROVENANCE.json` records
+the new source and per-file hashes. No kit code, example, or expectation changed.
+
+| Check | Result |
+| --- | --- |
+| Original prototype regression suite (`weave.py test`) | 143 tests passed |
+| Kit tests (`tests/`) | 59 passed, including the provenance hash check |
+| Teaching manifest (`weave.py examples`) | 34 expectations matched |
+| Merge-sort demo tests | Passed; `run_demo.py` concurrent run succeeded |
+| Tiny Shop demo tests | Passed; `run_demo.py` succeeded |
+| `weave.py doctor` | READY |
+
+The only behaviour difference observed is the more specific `E204` message for
+`?` early returns. Demo artifacts were not regenerated.

@@ -1,5 +1,12 @@
 # Weave
 
+[![CI](https://github.com/quaat/weave/actions/workflows/ci.yml/badge.svg)](https://github.com/quaat/weave/actions/workflows/ci.yml)
+[![Specification site](https://github.com/quaat/weave/actions/workflows/docs.yml/badge.svg)](https://github.com/quaat/weave/actions/workflows/docs.yml)
+
+**Specification:** [single page](https://quaat.github.io/weave/) ·
+[multi-page with search](https://quaat.github.io/weave/multipage/) ·
+[PDF](https://quaat.github.io/weave/weave-specification.pdf)
+
 Weave is an experimental, purely functional language that combines Petri nets
 with nominal, linear flows. It aims at correctness, distributability,
 parallelism, and fail safety. This repository holds the language's draft
@@ -40,6 +47,16 @@ make latexpdf          # _build/latex/weave-specification.pdf (needs XeLaTeX + l
 make validate-offline  # examples, grammar audit, tests, strict HTML build, link audit
 ```
 
+## Continuous integration
+
+| Workflow | Runs on | What it does |
+| --- | --- | --- |
+| [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, checks that `demo.py` regenerates the committed outputs, runs `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, and demo tests (Python 3.11–3.13). `specification`: `make validate-offline`, single-page and text builds, HTML link audit |
+| [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; pull requests that touch `specification/` | Builds the single-page edition (site root), the multi-page edition (`/multipage/`) and the XeLaTeX PDF, then audits links in the assembled site. The PDF is also uploaded as a build artifact. Only `main` deploys to GitHub Pages; this is the repository's only Pages workflow |
+
+External link checking (`make linkcheck`) needs network access to many hosts,
+so CI doesn't run it; run it locally before a release.
+
 ## Prototype versions
 
 The prototype exists in three places. Keep them as they are unless you also
@@ -48,12 +65,13 @@ update the recorded hashes.
 | Location | Prototype version | Pinned by |
 | --- | --- | --- |
 | `inventory-proof/` | v3, the working copy for further development | Started byte-identical to the specification snapshot |
-| `agent-kit/.agents/skills/weave/assets/prototype/` | v2, unchanged; the pure `fn` extension lives beside it in `scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
+| `agent-kit/.agents/skills/weave/assets/prototype/` | v3, unchanged; the pure `fn` extension lives beside it in `scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
 | `specification/reference/prototype/` | v3 (adds coloured nets `coloured.py` and the process-crash model `durable.py`) | `specification/PROVENANCE.json`, checked by `scripts/validate.py` |
 
 The specification is grounded in v3. Changes made in `inventory-proof/` reach
 the specification only when someone deliberately refreshes its snapshot and
-`PROVENANCE.json`. The agent kit still bundles v2.
+`PROVENANCE.json`. The agent kit bundles the same v3 snapshot, but its runner
+uses only the uncoloured checker and simulator.
 
 ## Status and license
 

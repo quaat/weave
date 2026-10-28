@@ -164,7 +164,8 @@ may differ: `CheckoutOutcome` has `Ok(Unit)` after sale is committed.
 
 Propagation inserts no cleanup, cancellation, payload conversion, or net firing.
 Any other live handle must also be accounted for on early-return branches.
-Discharging it only after `?` is insufficient. The curated `early_return_leak`
+Discharging it only after `?` is insufficient: the checker reports `E204` at the
+`?` line and lists the handles still held. The curated `early_return_leak`
 example demonstrates this failure; `checkout_propagating` demonstrates valid
 propagation across helper boundaries with explicit caller handling.
 

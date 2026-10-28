@@ -1,0 +1,47 @@
+{
+  "format": "weave-colour-exploration-v1",
+  "source_sha256": "90885a6a7e85b0bed4afc429a0ebe978d24ed580ceb03566f943ec5b4aea3b6c",
+  "orders": 2,
+  "colours": [
+    [
+      "tenant",
+      "order1"
+    ],
+    [
+      "tenant",
+      "order2"
+    ]
+  ],
+  "stock": 2,
+  "states": 841,
+  "edges": 3712,
+  "complete": true,
+  "max_states": 100000,
+  "token_bound_per_colour": 1,
+  "unreached_transitions": [],
+  "properties": [
+    "sold_requires_paid",
+    "dispatched_release_requires_rejection",
+    "paid_never_released",
+    "paid_state_requires_paid",
+    "unpaid_state_requires_rejection",
+    "inflight_has_registration",
+    "uncertain_has_registration",
+    "recovery_has_registration",
+    "manual_has_registration",
+    "token_identity",
+    "unique_admission"
+  ],
+  "premise_states": {
+    "sold_requires_paid": 232,
+    "dispatched_release_requires_rejection": 232,
+    "paid_never_released": 348,
+    "paid_state_requires_paid": 116,
+    "unpaid_state_requires_rejection": 116,
+    "inflight_has_registration": 116,
+    "uncertain_has_registration": 116,
+    "recovery_has_registration": 232,
+    "manual_has_registration": 232
+  },
+  "scope": "Exhaustive at the stated colours, stock, and bounds; no arbitrary-order cutoff theorem."
+}

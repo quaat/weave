@@ -1,7 +1,10 @@
 # Decisions beyond the executable fragment
 
-These decisions answer the remaining design review. They are specifications, not
-features implemented by this prototype. See README.md for the implemented boundary.
+These notes preserve the broader language/runtime proposal. Some narrow pieces
+are now executable; `README.md` and the generated `REPORT.md` are authoritative
+about that boundary. The current implementation includes tenant/order colours,
+two-order exploration, and a SQLite process-crash model. It is not the full
+distributed runtime described below.
 
 ## Protocol authority and resource obligations
 
@@ -15,10 +18,11 @@ consumes the permit. An application cannot use its ordinary network capability
 to bypass this if the real runtime only delegates access to the payment provider
 through that adapter; arbitrary unrestricted FFI would invalidate this claim.
 
-The scalar registration invariant proves accounting, not callback correctness.
-In a colored implementation a registration would contain the same reservation ID,
-operation identity, pending-state schema, recovery role, and recovery budget as
-the escrow it protects. That matching is a separate refinement obligation.
+The legacy scalar registration invariant proves only aggregate accounting.
+The coloured source now checks a family indexed by tenant/order and the bounded
+explorer checks arc identities. The durable model correlates operation keys and
+receipts to those indices. Richer registration payloads (schemas, recovery-role
+versions, and general budgets) and their production refinement remain future work.
 
 The linear handle records an abort route in its type declaration. Normal scope
 exit requires an explicit move or discharge. Cancellation transfers the handle
@@ -157,15 +161,12 @@ quietly removing the abstraction.
 ## Acceptance before claiming a real implementation
 
 The prototype demonstrates a source-declared Petri invariant and a protocol gate
-enforced by a small type checker. A full implementation still needs a compiler
-refinement argument, a colored identity-aware runtime, crash-safe persistence,
-capability-enforcing adapters, heartbeat/cancellation behavior, and upgrade tests.
-The revised prototype also checks one-order safety with abstract guard witnesses
-and linear helper calls/returns/propagation. Both evidence kinds and dispatch
-history are tracked, and all runtime-owned places have consumer lists. A small
-synchronous reference executor exercises the lowered flow with scripted outcomes.
-That does not implement the durable runtime mechanisms above. Guard truthfulness,
-consistency, and identity correlation, along with escalation time/retry budgets,
-remain outside the checked properties and are listed as unestablished.
-Those must be verified separately. The scalar place proof must not be presented
-as a proof of an entire distributed payment system.
+enforced by a small type checker. It now also implements coloured invariant
+families, two-order ordering analysis, and concrete process-crash tests over a
+file-backed coloured marking. The source-to-runtime refinement argument,
+arbitrary-order ordering, production persistence guarantees, capability-enforcing
+adapters, heartbeat behavior, and safe upgrades are still missing.
+Guard truthfulness and authentication remain assumptions. The durable model
+enforces one concrete retry-count budget; the analyser does not prove general
+time/retry policies. None of these results is a proof of an entire distributed
+payment system.

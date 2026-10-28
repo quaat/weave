@@ -1,0 +1,3753 @@
+[
+  {
+    "scenario": "admission_before_ack",
+    "status": "PASSED",
+    "crash": {
+      "action": "admit",
+      "checkpoint": "after_admission_commit",
+      "exit_code": 91
+    },
+    "marking": {
+      "recovery_queue[tenant,order2]": 1,
+      "sold[tenant,order1]": 1,
+      "registrations[tenant,order2]": 1,
+      "pool_free": 2,
+      "results[tenant,order1]": 1,
+      "results[tenant,order2]": 1
+    },
+    "jobs": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      }
+    ],
+    "operations": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Paid",
+        "attempts": 1,
+        "recovery_attempts": 0
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 0
+      }
+    ],
+    "results": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Ok"
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown"
+      }
+    ],
+    "provider": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Paid",
+        "attempts": 1,
+        "charges": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      }
+    ],
+    "events": [
+      {
+        "sequence": 1,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 2,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 3,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "available": 1,
+          "held[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1
+        }
+      },
+      {
+        "sequence": 4,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "available": 1,
+          "escrow[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 5,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "available": 1,
+          "charge_requests[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 6,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 7,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 8,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 9,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1,
+          "uncertain[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 10,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 11,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 12,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 14,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "kind": "admission_duplicate",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 17,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "held[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 18,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "escrow[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 19,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "charge_requests[tenant,order1]": 1,
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 21,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 22,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Paid"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "charge_ok"
+        },
+        "marking": {
+          "paid[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "sell"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 25,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "finish_sold"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 26,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 27,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "result_before_ack",
+    "status": "PASSED",
+    "crash": {
+      "action": "settle",
+      "checkpoint": "after_result_commit",
+      "exit_code": 91
+    },
+    "marking": {
+      "recovery_queue[tenant,order2]": 1,
+      "sold[tenant,order1]": 1,
+      "registrations[tenant,order2]": 1,
+      "pool_free": 2,
+      "results[tenant,order1]": 1,
+      "results[tenant,order2]": 1
+    },
+    "jobs": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      }
+    ],
+    "operations": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Paid",
+        "attempts": 1,
+        "recovery_attempts": 0
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 0
+      }
+    ],
+    "results": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Ok"
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown"
+      }
+    ],
+    "provider": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Paid",
+        "attempts": 1,
+        "charges": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      }
+    ],
+    "events": [
+      {
+        "sequence": 1,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 2,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 3,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "available": 1,
+          "held[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1
+        }
+      },
+      {
+        "sequence": 4,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "available": 1,
+          "escrow[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 5,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "available": 1,
+          "charge_requests[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 6,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 7,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 8,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 9,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1,
+          "uncertain[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 10,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 11,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 12,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 14,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "held[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 17,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "escrow[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 18,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "charge_requests[tenant,order1]": 1,
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 19,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 21,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Paid"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 22,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "charge_ok"
+        },
+        "marking": {
+          "paid[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "sell"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "finish_sold"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 25,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 26,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 27,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "lost_success_reply",
+    "status": "PASSED",
+    "crash": {
+      "action": "send",
+      "checkpoint": "after_provider_commit",
+      "exit_code": 91
+    },
+    "marking": {
+      "recovery_queue[tenant,order2]": 1,
+      "sold[tenant,order1]": 1,
+      "registrations[tenant,order2]": 1,
+      "pool_free": 2,
+      "results[tenant,order1]": 1,
+      "results[tenant,order2]": 1
+    },
+    "jobs": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      }
+    ],
+    "operations": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Paid",
+        "attempts": 1,
+        "recovery_attempts": 0
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 0
+      }
+    ],
+    "results": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Ok"
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown"
+      }
+    ],
+    "provider": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Paid",
+        "attempts": 1,
+        "charges": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      }
+    ],
+    "events": [
+      {
+        "sequence": 1,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 2,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 3,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "available": 1,
+          "held[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1
+        }
+      },
+      {
+        "sequence": 4,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "available": 1,
+          "escrow[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 5,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "available": 1,
+          "charge_requests[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 6,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 7,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 8,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 9,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1,
+          "uncertain[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 10,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 11,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 12,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 14,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "held[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 17,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "escrow[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 18,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "charge_requests[tenant,order1]": 1,
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 19,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 21,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Paid"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 22,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "charge_ok"
+        },
+        "marking": {
+          "paid[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "sell"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "finish_sold"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 25,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 26,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "cancel_after_paid",
+    "status": "PASSED",
+    "crash": {
+      "action": "receive",
+      "checkpoint": "after_receipt_commit",
+      "exit_code": 91
+    },
+    "marking": {
+      "recovery_queue[tenant,order2]": 1,
+      "sold[tenant,order1]": 1,
+      "registrations[tenant,order2]": 1,
+      "pool_free": 2,
+      "results[tenant,order1]": 1,
+      "results[tenant,order2]": 1
+    },
+    "jobs": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 2,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      }
+    ],
+    "operations": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Paid",
+        "attempts": 1,
+        "recovery_attempts": 0
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 0
+      }
+    ],
+    "results": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Ok"
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown"
+      }
+    ],
+    "provider": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Paid",
+        "attempts": 1,
+        "charges": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      }
+    ],
+    "events": [
+      {
+        "sequence": 1,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 2,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 3,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "available": 1,
+          "held[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1
+        }
+      },
+      {
+        "sequence": 4,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "available": 1,
+          "escrow[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 5,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "available": 1,
+          "charge_requests[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 6,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 7,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 8,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 9,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1,
+          "uncertain[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 10,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 11,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 12,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 14,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "held[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 17,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "escrow[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 18,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "charge_requests[tenant,order1]": 1,
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 19,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 21,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Paid"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 22,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "charge_ok"
+        },
+        "marking": {
+          "paid[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "cancel_paid"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "kind": "cancelled",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "generation": 2
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 25,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "finish_sold"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 26,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 27,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "late_receipt_after_cancel",
+    "status": "PASSED",
+    "crash": {
+      "action": "cancel",
+      "checkpoint": "after_cancel_finish",
+      "exit_code": 91
+    },
+    "marking": {
+      "recovery_queue[tenant,order2]": 1,
+      "sold[tenant,order1]": 1,
+      "registrations[tenant,order2]": 1,
+      "pool_free": 2,
+      "results[tenant,order1]": 1,
+      "results[tenant,order2]": 1
+    },
+    "jobs": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 2,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      }
+    ],
+    "operations": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Paid",
+        "attempts": 1,
+        "recovery_attempts": 0
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 0
+      }
+    ],
+    "results": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Ok"
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown"
+      }
+    ],
+    "provider": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Paid",
+        "attempts": 1,
+        "charges": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      }
+    ],
+    "events": [
+      {
+        "sequence": 1,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 2,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 3,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "available": 1,
+          "held[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1
+        }
+      },
+      {
+        "sequence": 4,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "available": 1,
+          "escrow[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 5,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "available": 1,
+          "charge_requests[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 6,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 7,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 8,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 9,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1,
+          "uncertain[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 10,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 11,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 12,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 14,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "held[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 17,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "escrow[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 18,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "charge_requests[tenant,order1]": 1,
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 19,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 21,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "cancel_inflight"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 22,
+        "kind": "cancelled",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "generation": 2
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 25,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 26,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Paid"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 27,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "recover_paid"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 28,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 29,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 30,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Paid"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 31,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Ok"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 32,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1,
+          "sold[tenant,order1]": 1
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "inconclusive_status",
+    "status": "PASSED",
+    "crash": {
+      "action": "receive",
+      "checkpoint": "after_receipt_commit",
+      "exit_code": 91
+    },
+    "marking": {
+      "recovery_queue[tenant,order2]": 1,
+      "manual[tenant,order1]": 1,
+      "registrations[tenant,order1]": 1,
+      "registrations[tenant,order2]": 1,
+      "pool_free": 2,
+      "results[tenant,order1]": 1,
+      "results[tenant,order2]": 1
+    },
+    "jobs": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "payload": "{\"sku\":\"one\"}",
+        "generation": 1,
+        "completed": 1,
+        "source_ack": 1,
+        "worker_ack": 1
+      }
+    ],
+    "operations": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 2
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown",
+        "attempts": 1,
+        "recovery_attempts": 0
+      }
+    ],
+    "results": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "state": "Unknown"
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "state": "Unknown"
+      }
+    ],
+    "provider": [
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order1\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      },
+      {
+        "key": "[\"Payments.charge\",\"tenant\",\"order2\"]",
+        "digest": "e12ece83e876e80c92fe52d347cbda06501ab468c183ac160278b2bccc744ac5",
+        "state": "Pending",
+        "attempts": 1,
+        "charges": 0
+      }
+    ],
+    "events": [
+      {
+        "sequence": 1,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 2,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 2,
+          "identities[tenant,order1]": 1,
+          "identities[tenant,order2]": 1,
+          "pool_free": 2
+        }
+      },
+      {
+        "sequence": 3,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "available": 1,
+          "held[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1
+        }
+      },
+      {
+        "sequence": 4,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "available": 1,
+          "escrow[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 5,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "available": 1,
+          "charge_requests[tenant,order2]": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 6,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 7,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 8,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "inflight[tenant,order2]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 9,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "registrations[tenant,order2]": 1,
+          "uncertain[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 10,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_busy[tenant,order2]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 11,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 12,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order2"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 14,
+        "kind": "admitted",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "kind": "source_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "available": 1,
+          "identities[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "reserve"
+        },
+        "marking": {
+          "held[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 17,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "arm"
+        },
+        "marking": {
+          "escrow[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 18,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "dispatch"
+        },
+        "marking": {
+          "charge_requests[tenant,order1]": 1,
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 19,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "adapter_dequeue"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "kind": "send_attempt",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 21,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "inflight[tenant,order1]": 1,
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 22,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "charge_unknown"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1,
+          "uncertain[tenant,order1]": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "handoff"
+        },
+        "marking": {
+          "pool_busy[tenant,order1]": 1,
+          "pool_free": 1,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "finish_unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 25,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 26,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 27,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 28,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 29,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 30,
+        "kind": "reconciliation_wait",
+        "detail": {
+          "attempts": 1,
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 31,
+        "kind": "evidence",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 32,
+        "kind": "result_commit",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "state": "Unknown"
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 33,
+        "kind": "worker_ack",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "pool_free": 2,
+          "recovery_queue[tenant,order1]": 1,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 34,
+        "kind": "fire",
+        "detail": {
+          "colour": [
+            "tenant",
+            "order1"
+          ],
+          "transition": "escalate"
+        },
+        "marking": {
+          "manual[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      },
+      {
+        "sequence": 35,
+        "kind": "reconciliation_wait",
+        "detail": {
+          "attempts": 2,
+          "colour": [
+            "tenant",
+            "order1"
+          ]
+        },
+        "marking": {
+          "manual[tenant,order1]": 1,
+          "pool_free": 2,
+          "recovery_queue[tenant,order2]": 1,
+          "registrations[tenant,order1]": 1,
+          "registrations[tenant,order2]": 1,
+          "results[tenant,order1]": 1,
+          "results[tenant,order2]": 1
+        }
+      }
+    ]
+  }
+]
