@@ -35,6 +35,7 @@ class Node:
     text: str
     line: int
     children: list[Node] = field(default_factory=list)
+    origin: str | None = None
 
 
 def tree(source: str) -> list[Node]:
@@ -726,8 +727,8 @@ def lower_questions(source: str) -> list[Node]:
                 err, unknown = fresh(), fresh()
                 branches = [
                     Node(f"Ok({variable}):", node.line, lower(nodes[position + 1:])),
-                    Node(f"Err({err}):", node.line, [Node(f"return Err({err})", node.line)]),
-                    Node(f"Unknown({unknown}):", node.line, [Node(f"return Unknown({unknown})", node.line)]),
+                    Node(f"Err({err}):", node.line, [Node(f"return Err({err})", node.line, origin="?")]),
+                    Node(f"Unknown({unknown}):", node.line, [Node(f"return Unknown({unknown})", node.line, origin="?")]),
                 ]
                 lowered.append(Node(f"match {operand}:", node.line, branches))
                 return lowered
@@ -899,6 +900,8 @@ def check_body(net: Net, nodes: list[Node], env: dict[str, Binding],
                     value.live = False
             outstanding = [f"{name}: {b.type}" for name, b in env.items() if b.live and is_linear(net, b.type)]
             if outstanding:
+                if node.origin == "?":
+                    raise CheckError("E204", f"'?' on line {line} may propagate Err/Unknown while these linear handles are still held: " + ", ".join(outstanding) + ".\nConsume them before '?', or handle the outcome explicitly and return the obligations.", line)
                 raise CheckError("E204", "Linear obligations left at normal return: " + ", ".join(outstanding) + ".\nConsume or hand off every handle. Cancellation routes do not permit silent normal drops.", line)
             if position != len(nodes) - 1:
                 raise CheckError("E210", "Unreachable statements after return.", line)
@@ -966,7 +969,7 @@ def proof_text(net: Net, certificate: dict) -> str:
               f"CHECKED {len(net.runtime_consumers)} runtime-owned places: closed consumer lists",
               "CHECKED foreign dispatch consumes an identity-matched, recovery-registered permit",
               "  These equalities do not establish payment ordering or per-order recovery coverage.",
-              "NOT ESTABLISHED liveness, provider truthfulness/consistency (including contradictory late replies), escalation budgets, per-order runtime correlation, or implementation refinement"]
+              "NOT ESTABLISHED orders>=2 or cross-order token matching in this uncoloured model; liveness, provider truthfulness/consistency (including contradictory late replies), escalation budgets, or implementation refinement"]
     return "\n".join(lines)
 
 

@@ -48,12 +48,13 @@ update the recorded hashes.
 | Location | Prototype version | Pinned by |
 | --- | --- | --- |
 | `inventory-proof/` | v3, the working copy for further development | Started byte-identical to the specification snapshot |
-| `agent-kit/.agents/skills/weave/assets/prototype/` | v2, unchanged; the pure `fn` extension lives beside it in `scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
+| `agent-kit/.agents/skills/weave/assets/prototype/` | v3, unchanged; the pure `fn` extension lives beside it in `scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
 | `specification/reference/prototype/` | v3 (adds coloured nets `coloured.py` and the process-crash model `durable.py`) | `specification/PROVENANCE.json`, checked by `scripts/validate.py` |
 
 The specification is grounded in v3. Changes made in `inventory-proof/` reach
 the specification only when someone deliberately refreshes its snapshot and
-`PROVENANCE.json`. The agent kit still bundles v2.
+`PROVENANCE.json`. The agent kit bundles the same v3 snapshot, but its runner
+uses only the uncoloured checker and simulator.
 
 ## Status and license
 

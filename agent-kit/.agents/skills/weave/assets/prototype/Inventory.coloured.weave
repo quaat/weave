@@ -1,0 +1,233 @@
+# Coloured protocol. available is a shared one-SKU stock pool.
+# Each [t, o] identifies a tenant/order; one unit per order.
+# Family invariants quantify over every colour; exploration uses two colours.
+net Inventory(stock: Nat):
+    place available = stock owner domain
+    place held[t, o] = 0 owner activation
+    place escrow[t, o] = 0 owner activation
+    place inflight[t, o] = 0 owner runtime
+    place paid[t, o] = 0 owner activation
+    place unpaid[t, o] = 0 owner activation
+    place uncertain[t, o] = 0 owner activation
+    place recovery_queue[t, o] = 0 owner runtime
+    place manual[t, o] = 0 owner runtime
+    place sold[t, o] = 0 owner domain
+    place registrations[t, o] = 0 owner runtime
+    place charge_requests[t, o] = 0 owner adapter
+
+    place identities[t, o] = 1 owner runtime
+    place released[t, o] = 0 owner domain
+
+    runtime_state identities consumers reserve
+
+    place pool_free = 2 owner domain
+    place pool_busy[t, o] = 0 owner runtime
+    place results[t, o] = 0 owner runtime
+    runtime_state pool_busy consumers finish_sold, finish_released, finish_unknown
+    runtime_state results terminal
+
+    linear Hold[t, o] at held issuer reserve cancel cancel_held
+    linear Escrow[t, o] at escrow issuer arm cancel cancel_escrow registered registrations
+    linear Paid[t, o] at paid issuer charge_ok cancel cancel_paid
+    linear Unpaid[t, o] at unpaid issuer charge_err cancel cancel_unpaid
+    linear Uncertain[t, o] at uncertain issuer charge_unknown cancel cancel_uncertain
+
+    runtime_state inflight consumers charge_ok, charge_err, charge_unknown, cancel_inflight
+    runtime_state recovery_queue consumers recover_paid, recover_rejected, escalate
+    runtime_state manual consumers manual_paid, manual_rejected
+    runtime_state registrations consumers sell, release, recover_paid, recover_rejected, manual_paid, manual_rejected, cancel_escrow, cancel_paid, cancel_unpaid
+
+    enum ChargeOutcome[t, o]:
+        Ok(Paid[t, o])
+        Err(Unpaid[t, o])
+        Unknown(Uncertain[t, o])
+
+    enum CheckoutOutcome[t, o]:
+        Ok(Unit)
+        Err(Unpaid[t, o])
+        Unknown(Uncertain[t, o])
+
+    invariant stock_conservation:
+        available + held + escrow + inflight + paid + unpaid + uncertain + recovery_queue + manual + sold == stock
+
+    invariant pool_credits:
+        pool_free + pool_busy == 2
+
+    invariant job_accounting[t, o]:
+        identities[t, o] + pool_busy[t, o] + results[t, o] == 1
+
+    invariant registration_balance[t, o]:
+        registrations[t, o] - escrow[t, o] - inflight[t, o] - paid[t, o] - unpaid[t, o] - uncertain[t, o] - recovery_queue[t, o] - manual[t, o] == 0
+
+    invariant identity_conservation[t, o]:
+        identities[t, o] + held[t, o] + escrow[t, o] + inflight[t, o] + paid[t, o] + unpaid[t, o] + uncertain[t, o] + recovery_queue[t, o] + manual[t, o] + sold[t, o] + released[t, o] == 1
+
+    check payment_ordering for orders 2:
+        admit reserve once
+        observe dispatch dispatch
+        place_bound 1
+        guard authoritative_paid_evidence establishes_paid
+        guard operator_supplied_paid_evidence establishes_paid
+        guard authoritative_final_rejection establishes_rejected
+        guard operator_supplied_final_rejection establishes_rejected
+        guard outcome_unresolved nondeterministic
+        guard recovery_budget_exhausted nondeterministic
+        guard operation_is_dispatchable nondeterministic
+        property token_identity: tokens match firing
+        property sold_requires_paid: marked sold requires paid_evidence
+        property dispatched_release_requires_rejection: after dispatch marked released requires rejected_evidence
+        property paid_never_released: after paid_evidence forbid released
+        property paid_state_requires_paid: marked paid requires paid_evidence
+        property unpaid_state_requires_rejection: marked unpaid requires rejected_evidence
+        property inflight_has_registration: marked inflight requires marked registrations
+        property uncertain_has_registration: marked uncertain requires marked registrations
+        property recovery_has_registration: marked recovery_queue requires marked registrations
+        property manual_has_registration: marked manual requires marked registrations
+
+    transition reserve[t, o]:
+        take 1 pool_free
+        put 1 pool_busy[t, o]
+        take 1 identities[t, o]
+        take 1 available
+        put 1 held[t, o]
+
+    transition arm[t, o]:
+        take 1 held[t, o]
+        put 1 escrow[t, o]
+        put 1 registrations[t, o]
+
+    transition dispatch[t, o]:
+        take 1 escrow[t, o]
+        read 1 registrations[t, o]
+        put 1 inflight[t, o]
+        put 1 charge_requests[t, o]
+
+    transition adapter_dequeue[t, o]:
+        take 1 charge_requests[t, o]
+        guard operation_is_dispatchable
+
+    transition charge_ok[t, o]:
+        take 1 inflight[t, o]
+        put 1 paid[t, o]
+        guard authoritative_paid_evidence
+
+    transition charge_err[t, o]:
+        take 1 inflight[t, o]
+        put 1 unpaid[t, o]
+        guard authoritative_final_rejection
+
+    transition charge_unknown[t, o]:
+        take 1 inflight[t, o]
+        put 1 uncertain[t, o]
+        guard outcome_unresolved
+
+    transition sell[t, o]:
+        take 1 paid[t, o]
+        take 1 registrations[t, o]
+        put 1 sold[t, o]
+
+    transition release[t, o]:
+        take 1 unpaid[t, o]
+        take 1 registrations[t, o]
+        put 1 available
+        put 1 released[t, o]
+
+    transition handoff[t, o]:
+        take 1 uncertain[t, o]
+        put 1 recovery_queue[t, o]
+
+    transition recover_paid[t, o]:
+        take 1 recovery_queue[t, o]
+        take 1 registrations[t, o]
+        put 1 sold[t, o]
+        guard authoritative_paid_evidence
+
+    transition recover_rejected[t, o]:
+        take 1 recovery_queue[t, o]
+        take 1 registrations[t, o]
+        put 1 available
+        put 1 released[t, o]
+        guard authoritative_final_rejection
+
+    transition escalate[t, o]:
+        take 1 recovery_queue[t, o]
+        put 1 manual[t, o]
+        guard recovery_budget_exhausted
+
+    transition manual_paid[t, o]:
+        take 1 manual[t, o]
+        take 1 registrations[t, o]
+        put 1 sold[t, o]
+        guard operator_supplied_paid_evidence
+
+    transition manual_rejected[t, o]:
+        take 1 manual[t, o]
+        take 1 registrations[t, o]
+        put 1 available
+        put 1 released[t, o]
+        guard operator_supplied_final_rejection
+
+    transition cancel_held[t, o]:
+        take 1 held[t, o]
+        put 1 available
+        put 1 released[t, o]
+
+    transition cancel_escrow[t, o]:
+        take 1 escrow[t, o]
+        take 1 registrations[t, o]
+        put 1 available
+        put 1 released[t, o]
+
+    transition cancel_inflight[t, o]:
+        take 1 inflight[t, o]
+        put 1 recovery_queue[t, o]
+
+    transition cancel_paid[t, o]:
+        take 1 paid[t, o]
+        take 1 registrations[t, o]
+        put 1 sold[t, o]
+
+    transition cancel_unpaid[t, o]:
+        take 1 unpaid[t, o]
+        take 1 registrations[t, o]
+        put 1 available
+        put 1 released[t, o]
+
+    transition cancel_uncertain[t, o]:
+        take 1 uncertain[t, o]
+        put 1 recovery_queue[t, o]
+
+    runtime_cancel inflight via cancel_inflight
+
+    api reserve(tenant: TenantId, order: OrderId) -> Hold[tenant, order] via reserve
+    api arm(h: Hold[t, o]) -> Escrow[t, o] via arm
+    api sell(h: Paid[t, o]) -> Unit via sell
+    api release(h: Unpaid[t, o]) -> Unit via release
+    api handoff(h: Uncertain[t, o]) -> Unit via handoff
+
+    foreign Payments.charge(tenant: TenantId, order: OrderId, amount: Money, permit: Escrow[tenant, order]) -> ChargeOutcome[tenant, order]:
+        dispatch dispatch
+        pending inflight
+        keyed by tenant, order
+        correlate client_key or provider_reference
+        outcome Ok via charge_ok
+        outcome Err via charge_err
+        outcome Unknown via charge_unknown
+
+    transition finish_sold[t, o]:
+        read 1 sold[t, o]
+        take 1 pool_busy[t, o]
+        put 1 pool_free
+        put 1 results[t, o]
+
+    transition finish_released[t, o]:
+        read 1 released[t, o]
+        take 1 pool_busy[t, o]
+        put 1 pool_free
+        put 1 results[t, o]
+
+    transition finish_unknown[t, o]:
+        read 1 recovery_queue[t, o]
+        take 1 pool_busy[t, o]
+        put 1 pool_free
+        put 1 results[t, o]

@@ -4,9 +4,11 @@ A self-contained starting point for teaching Codex or Claude Code the currently
 implemented Weave fragment: language guidance, accepted and rejected examples,
 and a portable skill containing the existing prototype and a small CLI.
 
-The source snapshot is `weave-inventory-proof.zip`, version 2, saved on
+The source snapshot is `weave-inventory-proof.zip`, version 3, saved on
 2026-10-28. It includes `?` lowering, runtime consumer sealing, rejection-evidence
-checks, and scripted single-order execution. This kit adds packaging and tooling,
+checks, and scripted single-order execution. Version 3 also bundles coloured nets
+(`coloured.py`) and a process-crash reference model (`durable.py`). The runner
+does not expose them yet; see `docs/prototype-status.md`. This kit adds packaging and tooling,
 plus one explicitly separate extension: pure `fn` programs with integer lists,
 direct recursion, and a cooperative fork/join scheduler (`check-pure`/`run-pure`,
 implemented outside the unchanged vendored prototype). See
