@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .state import Store, utcnow
+from .state import Store, run_issues, utcnow
 
 POLICY_PATH = Path(__file__).resolve().parent / "policy.json"
 WORKER_ENV_PREFIX = ("unset GH_TOKEN GITHUB_TOKEN GH_ENTERPRISE_TOKEN SSH_AUTH_SOCK; "
@@ -162,11 +162,11 @@ def subagent(payload: dict, phase: str) -> int:
 def _auto_checkpoint(store: Store, reason: str) -> dict:
     prev = store.read_checkpoint() or {}
     run = store.active_run() or {}
-    return store.checkpoint({**{k: v for k, v in prev.items() if k != "checkpointed_at"},
-                             "run_id": run.get("run_id"), "active_issue": run.get("active_issue"),
+    return store.checkpoint({**{k: v for k, v in prev.items() if k not in ("checkpointed_at", "active_issue")},
+                             "run_id": run.get("run_id"), "active_issues": run_issues(run),
                              "pending_messages": [i["event_id"] for i in store.pending()],
                              "reason": reason,
-                             "next_action": prev.get("next_action", "reconcile, then resume the active issue")})
+                             "next_action": prev.get("next_action", "reconcile, then resume the active issues")})
 
 
 def stop(payload: dict) -> int:
@@ -200,7 +200,8 @@ def session_start(payload: dict) -> int:
         return 0
     lines = ["Weave development workflow state (from the local ledger):"]
     if run:
-        lines.append(f"- Active run {run.get('run_id')} on issue #{run.get('active_issue', '-')}, scope: {run.get('scope', '-')}")
+        issues = ", ".join(f"#{n}" for n in run_issues(run)) or "-"
+        lines.append(f"- Active run {run.get('run_id')} on issues {issues}, scope: {run.get('scope', '-')}")
     if cp:
         lines.append(f"- Last checkpoint {cp.get('checkpointed_at')}: {cp.get('next_action', '-')}")
     if pending:

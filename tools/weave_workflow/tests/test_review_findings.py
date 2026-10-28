@@ -12,7 +12,7 @@ from pathlib import Path
 from tools.weave_workflow import events
 from tools.weave_workflow.cli import main, relay_problems
 from tools.weave_workflow.integration import integration_evidence
-from tools.weave_workflow.model import PullRequest, snapshot_to_dict
+from tools.weave_workflow.model import Issue, ProjectItem, PullRequest, snapshot_to_dict
 from tools.weave_workflow.publisher import Publisher, authenticated_events
 from tools.weave_workflow.state import Store
 
@@ -42,15 +42,38 @@ class ClaimSlotTests(unittest.TestCase):
         path.write_text(json.dumps(snapshot_to_dict(snap)))
         return str(path)
 
-    def test_claim_refused_while_slot_occupied(self):
+    def claimed_elsewhere(self, n: int) -> None:
+        """Record a published claim for #n in the ledger (another task of this run holds it)."""
+        ev = events.build("CLAIMED", run_id="run-other-0001", attempt=1, issue=f"{REPO}#{n}", milestone="M0",
+                          sender="orchestrator", recipient="orchestrator", claim_expires_at="2026-10-29T00:00:00Z",
+                          coordinator_host="other", work_type="implementation")
+        root = Path(os.environ["WEAVE_WORKFLOW_STATE"])
+        root.mkdir(parents=True, exist_ok=True)
+        Store(root).append({"type": "event", "event": ev, "sequence": 1, "origin": "claim"})
+
+    def test_claims_up_to_the_concurrency_limit(self):
+        self.assertEqual(policy()["concurrency"]["max_active_implementation_issues"], 3)
         snap = mini_snapshot()  # its "M0 Start" milestone is the live policy's current milestone M0
-        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "10", "--base", "HEAD", "--json"])
-        self.assertEqual(rc, 0, out)  # dry run accepted while the slot is free
+        ms = snap.issues[10].milestone
+        snap.issues[13] = Issue(13, "Task 13", snap.issues[10].body, labels=["roadmap"], milestone=ms)
+        snap.project.items[13] = ProjectItem("item-13", 13, "Todo", "opt-todo")
         snap.project.items[10].status = "In Progress"
         rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "11", "--base", "HEAD", "--json"])
-        self.assertEqual(rc, 2)
+        self.assertEqual(rc, 0, out)  # a second claim is allowed while one is active
+        self.claimed_elsewhere(11)
+        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "12", "--base", "HEAD", "--json"])
+        self.assertEqual(rc, 0, out)  # and a third
+        snap.project.items[12].status = "In Progress"
+        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "13", "--base", "HEAD", "--json"])
+        self.assertEqual(rc, 2)  # a fourth is refused with the limit at 3
         self.assertFalse(out["claimable"])
-        self.assertIn("resume it", out["reasons"][0])
+        self.assertIn("all 3 active implementation slot(s) occupied by #10, #11, #12", out["reasons"][0])
+
+    def test_same_issue_cannot_be_claimed_twice(self):
+        self.claimed_elsewhere(10)  # claimed, but the card has not left Todo yet
+        rc, out = run_cli(["--fixture", self.fixture(mini_snapshot()), "claim", "10", "--base", "HEAD", "--json"])
+        self.assertEqual(rc, 2)
+        self.assertIn("already an active implementation issue (claimed or In Progress)", out["reasons"])
 
     def test_missing_base_is_reported_not_raised(self):
         rc, out = run_cli(["--fixture", self.fixture(mini_snapshot()), "claim", "10", "--base", "no-such-ref", "--json"])
@@ -65,11 +88,8 @@ class ClaimSlotTests(unittest.TestCase):
         store = Store(Path(os.environ["WEAVE_WORKFLOW_STATE"]))
 
         def racing_lock(self_, run_id):
-            # Another coordinator finished claiming #11 while this process waited for the lock.
-            ev = events.build("CLAIMED", run_id="run-other-0001", attempt=1, issue=f"{REPO}#11", milestone="M0",
-                              sender="orchestrator", recipient="orchestrator", claim_expires_at="2026-10-29T00:00:00Z",
-                              coordinator_host="other", work_type="implementation")
-            store.append({"type": "event", "event": ev, "sequence": 1, "origin": "claim"})
+            # Another coordinator finished claiming #10 itself while this process waited for the lock.
+            self.claimed_elsewhere(10)
             return original(self_, run_id)
         state.Store.coordinator_lock = racing_lock
         try:

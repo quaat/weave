@@ -13,7 +13,7 @@ from pathlib import Path
 from .github import GitHubError
 from .integration import find_pr
 from .publisher import DeliveryPaused, Publisher, authenticated_events
-from .state import PacketError, Store
+from .state import PacketError, Store, run_issues
 from .transitions import TaskView, Transitioner, automation_moved_done
 
 
@@ -118,7 +118,7 @@ def reconcile(repo: Path, store: Store, adapter, policy: dict, apply: bool = Fal
                 report["notes"].append(f"worktree {tree.get('worktree')} ({branch}) has no active claim; preserved, not removed")
     if len(report["claims"]) > policy["concurrency"]["max_active_implementation_issues"]:
         report["conflicts"].append(f"more active claims than permitted: {report['claims']}")
-    run = store.active_run()
-    if run and run.get("active_issue") and not any(c["issue"] == run["active_issue"] for c in report["claims"]):
-        report["notes"].append(f"active run names #{run['active_issue']} but no published claim exists; resume or release explicitly")
+    for issue in run_issues(store.active_run()):
+        if not any(c["issue"] == issue for c in report["claims"]):
+            report["notes"].append(f"active run names #{issue} but no published claim exists; resume or release explicitly")
     return report

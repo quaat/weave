@@ -51,6 +51,16 @@ class PacketError(Exception):
     pass
 
 
+def run_issues(record: dict | None) -> list[int]:
+    """Issues named by an active-run or checkpoint record: ``active_issues``, or the single
+    ``active_issue`` written before concurrent claims were allowed."""
+    if not record:
+        return []
+    if "active_issues" in record:
+        return list(record["active_issues"] or [])
+    return [record["active_issue"]] if record.get("active_issue") is not None else []
+
+
 @dataclass
 class Store:
     root: Path

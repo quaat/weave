@@ -1,10 +1,15 @@
 """Scenarios 1 and 2: ordering, dependencies, predecessors, exceptions, exit gates, eligibility."""
+import shutil
+import tempfile
 import unittest
+from pathlib import Path
 
+from tools.weave_workflow.cli import held_claims
 from tools.weave_workflow.model import milestone_key, milestone_order
+from tools.weave_workflow.reconcile import reconcile
 from tools.weave_workflow.scheduler import build_graph, milestone_gate, plan
 
-from .support import mini_policy, mini_snapshot
+from .support import Harness, mini_policy, mini_snapshot
 
 
 def complete(snap, *numbers):
@@ -150,12 +155,31 @@ class EligibilityTests(unittest.TestCase):
         p = plan(snap, mini_policy())
         self.assertEqual(p.next.issue, 12)
 
-    def test_active_slot_must_be_resumed_first(self):
+    def test_active_issues_up_to_the_policy_limit(self):
         snap = mini_snapshot()
         snap.project.items[10].status = "In Progress"
-        p = plan(snap, mini_policy())
+        p = plan(snap, mini_policy())  # limit 3: one active issue leaves room for another
+        self.assertEqual((p.active, p.next.issue), ([10], 11))
+        pol = mini_policy()
+        pol["concurrency"]["max_active_implementation_issues"] = 1
+        p = plan(snap, pol)
         self.assertIsNone(p.next)
-        self.assertIn("resume it", p.stop_reason)
+        self.assertIn("all 1 active implementation slot(s) occupied by #10; resume them", p.stop_reason)
+
+    def test_full_slots_must_be_resumed_first(self):
+        snap = mini_snapshot()
+        snap.project.items[10].status = "In Progress"
+        p = plan(snap, mini_policy(), active_claims=[11, 12])
+        self.assertEqual(p.active, [10, 11, 12])
+        self.assertIsNone(p.next)
+        self.assertIn("resume them before claiming new work", p.stop_reason)
+
+    def test_claimed_issue_is_not_selected_again(self):
+        p = plan(mini_snapshot(), mini_policy(), active_claims=[11])  # claimed; card still Todo
+        c11 = next(c for c in p.candidates if c.issue == 11)
+        self.assertFalse(c11.eligible)
+        self.assertIn("already an active implementation issue (claimed or In Progress)", c11.reasons)
+        self.assertEqual(p.next.issue, 10)
 
     def test_nothing_eligible_stops_cleanly(self):
         snap = mini_snapshot()
@@ -187,6 +211,49 @@ class EarlyStartTests(unittest.TestCase):
         self.assertIn("no dependency or exit gate is waived", c.notes[0])
         self.assertEqual(p.next.issue, 11)  # in-milestone work still comes first
         self.assertFalse(any(c.issue == 30 for c in p.candidates))
+
+
+class ConcurrencyReconcileTests(unittest.TestCase):
+    """Reconcile and the run record honour the configured limit, not a single active issue."""
+
+    def setUp(self):
+        self.h = Harness()
+        self.repo = Path(tempfile.mkdtemp())  # not a Git repository: no worktrees to list
+
+    def tearDown(self):
+        self.h.close()
+        shutil.rmtree(self.repo, ignore_errors=True)
+
+    def claim(self, n):
+        self.h.publish("CLAIMED", n, claim_expires_at="2026-10-29T00:00:00Z", coordinator_host="t", work_type="implementation")
+
+    def report(self):
+        return reconcile(self.repo, self.h.store, self.h.gh, self.h.policy)
+
+    def test_claims_within_the_limit_are_not_a_conflict(self):
+        for n in (10, 11, 12):
+            self.claim(n)
+        rep = self.report()
+        self.assertEqual(sorted(c["issue"] for c in rep["claims"]), [10, 11, 12])
+        self.assertFalse(any("more active claims" in c for c in rep["conflicts"]), rep["conflicts"])
+        self.claim(20)
+        self.assertTrue(any("more active claims than permitted" in c for c in self.report()["conflicts"]))
+
+    def test_run_names_each_issue_without_a_claim(self):
+        self.claim(10)
+        self.h.store.set_active_run({"run_id": "run-test-0001", "active_issues": [10, 11]})
+        notes = self.report()["notes"]
+        self.assertIn("active run names #11 but no published claim exists; resume or release explicitly", notes)
+        self.assertFalse(any("names #10" in note for note in notes))
+        self.h.store.set_active_run({"run_id": "run-test-0001", "active_issue": 12})  # record from before the change
+        self.assertIn("active run names #12 but no published claim exists; resume or release explicitly", self.report()["notes"])
+
+    def test_held_claims_end_with_release_or_completion(self):
+        for n in (10, 11, 12):
+            self.claim(n)
+        self.h.publish("RELEASED", 11, reason="returned")
+        self.h.publish("COMPLETED", 12, head_sha="a" * 40, merge_sha="c" * 40)
+        self.assertEqual(held_claims(self.h.store), {10})
 
 
 if __name__ == "__main__":

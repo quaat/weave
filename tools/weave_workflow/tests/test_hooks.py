@@ -132,9 +132,20 @@ class LifecycleHookTests(HookHarness):
         self.assertIn("agent-kit/README.md", json.loads((self.store.root / "docs-audit-pending.json").read_text()))
 
     def test_session_start_context(self):
-        self.start_run()
+        self.start_run()  # a run record from before concurrent claims: a single active_issue
         _, out = self.call("SessionStart", source="resume")
         self.assertIn("reconcile", out["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("on issues #6,", out["hookSpecificOutput"]["additionalContext"])
+        self.call("PreCompact", trigger="auto")
+        self.assertEqual(self.store.read_checkpoint()["active_issues"], [6])
+        self.assertNotIn("active_issue", self.store.read_checkpoint())
+
+    def test_every_active_issue_is_named_and_checkpointed(self):
+        self.store.set_active_run({"run_id": "run-test-0001", "active_issues": [6, 7]})
+        _, out = self.call("SessionStart", source="resume")
+        self.assertIn("on issues #6, #7,", out["hookSpecificOutput"]["additionalContext"])
+        self.call("PreCompact", trigger="auto")
+        self.assertEqual(self.store.read_checkpoint()["active_issues"], [6, 7])
 
 
 class SettingsTests(unittest.TestCase):

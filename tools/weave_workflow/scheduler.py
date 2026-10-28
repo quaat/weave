@@ -229,6 +229,10 @@ def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
                         c.notes.append("scope restricted to the exception; no dependency or exit gate is waived")
                     c.sequence = (1, 0, n)
                     candidates.append(c)
+    for c in candidates:
+        if c.issue in active:  # one claim per issue, whatever the concurrency limit
+            c.eligible = False
+            c.reasons.append("already an active implementation issue (claimed or In Progress)")
     eligible = sorted((c for c in candidates if c.eligible), key=lambda c: c.sequence)
     stop = None
     nxt = None
@@ -236,7 +240,8 @@ def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
     if current is None:
         stop = "all milestone gates passed"
     elif len(active) >= max_active:
-        stop = f"active implementation slot occupied by {', '.join(f'#{n}' for n in active)}; resume it before claiming new work"
+        stop = (f"all {max_active} active implementation slot(s) occupied by {', '.join(f'#{n}' for n in active)}; "
+                "resume them before claiming new work")
     elif not eligible:
         stop = f"no eligible task in {current}; blockers recorded"
     elif snap.project is None:

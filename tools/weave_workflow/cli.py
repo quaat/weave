@@ -15,7 +15,7 @@ from .model import (acceptance_criteria, digest, requirements_digest, snapshot_f
                     snapshot_to_dict)
 from .publisher import DeliveryPaused, Publisher, authenticated_events, maintainer_decisions
 from .scheduler import plan as make_plan
-from .state import LockHeld, PacketError, Store, new_id, utcnow
+from .state import LockHeld, PacketError, Store, new_id, run_issues, utcnow
 from .transitions import TaskView, Transitioner, evaluate
 
 POLICY_PATH = Path(__file__).resolve().parent / "policy.json"
@@ -69,6 +69,15 @@ def active_claims(store: Store) -> list[int]:
         elif e["kind"] == "STATE_CHANGED" and e["to_status"] in ("In Review", "Done", "Todo"):
             claimed[n] = False
     return sorted(n for n, v in claimed.items() if v)
+
+
+def held_claims(store: Store) -> set[int]:
+    """Issues whose latest claim is neither released nor completed (work In Review stays held)."""
+    last: dict[int, str] = {}
+    for e in store.events():
+        if e["kind"] in ("CLAIMED", "RELEASED", "COMPLETED"):
+            last[int(e["issue"].split("#")[1])] = e["kind"]
+    return {n for n, kind in last.items() if kind == "CLAIMED"}
 
 
 # ------------------------------------------------------------------ commands
@@ -269,7 +278,11 @@ def cmd_claim(args) -> int:
                 refusal["note"] = "selection changed while waiting for the coordinator lock"
                 emit(args, refusal)
                 return 2
-            store.set_active_run({**run, "run_id": run_id, "active_issue": args.issue, "since": run.get("since", utcnow())})
+            # The run names every issue it holds a claim on (at most the policy's concurrency limit).
+            held = held_claims(store)
+            active_issues = sorted({n for n in run_issues(run) if n in held} | {args.issue})
+            store.set_active_run({**{k: v for k, v in run.items() if k != "active_issue"}, "run_id": run_id,
+                                  "active_issues": active_issues, "since": run.get("since", utcnow())})
             claimed = publisher.publish(events.build("CLAIMED", sender="orchestrator", recipient="orchestrator",
                                                      claim_expires_at=claim_expiry(policy), coordinator_host=socket.gethostname(),
                                                      work_type=cand.work_type, summary=f"Claimed for run {run_id}.", **ctx), origin="claim")
@@ -290,7 +303,7 @@ def cmd_claim(args) -> int:
             view = _view(store, snap, policy, args.issue, packet_valid=True, exclusive=True, worktree=worktree)
             proj = snap.project
             result = Transitioner(store, adapter, publisher, proj, policy, dry_run=False).execute(view, "In Progress", ctx)
-            store.checkpoint({"run_id": run_id, "active_issue": args.issue, "attempt": attempt,
+            store.checkpoint({"run_id": run_id, "issue": args.issue, "active_issues": active_issues, "attempt": attempt,
                               "status": "In Progress" if result.get("applied") else "claimed",
                               "packet": str(packet_path), "next_action": "delegate implementation with the packet"})
     except LockHeld as exc:
