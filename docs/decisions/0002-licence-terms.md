@@ -110,27 +110,58 @@ Third-party material that is or may be distributed:
 
 ### Open rights questions for the maintainer
 
-These are questions, not findings. This proposal does not answer them.
+These are questions, not findings. This proposal does not answer them. The maintainer has
+since answered questions 1–5, 7 and 8, and question 6 is still open; see
+[Maintainer answers](#maintainer-answers) below. The answers are not yet recorded on #2.
 
 1. Who authored or generated each of the four inputs in `specification/PROVENANCE.json`
    (weave-inventory-proof.zip v3, weave-agent-kit.zip, claude-code-weave-merge-sort.md,
-   claude-code-tiny-shop.md), and under what terms were they obtained?
+   claude-code-tiny-shop.md), and under what terms were they obtained? *(Answered.)*
 2. Who authored the design bundle (theme configuration, templates, LaTeX style, design
-   specimen PDF), and is it covered by the same answer?
+   specimen PDF), and is it covered by the same answer? *(Answered.)*
 3. Does any employer, funder, institution or contract hold rights in any part of the work,
-   or impose terms on its publication?
+   or impose terms on its publication? *(Answered.)*
 4. Does the copyright line in `LICENSE` name the correct holder or holders for all of the
-   material above?
+   material above? *(Answered.)*
 5. The specification's `author` setting, the PDF cover and the design specimen's metadata name
    "Danio project", while the copyright line names an individual. Which name should appear as
-   author and which as copyright holder?
+   author and which as copyright holder? *(Answered.)*
 6. Is any third-party material distributed beyond what is listed above (fonts embedded in
    PDFs, theme assets in built editions, quoted text, diagrams or code adapted from elsewhere),
-   and does any of it need its own notice?
+   and does any of it need its own notice? *(Still open.)*
 7. 14 of the 15 non-merge commits carry an AI co-author trailer. Does the maintainer want the
-   decision to say anything about AI-assisted contributions?
+   decision to say anything about AI-assisted contributions? *(Answered.)*
 8. Should future contributions be accepted under the same terms by stating so (as
-   `README.md` does now), or by another mechanism such as a sign-off requirement?
+   `README.md` does now), or by another mechanism such as a sign-off requirement? *(Answered.)*
+
+### Maintainer answers
+
+The maintainer gave these answers to the orchestrator in conversation on 28 October 2026, and
+the orchestrator relayed them for this record. They are not yet recorded on #2, so they are
+not a decision. Each answer is quoted verbatim.
+
+| Question (short form) | Answer |
+| --- | --- |
+| 1. Who authored the four `specification/PROVENANCE.json` inputs, and on what terms? | "ChatGPT wrote all, it should be released under MIT license." |
+| 2. Does the same answer cover the design bundle? | "yes" |
+| 3. Does any employer, funder, institution or contract hold rights or impose terms? | "no" |
+| 4. Does the copyright line in `LICENSE` name the correct holder? | "correct" |
+| 5. Which name should appear as author, and which as copyright holder? | "It should be Weave (not Danio)" |
+| 6. Is other third-party material distributed that needs a notice? | "don't know" |
+| 7. Should the decision say anything about AI-assisted contributions? | "sure, this is an AI developed programming language" |
+| 8. How are future contributions accepted? | "same terms by stating so" |
+
+How this record reads the answers:
+
+- Answers 1 and 2 cover the four inputs and the design bundle.
+- Answer 5 changes the author name only ("Danio project" becomes Weave). The copyright holder
+  stays as named in `LICENSE`, per answer 4.
+- Answer 8 keeps the existing statement in `README.md`.
+- Question 6 remains open, so the third-party list in the draft stays a placeholder.
+
+Separately, the repository's own commits carry AI co-author trailers naming a different
+assistant (see Git history above). The AI statement in the draft below is worded to cover
+AI-generated material generally.
 
 ## AC-2 LICENSE
 
@@ -143,8 +174,8 @@ satisfies AC-2 and no `LICENSE-docs` is needed. Note for the decision: MIT is un
 prose, and Creative Commons Attribution 4.0 (CC BY 4.0) is the usual choice for
 documentation. Whether MIT suits the specification text is for the maintainer to confirm.
 
-**Follow-up.** Once the decision is recorded, confirm or correct the copyright line in
-`LICENSE` according to the answers to questions 4 and 5.
+**Follow-up.** Answer 4 ("correct") confirms the copyright line. Once that is recorded on
+#2, `LICENSE` needs no change; answer 5 renames the author only (see Follow-up work).
 
 ## AC-3 SPDX identifiers or per-directory statement
 
@@ -257,47 +288,68 @@ git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been grant
 
 ## Draft decision text
 
-The maintainer can adapt this text and record it on #2 using the maintainer decision form.
-Bracketed parts need the maintainer's answers; the licence itself is one of them.
+This text reflects the maintainer answers above and is written for the maintainer to post on
+#2 using the maintainer decision form. Bracketed parts are optional or still open.
 
-> Weave is distributed under [the MIT License]. Except for the third-party material named
-> below, this covers all code (prototype, agent kit, build scripts and workflow tooling, and,
-> [subject to the answer on the four `specification/PROVENANCE.json` inputs], the vendored and
-> reference prototype snapshots), the specification text and its built editions, all examples,
-> and distributed assets authored for Weave, unless a file states otherwise. [No separate
-> documentation licence is used / The specification text is distributed under [terms]].
+> **Licence terms for Weave (#2)**
 >
-> Rights holders: [holder or holders]. The four inputs recorded in
-> `specification/PROVENANCE.json` and the design bundle were [authored by / obtained from]
-> [source] under [terms], which [permit / do not permit] distribution under [the chosen
-> licence]. [No / The following] employer,
-> funder, institution or contract holds rights in the work: [details].
+> Weave is distributed under the MIT License. Except for the third-party material named
+> below, this covers all code (the prototype, the vendored and reference prototype snapshots,
+> the agent kit, build scripts and workflow tooling), the specification text and its built editions, all examples, and assets authored
+> for Weave, unless a file states otherwise. No separate documentation licence is used.
+>
+> The rights holder is the copyright holder named in `LICENSE`. The four inputs recorded in
+> `specification/PROVENANCE.json` (weave-inventory-proof.zip v3, weave-agent-kit.zip,
+> claude-code-weave-merge-sort.md and claude-code-tiny-shop.md) and the design bundle were
+> generated with ChatGPT for this project. The copyright holder releases them under the MIT
+> License [optional: to the extent the holder has rights in AI-generated material]. No
+> employer, funder, institution or contract holds rights in the work or sets conditions on it.
+>
+> Weave is developed with AI assistance, and the AI-generated material is released under the
+> same terms.
+>
+> The author name is "Weave" [option: "the Weave project"], replacing "Danio project". The
+> copyright holder is unchanged.
 >
 > Third-party material distributed with or embedded in Weave, including [fonts embedded in
-> PDFs, theme and Sphinx assets in built editions, other], is not covered by this grant and
-> remains under its own licence. Its terms and notices will be recorded in [a third-party
-> notices file at the repository root / the REUSE-style metadata of AC-3 option 3 / other].
+> PDFs, theme and Sphinx assets in built editions; further items to be identified in
+> follow-up], is not covered by this grant and remains under its own licence. Its terms and
+> notices will be recorded in [a third-party notices file at the repository root / the
+> REUSE-style metadata of AC-3 option 3].
 >
-> Follow-up: per-file or per-directory licence identification, a record of third-party terms
-> and notices, PDF cover and colophon, and a check of the copyright line, as listed in decision
-> record 0002.
+> Contributions are accepted under the same terms, as stated in `README.md`.
+>
+> Follow-up: per-file or per-directory licence identification; an inventory and record of
+> third-party terms and notices; a copyright and licence line on the PDF cover or a colophon;
+> and renaming the author from "Danio project" to Weave in `specification/docs/conf.py`, in
+> the cover label in `specification/docs/_latex/weave.sty` and in the metadata of
+> `specification/design/weave-design-specimen.pdf`, as listed in decision record 0002.
+
+The bracketed clause in the second paragraph is optional. Whether copyright exists in purely
+AI-generated material varies by jurisdiction, and the clause avoids claiming more than the
+holder may have; this is orientation, not legal advice.
 
 ## Follow-up work
 
 After the decision is recorded, one implementation issue should:
 
-1. correct `LICENSE` and the copyright statements if the rights-holder answers require it;
+1. rename the author from "Danio project" to Weave (or the Weave project, if the maintainer
+   picks that option): the `author` setting in `specification/docs/conf.py` (which also feeds
+   the PDF metadata) and the "DANIO PROJECT" cover label in
+   `specification/docs/_latex/weave.sty`. `specification/design/weave-design-specimen.pdf` has
+   no tracked source, so its metadata cannot be regenerated from this repository; edit the
+   metadata in place, regenerate the PDF from the original design bundle, or record that it
+   keeps the old name. `LICENSE` keeps its copyright line (answer 4);
 2. add SPDX identifiers or per-directory statements, or REUSE-style metadata, covering code,
    specification, examples and assets, with the pinned snapshots covered from outside their
    directories (AC-3);
-3. add the copyright and licence line to the PDF cover or a colophon and settle the cover's
-   author name (AC-5);
-4. record the terms and notices of the third-party material excluded from the grant (fonts
-   embedded in PDFs, theme and Sphinx assets in built editions, and anything else the
-   maintainer identifies under question 6), in the place the decision names: a third-party
-   notices file or the REUSE-style metadata of AC-3 option 3;
-5. rebuild the HTML, single-page and PDF editions and check the footer, cover and published
-   site;
+3. add the copyright and licence line to the PDF cover or a colophon (AC-5);
+4. inventory the third-party material, since question 6 is still open (answer: "don't
+   know"). Start from the fonts embedded in PDFs and the theme and Sphinx assets in built
+   editions. Record its terms and notices where the decision names: a third-party notices
+   file or the REUSE-style metadata of AC-3 option 3;
+5. rebuild the HTML, single-page and PDF editions and check the footer, cover, author name and
+   published site;
 6. update this record's status to point at the recorded decision.
 
 ## What this proposal does not do
@@ -306,7 +358,8 @@ After the decision is recorded, one implementation issue should:
   maintainer evidence.
 - It does not change `LICENSE`, any licence statement, any SPDX identifier,
   `specification/docs/conf.py`, the HTML footer or the PDF cover.
-- It does not name rights holders beyond what the repository records and Git history show;
-  open points are listed as questions.
+- Its own findings name no rights holder beyond what the repository records and Git history
+  show. The maintainer's answers are quoted as relayed, and the remaining open point is
+  listed as a question.
 - It does not modify either `PROVENANCE.json` or the pinned prototype snapshots.
 - It gives no legal advice; the trade-offs noted are for orientation only.
