@@ -127,7 +127,9 @@ upstream sources:
   their dependencies, plus every `.sty`, `.cls` and `.tex` file in TeX Live's `tex/latex`.
 
 The measure is the share of a file's 8-token shingles found in its best-matching upstream
-file; PDFs are compared by their extracted text. The files were also searched for attribution
+file; PDFs are compared by their extracted text. The table below covers the specification
+files (R10, at `3dfc415`, against files of the same kind). The repository-wide scan follows it
+(R14). The files were also searched for attribution
 markers (copyright, (c), ©, licence, SPDX, "based on", "adapted", "derived", "taken from",
 "credit", author names, URLs). Commands R10–R13 are under [Commands run](#commands-run). Where
 several upstream files tie for the top match, the named file can differ between runs.
@@ -148,8 +150,53 @@ several upstream files tie for the top match, the named file can differ between 
 | `specification/scripts/*.py` (8 files) | various | 0.4–4.2% | Weave-authored; the highest is one `subprocess.run([sys.executable, …` line in `test_reference.py` |
 | `specification/design/README.md`, `specification/design/weave-design-specimen.pdf` (text) | none | 0.0% | Weave design bundle; its only URLs are documentation links |
 
-Apart from the two adapted files, no file carries an attribution marker or a run of copied
-text. The `provenance.rst` notices list both adapted files.
+**Repository-wide scan (R14).** Every tracked text file at `bf150ba` was compared, without
+type matching, against 9,075 corpus files: the specification virtual environment's
+site-packages, TeX Live's `tex/latex`, and the standard library of the virtual environment's
+Python 3.12.14 interpreter. Excluded:
+- the two pinned prototype snapshots, which are identical to the v3 archive per both
+  `PROVENANCE.json` manifests;
+- `LICENSE` and `LICENSES/`, which hold deliberate licence texts;
+- generated files: those `tools/weave_workflow/docmap.json` declares (nine `inventory-proof/`
+  outputs, `rule-catalogue.rst` and `conformance.rst`), the recorded build outputs in
+  `specification/validation/`, and the recorded demo outputs under `agent-kit/demos/*/artifacts/`.
+
+The only binary files are the four PDFs, which are scanned through their extracted text, and
+two empty files. 275 files were scanned.
+
+| Directory | Files | Highest overlap (file → best corpus match) |
+| --- | --- | --- |
+| root files | 8 | 0.2% |
+| `.claude/` | 12 | 6.2% (weave_hook.py → timeit.py) |
+| `.github/` | 4 | 0.0% |
+| `agent-kit/` (top level, `.agents/` outside the snapshot, `.claude/`, `demos/` without artifacts, `docs/`, `examples/`, `tests/`) | 74 | 1.1% |
+| `agent-kit/scripts/` | 2 | 6.9% (weave.py → tabnanny.py) |
+| `docs/` | 15 | 0.1% |
+| `inventory-proof/` | 30 | 0.7% |
+| `specification/` (top level, `design/`, `examples/`, `grammar/`, `tests/`) | 44 | 0.9% |
+| `specification/docs/` | 45 | 49.5% (search.html → Furo sidebar/search.html) |
+| `specification/scripts/` | 8 | 5.9% (diagrams_to_pdf.py → webbrowser.py) |
+| `tools/` | 33 | 4.7% |
+
+Files at or above 5%:
+- `specification/docs/_templates/sidebar/search.html` (49.5%): the recorded Furo adaptation.
+- `specification/docs/_static/weave-favicon.svg` (28.4%, against a Furo icon template), and
+  `specification/docs/_templates/page.html` (10.0%), `specification/docs/_ext/weave_lexer.py`
+  (7.3%) and `specification/docs/_static/weave.css` (5.8%): the same boilerplate and API idioms
+  as in the table above.
+- `specification/docs/chapters/provenance.rst` (7.9%, against Sphinx's licence file): the
+  licence texts it quotes deliberately.
+- `agent-kit/scripts/weave.py` (6.9%), `.claude/hooks/weave_hook.py` (6.2%),
+  `agent-kit/scripts/sync_skill_reference.py` (6.2%), `specification/scripts/diagrams_to_pdf.py`
+  (5.9%) and `specification/scripts/test_reference.py` (5.1%): the matching runs are a
+  `#!/usr/bin/env python3` line followed by a docstring opening, `if __name__ == "__main__":`
+  and `sys.path.insert(0,`.
+
+Result: no run of text copied from the indexed corpus was found, apart from the recorded
+adaptations (`search.html`, `weave.sty`) and deliberate quotations. The `provenance.rst`
+notices list both adapted files.
+
+Method and limits: 8-token shingle overlap against the indexed corpus; it cannot detect copying from sources outside the corpus; the provenance of the four PROVENANCE inputs and the design bundle rests on the recorded decision.
 
 ### Further rights holders
 
@@ -158,15 +205,20 @@ There are none beyond those recorded:
   the four `specification/PROVENANCE.json` inputs and the design bundle were generated with
   ChatGPT for this project, and that no employer, funder, institution or contract holds rights
   in the work.
-- **Git history** at the head of this branch and on every other ref (38 commits, R13):
-  - every author is the maintainer, under two forms of the same name;
-  - the only other committer is GitHub, the service that records commits made through its web
-    interface;
-  - the only trailers are `Co-Authored-By` lines naming an AI coding assistant, plus session
-    links. Those trailers name tools, not rights holders; the decision covers AI-generated
-    material "to the extent the holder has rights" in it.
-- **PR #64.** Its commit (`7b2cb65`, cherry-picked here as `cf1e3b6`) is authored and
-  committed under the maintainer's identity. The orchestrator reports that a Codex session
+- **Git history** at `bf150ba`: 34 commits (R13).
+  - Authors: the maintainer, under two forms of the same name (30 and 4 commits).
+  - Committers: the maintainer, and GitHub (4), which records commits made through its web
+    interface.
+  - Trailers: 28 `Co-Authored-By` lines and 9 session links.
+  - The `Co-Authored-By` trailers name an AI coding assistant. The recorded decision addresses
+    AI-generated material: "The copyright holder releases them under the MIT License to the
+    extent the holder has rights in AI-generated material." and "Weave is developed with AI
+    assistance, and the AI-generated material is released under the same terms." It also
+    states: "No employer, funder, institution or contract holds rights in the work or sets
+    conditions on it."
+- **PR #64.** Its commit, `7b2cb65` on `origin/codex/reuse-metadata-follow-up` (cherry-picked
+  here as `cf1e3b6`), is authored and committed under the maintainer's identity, with no
+  trailers. The orchestrator reports that a Codex session
   under the maintainer's account produced it.
 - **Third-party holders** are recorded where their material is: the font holders, the HTML
   component holders, and the Furo and Sphinx code adapted in `search.html` and `weave.sty`.
@@ -175,6 +227,7 @@ There are none beyond those recorded:
 
 The review of rights holders and provenance is complete. Every distributed source, including
 third-party fonts, components and adapted code, has a recorded origin, holder and licence.
+Method and limits: 8-token shingle overlap against the indexed corpus; it cannot detect copying from sources outside the corpus; the provenance of the four PROVENANCE inputs and the design bundle rests on the recorded decision.
 Each item still open in `follow-up` falls outside that review:
 
 | Open item | Why it does not affect AC-1 |
@@ -599,16 +652,17 @@ copies, read the committed bytes.
 ### Commands for the copied-material and holder review
 
 Run from the worktree root. R10, R11 and R12 read commit `3dfc415`, before the `weave.sty`
-annotation; R13 reads all refs.
+annotation. R13 and R14 read commit `bf150ba`, and R13 also reads the PR #64 commit `7b2cb65`.
 
 | Ref | Command | Exit | Result |
 | --- | --- | --- | --- |
 | R10 | `python3 overlap.py 3dfc415 "$SPEC_VENV/lib/python3.12/site-packages" /usr/share/texlive/texmf-dist/tex/latex` (script below) | 0 | 6,115 upstream files indexed; the per-file results in the review table |
 | R11 | For each file in scope: `git show 3dfc415:FILE` (`pdftotext` for PDFs) piped to `grep -n -i -E 'copyright\|\(c\)\|©\|licen[cs]\|spdx\|based on\|adapted\|derived\|from http\|taken from\|credit\|author\|https?://'` | 0/1 | documentation links, the `author` and `copyright` settings, SVG namespace URLs and domain words only |
 | R12 | `git archive 3dfc415 specification \| tar -x`, then `python3 scripts/render_diagrams.py` in the copy and `cmp` each SVG with `git show 3dfc415:…` | 0 | all three SVGs byte-identical |
-| R13 | `git log --all --format='author: %an%ncommitter: %cn' \| sort \| uniq -c` and `git log --all --format='%(trailers:only,unfold)'` | 0 | the maintainer's two name forms, GitHub as committer, Co-Authored-By lines for an AI assistant and session links |
+| R13 | `git rev-list --count bf150ba`; `git log bf150ba --format='author: %an%ncommitter: %cn' \| sort \| uniq -c`; `git log bf150ba --format='%(trailers:only,unfold)'`; `git log -1 7b2cb65 --format='%an \| %cn \| %(trailers:only,unfold)'` | 0 | 34 commits; authors: the maintainer's two name forms (30, 4); committers: the maintainer (30) and GitHub (4); 28 Co-Authored-By trailers and 9 session links; `7b2cb65` under the maintainer's identity with no trailers |
+| R14 | `python3 overlap2.py bf150ba "$SITE" /usr/share/texlive/texmf-dist/tex/latex "$STDLIB"`, where `$SITE` and `$STDLIB` are the specification virtual environment's `sysconfig` purelib and stdlib paths (script below) | 0 | 275 files scanned against 9,075 corpus files; summary in the copied-material review |
 
-The script, overlap.py:
+The R10 script, overlap.py:
 
 ```python
 """Copied-material check: share of a file's 8-token shingles found in each upstream file."""
@@ -640,10 +694,12 @@ for p in glob.glob(TEX + "/**/*.sty", recursive=True) + glob.glob(TEX + "/**/*.c
 paths = subprocess.run(["git", "ls-tree", "-r", "--name-only", REV, "--"] + SCOPE, capture_output=True, text=True, check=True).stdout.split()
 print(f"upstream files indexed: {len(files)}")
 for p in paths:
+    data = subprocess.run(["git", "show", f"{REV}:{p}"], capture_output=True, check=True).stdout
     if p.endswith(".pdf"):
-        text = subprocess.run(f"git show {REV}:{p} | pdftotext - -", shell=True, capture_output=True, text=True).stdout; k = "doc"
+        data = subprocess.run(["pdftotext", "-", "-"], input=data, capture_output=True, check=True).stdout; k = "doc"
     else:
-        text = subprocess.run(["git", "show", f"{REV}:{p}"], capture_output=True, text=True, check=True).stdout; k = kind(p)
+        k = kind(p)
+    text = data.decode("utf-8", "replace")
     sh = shingles(text); hits = Counter()
     for s in sh:
         for fid in index.get((k, s), ()): hits[fid] += 1
@@ -653,6 +709,64 @@ for p in paths:
         print(f"{n/len(sh):6.1%}  {len(sh):5d}  {p}  ->  {top}")
     else:
         print(f"{0:6.1%}  {len(sh):5d}  {p}  ->  -")
+```
+
+The R14 script, overlap2.py:
+
+```python
+"""Copied-material check: for each tracked file at REV, the share of its 8-token shingles
+found in its best-matching file of the indexed corpus. Usage: overlap2.py REV CORPUS_DIR..."""
+import os, re, subprocess, sys
+from collections import defaultdict
+REV, CORPORA, K = sys.argv[1], sys.argv[2:], 8
+EXCLUDE_PREFIXES = (
+    "specification/reference/prototype/",                 # pinned snapshot (PROVENANCE manifest)
+    "agent-kit/.agents/skills/weave/assets/prototype/",   # pinned snapshot (PROVENANCE manifest)
+    "LICENSES/", "specification/validation/",             # licence texts; recorded build outputs
+)
+EXCLUDE_FILES = {"LICENSE"} | {  # generated documents declared in tools/weave_workflow/docmap.json
+    "inventory-proof/REPORT.md", "inventory-proof/ACTUAL_OUTPUT.txt",
+    "inventory-proof/LOWERED_PROPAGATION.weave", "inventory-proof/proof.json",
+    "inventory-proof/ordering.json", "inventory-proof/scenarios.json",
+    "inventory-proof/colour-proof.json", "inventory-proof/colour-check.json",
+    "inventory-proof/durable-scenarios.json", "specification/docs/chapters/rule-catalogue.rst",
+    "specification/docs/chapters/conformance.rst"}
+CORPUS_SUFFIXES = (".py", ".pyi", ".html", ".css", ".js", ".svg", ".sty", ".cls", ".tex", ".def",
+                   ".ldf", ".fd", ".clo", ".cfg", ".md", ".rst", ".txt", ".toml", ".json", ".yml",
+                   ".yaml", ".ini", ".css_t", ".tex_t", ".js_t")
+def run(args, data=None):
+    return subprocess.run(args, input=data, capture_output=True, check=True).stdout
+def shingles(text):
+    w = re.findall(r"\w+|[^\w\s]", text.lower())
+    return {hash(tuple(w[i:i + K])) for i in range(len(w) - K + 1)}
+def excluded(p):
+    return (p in EXCLUDE_FILES or p.startswith(EXCLUDE_PREFIXES)
+            or ("/artifacts/" in p and p.startswith("agent-kit/demos/")))  # recorded demo outputs
+paths = run(["git", "ls-tree", "-r", "--name-only", REV]).decode().split("\n")
+repo, owner = [], defaultdict(list)
+for p in filter(None, paths):
+    if excluded(p): continue
+    data = run(["git", "show", f"{REV}:{p}"])
+    if p.endswith(".pdf"): data = run(["pdftotext", "-", "-"], data)
+    elif b"\0" in data: continue
+    sh = shingles(data.decode("utf-8", "replace"))
+    i = len(repo); repo.append([p, len(sh), 0, "-"])
+    for s in sh: owner[s].append(i)
+n_corpus = 0
+for corpus in CORPORA:
+    for root, _, names in os.walk(corpus):
+        for name in names:
+            path = os.path.join(root, name)
+            if not name.endswith(CORPUS_SUFFIXES) or os.path.getsize(path) > 5_000_000: continue
+            with open(path, encoding="utf-8", errors="ignore") as f: sh = shingles(f.read())
+            n_corpus += 1; hits = defaultdict(int)
+            for s in sh:
+                for i in owner.get(s, ()): hits[i] += 1
+            for i, n in hits.items():
+                if n > repo[i][2]: repo[i][2], repo[i][3] = n, os.path.relpath(path, corpus)
+print(f"files scanned: {len(repo)}; corpus files indexed: {n_corpus}")
+for p, total, best, top in sorted(repo):
+    print(f"{(best / total if total else 0):6.1%}  {total:6d}  {p}  ->  {top}")
 ```
 
 ## Recorded decision

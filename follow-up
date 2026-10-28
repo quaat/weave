@@ -156,10 +156,15 @@ material: https://github.com/quaat/weave/issues/2#issuecomment-6480423748
   Done; there are none beyond those recorded:
   - The decision on #2 names the LICENSE holder and excludes employer, funder,
     institution and contract rights.
-  - Git history on all refs (38 commits) shows only the maintainer as author,
-    GitHub as committer for web-created commits, and Co-Authored-By trailers
-    naming an AI assistant, which is a tool, not a rights holder.
-  - PR #64's commit is under the maintainer's identity.
+  - Git history at bf150ba (34 commits) shows only the maintainer as author
+    (two name forms), and GitHub as committer for web-created commits. The
+    Co-Authored-By trailers name an AI coding assistant. The recorded decision
+    addresses AI-generated material: "The copyright holder releases them under
+    the MIT License to the extent the holder has rights in AI-generated
+    material." and "No employer, funder, institution or contract holds rights
+    in the work or sets conditions on it."
+  - PR #64's commit 7b2cb65 is under the maintainer's identity, with no
+    trailers.
   - The third-party holders (fonts, HTML components, and the Furo and Sphinx
     code adapted in search.html and weave.sty) are recorded at their paths.
   See docs/decisions/0002-licence-terms.md, "Further rights holders".
@@ -237,7 +242,14 @@ Observed configuration and dependency pins:
     conf.py, the scripts and the design bundle.
   - Method: compared by 8-token shingle overlap with 6,115 upstream files
     (spec venv site-packages and TeX Live tex/latex), and searched for
-    attribution markers.
+    attribution markers. A second scan covered every tracked text file at
+    bf150ba (275 files; snapshots, licence texts and generated files excluded)
+    against 9,075 files, adding the interpreter's standard library. Above 5%
+    there are only the recorded adaptations, a deliberate licence quotation,
+    and boilerplate or API idioms.
+  - Limits: 8-token shingle overlap against the indexed corpus; it cannot
+    detect copying from sources outside the corpus; the provenance of the four
+    PROVENANCE inputs and the design bundle rests on the recorded decision.
   - Found: Furo's search form (search.html, already annotated) and Sphinx's
     title-macro page-anchor handling (weave.sty, now MIT AND BSD-2-Clause).
     Everything else is Weave-authored or overrides an upstream template
