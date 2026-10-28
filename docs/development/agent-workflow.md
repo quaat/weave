@@ -96,16 +96,19 @@ Revalidated against live records by `python3 -m tools.weave_workflow plan` on ev
 | Claim | `claim N` (dry run), `claim N --apply` | CLAIMED, DOCS_IMPACT, PLAN; worktree `agent/N-slug`; Todo → In Progress |
 | Delegate | `/weave-task`, subagent with the packet | DELEGATED (published before work starts) |
 | Implement | `weave-implementer` | IMPLEMENTATION_READY in the local outbox |
-| Verify | `weave-verifier` | VERIFICATION_RESULT with commands and exit codes |
-| Documentation | `/weave-docs`, `docs-audit --base` | DOCS_AUDIT_RESULT for the candidate head |
+| Verify | `verify N --worktree PATH --packet FILE --apply` (the `weave-verifier` subagent may investigate failures) | VERIFICATION_RESULT with argv, directory and exit code of every check, produced by the command itself |
+| Documentation | `/weave-docs`, `docs-audit --repo PATH --base SHA --publish N --apply` | DOCS_AUDIT_RESULT for the candidate head |
 | Local and safety review | `weave-local-reviewer`, `weave-safety-reviewer` | LOCAL_REVIEW_RESULT (local, safety) |
-| Independent review | `/weave-review`, `review N --apply` | REVIEW_REQUESTED, REVIEW_RESULT with Codex provenance |
+| Independent review | `/weave-review`, `review N --worktree PATH --apply` | REVIEW_REQUESTED, REVIEW_RESULT with Codex provenance (mirrored to the PR); READY_TO_MERGE on PASS |
 | Transition | `transition N "In Review" --apply` | TRANSITION_INTENT, STATE_CHANGED |
-| Integrate | maintainer merge | integration evidence; `transition N Done --apply`; COMPLETED |
+| Integrate | maintainer merge, then `transition N Done --worktree PATH --apply` | integration evidence derived from the PR and Git; STATE_CHANGED; COMPLETED |
+| Milestone exit | `milestone-gate Mx --evidence FILE --apply` | GATE_EVALUATED on the epic (PASS only if the mechanical checks hold) |
 
 Workers never write to GitHub. They return structured messages to the orchestrator, which
 validates them (`event validate FILE`) and publishes them with attribution
-(`event publish FILE --apply`).
+(`event publish FILE --apply`). Event kinds that gates rely on (claims, plans, verification
+and audit results, review requests and results, transitions, gate evaluations) cannot be
+relayed this way: only the command that produces their evidence publishes them.
 
 ## Failure recovery
 

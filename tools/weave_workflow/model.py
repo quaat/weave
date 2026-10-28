@@ -96,6 +96,7 @@ class PullRequest:
     closes: list[int]
     checks: list[tuple[str, str]]
     review_decision: str | None
+    merged_by: str | None = None
 
 
 @dataclass

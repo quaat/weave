@@ -223,10 +223,11 @@ class Transitioner:
                     "operations": [f"refused: observed status {observed!r} differs from expected {view.status!r}; reconcile first"]}
         intent = events.build("TRANSITION_INTENT", sender="orchestrator", recipient="orchestrator",
                               operation_id=op_id, from_status=view.status, to_status=to_status, **ctx)
-        self.publisher.publish(intent)
+        self.publisher.publish(intent, origin="transition")
         self.store.append({"type": "operation", "operation_id": op_id, "phase": "intent",
                            "issue": view.issue.number, "item_id": item.item_id,
-                           "from_status": view.status, "to_status": to_status, "intent_event": intent["event_id"]})
+                           "from_status": view.status, "to_status": to_status, "intent_event": intent["event_id"],
+                           "integration": view.integration if to_status == "Done" else None})
         try:
             self.adapter.set_status(self.project, item.item_id, to_status)
         except AmbiguousWrite:
@@ -249,7 +250,12 @@ class Transitioner:
         changed = events.build("STATE_CHANGED", sender="orchestrator", recipient="orchestrator",
                                operation_id=op_id, from_status=intent["from_status"],
                                to_status=intent["to_status"], causation_id=intent["intent_event"], **ctx)
-        self.publisher.publish(changed)
+        self.publisher.publish(changed, origin="transition")
+        if intent["to_status"] == "Done" and intent.get("integration"):
+            integ = intent["integration"]
+            self.publisher.publish(events.build("COMPLETED", sender="orchestrator", recipient="orchestrator",
+                                                head_sha=integ["pr_head_sha"], merge_sha=integ["merge_sha"],
+                                                causation_id=changed["event_id"], **ctx), origin="transition")
         for op in self._label_ops(intent["to_status"], intent["from_status"]):
             verb, label = op.split(" label ")
             if verb == "add":

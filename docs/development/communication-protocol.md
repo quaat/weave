@@ -64,6 +64,25 @@ comment may index status and evidence, but it is not the audit history.
 - If GitHub is unavailable, messages stay queued, a checkpoint is written, and dispatches and
   transitions pause. Delivery is never claimed before it happens.
 
+## Reserved kinds
+
+Gates rely on some kinds, so only the command that produces their evidence may publish them.
+The origin is recorded in the ledger delivery, and an envelope of a reserved kind delivered
+from any other origin is not trusted.
+
+| Kind | Published only by |
+| --- | --- |
+| CLAIMED, DOCS_IMPACT, PLAN | `claim --apply` |
+| VERIFICATION_RESULT | `verify --apply` (runs the checks itself) |
+| DOCS_AUDIT_RESULT | `docs-audit --publish N --apply` (runs the audit itself) |
+| REVIEW_REQUESTED, REVIEW_RESULT, READY_TO_MERGE | `review --apply` (runs and validates Codex itself) |
+| TRANSITION_INTENT, STATE_CHANGED, COMPLETED | `transition --apply` |
+| GATE_EVALUATED | `milestone-gate --apply` |
+| DECISION_RECORDED | never the coordinator; decisions are maintainer comments |
+
+Everything else goes through the relay (`event publish`), which also checks that the sender
+role may send the kind (for example only the implementer sends IMPLEMENTATION_READY).
+
 ## Authentication
 
 An envelope is trusted only if its comment was posted by a login in

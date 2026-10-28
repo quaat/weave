@@ -31,8 +31,9 @@ sandbox.
 6. After fixes, rerun the affected checks and the documentation audit, then request a fresh
    review of the new head. Reuse finding IDs; say whether the review is full or a justified
    delta.
-7. On PASS: mirror the result in the PR as a comment marked as relayed (never as a GitHub
-   approval), publish READY_TO_MERGE and set `agent:ready-to-merge`. The issue stays In Review
-   until the maintainer merges.
+7. On PASS, `review --apply` has already mirrored the result to the PR (when it exists) as a
+   relayed comment, never a GitHub approval, published READY_TO_MERGE and set
+   `agent:ready-to-merge`. If the PR is opened later, link the issue's REVIEW_RESULT from its
+   description. The issue stays In Review until the maintainer merges.
 8. Budget: at most three review rounds per attempt. On exhaustion, preserve the work, return
    genuine rework to In Progress, add `agent:needs-human` and summarise the disagreement.

@@ -130,6 +130,21 @@ def run_codex(packet: dict, worktree: Path, out_dir: Path, policy: dict, codex: 
     return ReviewRun(result, result_path, provenance)
 
 
+def render_result(result: dict, provenance: dict) -> str:
+    lines = [f"**Verdict:** {result['verdict']} (round summary below)", "", result["summary"], "",
+             "| Criterion | Status | Evidence |", "| --- | --- | --- |"]
+    lines += [f"| {c['id']} | {c['status']} | {c['evidence'][:300].replace('|', '/')} |" for c in result["criteria"]]
+    if result["findings"]:
+        lines += ["", "Findings:", ""]
+        lines += [f"- `{f['id']}` ({f['severity']}{', blocking' if f['blocking'] else ''}) {f['location']}: "
+                  f"{f['description']} Required correction: {f['required_correction']}" for f in result["findings"]]
+    if result["limitations"]:
+        lines += ["", "Reviewer limitations: " + "; ".join(result["limitations"])]
+    lines += ["", f"_Fresh read-only session: {provenance['cli']} {provenance['version']}, session `{provenance['session']}`. "
+              "Relayed by the orchestrator; this is not a GitHub review approval._"]
+    return "\n".join(lines)
+
+
 def accept(result: dict, *, request: dict, current_head: str, current_base: str,
            requirements_now: str, criteria_ids: list[str], doc_criteria_ids: list[str]) -> dict:
     """Validate a review result against the schema and the exact request. Returns a normalised verdict.

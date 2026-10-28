@@ -78,7 +78,7 @@ query($owner:String!,$name:String!,$endCursor:String){
     pullRequests(first:50,after:$endCursor,orderBy:{field:CREATED_AT,direction:ASC}){
       totalCount pageInfo{hasNextPage endCursor}
       nodes{number state merged headRefName headRefOid baseRefName baseRefOid
-        mergeCommit{oid} reviewDecision
+        mergeCommit{oid} reviewDecision mergedBy{login}
         closingIssuesReferences(first:20){nodes{number}}
         commits(last:1){nodes{commit{oid statusCheckRollup{state
           contexts(first:100){nodes{__typename ... on CheckRun{name status conclusion}
@@ -246,7 +246,8 @@ class GhCli:
                     head_ref=n["headRefName"], head_sha=n["headRefOid"], base_ref=n["baseRefName"],
                     base_sha=n["baseRefOid"], merge_sha=(n["mergeCommit"] or {}).get("oid"),
                     closes=[i["number"] for i in n["closingIssuesReferences"]["nodes"]],
-                    checks=checks, review_decision=n["reviewDecision"]))
+                    checks=checks, review_decision=n["reviewDecision"],
+                    merged_by=(n["mergedBy"] or {}).get("login")))
         return pulls
 
     def fetch_branch_protection(self, branch: str) -> dict | None:

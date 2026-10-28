@@ -103,9 +103,13 @@ class Harness:
         return {"run_id": "run-test-0001", "attempt": attempt, "issue": f"{REPO}#{n}",
                 "milestone": self.snap.issues[n].milestone_key}
 
-    def publish(self, kind: str, n: int, sender="orchestrator", recipient="orchestrator", body="", **fields) -> dict:
+    def publish(self, kind: str, n: int, sender="orchestrator", recipient="orchestrator", body="", origin=None, **fields) -> dict:
+        """Publish as the command that owns the kind would (reserved kinds), else through the relay."""
+        from tools.weave_workflow.publisher import RESERVED_ORIGINS
         ev = events.build(kind, sender=sender, recipient=recipient, **self.ctx(n), **fields)
-        return self.publisher.publish(ev, body)
+        if origin is None:
+            origin = next(iter(sorted(RESERVED_ORIGINS.get(kind) or {"relay"})))
+        return self.publisher.publish(ev, body, origin=origin)
 
     def plan_event(self, n: int) -> dict:
         from tools.weave_workflow.model import acceptance_criteria

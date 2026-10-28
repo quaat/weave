@@ -37,12 +37,14 @@ Derived from current CI and the affected components, run in each component's dir
 
 `python3 -m tools.weave_workflow review N --worktree PATH` builds the packet (dry run);
 `--apply` publishes REVIEW_REQUESTED and launches the reviewer. The packet contains: issue
-and milestone scope, criteria, dependency and exit-gate evidence, maintainer decisions; the
-repository, base (merge-base) and head SHAs and requirements digest of a clean committed
-candidate; how to inspect the diff with access to surrounding source and specification;
-verification commands with exit codes, CI links, accepted limitations; the documentation
-impact list, documents changed and the DOCS_AUDIT_RESULT; local-review findings and
-dispositions. Codex is not told to agree with anything.
+and milestone scope, criteria, the state of every blocking prerequisite and of the predecessor
+milestones' exit gates (from `plan`), maintainer decisions; the base (merge-base) and head SHAs
+and requirements digest of a clean committed candidate, with the commands to inspect the diff
+in the worktree; the published VERIFICATION_RESULT checks with exit codes, CI links
+(`--ci-link`), accepted limitations (`--limitation`) and further evidence files (`--evidence`);
+the documentation impact list, documents changed and the DOCS_AUDIT_RESULT; local and safety
+review results and finding dispositions; earlier change requests. Codex is not told to agree
+with anything.
 
 The reviewer is a **fresh, ephemeral, read-only** `codex exec` session: `--sandbox read-only
 --ephemeral -c mcp_servers={}`, run from the candidate worktree, with `GH_TOKEN`,
@@ -57,7 +59,13 @@ digest, `PASS`, `REQUEST_CHANGES` or `BLOCKED`, a criterion-by-criterion assessm
 the documentation criteria (`DOC-n`), findings with stable IDs (`F-n`), severity, blocking
 flag, location, reproduction and required correction, checks actually run, limitations and a
 summary. CLI, version and session id are recorded as provenance. The orchestrator publishes
-the result in the issue and mirrors it in the PR.
+the result in the issue and, when the task's PR (`agent/N-…`) exists, mirrors it there as a
+relayed comment, never as a GitHub approval. A PASS also publishes READY_TO_MERGE and sets
+`agent:ready-to-merge`.
+
+The reviewer runs in a read-only sandbox, so it cannot create temporary files and may be
+unable to rerun test suites; the packet's verification results and CI links carry that
+evidence, and the reviewer reports what it could not rerun as a limitation.
 
 ## Accepting a result
 

@@ -17,5 +17,6 @@ worktree. Policy: `docs/development/documentation-currency.md`.
   expected-rejection fixtures. If the documents and the implementation disagree on
   semantics, record the discrepancy and report it; do not pick the convenient side.
 - Run `python3 -m tools.weave_workflow docs-audit --base <base> --impact <packet>` and
-  report the result as a DOCS_AUDIT_RESULT message with the changed paths. Never use `gh`,
-  push, or launch agents.
+  report the findings and the changed paths to the orchestrator, which publishes the
+  authoritative DOCS_AUDIT_RESULT with `docs-audit --publish`. Never use `gh`, push, or launch
+  agents.

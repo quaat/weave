@@ -100,9 +100,9 @@ class Store:
         p.mkdir(exist_ok=True, mode=0o700)
         return p
 
-    def enqueue(self, item: dict) -> Path:
+    def enqueue(self, item: dict, replace: bool = False) -> Path:
         path = self.outbox / f"{item['event_id']}.json"
-        if path.exists():
+        if path.exists() and not replace:
             return path  # idempotent: same event id is the same message
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(item, indent=2, sort_keys=True), encoding="utf-8")

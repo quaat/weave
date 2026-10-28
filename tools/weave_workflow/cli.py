@@ -216,7 +216,10 @@ def cmd_claim(args) -> int:
                     "reasons": cand.reasons if cand else [f"#{args.issue} is not a candidate in {p.current}"],
                     "stop_reason": p.stop_reason})
         return 2
-    if p.next and p.next.issue != args.issue and not args.override_order:
+    if p.next is None:
+        emit(args, {"claimable": False, "issue": args.issue, "reasons": [p.stop_reason or "no task selected"]})
+        return 2
+    if p.next.issue != args.issue and not args.override_order:
         emit(args, {"claimable": False, "reasons": [f"#{p.next.issue} precedes #{args.issue} in the deterministic order"]})
         return 2
     issue = snap.issues[args.issue]
@@ -247,15 +250,15 @@ def cmd_claim(args) -> int:
             store.set_active_run({**run, "run_id": run_id, "active_issue": args.issue, "since": run.get("since", utcnow())})
             claimed = publisher.publish(events.build("CLAIMED", sender="orchestrator", recipient="orchestrator",
                                                      claim_expires_at=claim_expiry(policy), coordinator_host=socket.gethostname(),
-                                                     work_type=cand.work_type, summary=f"Claimed for run {run_id}.", **ctx))
+                                                     work_type=cand.work_type, summary=f"Claimed for run {run_id}.", **ctx), origin="claim")
             impact_ev = publisher.publish(events.build("DOCS_IMPACT", sender="orchestrator", recipient="implementer",
                                                        docs_impact=packet["docs_impact"], causation_id=claimed["event_id"],
-                                                       correlation_id=claimed["event_id"], **ctx))
+                                                       correlation_id=claimed["event_id"], **ctx), origin="claim")
             plan_ev = publisher.publish(events.build(
                 "PLAN", sender="orchestrator", recipient="implementer", requirements_digest=packet["requirements_digest"],
                 criteria=[{"id": c["id"], "text_digest": c["text_digest"], "verification": c["verification"]} for c in packet["criteria"]],
                 causation_id=impact_ev["event_id"], correlation_id=claimed["event_id"], **ctx),
-                body="\n".join(f"- **{c['id']}** {c['text']}" for c in packet["criteria"]))
+                body="\n".join(f"- **{c['id']}** {c['text']}" for c in packet["criteria"]), origin="claim")
             _git(repo, "worktree", "add", worktree, "-b", branch, base_sha)
             packet_path = store.run_dir(run_id) / f"packet-{args.issue}-a{attempt}.json"
             packet_path.write_text(json.dumps(packet, indent=2), encoding="utf-8")
@@ -284,8 +287,9 @@ def cmd_event(args) -> int:
     if errors:
         emit(args, {"valid": False, "errors": errors})
         return 1
-    if data["sender"] not in ("orchestrator",) and data["recipient"] != "orchestrator":
-        emit(args, {"valid": False, "errors": ["worker messages must be addressed to the orchestrator"]})
+    problems = relay_problems(data)
+    if problems:
+        emit(args, {"valid": False, "errors": problems})
         return 1
     if args.action == "validate" or not args.apply:
         text, clean = events.render(data, args.body or "")
@@ -294,12 +298,43 @@ def cmd_event(args) -> int:
     store = Store.for_repo(repo_root())
     publisher = Publisher(store, adapter_for(args, policy), policy["repository"], policy["actors"]["coordinator_logins"])
     try:
-        published = publisher.publish(data, args.body or "")
+        published = publisher.publish(data, args.body or "", origin="relay")
     except DeliveryPaused as exc:
         emit(args, {"published": False, "paused": str(exc)})
         return 4
     emit(args, {"published": True, "event_id": published["event_id"]})
     return 0
+
+
+RELAY_SENDERS = {
+    "QUESTION": {"implementer", "verifier", "docs-editor", "local-reviewer", "safety-reviewer", "investigator", "orchestrator"},
+    "ANSWER": {"orchestrator", "investigator"},
+    "PROGRESS": {"orchestrator", "implementer", "verifier", "docs-editor", "investigator"},
+    "DELEGATED": {"orchestrator"},
+    "IMPLEMENTATION_READY": {"implementer"},
+    "LOCAL_REVIEW_RESULT": {"local-reviewer", "safety-reviewer"},
+    "FINDING_DISPOSITION": {"orchestrator"},
+    "CHANGES_REQUESTED": {"orchestrator"},
+    "BLOCKED": {"orchestrator", "implementer", "verifier", "docs-editor", "local-reviewer", "safety-reviewer", "investigator"},
+    "RESUMED": {"orchestrator"},
+    "RELEASED": {"orchestrator"},
+}
+
+
+def relay_problems(data: dict) -> list[str]:
+    """Why a message may not go through the generic relay (empty list: it may)."""
+    from .publisher import RESERVED_ORIGINS
+    kind, sender = data["kind"], data["sender"]
+    if kind in RESERVED_ORIGINS:
+        owners = sorted(RESERVED_ORIGINS[kind]) or ["a maintainer comment"]
+        return [f"{kind} is produced only by {', '.join(owners)}; it cannot be relayed"]
+    if sender not in RELAY_SENDERS.get(kind, set()):
+        return [f"{sender} may not send {kind}"]
+    if sender != "orchestrator" and data["recipient"] != "orchestrator":
+        return ["worker messages must be addressed to the orchestrator"]
+    if kind == "LOCAL_REVIEW_RESULT" and {"local-reviewer": "local", "safety-reviewer": "safety"}[sender] != data["review_kind"]:
+        return ["review_kind does not match the reviewer role"]
+    return []
 
 
 def cmd_new_event(args) -> int:
@@ -320,15 +355,104 @@ def cmd_new_event(args) -> int:
     return 0
 
 
+def _task_context(store: Store, snap, policy: dict, number: int) -> dict:
+    trusted, _ = authenticated_events(store, snap, policy["actors"]["coordinator_logins"], number)
+    plan_ev = next((e for e in reversed(trusted) if e["kind"] == "PLAN"), None)
+    if plan_ev is None:
+        raise SystemExit(f"#{number} has no published PLAN; claim it first")
+    return {"run_id": plan_ev["run_id"], "attempt": plan_ev["attempt"], "issue": plan_ev["issue"],
+            "milestone": plan_ev["milestone"]}
+
+
+def _publish_task_event(args, number: int, kind: str, origin: str, body: str = "", **fields) -> dict | None:
+    policy = load_policy()
+    store = Store.for_repo(repo_root())
+    adapter = adapter_for(args, policy)
+    snap = adapter.snapshot()
+    ev = events.build(kind, sender="orchestrator", recipient="orchestrator",
+                      **_task_context(store, snap, policy, number), **fields)
+    if not args.apply:
+        return {"dry_run": True, "event": ev}
+    publisher = Publisher(store, adapter, policy["repository"], policy["actors"]["coordinator_logins"])
+    return {"event_id": publisher.publish(ev, body, origin=origin)["event_id"]}
+
+
+def cmd_verify(args) -> int:
+    """Run the packet's checks in the candidate worktree, recording argv, directory and exit code."""
+    worktree = Path(args.worktree).resolve()
+    if _git(worktree, "status", "--porcelain"):
+        emit(args, {"ok": False, "reason": "candidate worktree is not clean; commit first"})
+        return 2
+    head = _git(worktree, "rev-parse", "HEAD")
+    packet = json.loads(Path(args.packet).read_text(encoding="utf-8"))
+    log_dir = Path(args.packet).resolve().parent / f"verify-{args.issue}-{head[:12]}"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    checks = []
+    for i, check in enumerate(packet["checks"], 1):
+        cwd = worktree / check["cwd"]
+        proc = subprocess.run(check["argv"], cwd=cwd, capture_output=True, text=True)
+        rc = proc.returncode
+        if rc == 0 and check.get("then") == "git diff --exit-code -- .":
+            rc = subprocess.run(["git", "diff", "--exit-code", "--", "."], cwd=cwd, capture_output=True).returncode
+        log = log_dir / f"{i:02d}.log"
+        log.write_text(proc.stdout + proc.stderr, encoding="utf-8")
+        checks.append({"name": check["name"], "command": check["argv"], "cwd": check["cwd"], "exit_code": rc, "log": str(log)})
+    result = "PASS" if all(c["exit_code"] == 0 for c in checks) else "FAIL"
+    body = "\n".join(f"- `{' '.join(c['command'])}` in `{c['cwd']}` → exit {c['exit_code']}" for c in checks)
+    out = {"head_sha": head, "result": result, "checks": checks}
+    out["published"] = _publish_task_event(args, args.issue, "VERIFICATION_RESULT", "verify", body=body,
+                                           head_sha=head, result=result, checks=checks)
+    emit(args, out)
+    return 0 if result == "PASS" else 1
+
+
+def cmd_milestone_gate(args) -> int:
+    """Mechanical exit-gate checks; GATE_EVALUATED PASS is published only when they all hold."""
+    from .scheduler import milestone_gate, milestone_members
+    policy = load_policy()
+    repo = repo_root()
+    store = Store.for_repo(repo)
+    adapter = adapter_for(args, policy)
+    snap = adapter.snapshot()
+    key = args.milestone
+    spec = policy["milestones"][key]
+    reasons = [r for r in milestone_gate(snap, policy, key, [{"gate": f"milestone-exit:{key}", "result": "PASS"}]).reasons
+               if "epic" not in r]
+    for pred in spec["requires"]:
+        if not milestone_gate(snap, policy, pred, gate_events(store, snap, policy)).passed:
+            reasons.append(f"predecessor {pred} has not passed its exit gate")
+    audit = docs_audit.audit(repo)
+    if audit.result != "PASS":
+        reasons.append(f"whole-repository documentation audit fails ({audit.error_count} errors)")
+    if not args.evidence:
+        reasons.append("no exit-criteria evidence supplied (--evidence)")
+    result = "PASS" if not reasons else "FAIL"
+    out = {"milestone": key, "result": result, "reasons": reasons,
+           "members": [i.number for i in milestone_members(snap, policy, key)]}
+    if args.apply:
+        evidence = Path(args.evidence).read_text(encoding="utf-8") if args.evidence else ""
+        ev = events.build("GATE_EVALUATED", sender="orchestrator", recipient="orchestrator", gate=f"milestone-exit:{key}",
+                          result=result, run_id=(store.active_run() or {}).get("run_id") or new_id("run"), attempt=1,
+                          issue=f"{policy['repository']}#{spec['epic']}", milestone=key)
+        body = evidence + ("\n\nUnmet: " + "; ".join(reasons) if reasons else "")
+        publisher = Publisher(store, adapter, policy["repository"], policy["actors"]["coordinator_logins"])
+        out["event_id"] = publisher.publish(ev, body, origin="milestone-gate")["event_id"]
+    emit(args, out)
+    return 0 if result == "PASS" else 2
+
+
 def cmd_transition(args) -> int:
     policy = load_policy()
     repo = repo_root()
     store = Store.for_repo(repo)
     adapter = adapter_for(args, policy)
     snap = adapter.snapshot()
-    integration = json.loads(Path(args.integration).read_text()) if args.integration else None
     worktree = Path(args.worktree) if args.worktree else None
     head = args.head or (_git(worktree, "rev-parse", "HEAD") if worktree else None)
+    integration = None
+    if args.to == "Done" and head:
+        from .integration import integration_evidence
+        integration = integration_evidence(repo, snap, policy, args.issue, head, args.base)
     clean = bool(worktree) and _git(worktree, "status", "--porcelain") == ""
     view = _view(store, snap, policy, args.issue, head=head, clean=clean, integration=integration,
                  worktree=str(worktree) if worktree else None)
@@ -337,7 +461,7 @@ def cmd_transition(args) -> int:
            "issue": f"{policy['repository']}#{args.issue}", "milestone": view.issue.milestone_key}
     if not args.apply:
         g = evaluate(view, args.to)
-        emit(args, {"dry_run": True, "gate": g.__dict__})
+        emit(args, {"dry_run": True, "gate": g.__dict__, "integration": integration})
         return 0 if g.passed else 2
     publisher = Publisher(store, adapter, policy["repository"], policy["actors"]["coordinator_logins"])
     try:
@@ -369,10 +493,22 @@ def cmd_outbox(args) -> int:
 
 
 def cmd_docs_audit(args) -> int:
-    repo = repo_root()
+    repo = Path(args.repo).resolve() if args.repo else repo_root()
     impact = json.loads(Path(args.impact).read_text())["docs_impact"] if args.impact else None
     result = docs_audit.audit(repo, base=args.base, impact=impact)
     data = result.to_dict()
+    if args.publish:
+        if not args.base:
+            print("--publish needs --base (a change-scope audit of the candidate)", file=sys.stderr)
+            return 2
+        if _git(repo, "status", "--porcelain"):
+            print("the audited worktree is not clean; commit the candidate first", file=sys.stderr)
+            return 2
+        data["published"] = _publish_task_event(args, args.publish, "DOCS_AUDIT_RESULT", "docs-audit",
+                                                head_sha=result.head_sha, result=result.result,
+                                                error_count=result.error_count, scope="change",
+                                                body="\n".join(f"- {f.severity}: [{f.check}] `{f.path}`: {f.message}"
+                                                                for f in result.findings) or "No findings.")
     if args.json:
         print(json.dumps(data, indent=2))
     else:
@@ -403,6 +539,7 @@ def cmd_docs_map(args) -> int:
 
 def cmd_review(args) -> int:
     """Build the review packet for the candidate; with --apply, run the independent Codex review."""
+    from .integration import find_pr
     from .reconcile import review_round
     policy = load_policy()
     repo = repo_root()
@@ -426,31 +563,48 @@ def cmd_review(args) -> int:
     audit_ev = view.latest("DOCS_AUDIT_RESULT", head_sha=head, scope="change")
     verification = view.latest("VERIFICATION_RESULT", head_sha=head)
     rnd = review_round(view)
-    request_id = new_id("ev")
-    packet = review.build_packet(
-        run_id=plan_ev["run_id"], attempt=plan_ev["attempt"], request_id=request_id, issue_url=issue.url,
-        milestone=issue.milestone_key, criteria=crit, requirements_digest=requirements_digest(issue),
-        base_sha=base, head_sha=head, dependency_evidence=[], decisions=[d["text"] for d in view.decisions],
-        checks=(verification or {}).get("checks", []), ci_links=args.ci_link or [], limitations=args.limitation or [],
-        docs_impact=(impact_ev or {}).get("docs_impact", []), docs_changed=(view.latest("IMPLEMENTATION_READY", head_sha=head) or {}).get("docs_updated", []),
-        docs_audit=audit_ev or {"result": "MISSING"}, local_findings=[e for e in view.all("LOCAL_REVIEW_RESULT", head_sha=head)],
-        review_round=rnd, previous_findings=[e for e in view.all("CHANGES_REQUESTED")])
     if rnd > policy["review"]["max_rounds_per_attempt"]:
         emit(args, {"ok": False, "reason": "review budget exhausted; mark agent:needs-human and summarise the disagreement"})
         return 2
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    deps = [f"#{e.blocker}: {snap.issues[e.blocker].state} ({snap.issues[e.blocker].state_reason}), board "
+            f"{snap.status_of(e.blocker)!r}; edge from {'; '.join(e.provenance)}" for e in p.graph.blockers_of(args.issue)
+            if e.blocker in snap.issues]
+    key = issue.milestone_key
+    if key in policy["milestones"]:
+        for pred in policy["milestones"][key]["requires"]:
+            g = p.gates[pred]
+            deps.append(f"predecessor {pred}: exit gate {'passed' if g.passed else 'NOT passed: ' + '; '.join(g.reasons[:3])}")
+    live = []
+    for path in args.evidence or []:
+        live.append({"file": path, "content": Path(path).read_text(encoding="utf-8")[:20000]})
+    request_id = new_id("ev")
+    packet = review.build_packet(
+        run_id=plan_ev["run_id"], attempt=plan_ev["attempt"], request_id=request_id, issue_url=issue.url,
+        milestone=key, criteria=crit, requirements_digest=requirements_digest(issue),
+        base_sha=base, head_sha=head, dependency_evidence=deps, decisions=[d["text"] for d in view.decisions],
+        checks=(verification or {}).get("checks", []), ci_links=args.ci_link or [], limitations=args.limitation or [],
+        docs_impact=(impact_ev or {}).get("docs_impact", []),
+        docs_changed=(view.latest("IMPLEMENTATION_READY", head_sha=head) or {}).get("docs_updated", []),
+        docs_audit=audit_ev or {"result": "MISSING"},
+        local_findings=view.all("LOCAL_REVIEW_RESULT", head_sha=head) + view.all("FINDING_DISPOSITION"),
+        review_round=rnd, previous_findings=view.all("CHANGES_REQUESTED"),
+        mode="delta" if args.delta else "full")
+    if live:
+        packet["additional_evidence"] = live
+    pr = find_pr(snap, args.issue, head)
     if not args.apply:
-        emit(args, {"dry_run": True, "packet": packet})
+        emit(args, {"dry_run": True, "packet": packet, "mirror_to_pr": pr.number if pr else None})
         return 0
     ctx = {"run_id": plan_ev["run_id"], "attempt": plan_ev["attempt"], "issue": f"{policy['repository']}#{args.issue}",
-           "milestone": issue.milestone_key}
+           "milestone": key}
     publisher = Publisher(store, adapter, policy["repository"], policy["actors"]["coordinator_logins"])
     req = events.build("REVIEW_REQUESTED", sender="orchestrator", recipient="codex-reviewer", head_sha=head, base_sha=base,
                        requirements_digest=packet["requirements_digest"], review_round=rnd, **ctx)
-    req["event_id"] = request_id
-    req["correlation_id"] = request_id
-    publisher.publish(req)
+    req["event_id"] = req["correlation_id"] = request_id
+    publisher.publish(req, origin="review")
     out_dir = store.run_dir(plan_ev["run_id"]) / "reviews"
-    (out_dir).mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / f"packet-{request_id}.json").write_text(json.dumps(packet, indent=2), encoding="utf-8")
     try:
         run = review.run_codex(packet, worktree, out_dir, policy)
@@ -465,16 +619,25 @@ def cmd_review(args) -> int:
                                        correlation_id=request_id, **ctx))
         emit(args, {"ok": False, "reason": str(exc)})
         return 2
-    body = "\n".join([f"**Verdict:** {run.result['verdict']}", "", run.result["summary"], ""] +
-                     [f"- `{f['id']}` ({f['severity']}{', blocking' if f['blocking'] else ''}) {f['location']}: {f['description']}"
-                      for f in run.result["findings"]] +
-                     ["", "_Relayed by the orchestrator from a fresh read-only Codex session; this is not a GitHub review approval._"])
-    publisher.publish(events.build("REVIEW_RESULT", sender="codex-reviewer", recipient="orchestrator", head_sha=head, base_sha=base,
-                                   requirements_digest=packet["requirements_digest"], review_round=rnd,
-                                   verdict=accepted["verdict"], review_digest=accepted["review_digest"],
-                                   review_request_id=request_id, reviewer_provenance=run.provenance,
-                                   causation_id=request_id, correlation_id=request_id, **ctx), body=body)
-    emit(args, {"ok": True, "verdict": accepted["verdict"], "result": str(run.raw_path), "accepted": accepted})
+    body = review.render_result(run.result, run.provenance)
+    result_ev = publisher.publish(events.build(
+        "REVIEW_RESULT", sender="codex-reviewer", recipient="orchestrator", head_sha=head, base_sha=base,
+        requirements_digest=packet["requirements_digest"], review_round=rnd, verdict=accepted["verdict"],
+        review_digest=accepted["review_digest"], review_request_id=request_id, reviewer_provenance=run.provenance,
+        causation_id=request_id, correlation_id=request_id, **ctx), body=body, origin="review")
+    mirrored = None
+    if pr is not None:
+        mirror = (f"Relayed from {issue.url}#issuecomment (event `{result_ev['event_id']}`) by the orchestrator. "
+                  "This is not a GitHub review approval.\n\n" + body)
+        mirrored = adapter.post_comment(pr.number, mirror).id
+        store.append({"type": "mirror", "event_id": result_ev["event_id"], "pr": pr.number, "comment_id": mirrored})
+    if accepted["verdict"] == "PASS":
+        publisher.publish(events.build("READY_TO_MERGE", sender="orchestrator", recipient="maintainer", head_sha=head,
+                                       causation_id=result_ev["event_id"], correlation_id=request_id, **ctx), origin="review")
+        adapter.remove_label(args.issue, "agent:changes-requested")
+        adapter.add_labels(args.issue, ["agent:ready-to-merge"])
+    emit(args, {"ok": True, "verdict": accepted["verdict"], "result": str(run.raw_path), "accepted": accepted,
+                "mirrored_to_pr": pr.number if mirrored else None})
     return 0
 
 
@@ -564,13 +727,27 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("to", choices=["Todo", "In Progress", "In Review", "Done"])
     p.add_argument("--worktree")
     p.add_argument("--head")
-    p.add_argument("--integration", help="JSON file with integration evidence")
+    p.add_argument("--base", default="origin/main", help="integration branch for containment checks (fetch it first)")
     p.add_argument("--apply", action="store_true")
     p.set_defaults(fn=cmd_transition)
+    p = sub.add_parser("verify", parents=[common], help="run the packet's checks on the candidate; --apply publishes VERIFICATION_RESULT")
+    p.add_argument("issue", type=int)
+    p.add_argument("--worktree", required=True)
+    p.add_argument("--packet", required=True)
+    p.add_argument("--apply", action="store_true")
+    p.set_defaults(fn=cmd_verify)
+    p = sub.add_parser("milestone-gate", parents=[common], help="evaluate a milestone exit gate; --apply publishes GATE_EVALUATED on the epic")
+    p.add_argument("milestone")
+    p.add_argument("--evidence", help="Markdown file: how each exit criterion and maintainer requirement is met")
+    p.add_argument("--apply", action="store_true")
+    p.set_defaults(fn=cmd_milestone_gate)
     sub.add_parser("outbox", parents=[common], help="list undelivered messages").set_defaults(fn=cmd_outbox)
     p = sub.add_parser("docs-audit", parents=[common], help="offline documentation drift audit")
     p.add_argument("--base", help="also run change checks against this base revision")
     p.add_argument("--impact", help="DOCS_IMPACT event or packet JSON with docs_impact")
+    p.add_argument("--repo", help="audit this worktree instead of the current repository")
+    p.add_argument("--publish", type=int, metavar="ISSUE", help="publish DOCS_AUDIT_RESULT for the audited head (needs --base and --apply)")
+    p.add_argument("--apply", action="store_true")
     p.set_defaults(fn=cmd_docs_audit)
     p = sub.add_parser("docs-map", parents=[common], help="check or regenerate the generated part of the documentation map")
     p.add_argument("--write", action="store_true")
@@ -581,6 +758,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--base", default="origin/main")
     p.add_argument("--ci-link", action="append")
     p.add_argument("--limitation", action="append")
+    p.add_argument("--evidence", action="append", help="file with additional evidence (for example a live dry-run report)")
+    p.add_argument("--delta", action="store_true", help="justified delta review of fixes (state why in --limitation)")
     p.add_argument("--apply", action="store_true")
     p.set_defaults(fn=cmd_review)
     p = sub.add_parser("report", parents=[common], help="full dry-run report (no remote writes)")

@@ -31,10 +31,11 @@ without a recorded justification (`status: not-applicable`, `justification: ...`
 4. If a boundary moved (something became implemented, or was narrowed), update the
    specification's `status.rst`, `limitations.rst` and `design-history.rst` and every document
    that stated the old boundary.
-5. Run the change-scope audit from the worktree, with the impact list from the packet:
-   `python3 -m tools.weave_workflow docs-audit --base <base-sha> --impact <packet.json>`.
-   Publish DOCS_AUDIT_RESULT (scope `change`, the head SHA, result, error count). On FAIL,
-   add `agent:docs-stale`; the In Review gate stays closed.
+5. Run and publish the change-scope audit of the committed candidate, with the impact list
+   from the packet:
+   `python3 -m tools.weave_workflow docs-audit --repo <worktree> --base <base-sha> --impact <packet.json> --publish <N> --apply`.
+   It publishes DOCS_AUDIT_RESULT (scope `change`, the head SHA, result, error count). On FAIL
+   the In Review gate stays closed and the transition adds `agent:docs-stale`.
 6. Warnings about protected vocabulary need a reviewer to confirm that the new use carries
    the specification's meaning.
 
