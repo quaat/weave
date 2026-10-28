@@ -12,8 +12,9 @@ configuration, provenance record or pinned snapshot, and it does not tick any cr
 
 ## Summary and assumed terms
 
-Following the maintainer's direction, this proposal assumes **one licence, the MIT License,
-for everything distributed from this repository**:
+Commit `2faeef8` added an MIT `LICENSE` to the repository. At the orchestrator's request, this
+proposal takes as its working assumption **one licence, the MIT License, for everything
+distributed from this repository**, pending the maintainer's recorded decision:
 
 - code: the prototype working copy, the vendored and reference prototype snapshots, the agent
   kit, the specification's build scripts and Sphinx extensions, and the workflow tooling;
@@ -22,10 +23,11 @@ for everything distributed from this repository**:
 - examples: every Weave program (`*.weave`) and teaching or demo material;
 - distributed assets: diagrams, the favicon, the design specimen PDF and generated reports.
 
-Whether MIT is right, and who the rights holders are, is the maintainer's choice to confirm.
+This is an assumption, not a decision. Which terms apply, and who the rights holders are, is
+for the maintainer to decide and record.
 
-The repository already carries these terms. Commit `2faeef8` ("Add MIT license and expand the
-README") added an MIT `LICENSE` at the root and replaced the earlier "no licence" notes in
+The repository already contains MIT text. Besides adding `LICENSE`, commit `2faeef8` ("Add MIT
+license and expand the README") replaced the earlier "no licence" notes in
 `README.md`, `specification/README.md`, `specification/docs/chapters/provenance.rst`,
 `agent-kit/docs/prototype-status.md` and the `copyright` string in
 `specification/docs/conf.py`. The Context paragraph of #2, which describes the material as
@@ -37,16 +39,24 @@ remaining per-file and PDF work (AC-3, AC-5).
 
 ### What the records show
 
-**Git history.** The base revision has 18 commits, all dated 28 October 2026. Every commit was
-authored under one of two Git identities that carry the same personal name as the copyright
-line in `LICENSE`: 15 were authored locally, and 3 were created through the GitHub web
-interface (two pull-request merges and one workflow file that is no longer tracked). No other
-human author or committer appears. 14 of the 18 commit messages carry a `Co-Authored-By`
-trailer naming an AI coding assistant; this includes every commit touching `inventory-proof/`,
+**Git history.** The base revision has 18 commits, all dated 28 October 2026: 15 non-merge
+commits and 3 merges. Every commit was authored under one of two Git identities, each carrying
+a form of the same personal name as the copyright line in `LICENSE` (one includes a middle
+initial, the other does not). 15 commits were authored locally under the first identity. 3 were
+created through the GitHub web interface under the second: two pull-request merges and one
+workflow file that is not tracked at base. No other human author or committer appears.
+
+14 of the 15 non-merge commits carry a `Co-Authored-By` trailer naming an AI coding
+assistant; no merge commit carries one. Every non-merge commit touching `inventory-proof/`,
 `agent-kit/`, `specification/`, `tools/weave_workflow/`, `docs/development/`, `.claude/`,
-`LICENSE` and `README.md`, and 6 of the 8 commits touching `.github/`. The first commit
-(`2e0e7fe`) imported the specification, the prototype and the agent kit together, so Git
-history starts at the import and does not show who wrote the imported material before it.
+`LICENSE` or `README.md` carries the trailer, as do 6 of the 7 non-merge commits touching
+`.github/`. The exception is the web-created workflow file. The first commit (`2e0e7fe`)
+imported the specification, the prototype and the agent kit together. Git history therefore
+starts at the import and does not show who wrote the imported material before it.
+
+Commit counts in this record follow one convention: the number of non-merge commits reachable
+from base `6564a03` that touch the path, including the import commit where it applies
+(`git rev-list --no-merges --count 6564a03 -- PATH`).
 
 **Provenance manifests.** `specification/PROVENANCE.json` lists four inputs under `sources`,
 each identified only by file name, a library file identifier, a version (or none) and a
@@ -72,11 +82,11 @@ the first commit. It is not listed as a source in either manifest.
 
 | Source | Files at base | What the records show |
 | --- | --- | --- |
-| `inventory-proof/` (prototype working copy, reports, nets) | 39 | Derived from the v3 archive; edited in 2 commits; no licence text of its own |
-| `agent-kit/` (kit, runner, skill, docs, examples, demos) | 126 | Derived from weave-agent-kit.zip and the v3 archive; edited in 4 commits; `agent-kit/CHANGELOG.md` records the MIT statement |
+| `inventory-proof/` (prototype working copy, reports, nets) | 39 | Derived from the v3 archive; touched by 2 commits, including the import; no licence text of its own |
+| `agent-kit/` (kit, runner, skill, docs, examples, demos) | 126 | Derived from weave-agent-kit.zip and the v3 archive; touched by 4 commits, including the import; `agent-kit/CHANGELOG.md` records the MIT statement |
 | `agent-kit/.agents/skills/weave/assets/prototype/` (vendored snapshot, pinned) | 39 | Byte-identical to the v3 archive per `agent-kit/PROVENANCE.json`; contains no licence or copyright text |
 | `agent-kit/examples/` and `agent-kit/demos/` | 34 and 23 | Examples from weave-agent-kit.zip per `specification/docs/chapters/provenance.rst`; no record states who wrote the demos |
-| `specification/` (Sphinx sources, rules, Makefile) | 154 | Imported in the first commit, edited in 7 commits |
+| `specification/` (Sphinx sources, rules, Makefile) | 154 | Touched by 7 commits, including the import |
 | `specification/reference/prototype/` (reference snapshot, pinned) | 39 | Original bytes of the v3 archive per `specification/PROVENANCE.json`; contains no licence or copyright text |
 | `specification/scripts/` and `specification/docs/_ext/` | 8 and 3 | Build and validation scripts and Sphinx extensions; no separate record |
 | `specification/examples/` and other `*.weave` programs | 32 files in the directory; 114 `*.weave` files in the repository | Teaching examples from weave-agent-kit.zip, rechecked against v3 |
@@ -84,8 +94,8 @@ the first commit. It is not listed as a source in either manifest.
 | Design assets: `specification/design/weave-design-specimen.pdf`, `specification/docs/_static/diagrams/`, `specification/docs/_static/weave-favicon.svg`, `specification/docs/_latex/weave.sty`, templates | 1 PDF, 6 diagram files, 1 favicon | Specimen PDF metadata names "Danio project" as author; diagrams are drawn by `specification/scripts/render_diagrams.py` and converted by `specification/scripts/diagrams_to_pdf.py` |
 | Generated reports and recorded outputs: `inventory-proof/REPORT.md` and the other files `demo.py` writes, `specification/validation/` | 16 in `specification/validation/` | Outputs of the repository's own scripts and builds |
 | Built editions (HTML, single page, PDF) | not tracked | Produced by CI; include theme and Sphinx static assets from pinned dependencies |
-| `tools/weave_workflow/` and `docs/development/` | 32 and 14 | Created in the workflow bootstrap (`4804662`) and later commits |
-| `.claude/` and `.github/` | 12 and 4 | Agent configuration and CI workflows |
+| `tools/weave_workflow/` and `docs/development/` | 32 and 14 | Created in the workflow bootstrap (`4804662`); touched by 4 and 5 commits respectively, including the bootstrap |
+| `.claude/` and `.github/` | 12 and 4 | Agent configuration and CI workflows; touched by 3 and 7 commits respectively |
 
 Third-party material that is or may be distributed:
 
@@ -117,30 +127,29 @@ These are questions, not findings. This proposal does not answer them.
 6. Is any third-party material distributed beyond what is listed above (fonts embedded in
    PDFs, theme assets in built editions, quoted text, diagrams or code adapted from elsewhere),
    and does any of it need its own notice?
-7. Most commits carry an AI co-author trailer. Does the maintainer want the decision to say
-   anything about AI-assisted contributions?
+7. 14 of the 15 non-merge commits carry an AI co-author trailer. Does the maintainer want the
+   decision to say anything about AI-assisted contributions?
 8. Should future contributions be accepted under the same terms by stating so (as
    `README.md` does now), or by another mechanism such as a sign-off requirement?
 
 ## AC-2 LICENSE
 
-**Current state.** `LICENSE` exists at the repository root and contains the standard MIT
-License text with one copyright line for 2026. It was added in `2faeef8`. No other licence
-file is tracked (command D below).
+**Current state.** At base `6564a03`, `LICENSE` exists at the repository root and contains
+the standard MIT License text with one copyright line for 2026. It was added in `2faeef8`. No
+other licence file is tracked at base (command D below).
 
-**Assessment under the assumed terms.** If MIT covers code and prose alike, one `LICENSE`
-satisfies AC-2 and no `LICENSE-docs` is needed. Trade-off, for the record only: applying MIT to
-specification prose is legally workable but unusual, and Creative Commons Attribution 4.0
-(CC BY 4.0) is the common alternative for documentation. The maintainer chose MIT, so this
-proposal does not recommend a change.
+**Assessment under the working assumption.** If MIT covers code and prose alike, one `LICENSE`
+satisfies AC-2 and no `LICENSE-docs` is needed. Note for the decision: MIT is uncommon for
+prose, and Creative Commons Attribution 4.0 (CC BY 4.0) is the usual choice for
+documentation. Whether MIT suits the specification text is for the maintainer to confirm.
 
 **Follow-up.** Once the decision is recorded, confirm or correct the copyright line in
 `LICENSE` according to the answers to questions 4 and 5.
 
 ## AC-3 SPDX identifiers or per-directory statement
 
-**Measured state.** No tracked file contains an SPDX identifier, and no file in the worktree
-does outside `_build`, `_site` and `.git`. There is no REUSE metadata. The only per-directory
+**Measured state.** At base `6564a03`, no tracked file contains an SPDX identifier (commands A
+and B below), and there is no REUSE metadata (command D). The only per-directory
 statements are prose sentences in `specification/README.md` and
 `agent-kit/docs/prototype-status.md`. `inventory-proof/` has no statement of its own; the
 root `README.md` says the licence covers the whole repository.
@@ -169,14 +178,14 @@ about them lives outside the snapshot directories.
 
 ## AC-4 "No licence" statements
 
-**Measured state.** No tracked file outside the pinned snapshots contains a "no licence" style
-statement, and neither pinned snapshot does (commands E and F below). The same search run at
-the parent of `2faeef8` finds six such lines, in `README.md`,
+**Measured state.** At base `6564a03`, no tracked file outside the pinned snapshots contains a
+"no licence" style statement, and neither pinned snapshot does (commands E and F below). The
+same search run at the parent of `2faeef8` finds six such lines, in `README.md`,
 `agent-kit/docs/prototype-status.md`, `specification/README.md`,
 `specification/docs/chapters/provenance.rst` (two lines) and `specification/docs/conf.py`, so
 the pattern does detect the earlier wording and `2faeef8` removed it.
 
-`specification/docs/conf.py` currently sets:
+At base `6564a03`, `specification/docs/conf.py` sets:
 
 ```python
 author = "Danio project"
@@ -194,7 +203,8 @@ and the `copyright` string together.
 local HTML build in the main checkout made after `2faeef8` shows
 "Copyright © 2026, Thomas F. Hagelien. MIT License" in the footer; an older local single-page
 build made before `2faeef8` still shows the former "distribution terms not specified" string.
-The HTML footer therefore follows `conf.py` and will reflect the terms after any rebuild. The
+The HTML footer therefore follows `conf.py` and will show whatever `copyright` string is set
+when the site is next rebuilt. The
 published site was not checked (no network access during preparation).
 
 **PDF cover.** `specification/docs/_latex/weave.sty` defines the cover (`\weavemaketitle`): the
@@ -202,7 +212,7 @@ label "DANIO PROJECT", the title, the tagline, the release, the `author` setting
 ("Danio project") and the reference-snapshot digest. It shows **no copyright or licence
 line**, and the PDF has no copyright page. The running footer reads "Weave / Draft
 specification" and the page number. PDF metadata takes its author from the same setting. In
-the PDF, the terms appear only in the body, in the "Distribution status" section built from
+the PDF, the MIT statement appears only in the body, in the "Distribution status" section built from
 `specification/docs/chapters/provenance.rst`. No built PDF was available to inspect; this
 assessment comes from the style file and `conf.py`.
 
@@ -213,46 +223,53 @@ editions and confirm the footer, the cover and the published site.
 
 ## Commands run
 
-All commands were run from the worktree root at the base revision.
+Every measurement is pinned to a revision, so it reads the same however this branch moves; the
+search commands would otherwise match the patterns quoted in this record. All were run from the
+worktree root. A, B and D–G read base `6564a03`. The control reads the parent of `2faeef8`. H
+reads the four PDFs in the worktree; `git diff --stat 6564a03 HEAD -- '*.pdf'` is empty, so
+they are the files tracked at base. An earlier worktree scan, labelled C, was dropped: it would
+also match this record.
 
 | Ref | Command | Exit | Result |
 | --- | --- | --- | --- |
-| A | `git grep -n -I 'SPDX-License-Identifier'` | 1 | no matches |
-| B | `git grep -n -I -i 'spdx'` | 1 | no matches |
-| C | `grep -rIl --exclude-dir=_build --exclude-dir=_site --exclude-dir=.git 'SPDX-License-Identifier' .` | 1 | no matches (tracked and untracked files) |
+| A | `git grep -n -I 'SPDX-License-Identifier' 6564a03 -- .` | 1 | no matches |
+| B | `git grep -n -I -i 'spdx' 6564a03 -- .` | 1 | no matches |
 | D | see below | 0 | only `LICENSE` |
 | E | see below (outside pinned snapshots) | 1 | no matches |
 | F | see below (pinned snapshots only) | 1 | no matches |
-| G | `git grep -n -I -i -E 'licen[cs]'` | 0 | licence mentions only in `LICENSE`, the MIT statements listed under AC-4, `agent-kit/CHANGELOG.md`, workflow and agent policy (`.claude/agents/weave-safety-reviewer.md`, `docs/development/`, `tools/weave_workflow/policy.json`) and `specification/design/README.md` (MathJax note) |
-| H | `pdfinfo FILE` and `pdffonts FILE` for each of the four tracked PDFs | 0 | font subsets and metadata as reported under AC-1 |
+| G | `git grep -n -I -i -E 'licen[cs]' 6564a03 -- .` | 0 | licence mentions only in `LICENSE`, the MIT statements listed under AC-4, `agent-kit/CHANGELOG.md`, workflow and agent policy (`.claude/agents/weave-safety-reviewer.md`, `docs/development/`, `tools/weave_workflow/policy.json`) and `specification/design/README.md` (MathJax note) |
+| H | `pdfinfo FILE` and `pdffonts FILE` for each of the four PDFs | 0 | font subsets and metadata as reported under AC-1 |
+| Control | see below | 0 | six lines, listed under AC-4 |
 
 ```bash
-# D: licence-like files
-git ls-files | grep -i -E '(^|/)(LICEN[CS]E|COPYING|NOTICE)[^/]*$|\.reuse|dep5'
+# D: licence-like files tracked at base
+git ls-tree -r --name-only 6564a03 | grep -i -E '(^|/)(LICEN[CS]E|COPYING|NOTICE)[^/]*$|\.reuse|dep5'
 
-# E: "no licence" phrasings outside the pinned snapshots
-git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been granted|no licence has been granted|all rights reserved|licen[cs]e (was|has been) not|did not supply a (source )?licen|distribution terms not|no new licen|without a licen' -- . ':!specification/reference/prototype' ':!agent-kit/.agents/skills/weave/assets/prototype'
+# E: "no licence" phrasings at base, outside the pinned snapshots
+git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been granted|no licence has been granted|all rights reserved|licen[cs]e (was|has been) not|did not supply a (source )?licen|distribution terms not|no new licen|without a licen' 6564a03 -- . ':!specification/reference/prototype' ':!agent-kit/.agents/skills/weave/assets/prototype'
 
-# F: the same pattern, pinned snapshots only
-git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been granted|no licence has been granted|all rights reserved|licen[cs]e (was|has been) not|did not supply a (source )?licen|distribution terms not|no new licen|without a licen' -- specification/reference/prototype agent-kit/.agents/skills/weave/assets/prototype
+# F: the same pattern at base, pinned snapshots only
+git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been granted|no licence has been granted|all rights reserved|licen[cs]e (was|has been) not|did not supply a (source )?licen|distribution terms not|no new licen|without a licen' 6564a03 -- specification/reference/prototype agent-kit/.agents/skills/weave/assets/prototype
 
-# Control: the same pattern at the parent of 2faeef8 finds six lines (exit 0)
+# Control: the same pattern at the parent of 2faeef8
 git grep -n -I -i -E 'no licen|not licensed|unlicensed|no license has been granted|no licence has been granted|all rights reserved|licen[cs]e (was|has been) not|did not supply a (source )?licen|distribution terms not|no new licen|without a licen' 2faeef8^ -- .
 ```
 
 ## Draft decision text
 
 The maintainer can adapt this text and record it on #2 using the maintainer decision form.
-Bracketed parts need the maintainer's answers.
+Bracketed parts need the maintainer's answers; the licence itself is one of them.
 
-> Weave is distributed under the MIT License. This covers all code (prototype, vendored and
+> Weave is distributed under [the MIT License]. This covers all code (prototype, vendored and
 > reference prototype snapshots, agent kit, build scripts and workflow tooling), the
 > specification text and its built editions, all examples, and distributed assets, unless a
-> file states otherwise. No separate documentation licence is used.
+> file states otherwise. [No separate documentation licence is used / The specification text
+> is distributed under [terms]].
 >
 > Rights holders: [holder or holders]. The four inputs recorded in
 > `specification/PROVENANCE.json` and the design bundle were [authored by / obtained from]
-> [source] under [terms], which permit distribution under MIT. [No / The following] employer,
+> [source] under [terms], which [permit / do not permit] distribution under [the chosen
+> licence]. [No / The following] employer,
 > funder, institution or contract holds rights in the work: [details].
 >
 > Third-party material: [fonts embedded in PDFs, theme assets in built editions, other]
