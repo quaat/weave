@@ -483,7 +483,7 @@ def _change_checks(repo: Path, docmap: dict, base: str, impact: list[dict] | Non
     changes = changed_files(repo, base)
     result.counts["changed_files"] = len(changes)
     required = required_documents(docmap, changes)
-    declared = {i["path"]: i for i in (impact or [])}
+    declared = {i["path"]: i for i in (impact or []) if not i["path"].startswith("(")}  # "(…)" marks computed entries
     for doc, rules in sorted(required.items()):
         if doc in changes:
             continue

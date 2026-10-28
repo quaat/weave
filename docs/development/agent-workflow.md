@@ -96,8 +96,8 @@ Revalidated against live records by `python3 -m tools.weave_workflow plan` on ev
 | Claim | `claim N` (dry run), `claim N --apply` | CLAIMED, DOCS_IMPACT, PLAN; worktree `agent/N-slug`; Todo → In Progress |
 | Delegate | `/weave-task`, subagent with the packet | DELEGATED (published before work starts) |
 | Implement | `weave-implementer` | IMPLEMENTATION_READY in the local outbox |
-| Verify | `verify N --worktree PATH --packet FILE --apply` (the `weave-verifier` subagent may investigate failures) | VERIFICATION_RESULT with argv, directory and exit code of every check, produced by the command itself |
-| Documentation | `/weave-docs`, `docs-audit --repo PATH --base SHA --publish N --apply` | DOCS_AUDIT_RESULT for the candidate head |
+| Verify | `verify N --apply` (the `weave-verifier` subagent may investigate failures) | VERIFICATION_RESULT for the claimed worktree's head: the recorded packet's checks plus those derived from the diff, with argv, directory and exit code |
+| Documentation | `/weave-docs`, `docs-audit --publish N --apply` | DOCS_AUDIT_RESULT for the candidate head, audited against the claim's base, worktree and DOCS_IMPACT list |
 | Local and safety review | `weave-local-reviewer`, `weave-safety-reviewer` | LOCAL_REVIEW_RESULT (local, safety) |
 | Independent review | `/weave-review`, `review N --worktree PATH --apply` | REVIEW_REQUESTED, REVIEW_RESULT with Codex provenance (mirrored to the PR); READY_TO_MERGE on PASS |
 | Transition | `transition N "In Review" --apply` | TRANSITION_INTENT, STATE_CHANGED |

@@ -97,6 +97,7 @@ class PullRequest:
     checks: list[tuple[str, str]]
     review_decision: str | None
     merged_by: str | None = None
+    checks_complete: bool = True
 
 
 @dataclass
@@ -107,6 +108,7 @@ class Snapshot:
     project: ProjectInfo | None = None
     project_error: str | None = None
     branch_protection: dict | None = None
+    branch_protection_error: str | None = None
     notes: list[str] = field(default_factory=list)
 
     def status_of(self, number: int) -> str | None:
@@ -191,4 +193,5 @@ def snapshot_from_dict(data: dict) -> Snapshot:
         pulls.append(PullRequest(**pr))
     return Snapshot(issues=issues, milestones=[Milestone(**m) for m in data["milestones"]], pulls=pulls,
                     project=project, project_error=data.get("project_error"),
-                    branch_protection=data.get("branch_protection"), notes=list(data.get("notes", [])))
+                    branch_protection=data.get("branch_protection"),
+                    branch_protection_error=data.get("branch_protection_error"), notes=list(data.get("notes", [])))

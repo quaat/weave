@@ -81,7 +81,7 @@ query($owner:String!,$name:String!,$endCursor:String){
         mergeCommit{oid} reviewDecision mergedBy{login}
         closingIssuesReferences(first:20){nodes{number}}
         commits(last:1){nodes{commit{oid statusCheckRollup{state
-          contexts(first:100){nodes{__typename ... on CheckRun{name status conclusion}
+          contexts(first:100){totalCount nodes{__typename ... on CheckRun{name status conclusion}
                                              ... on StatusContext{context state}}}}}}}}
     }
   }
@@ -236,7 +236,9 @@ class GhCli:
                 commit = n["commits"]["nodes"][0]["commit"] if n["commits"]["nodes"] else {}
                 rollup = commit.get("statusCheckRollup") or {}
                 checks = []
-                for c in (rollup.get("contexts") or {}).get("nodes", []):
+                contexts = rollup.get("contexts") or {"totalCount": 0, "nodes": []}
+                complete = contexts["totalCount"] == len(contexts["nodes"])
+                for c in contexts["nodes"]:
                     if c["__typename"] == "CheckRun":
                         checks.append((c["name"], (c["conclusion"] or c["status"] or "").upper()))
                     else:
@@ -247,7 +249,7 @@ class GhCli:
                     base_sha=n["baseRefOid"], merge_sha=(n["mergeCommit"] or {}).get("oid"),
                     closes=[i["number"] for i in n["closingIssuesReferences"]["nodes"]],
                     checks=checks, review_decision=n["reviewDecision"],
-                    merged_by=(n["mergedBy"] or {}).get("login")))
+                    merged_by=(n["mergedBy"] or {}).get("login"), checks_complete=complete))
         return pulls
 
     def fetch_branch_protection(self, branch: str) -> dict | None:
@@ -268,6 +270,7 @@ class GhCli:
         try:
             snap.branch_protection = self.fetch_branch_protection("main")
         except GitHubError as exc:
+            snap.branch_protection_error = str(exc)
             snap.notes.append(f"branch protection unreadable: {exc}")
         return snap
 

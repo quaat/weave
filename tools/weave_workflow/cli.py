@@ -226,7 +226,12 @@ def cmd_claim(args) -> int:
     run = store.active_run() or {}
     run_id = run.get("run_id") or new_id("run")
     attempt = 1 + sum(1 for e in store.events(f"{policy['repository']}#{args.issue}") if e["kind"] == "CLAIMED")
-    base_sha = _git(repo, "rev-parse", args.base)
+    try:
+        base_sha = _git(repo, "rev-parse", "--verify", f"{args.base}^{{commit}}")
+    except subprocess.CalledProcessError:
+        emit(args, {"claimable": False, "issue": args.issue,
+                     "reasons": [f"base revision {args.base!r} not found; fetch it first"]})
+        return 2
     branch = _branch_for(args.issue, issue.title)
     worktree = str(repo / ".worktrees" / branch.replace("/", "-"))
     allowed = args.allowed_path or ["**"]
@@ -262,6 +267,8 @@ def cmd_claim(args) -> int:
             _git(repo, "worktree", "add", worktree, "-b", branch, base_sha)
             packet_path = store.run_dir(run_id) / f"packet-{args.issue}-a{attempt}.json"
             packet_path.write_text(json.dumps(packet, indent=2), encoding="utf-8")
+            store.append({"type": "packet", "issue": args.issue, "run_id": run_id, "attempt": attempt,
+                          "path": str(packet_path), "digest": digest(packet_path.read_text(encoding="utf-8"))})
             snap = adapter.snapshot()
             view = _view(store, snap, policy, args.issue, packet_valid=True, exclusive=True, worktree=worktree)
             proj = snap.project
@@ -364,6 +371,20 @@ def _task_context(store: Store, snap, policy: dict, number: int) -> dict:
             "milestone": plan_ev["milestone"]}
 
 
+def recorded_packet(store: Store, snap, policy: dict, number: int) -> dict:
+    """The packet recorded when the issue was claimed, verified against its ledger digest."""
+    ctx = _task_context(store, snap, policy, number)
+    recs = [r for r in store.records("packet")
+            if r["issue"] == number and r["run_id"] == ctx["run_id"] and r["attempt"] == ctx["attempt"]]
+    if not recs:
+        raise SystemExit(f"no recorded packet for #{number} run {ctx['run_id']} attempt {ctx['attempt']}")
+    rec = recs[-1]
+    text = Path(rec["path"]).read_text(encoding="utf-8")
+    if digest(text) != rec["digest"]:
+        raise SystemExit(f"packet {rec['path']} was modified after the claim")
+    return json.loads(text)
+
+
 def _publish_task_event(args, number: int, kind: str, origin: str, body: str = "", **fields) -> dict | None:
     policy = load_policy()
     store = Store.for_repo(repo_root())
@@ -378,17 +399,28 @@ def _publish_task_event(args, number: int, kind: str, origin: str, body: str = "
 
 
 def cmd_verify(args) -> int:
-    """Run the packet's checks in the candidate worktree, recording argv, directory and exit code."""
-    worktree = Path(args.worktree).resolve()
+    """Run the claim's checks plus those derived from the actual diff in the claimed worktree."""
+    policy = load_policy()
+    repo = repo_root()
+    store = Store.for_repo(repo)
+    snap = adapter_for(args, policy).snapshot()
+    packet = recorded_packet(store, snap, policy, args.issue)
+    worktree = Path(packet["worktree"])
     if _git(worktree, "status", "--porcelain"):
         emit(args, {"ok": False, "reason": "candidate worktree is not clean; commit first"})
         return 2
     head = _git(worktree, "rev-parse", "HEAD")
-    packet = json.loads(Path(args.packet).read_text(encoding="utf-8"))
-    log_dir = Path(args.packet).resolve().parent / f"verify-{args.issue}-{head[:12]}"
+    if subprocess.run(["git", "merge-base", "--is-ancestor", packet["base_sha"], head], cwd=worktree).returncode != 0:
+        emit(args, {"ok": False, "reason": "candidate does not descend from the claimed base"})
+        return 2
+    changed = _git(worktree, "diff", "--name-only", packet["base_sha"], head).splitlines()
+    required = {c["name"]: c for c in packet["checks"]}
+    for c in derive_checks(worktree, changed):
+        required.setdefault(c["name"], c)
+    log_dir = store.run_dir(packet["run_id"]) / f"verify-{args.issue}-{head[:12]}"
     log_dir.mkdir(parents=True, exist_ok=True)
     checks = []
-    for i, check in enumerate(packet["checks"], 1):
+    for i, check in enumerate(required.values(), 1):
         cwd = worktree / check["cwd"]
         proc = subprocess.run(check["argv"], cwd=cwd, capture_output=True, text=True)
         rc = proc.returncode
@@ -397,7 +429,7 @@ def cmd_verify(args) -> int:
         log = log_dir / f"{i:02d}.log"
         log.write_text(proc.stdout + proc.stderr, encoding="utf-8")
         checks.append({"name": check["name"], "command": check["argv"], "cwd": check["cwd"], "exit_code": rc, "log": str(log)})
-    result = "PASS" if all(c["exit_code"] == 0 for c in checks) else "FAIL"
+    result = "PASS" if checks and all(c["exit_code"] == 0 for c in checks) else "FAIL"
     body = "\n".join(f"- `{' '.join(c['command'])}` in `{c['cwd']}` → exit {c['exit_code']}" for c in checks)
     out = {"head_sha": head, "result": result, "checks": checks}
     out["published"] = _publish_task_event(args, args.issue, "VERIFICATION_RESULT", "verify", body=body,
@@ -452,7 +484,7 @@ def cmd_transition(args) -> int:
     integration = None
     if args.to == "Done" and head:
         from .integration import integration_evidence
-        integration = integration_evidence(repo, snap, policy, args.issue, head, args.base)
+        integration = integration_evidence(repo, snap, policy, args.issue, head)
     clean = bool(worktree) and _git(worktree, "status", "--porcelain") == ""
     view = _view(store, snap, policy, args.issue, head=head, clean=clean, integration=integration,
                  worktree=str(worktree) if worktree else None)
@@ -492,15 +524,43 @@ def cmd_outbox(args) -> int:
     return 0
 
 
+def bound_impact(recorded: list[dict], supplied: list[dict] | None) -> list[dict]:
+    """The claim's impact list, optionally extended or justified, never shortened."""
+    if supplied is None:
+        return recorded
+    by_path = {i["path"]: i for i in supplied}
+    dropped = [i["path"] for i in recorded if i["path"] not in by_path]
+    if dropped:
+        raise SystemExit(f"the impact list may not be shortened; missing: {dropped}")
+    for item in supplied:
+        if item.get("status") == "not-applicable" and not item.get("justification"):
+            raise SystemExit(f"{item['path']}: not-applicable needs a justification")
+    return supplied
+
+
 def cmd_docs_audit(args) -> int:
-    repo = Path(args.repo).resolve() if args.repo else repo_root()
     impact = json.loads(Path(args.impact).read_text())["docs_impact"] if args.impact else None
-    result = docs_audit.audit(repo, base=args.base, impact=impact)
+    repo = Path(args.repo).resolve() if args.repo else repo_root()
+    base = args.base
+    if args.publish:
+        policy = load_policy()
+        store = Store.for_repo(repo_root())
+        snap = adapter_for(args, policy).snapshot()
+        packet = recorded_packet(store, snap, policy, args.publish)
+        trusted, _ = authenticated_events(store, snap, policy["actors"]["coordinator_logins"], args.publish)
+        recorded = next((e for e in reversed(trusted) if e["kind"] == "DOCS_IMPACT"), None)
+        if recorded is None:
+            print("no published DOCS_IMPACT for this claim", file=sys.stderr)
+            return 2
+        if (args.repo and Path(args.repo).resolve() != Path(packet["worktree"]).resolve()) or \
+                (args.base and _git(repo_root(), "rev-parse", args.base) != packet["base_sha"]):
+            print("--repo and --base must match the claim (worktree and base); omit them when publishing", file=sys.stderr)
+            return 2
+        repo, base = Path(packet["worktree"]), packet["base_sha"]
+        impact = bound_impact(recorded["docs_impact"], impact)
+    result = docs_audit.audit(repo, base=base, impact=impact)
     data = result.to_dict()
     if args.publish:
-        if not args.base:
-            print("--publish needs --base (a change-scope audit of the candidate)", file=sys.stderr)
-            return 2
         if _git(repo, "status", "--porcelain"):
             print("the audited worktree is not clean; commit the candidate first", file=sys.stderr)
             return 2
@@ -727,13 +787,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("to", choices=["Todo", "In Progress", "In Review", "Done"])
     p.add_argument("--worktree")
     p.add_argument("--head")
-    p.add_argument("--base", default="origin/main", help="integration branch for containment checks (fetch it first)")
     p.add_argument("--apply", action="store_true")
     p.set_defaults(fn=cmd_transition)
-    p = sub.add_parser("verify", parents=[common], help="run the packet's checks on the candidate; --apply publishes VERIFICATION_RESULT")
+    p = sub.add_parser("verify", parents=[common], help="run the claim's checks on its candidate; --apply publishes VERIFICATION_RESULT")
     p.add_argument("issue", type=int)
-    p.add_argument("--worktree", required=True)
-    p.add_argument("--packet", required=True)
     p.add_argument("--apply", action="store_true")
     p.set_defaults(fn=cmd_verify)
     p = sub.add_parser("milestone-gate", parents=[common], help="evaluate a milestone exit gate; --apply publishes GATE_EVALUATED on the epic")

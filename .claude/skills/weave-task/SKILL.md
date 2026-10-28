@@ -27,9 +27,10 @@ the dependent work starts and a result before the next handoff.
 3. **Handle questions.** Publish each QUESTION and your ANSWER. Escalate to the maintainer
    (`agent:needs-human`, BLOCKED) for decisions on rights, semantics or architecture.
 4. **Verify.** Run the packet's checks on the committed candidate:
-   `python3 -m tools.weave_workflow verify <N> --worktree <path> --packet <packet.json> --apply`.
-   It runs every check itself and publishes VERIFICATION_RESULT with argv, directory and exit
-   code. Use `weave-verifier` to investigate failures. A failure goes back to the implementer;
+   `python3 -m tools.weave_workflow verify <N> --apply`.
+   It loads the packet recorded at claim time (digest-checked), adds the checks derived from the
+   actual diff, runs them in the claimed worktree and publishes VERIFICATION_RESULT with argv,
+   directory and exit code. Use `weave-verifier` to investigate failures. A failure goes back to the implementer;
    never reclassify it.
 5. **Documentation.** Use the `weave-docs` skill: apply the impact list, regenerate generated
    documents, then run the change-scope audit for the candidate head and publish

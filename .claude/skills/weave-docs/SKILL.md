@@ -33,8 +33,10 @@ without a recorded justification (`status: not-applicable`, `justification: ...`
    that stated the old boundary.
 5. Run and publish the change-scope audit of the committed candidate, with the impact list
    from the packet:
-   `python3 -m tools.weave_workflow docs-audit --repo <worktree> --base <base-sha> --impact <packet.json> --publish <N> --apply`.
-   It publishes DOCS_AUDIT_RESULT (scope `change`, the head SHA, result, error count). On FAIL
+   `python3 -m tools.weave_workflow docs-audit --publish <N> --apply`, adding `--impact <file>`
+   only to extend the claim's list or to mark entries `not-applicable` with a justification.
+   The audit always uses the claim's worktree, base revision and published DOCS_IMPACT list (it
+   refuses a shortened list or a different base). It publishes DOCS_AUDIT_RESULT (scope `change`, the head SHA, result, error count). On FAIL
    the In Review gate stays closed and the transition adds `agent:docs-stale`.
 6. Warnings about protected vocabulary need a reviewer to confirm that the new use carries
    the specification's meaning.

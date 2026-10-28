@@ -44,13 +44,18 @@ class ClaimSlotTests(unittest.TestCase):
 
     def test_claim_refused_while_slot_occupied(self):
         snap = mini_snapshot()  # its "M0 Start" milestone is the live policy's current milestone M0
-        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "10", "--json"])
+        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "10", "--base", "HEAD", "--json"])
         self.assertEqual(rc, 0, out)  # dry run accepted while the slot is free
         snap.project.items[10].status = "In Progress"
-        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "11", "--json"])
+        rc, out = run_cli(["--fixture", self.fixture(snap), "claim", "11", "--base", "HEAD", "--json"])
         self.assertEqual(rc, 2)
         self.assertFalse(out["claimable"])
         self.assertIn("resume it", out["reasons"][0])
+
+    def test_missing_base_is_reported_not_raised(self):
+        rc, out = run_cli(["--fixture", self.fixture(mini_snapshot()), "claim", "10", "--base", "no-such-ref", "--json"])
+        self.assertEqual(rc, 2)
+        self.assertIn("no-such-ref", out["reasons"][0])
 
     def test_claim_refused_when_board_unreadable(self):
         rc, out = run_cli(["--fixture", self.fixture(mini_snapshot(with_project=False)), "claim", "11", "--json"])
@@ -131,16 +136,25 @@ class IntegrationEvidenceTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.repo, ignore_errors=True)
 
-    def snap_with(self, merge_sha, checks=(("ci", "SUCCESS"),), merged_by="quaat"):
+    def snap_with(self, merge_sha, checks=(("ci", "SUCCESS"),), merged_by="quaat", complete=True, base="main"):
         snap = mini_snapshot()
-        snap.pulls = [PullRequest(5, "merged", True, "agent/10-task", self.head, "main", "0" * 40, merge_sha, [10],
-                                  list(checks), None, merged_by)]
+        snap.pulls = [PullRequest(5, "merged", True, "agent/10-task", self.head, base, "0" * 40, merge_sha, [10],
+                                  list(checks), None, merged_by, complete)]
         return snap
+
+    def pol(self):
+        pol = policy()
+        pol["integration"] = {"branch": "main", "ref": "main", "required_checks": ["ci"]}
+        return pol
+
+    def merged(self):
+        self.git("merge", "-q", "--no-ff", "-m", "merge", "agent/10-task")
+        return self.git("rev-parse", "HEAD")
 
     def test_clean_merge_is_accepted(self):
         self.git("merge", "-q", "--no-ff", "-m", "merge", "agent/10-task")
         merge = self.git("rev-parse", "HEAD")
-        ev = integration_evidence(self.repo, self.snap_with(merge), policy(), 10, self.head, "main")
+        ev = integration_evidence(self.repo, self.snap_with(merge), self.pol(), 10, self.head)
         self.assertTrue(ev["merged"] and ev["checks_passed"] and ev["merge_in_base"])
         self.assertTrue(ev["tree_matches_candidate"])
         self.assertTrue(ev["required_reviews_passed"])
@@ -151,7 +165,7 @@ class IntegrationEvidenceTests(unittest.TestCase):
         self.git("add", "-A"); self.git("commit", "-q", "-m", "merge with edits")
         merge = self.git("rev-parse", "HEAD")
         ev = integration_evidence(self.repo, self.snap_with(merge, checks=(("ci", "FAILURE"),), merged_by="someone"),
-                                  policy(), 10, self.head, "main")
+                                  self.pol(), 10, self.head)
         self.assertFalse(ev["tree_matches_candidate"])
         self.assertFalse(ev["checks_passed"])
         self.assertFalse(ev["required_reviews_passed"])
@@ -160,11 +174,83 @@ class IntegrationEvidenceTests(unittest.TestCase):
         self.git("switch", "-q", "-c", "elsewhere")
         self.git("merge", "-q", "--no-ff", "-m", "merge", "agent/10-task")
         merge = self.git("rev-parse", "HEAD")
-        ev = integration_evidence(self.repo, self.snap_with(merge), policy(), 10, self.head, "main")
+        ev = integration_evidence(self.repo, self.snap_with(merge), self.pol(), 10, self.head)
         self.assertFalse(ev["merge_in_base"])
 
+    def test_required_checks_must_all_be_present_complete_and_passing(self):
+        merge = self.merged()
+        cases = {
+            "missing required check": self.snap_with(merge, checks=(("other", "SUCCESS"),)),
+            "incomplete check list": self.snap_with(merge, complete=False),
+            "wrong integration branch": self.snap_with(merge, base="release"),
+        }
+        snap = self.snap_with(merge)
+        snap.branch_protection = {"required_status_checks": {"contexts": ["ci", "security-scan"]}}
+        cases["protection requires an absent check"] = snap
+        snap = self.snap_with(merge)
+        snap.branch_protection_error = "HTTP 502"
+        cases["unreadable protection"] = snap
+        for name, s in cases.items():
+            with self.subTest(name):
+                self.assertFalse(integration_evidence(self.repo, s, self.pol(), 10, self.head)["checks_passed"])
+
     def test_no_pr_means_no_evidence(self):
-        self.assertIsNone(integration_evidence(self.repo, mini_snapshot(), policy(), 10, self.head, "main"))
+        self.assertIsNone(integration_evidence(self.repo, mini_snapshot(), self.pol(), 10, self.head))
+
+
+class BoundEvidenceTests(unittest.TestCase):
+    """F-002 and F-007: verification and audit results are bound to the recorded claim."""
+
+    def setUp(self):
+        self.h = Harness()
+        os.environ["WEAVE_WORKFLOW_STATE"] = str(self.h.store.root)
+        self.h.policy = policy()  # the CLI reads the live policy; use its M0 for the fixture
+        self.h.publisher = Publisher(self.h.store, self.h.gh, REPO, ["quaat"])
+        self.wt = Path(tempfile.mkdtemp()) / "wt"
+        self.wt.mkdir()
+        env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+               "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
+        def git(*a):
+            return subprocess.run(["git", *a], cwd=self.wt, env=env, capture_output=True, text=True, check=True).stdout.strip()
+        git("init", "-q"); (self.wt / "README.md").write_text("x\n"); git("add", "-A"); git("commit", "-q", "-m", "base")
+        self.base = git("rev-parse", "HEAD")
+        (self.wt / "README.md").write_text("y\n"); git("commit", "-qam", "change")
+        self.h.publish("CLAIMED", 10, claim_expires_at="2026-10-28T08:00:00Z", coordinator_host="t", work_type="implementation")
+        self.h.publish("DOCS_IMPACT", 10, docs_impact=[{"path": "README.md", "reason": "r", "status": "required"}])
+        plan = self.h.plan_event(10)
+        packet = {"run_id": plan["run_id"], "attempt": 1, "worktree": str(self.wt), "base_sha": self.base, "checks": []}
+        self.packet_path = self.h.store.run_dir(plan["run_id"]) / "packet-10-a1.json"
+        self.packet_path.write_text(json.dumps(packet))
+        from tools.weave_workflow.model import digest
+        self.h.store.append({"type": "packet", "issue": 10, "run_id": plan["run_id"], "attempt": 1,
+                             "path": str(self.packet_path), "digest": digest(self.packet_path.read_text())})
+        self.fixture = Path(self.h.tmp) / "snap.json"
+        self.fixture.write_text(json.dumps(snapshot_to_dict(self.h.snap)))
+
+    def tearDown(self):
+        del os.environ["WEAVE_WORKFLOW_STATE"]
+        shutil.rmtree(self.wt.parent, ignore_errors=True)
+        self.h.close()
+
+    def test_empty_packet_cannot_yield_pass(self):
+        rc, out = run_cli(["--fixture", str(self.fixture), "verify", "10", "--json"])
+        self.assertGreaterEqual(len(out["checks"]), 1)  # derived checks are always added
+        self.assertEqual(out["result"], "FAIL")      # the derived audit cannot run in this foreign tree
+        self.assertTrue(out["published"]["dry_run"])
+
+    def test_tampered_packet_is_rejected(self):
+        self.packet_path.write_text(self.packet_path.read_text().replace('"checks": []', '"checks": [{"name": "x", "cwd": ".", "argv": ["true"]}]'))
+        with self.assertRaises(SystemExit):
+            run_cli(["--fixture", str(self.fixture), "verify", "10", "--json"])
+
+    def test_docs_audit_publication_uses_claim_base_and_impact(self):
+        with redirect_stdout(io.StringIO()):
+            rc = main(["--fixture", str(self.fixture), "docs-audit", "--publish", "10", "--base", "HEAD"])
+        self.assertEqual(rc, 2)  # a base other than the claim's is refused
+        shortened = Path(self.h.tmp) / "impact.json"
+        shortened.write_text(json.dumps({"docs_impact": []}))
+        with self.assertRaises(SystemExit):
+            main(["--fixture", str(self.fixture), "docs-audit", "--publish", "10", "--impact", str(shortened)])
 
 
 class ReplayTests(unittest.TestCase):

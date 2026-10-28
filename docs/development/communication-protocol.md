@@ -73,8 +73,8 @@ from any other origin is not trusted.
 | Kind | Published only by |
 | --- | --- |
 | CLAIMED, DOCS_IMPACT, PLAN | `claim --apply` |
-| VERIFICATION_RESULT | `verify --apply` (runs the checks itself) |
-| DOCS_AUDIT_RESULT | `docs-audit --publish N --apply` (runs the audit itself) |
+| VERIFICATION_RESULT | `verify --apply` (runs the recorded packet's checks plus the diff-derived checks itself) |
+| DOCS_AUDIT_RESULT | `docs-audit --publish N --apply` (runs the audit itself against the claim's base, worktree and impact list) |
 | REVIEW_REQUESTED, REVIEW_RESULT, READY_TO_MERGE | `review --apply` (runs and validates Codex itself) |
 | TRANSITION_INTENT, STATE_CHANGED, COMPLETED | `transition --apply` |
 | GATE_EVALUATED | `milestone-gate --apply` |

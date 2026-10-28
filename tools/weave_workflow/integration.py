@@ -30,14 +30,36 @@ def find_pr(snap: Snapshot, issue: int, head: str | None = None) -> PullRequest 
     return (merged or [p for p in prs if p.state == "open"] or prs or [None])[-1]
 
 
-def integration_evidence(repo: Path, snap: Snapshot, policy: dict, issue: int, head: str,
-                         base_ref: str = "origin/main") -> dict | None:
+def required_checks(snap: Snapshot, policy: dict) -> tuple[set[str], str | None]:
+    """Required check names: the policy's CI jobs plus those required by branch protection.
+    Returns (names, error); an unreadable protection setting is an error, never an empty set."""
+    names = set(policy["integration"]["required_checks"])
+    if snap.branch_protection_error:
+        return names, f"branch protection unreadable: {snap.branch_protection_error}"
+    rsc = (snap.branch_protection or {}).get("required_status_checks") or {}
+    names |= set(rsc.get("contexts") or [])
+    names |= {c["context"] for c in rsc.get("checks") or []}
+    return names, None
+
+
+def integration_evidence(repo: Path, snap: Snapshot, policy: dict, issue: int, head: str) -> dict | None:
+    base_ref = policy["integration"]["ref"]
     pr = find_pr(snap, issue, head)
     if pr is None:
         return None
     ev = {"pr": pr.number, "merged": pr.merged, "pr_head_sha": pr.head_sha, "merge_sha": pr.merge_sha,
-          "merged_by": pr.merged_by, "checks": pr.checks}
-    ev["checks_passed"] = bool(pr.checks) and all(state in PASSING for _, state in pr.checks)
+          "merged_by": pr.merged_by, "checks": pr.checks, "integration_ref": base_ref,
+          "pr_base_ref": pr.base_ref}
+    required, error = required_checks(snap, policy)
+    states = {}
+    for name, state in pr.checks:
+        states.setdefault(name, []).append(state)
+    missing = sorted(n for n in required if n not in states)
+    failing = sorted(n for n, s in states.items() if any(x not in PASSING for x in s))
+    ev.update({"required_checks": sorted(required), "missing_checks": missing, "failing_checks": failing,
+               "checks_complete": pr.checks_complete, "check_evidence_error": error})
+    ev["checks_passed"] = (pr.checks_complete and error is None and not missing and not failing
+                           and pr.base_ref == policy["integration"]["branch"])
     protection = snap.branch_protection or {}
     if protection.get("required_pull_request_reviews"):
         ev["required_reviews_passed"] = pr.review_decision == "APPROVED"

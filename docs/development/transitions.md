@@ -13,7 +13,7 @@ python3 -m tools.weave_workflow transition 6 "In Review" --worktree .worktrees/a
 | Todo → In Progress | Eligible milestone and task; dependency gate passes; validated packet including documentation impact; exclusive claim (coordinator lock); CLAIMED, DOCS_IMPACT and PLAN published; isolated worktree assigned; requirements unchanged since PLAN |
 | In Progress → In Review | Committed candidate in a clean worktree; IMPLEMENTATION_READY for that head mapping every PLAN criterion to evidence; VERIFICATION_RESULT PASS for the head; change-scope DOCS_AUDIT_RESULT PASS for the head (cited by IMPLEMENTATION_READY); local and safety LOCAL_REVIEW_RESULT PASS for the head; REVIEW_REQUESTED for the head |
 | In Review → In Progress | A valid review requested changes (REVIEW_RESULT + CHANGES_REQUESTED), acceptance or documentation evidence failed for the head, the head moved since the review request, or requirements changed |
-| In Review → Done | REVIEW_RESULT PASS answering the latest REVIEW_REQUESTED for the exact candidate, same base and current requirements, not superseded; review budget not exceeded; every blocking finding disposed; checks and documentation audit PASS for the head; maintainer decision or action recorded where the policy requires one; integration evidence derived by `tools/weave_workflow/integration.py` from the fetched PR and local Git (never supplied by the caller): PR merged, PR head equals the reviewed head, all PR checks passed, merge commit contained in `origin/main`, integrated tree equals the candidate merged into the first parent, and required human reviews satisfied (an approving review decision under branch protection; otherwise a merge by a maintainer login) |
+| In Review → Done | REVIEW_RESULT PASS answering the latest REVIEW_REQUESTED for the exact candidate, same base and current requirements, not superseded; review budget not exceeded; every blocking finding disposed; checks and documentation audit PASS for the head; maintainer decision or action recorded where the policy requires one; integration evidence derived by `tools/weave_workflow/integration.py` from the fetched PR and local Git (never supplied by the caller): PR merged into the integration branch (`policy.json` → `integration`), PR head equals the reviewed head, the complete check list of the PR head contains every required check (the policy's CI jobs plus any checks required by branch protection; unreadable protection fails the gate) and none failed, merge commit contained in `origin/main`, integrated tree equals the candidate merged into the first parent, and required human reviews satisfied (an approving review decision under branch protection; otherwise a merge by a maintainer login) |
 | In Progress → Todo | RELEASED published, preserving partial work and the claim release |
 
 A failing documentation audit at the In Review gate adds `agent:docs-stale` and blocks the
@@ -39,7 +39,7 @@ transition.
   regression normally gets a linked new issue.
 
 Run `git fetch` for `origin/main` before evaluating the Done gate so containment can be
-checked. `transition N Done --worktree PATH` prints the derived integration evidence with the
+checked; the integration branch comes from the policy and cannot be chosen on the command line. `transition N Done --worktree PATH` prints the derived integration evidence with the
 gate result.
 
 ## Guarded execution
