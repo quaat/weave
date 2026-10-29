@@ -86,10 +86,12 @@ kind. That table is the reference; this section only states the rule.
   are written by the kit and fully typed: an event kind from a fixed list, integers and
   function names. Diagnostic paths hold a
   `weave-diagnostic-v1` document whose message is tool text.
-- Prose paths (such as `scope`, `reason`, `lesson`, `assumptions`) may not be a label or an
-  upper-case status word. They may not contain a label word or a status word (`PASSED`,
-  `FAIL`, `RECHECKED`, `NOT PROVED`, …) as a whole upper-case token. Nor may they begin,
-  after whitespace and quotes and in any case, with a verdict word (`CLAIM_LEXICON`).
+- Prose paths (such as `scope`, `reason`, `lesson`, `assumptions`) contain no all-capitals
+  token: no whole word of two or more capital letters (`PASSED`, `SUCCESS`, `PROVEN`, a
+  label's words such as `NOT ESTABLISHED`, a code such as `TOOL_ERROR`, or any new word),
+  except the acronyms on `PROSE_TOKENS`, which are `OS` and `API`, where real prose uses
+  them. Nor may prose begin, after whitespace and quotes and in any case, with a verdict
+  word (`CLAIM_LEXICON`). A label never appears in prose, even quoted.
 - An envelope's cited quotations (`assumptions` and `claim.statement`) may contain such a
   word in their wording, but are never a bare label or status word.
 
@@ -111,11 +113,13 @@ itself linted as JSON), or begins with one of these prefixes: `tool status: `,
 belong to the line above. The demos declare their own headings (`TEXT_PREFIXES` in each
 `run_demo.py`), each non-empty and ending with `:`, `: ` or ` - `; a heading may declare
 that an application outcome (`Ok`, `Err`, `Unknown`) follows it, as Tiny Shop's
-`== Payment outcome: ` does. None of these
-non-claim lines may contain a label or another upper-case status word (`PASSED`, `PASS`,
-`FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`, `CHECKED`, `EXECUTED`, …) as a whole token;
-the one exception is the tool status word right after `tool status: ` (`PASS`, `FAIL`,
-`READY`, `NOT READY`). The text after any non-claim prefix (runner or declared, and after
+`== Payment outcome: ` does. The text after a non-claim prefix follows the prose rule
+above: no all-capitals token except `PROSE_TOKENS`. Codes are allowed only in their
+places: the tool status word right after `tool status: ` (`PASS`, `FAIL`, `READY`,
+`NOT READY`); the code right after `error: ` (a mapped diagnostic code or a demo's
+`INPUT`, `RUNNER_OUTPUT`, `RUNNER_FAILED`, followed by `[stage]`); and the code and rule of
+a diagnostic header, which are checked against the diagnostic map, while its location
+follows the prose rule. The text after any non-claim prefix (runner or declared, and after
 the tool status word) may not begin with a verdict word from `CLAIM_LEXICON`, in any case
 and after any whitespace and quotes, except a declared application outcome; an unindented
 line that begins with one is a finding unless it begins with an exact label.

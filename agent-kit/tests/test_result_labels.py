@@ -330,15 +330,18 @@ PROSE_SITES = {
 }
 # Each prose rule, the fragment of its message, and values only that rule catches.
 PROSE_RULES = {
-    'status word': ('presents a claim without one of the six result labels', ('DONE', 'ALL GOOD', 'ALL / DONE')),
     'leading verdict word': ('begins with a verdict word', (
-        'Proved stock conservation', 'SUCCESS: stock conservation holds', 'success - all invariants',
+        'Proved stock conservation', 'Success: stock conservation holds', 'success - all invariants',
         'Verified for every order', 'ok', 'holds for N0', 'Not established: budget', 'Proved.',
         'Proved, for every order', 'Proved!', ' Proved stock', '"Proved" stock', "'ok'", 'Holds;', 'success.',
         '\tVerified', 'not proved')),
-    'status token': ('contains the status word', (
-        'all invariants (PROVED).', 'counts;FAILED=0', 'for orders>=2 NOT PROVED',
-        'ordering CHECKED WITHIN BOUNDS here', 'fine; RECHECKED 2 invariants', 'everything PASSED')),
+    'all-capitals token': ('contains the status word', (
+        # Codex round 4: words outside any list, and an arbitrary new one
+        'Stock conservation is SUCCESS', 'the invariant is PROVEN', 'stock conservation HOLDS',
+        'ordering UNPROVED', 'the run is FROBNICATED', 'DONE', 'ALL GOOD', 'ALL / DONE',
+        'all invariants (PROVED).', 'counts;FAILED=0', 'for orders>=2 NOT PROVED', 'is NOT ESTABLISHED',
+        'ordering CHECKED WITHIN BOUNDS here', 'fine; RECHECKED 2 invariants', 'everything PASSED',
+        'raised TOOL_ERROR', 'a JSON object')),
 }
 NEVER = re.compile(r'(?!x)x')
 
@@ -370,9 +373,8 @@ class ProseRuleTests(unittest.TestCase):
     def test_each_rule_is_needed(self):
         """With one rule patched out, its cases pass: no other rule covers them."""
         patches = {
-            'status word': mock.patch.object(weave_labels, '_STATUS_WORD', NEVER),
             'leading verdict word': mock.patch.object(weave_labels, '_begins_with_verdict', lambda text: False),
-            'status token': mock.patch.object(weave_labels, '_STATUS_TOKEN', NEVER),
+            'all-capitals token': mock.patch.object(weave_labels, '_STATUS_TOKEN', NEVER),
         }
         for rule, patch in patches.items():
             with self.subTest(rule=rule), patch:
@@ -381,7 +383,7 @@ class ProseRuleTests(unittest.TestCase):
 
     def test_text_rules_are_needed(self):
         cases = {'_begins_with_verdict': ('result: Proved.', lambda text: False),
-                 '_STATUS_TOKEN': ('result: [1] FAILED', NEVER)}
+                 '_STATUS_TOKEN': ('result: Stock conservation is SUCCESS', NEVER)}
         for name, (line, replacement) in cases.items():
             with self.subTest(name):
                 self.assertEqual(len(lint_text(line)), 1)
@@ -550,6 +552,15 @@ class RunnerOutputTests(unittest.TestCase):
         self.assertEqual(used - declared, set())
         self.assertEqual(declared - used, set(self.NOT_PRODUCED_HERE) & declared)
         self.assertLessEqual(set(self.NOT_PRODUCED_HERE), {(o, p) for o, ps in SCHEMA.items() for p in ps})
+
+    def test_prose_token_allowances_are_used(self):
+        """Each all-capitals token allowed in prose really occurs where PROSE_TOKENS says."""
+        self.assertEqual(set(weave_labels.PROSE_TOKENS), {'OS', 'API'})
+        run_pure = json.loads(self.outputs['run-pure'][1][1])
+        self.assertIn(' OS ', run_pure['execution']['scheduler'])
+        self.assertIn(' OS ', self.outputs['run-pure'][0][1])
+        examples = json.loads(self.outputs['examples'][1][1])
+        self.assertTrue(any(' API ' in r['lesson'] for r in examples['results']))
 
     def test_every_command_ran(self):
         for name, ((text_code, _, _), (json_code, out, err), _) in self.outputs.items():

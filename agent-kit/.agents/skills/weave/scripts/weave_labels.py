@@ -68,11 +68,17 @@ NON_CLAIM_PREFIXES = ("tool status: ", "runtime status: ", "result: ", "stats: "
 # The one place a non-claim line may carry a status word: the word right after
 # "tool status: " is the tool status itself (doctor, examples, test).
 TOOL_STATUS_WORDS = ("PASS", "FAIL", "READY", "NOT READY")
-# A whole upper-case status token: a word of the six labels or a known non-canonical
-# status word (PASSED, PASS, FAIL, FAILED, RECHECKED, NOT PROVED, CHECKED, EXECUTED, ...).
-# Outside a claim line no line carries one, except the tool status word above.
-_STATUS_TOKEN = re.compile(r"(?<![A-Za-z0-9_])(?:PROVED|CHECKED|SCRIPTED|VIOLATED|ESTABLISHED|BOUNDS|PASSED|PASS|"
-                           r"FAILED|FAIL|FAILURE|RECHECKED|EXECUTED|VERIFIED|BOUNDED|EXPECTED)(?![A-Za-z0-9_])")
+# An all-capitals token: a whole word of two or more capital letters, possibly joined by
+# underscores (PASSED, SUCCESS, PROVEN, NOT, ESTABLISHED, TOOL_ERROR). Prose and the text
+# after a non-claim prefix contain none, except those on PROSE_TOKENS; a label's words in
+# prose are therefore findings too, since claims belong only in claim_label or a claim line.
+_STATUS_TOKEN = re.compile(r"(?<![A-Za-z0-9_])[A-Z]{2,}(?:_[A-Z]+)*(?![A-Za-z0-9_])")
+# All-capitals tokens that really occur in kit prose, each with where (enumerated from
+# every output the tests produce; a new one fails the tests until it is listed here).
+PROSE_TOKENS = {
+    "OS": "run-pure /execution/scheduler and its runtime status line: 'cooperative, single OS thread'",
+    "API": "examples /results/*/lesson, from the teaching manifest: 'An API changes state ...'",
+}
 # The diagnostic code-to-rule map the runner uses (assets/diagnostics.json in this skill).
 _CODES = json.loads((Path(__file__).resolve().parents[1] / "assets" / "diagnostics.json")
                     .read_text(encoding="utf-8"))["codes"]
@@ -391,14 +397,22 @@ def _prose_errors(value: str, where: str) -> list[str]:
     """Free text: never a label or upper-case status word, no status token, no leading verdict word."""
     if value in RESULT_LABELS:
         return [f"{where}: result label {value!r} outside a claim_label member"]
-    if _STATUS_WORD.fullmatch(value.strip(_LEADING_NOISE)):
-        return [f"{where}: status word {value!r} presents a claim without one of the six result labels"]
     if _begins_with_verdict(value):
         return [f"{where}: {value!r} begins with a verdict word outside a claim_label member"]
-    token = _STATUS_TOKEN.search(value)
+    token = _capitals(value)
     if token:
-        return [f"{where}: {value!r} contains the status word {token.group()!r} outside a claim_label member"]
+        return [f"{where}: {value!r} contains the status word {token!r} outside a claim_label member"]
     return []
+
+
+def _capitals(text: str) -> str | None:
+    """The first all-capitals token in ``text`` that is not on PROSE_TOKENS, if any."""
+    return next((m.group() for m in _STATUS_TOKEN.finditer(text) if m.group() not in PROSE_TOKENS), None)
+
+
+# Codes the demos' own error records use, besides the mapped diagnostic codes.
+DEMO_CODES = ("INPUT", "RUNNER_OUTPUT", "RUNNER_FAILED")
+_ERROR_CODE = re.compile(r"(?P<code>[A-Z][A-Z0-9_]*) \[[a-z-]+\]")
 
 
 def text_claims(text: str) -> list[tuple[int, str]]:
@@ -462,12 +476,19 @@ def lint_text(text: str, extra_prefixes=()) -> list[str]:
             body = rest[len(word):].lstrip() if word else rest
         elif runner is not None:
             body = line[len(runner):]
+            # An error line names its code and stage first; a code is allowed only there.
+            code = _ERROR_CODE.match(body) if runner == "error: " else None
+            if code and (code["code"] in _CODES or code["code"] in DEMO_CODES):
+                body = body[code.end():]
         elif own is not None:
             body, outcomes = line[len(own[0]):], own[1]
+        else:
+            # a diagnostic header: code and rule are checked against the map; the location is free text
+            body = _DIAGNOSTIC.fullmatch(line)["location"]
         first = body.lstrip(_LEADING_NOISE).split(" ", 1)[0]
-        token = _STATUS_TOKEN.search(body)
+        token = _capitals(body)
         if token:
-            errors.append(f"line {number}: {line!r} is not a claim but carries the status word {token.group()!r}")
+            errors.append(f"line {number}: {line!r} is not a claim but carries the status word {token!r}")
         elif (runner is not None or own is not None) and first not in outcomes and _begins_with_verdict(body):
             errors.append(f"line {number}: {line!r} is not a claim but its text begins with a verdict word")
     return errors
