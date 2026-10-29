@@ -84,7 +84,11 @@ refuses them. No committed file is a `weave-diagnostic-v1` document: the prototy
   prototype's console words (`PASSED`, `RECHECKED`, `NOT PROVED`, a bare `CHECKED`) and
   abbreviations such as `SCRIPTED`. The label lint for tool output (quaat/weave#8) is
   `agent-kit/tests/test_result_labels.py`, which also lints every wrapped envelope, and
-  `specification/tests/test_result_labels.py`.
+  `specification/tests/test_result_labels.py`. In an envelope the lint allows a status word
+  only in `claim_label` and in the two quotation fields: the cited `assumptions` (one
+  quotes "PROVED labels apply only …" from `checker.py`) and `claim.statement`, the
+  wrapped file's own wording (such as the prototype's "VIOLATED …" in `report.json`);
+  neither may be a bare label or status word.
 - `runtime_status` is separate from the label: `waiting`, `timed out`, `completed`, or
   `null` when the producer recorded no runtime status. It records how a run ended, not
   what was established, and the reader refuses a label or an application outcome in it.

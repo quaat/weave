@@ -11,7 +11,8 @@ a label:
   boolean ``ok`` (and the exit code); the status of a runtime run is
   ``runtime_status`` (``waiting``, ``timed out`` or ``completed``). No member is
   named ``status``, no member other than ``claim_label`` holds a label, and no
-  value is any other upper-case status word (``PASSED``, ``CHECKED``, ...);
+  string value is or contains another upper-case status word (``PASSED``,
+  ``CHECKED``, ...) as a whole token;
   the only upper-case word values that are not claims are listed in
   ``NON_CLAIM_WORDS``, and user-chosen names under ``IDENTIFIER_MEMBERS`` are
   not checked.
@@ -153,45 +154,79 @@ def json_claims(document, pointer: str = "") -> list[tuple[str, object]]:
     return found
 
 
+# Quotations in evidence envelopes (format weave-evidence-envelope-v1), the only JSON
+# strings outside claim_label that may contain a status token: each entry of the top-level
+# ``assumptions`` is a verbatim, cited quotation of the specification or a producer's
+# docstring (evidence/weave_evidence/conditions.py; one quotes "PROVED labels apply only
+# ..." from checker.py), and ``claim.statement`` is the wrapped file's own wording (for
+# example the prototype's "VIOLATED <property> ..." in report.json). Both are re-derived
+# and hash-checked by the evidence verifier; neither is the envelope's claim, which is
+# ``claim_label``. They may contain a status token in their wording, but are never a bare
+# label or status word.
+ENVELOPE_FORMAT = "weave-evidence-envelope-v1"
+ENVELOPE_QUOTATIONS = (re.compile(r"/assumptions/\d+"), re.compile(r"/claim/statement"))
+
+
 def lint_json(document, pointer: str = "") -> list[str]:
-    """Violations of the JSON claim rules in ``document``; an empty list when there are none."""
+    """Violations of the JSON claim rules in ``document``; an empty list when there are none.
+
+    Every string value outside ``claim_label`` is checked: it may not be a result label
+    or an upper-case status word, and it may not contain one as a whole upper-case token
+    (``PASSED everything holds``, ``NOT PROVED stock``). Exempt are raw members
+    (``RAW_MEMBERS``), user-chosen names (``IDENTIFIER_MEMBERS``), the teaching manifest's
+    ``ACCEPT`` (``NON_CLAIM_WORDS``) and, in an evidence envelope only, its quotations
+    (``ENVELOPE_QUOTATIONS``). The runner's JSON has no tool status string (``ok`` is a
+    boolean).
+    """
+    quotations = isinstance(document, dict) and document.get("format") == ENVELOPE_FORMAT and pointer == ""
+    return _lint(document, pointer, quotations)
+
+
+def _lint(document, pointer: str, quotations: bool) -> list[str]:
     errors = []
     if isinstance(document, dict):
-        for key, value in document.items():
-            if key in RAW_MEMBERS:
-                continue
-            where = f"{pointer}/{key}"
-            if key == "claim_label":
-                if value not in RESULT_LABELS:
-                    errors.append(f"{where}: claim label {value!r} is not one of the six result labels")
-            elif key == "status":
-                errors.append(f"{where}: a member named 'status' ({value!r}) does not say whether it is a claim; "
-                              "use claim_label for a claim, ok for tool status, runtime_status for a run")
-            elif key == "runtime_status":
-                if value is not None and value not in RUNTIME_STATUSES:
-                    errors.append(f"{where}: runtime status {value!r} is not one of {', '.join(RUNTIME_STATUSES)}")
-            elif key in IDENTIFIER_MEMBERS and _identifiers(value):
-                continue
-            elif isinstance(value, str):
-                errors += _value_errors(value, where)
-            else:
-                errors += lint_json(value, where)
+        items = [(f"{pointer}/{key}", key, value) for key, value in document.items()]
     elif isinstance(document, list):
-        for index, value in enumerate(document):
-            where = f"{pointer}/{index}"
-            if isinstance(value, str):
-                errors += _value_errors(value, where)
-            else:
-                errors += lint_json(value, where)
+        items = [(f"{pointer}/{index}", None, value) for index, value in enumerate(document)]
+    else:
+        return errors
+    for where, key, value in items:
+        if key in RAW_MEMBERS:
+            continue
+        if key == "claim_label":
+            if value not in RESULT_LABELS:
+                errors.append(f"{where}: claim label {value!r} is not one of the six result labels")
+        elif key == "status":
+            errors.append(f"{where}: a member named 'status' ({value!r}) does not say whether it is a claim; "
+                          "use claim_label for a claim, ok for tool status, runtime_status for a run")
+        elif key == "runtime_status":
+            if value is not None and value not in RUNTIME_STATUSES:
+                errors.append(f"{where}: runtime status {value!r} is not one of {', '.join(RUNTIME_STATUSES)}")
+        elif key in IDENTIFIER_MEMBERS and _identifiers(value):
+            continue
+        elif isinstance(value, str):
+            quoted = quotations and any(q.fullmatch(where) for q in ENVELOPE_QUOTATIONS)
+            errors += _value_errors(value, where, quoted)
+        else:
+            errors += _lint(value, where, quotations)
     return errors
 
 
-def _value_errors(value: str, where: str) -> list[str]:
-    """A string outside claim_label: never a label, and never another upper-case status word."""
+def _value_errors(value: str, where: str, quoted: bool = False) -> list[str]:
+    """A string outside claim_label: never a label, never a status word, and no status token inside it.
+
+    A ``quoted`` string (an envelope quotation) may contain a status token in its wording,
+    but is still never a bare label or status word.
+    """
     if value in RESULT_LABELS:
         return [f"{where}: result label {value!r} outside a claim_label member"]
-    if _STATUS_WORD.fullmatch(value) and value not in NON_CLAIM_WORDS:
+    if value in NON_CLAIM_WORDS:
+        return []
+    if _STATUS_WORD.fullmatch(value):
         return [f"{where}: status word {value!r} presents a claim without one of the six result labels"]
+    token = None if quoted else _STATUS_TOKEN.search(value)
+    if token:
+        return [f"{where}: {value!r} contains the status word {token.group()!r} outside a claim_label member"]
     return []
 
 

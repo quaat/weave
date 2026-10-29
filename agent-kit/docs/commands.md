@@ -67,9 +67,18 @@ else the runner reports is a claim, and it is never written with a label.
 | Diagnostics | `diagnostic` | `file:line:column: CODE (RULE) [stage]` and indented lines |
 | Raw output of another tool | `output`, `upstream_output` | indented under `raw output (…; not a claim):` |
 
-No JSON member is named `status`, and no JSON value is another upper-case status word
-such as `PASSED` (the teaching manifest's `ACCEPT` expectation is the one exception;
-user-chosen names such as an upper-case property, invariant or flow name are not status words).
+No JSON member is named `status`. Outside `claim_label`, which holds exactly one of the
+six labels, no JSON string is or contains a label or another upper-case status word
+(`PASSED`, `PASS`, `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`, `CHECKED`, `EXECUTED`, …) as a
+whole token; prose such as `scope` uses lower case ("not established"). The exceptions,
+listed in `weave_labels.py`, are: raw-output members (`diagnostic`, `output`,
+`upstream_output`, `events`, `detail`, `context`); members holding user-chosen names or
+paths (`IDENTIFIER_MEMBERS`, so an upper-case property name is not a status word); the
+teaching manifest's `ACCEPT` expectation; and, in an evidence envelope only, its cited
+quotations (`assumptions` entries and `claim.statement`), which may contain such a word in
+their wording but are never a bare label or status word. The JSON has no tool status
+string: `ok` is a boolean. The prototype's own certificate written by
+`analyze --certificate` is raw tool output and keeps its `status: PROVED` fields.
 
 Text output is a closed set of line forms. An unindented line is a claim only if it
 begins with one of the six labels exactly as written (not `proved`, `Checked flow` or

@@ -175,6 +175,18 @@ class LintNegativeTests(unittest.TestCase):
             'status word in a list': {'lines': ['RECHECKED']},
             'two-word status word': {'invariant': {'result': 'NOT PROVED'}},
             'status word with a slash': {'run': {'result': 'SCRIPTED / PASSED'}},
+            # Codex round 2 F-002: status tokens inside a longer string
+            'token beside a real claim': {'accounting': {'claim_label': 'PROVED', 'verdict': 'PASSED everything holds'}},
+            'NOT PROVED inside a string': {'verdict': 'NOT PROVED stock conservation'},
+            'embedded with punctuation': {'note': 'all invariants (PROVED).'},
+            'embedded after a separator': {'stats': 'ok;FAILED=0'},
+            'mixed case then a token': {'summary': 'Not PROVED for orders>=2'},
+            'label words in a sentence': {'scope': 'ordering CHECKED WITHIN BOUNDS here'},
+            'mixed-case claim label': {'claim_label': 'Proved'},
+            'token in a list entry': {'notes': ['fine', 'RECHECKED 2 invariants']},
+            'envelope quotation pointer outside an envelope': {'assumptions': ['PROVED labels apply only ...']},
+            'envelope scope is not a quotation': {'format': 'weave-evidence-envelope-v1', 'scope': 'everything PASSED'},
+            'envelope nested assumptions': {'format': 'weave-evidence-envelope-v1', 'x': {'assumptions': ['PASSED']}},
             'application outcome as runtime status': {'runtime_status': 'Unknown'},
             'label as runtime status': {'runtime_status': 'NOT ESTABLISHED'},
         }
@@ -187,9 +199,10 @@ class LintNegativeTests(unittest.TestCase):
                     'runs': [{'claim_label': S, 'runtime_status': 'completed', 'outcome': 'Unknown'}],
                     'diagnostic': {'code': 'E112', 'message': 'NOT PROVED: residual', 'details': {'status': 'X'}},
                     'output': 'PASSED\nOK', 'upstream_output': 'CHECKED 2 linear resources',
-                    'scope': 'NOT ESTABLISHED for anything outside the tool', 'runtime_status': None,
+                    'scope': 'nothing is established outside the tool', 'runtime_status': None,
                     'results': [{'expected': 'ACCEPT', 'actual': 'ACCEPT'}, {'expected': 'E203', 'actual': 'P421'}],
-                    'profiles': ['F0', 'N0', 'N1', 'R0'], 'outcome': 'Unknown', 'mode': 'concurrent'}
+                    'profiles': ['F0', 'N0', 'N1', 'R0'], 'outcome': 'Unknown', 'mode': 'concurrent',
+                    'reason': 'pure fn kit extension outside F0; missing model; not established here'}
         self.assertEqual(lint_json(document), [])
         self.assertEqual(json_claims(document), [('/accounting/claim_label', P), ('/runs/0/claim_label', S)])
 
@@ -223,6 +236,40 @@ class LintNegativeTests(unittest.TestCase):
         self.assertEqual(len(lint_text(text.replace('CHECKED flow ', 'CHECKED '))), 1)
         self.assertEqual(len(lint_text(text.replace('PROVED ', 'NOT PROVED '))), 1)
         self.assertEqual(len(lint_text(text.replace('CHECKED WITHIN BOUNDS ', 'PASSED '))), 1)
+
+
+class EnvelopeQuotationTests(unittest.TestCase):
+    def test_only_envelope_quotations_may_quote_a_status_word(self):
+        envelope = {'format': 'weave-evidence-envelope-v1', 'claim_label': 'PROVED',
+                    'claim': {'name': 'x', 'statement': 'VIOLATED p within one-order model'},
+                    'assumptions': ['PROVED labels apply only to exact integer linear invariants. [checker.py, docstring]']}
+        self.assertEqual(lint_json(envelope), [])
+        self.assertEqual(len(lint_json(dict(envelope, format='other'))), 2)
+        self.assertEqual(len(lint_json(dict(envelope, scope='PASSED'))), 1)
+        for bare in ('PASSED', 'PROVED', 'NOT PROVED'):
+            with self.subTest(bare=bare):
+                self.assertEqual(len(lint_json(dict(envelope, claim={'name': 'x', 'statement': bare}))), 1)
+                self.assertEqual(len(lint_json(dict(envelope, assumptions=[bare]))), 1)
+
+
+class ArtifactTests(unittest.TestCase):
+    """The committed demo artifacts written by the runner and the demos pass the lint."""
+
+    def test_demo_artifacts(self):
+        texts = {'demos/merge_sort/artifacts/trace-concurrent.txt': 'merge_sort'}
+        count = 0
+        for path in sorted((ROOT / 'demos').glob('*/artifacts/*.json')):
+            data = json.loads(path.read_text(encoding='utf-8'))
+            if isinstance(data, dict) and data.get('format') == 'weave-place-invariant-v1':
+                # analyze --certificate writes the prototype's own certificate: raw tool output.
+                continue
+            with self.subTest(path.name):
+                self.assertEqual(lint_json(data), [])
+                count += 1
+        self.assertEqual(count, 7)
+        for rel, demo in texts.items():
+            prefixes = DemoOutputTests.prefixes(self, ROOT / f'demos/{demo}/run_demo.py')
+            self.assertEqual(lint_text((ROOT / rel).read_text(encoding='utf-8'), prefixes), [])
 
 
 class RunnerOutputTests(unittest.TestCase):
