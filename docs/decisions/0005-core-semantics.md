@@ -32,7 +32,7 @@ prototypes untouched.
   sed. Their outputs and exit codes are under [Commands run](#commands-run). They write only to
   `$TMPDIR`. Where these probes print result labels such as `PROVED`, the labels are quoted
   tool output; this record makes no evidence claim of its own.
-- **Downstream issues.** The texts of #15, #17, #22, #24 and #27 are not quoted anywhere in
+- **Downstream issues.** The texts of #17, #22, #24 and #27 are not quoted anywhere in
   the repository. This record therefore uses only their numbers, as the #5 issue text relays
   them in the task packet, and does not describe their scope.
 - **Rust.** `docs/development/implementation-language.md` (lines 27–33) puts semantics in the
@@ -145,9 +145,7 @@ ASCII decimal. Partial list primitives fault on empty input.
 
 ### (e) Downstream
 
-Rust interpreter and conformance fixtures; the verification fragment (area 6, #27). #15 may
-take integer and pure-error semantics, but only by elimination from the issues named in the
-packet; see [Open question](#open-question).
+Rust interpreter and conformance fixtures; the verification fragment (area 6, #27).
 
 ## 2. Pure error propagation and evaluation order
 
@@ -206,8 +204,7 @@ or turn into Err or Unknown of a foreign operation.
 
 ### (e) Downstream
 
-Rust interpreter; durable replay (area 7); the verification fragment (#27). Possibly #15 (see
-[Open question](#open-question)).
+Rust interpreter; durable replay (area 7); the verification fragment (#27).
 
 ## 3. Identity naming
 
@@ -504,13 +501,6 @@ transition).
    sorts requires a documented amendment to these rules, to N1 and to the
    verification fragment.
 ```
-
-## Open question
-
-#15 is named among the downstream issues, but neither the repository nor the material given
-to the preparer says which decision area it consumes. By elimination it could take areas 1–2,
-but this record does not assume so. The orchestrator or the maintainer should confirm before
-phase 2 adds the references for AC-2.
 
 ## Acceptance criteria status
 
