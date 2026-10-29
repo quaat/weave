@@ -78,6 +78,11 @@ Known evolution
 * Specification 0.1: implementation profiles, EBNF, result vocabulary and limits.
 * Specification 0.2: D-01 declared evidence/correlation direction; D-02 waiting
   execution contract; explicit N0/N1 difference; formal rules and conformance.
+* Stability policy, added during 0.2-draft (quaat/weave#3): five independent
+  version axes; diagnostic codes and rule IDs as never-reused compatibility
+  anchors; migration notes for semantic changes; new capability as versioned
+  extensions or new profiles rather than changes to F0, N0, N1 or R0. No
+  identifier, rule or profile changed. See :doc:`stability`.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.
