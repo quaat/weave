@@ -75,6 +75,17 @@ from its indexed inputs or result is outside D0; an implementation MUST reject
 that binding at load time. It must not guess based on parameter spellings.
 This is stricter than the current erased API validator, recorded as MODEL-06.
 
+.. note::
+
+   **Scope of the colour rules.** D0-COLOR-1 and D0-COLOR-2 currently assume that a
+   colour is exactly one tenant/order pair: the two positional N1 sorts in
+   :doc:`net-semantics`. Every transition binds one such pair, and every indexed
+   handle, input, read and output of an operation refers to that pair. D0 does not
+   define resources indexed by other or additional declared sorts, by a different
+   arity, or by more than one pair per operation. Supporting arbitrary declared
+   sorts requires a documented amendment to these rules, to N1 and to the
+   verification fragment.
+
 .. _D0-ADMIT-1:
 
 D0-ADMIT-1 — Repeated identity

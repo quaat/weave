@@ -88,6 +88,15 @@ Known evolution
   reproducible baseline procedure with pinned identifiers in :doc:`baseline`, a
   generated :doc:`rule-coverage` page, and the source-to-model trust boundary in
   :doc:`security`. No identifier, rule or profile changed.
+* Core semantic decisions, recorded during 0.2-draft (quaat/weave#5): the
+  maintainer adopted exact integers with run budgets, Euclidean division, ASCII
+  decimal literals and faulting partial list primitives; a closed set of pure
+  faults with left-to-right, sequential-equivalent outcomes; nominal identity
+  values; ``within`` as an observation deadline; declared-route cancellation
+  ownership; the current N1 fragment for M4; and the full durable state
+  inventory for M5. They bind later milestones. A note after D0-COLOR-2 states
+  that D0's colour rules assume one tenant/order pair. No identifier, rule or
+  profile changed. See :doc:`core-decisions`.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

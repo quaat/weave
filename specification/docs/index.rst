@@ -58,6 +58,7 @@ followed by static and dynamic semantics. For reviewers, use
    chapters/rule-catalogue
    chapters/rule-coverage
    chapters/limitations
+   chapters/core-decisions
    chapters/proposals
    chapters/tooling
    chapters/provenance

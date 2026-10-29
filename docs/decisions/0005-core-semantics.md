@@ -6,19 +6,30 @@ SPDX-License-Identifier: MIT
 # 0005: Core semantics: integers, pure errors, identity naming, deadlines, cancellation, verification fragment
 
 - **Issue:** [quaat/weave#5](https://github.com/quaat/weave/issues/5), milestone M0
-- **Status:** Proposed (awaiting maintainer decision)
+- **Status:** Decided, 29 October 2026, by the maintainer on #5
+  ([decision comment](https://github.com/quaat/weave/issues/5#issuecomment-6498004593)):
+  **1A** (with **D3**, **L1** and **E1**), **2B**, **3A**, **4A**, **5A**, **6A** and **7A**,
+  the recommended option in each area. See [Decisions](#decisions) and
+  [Rejected alternatives](#rejected-alternatives).
 - **Prepared against:** base revision `0d3185ffdc2084800f4e84bd5d3c74b14b8998dc`, 29 October 2026
-- **Decision owner:** the maintainer. This record sets out options and recommendations. It
-  does not decide anything.
+- **Decided record and specification chapter written against:** base revision
+  `656680c817a0224ae9c713124105a3ac4a7cbecf`
+- **Decision owner:** the maintainer. The decision comment adopts the recommended options of
+  this record, at commit `7bac145`, "with the rationale and rejected alternatives given
+  there". This file is byte-identical at `7bac145` and at `6e80bda`, the phase-1 head on the
+  phase-2 branch. Where the decision comment and this record differ in detail, the decision
+  comment governs.
+- **Specification:** the decisions are recorded in the chapter "Core semantic decisions",
+  `specification/docs/chapters/core-decisions.rst`.
 
-This is phase 1 of #5: preparing the decisions. For each of the seven decision areas it gives
+Phase 1 of #5 prepared the decisions. For each of the seven decision areas this record gives
 the current specification and prototype behaviour, the question, the options with their
-trade-offs, a recommendation and the downstream issues. Every recommendation is labelled
-**Recommendation (not a decision)**. Phase 2 starts after the maintainer records the decisions
-on #5. It writes the decided record (AC-1), adds the D0 note prepared
-[below](#prepared-d0-note-ac-3) (AC-3) and references the decisions from the downstream
-issues (AC-2). This change leaves the specification, the rules, the checkers and the
-prototypes untouched.
+trade-offs, a recommendation and the downstream issues. The sections labelled
+**Recommendation (not a decision)** are kept as prepared; the maintainer's decisions are under
+[Decisions](#decisions). Phase 2 recorded the decisions in the specification chapter
+(AC-1) and added the D0 note [below](#prepared-d0-note-ac-3) to the specification (AC-3).
+Referencing the decisions from the downstream issues (AC-2) is a GitHub action for the
+orchestrator. Neither phase changes a rule ID, a checker or a prototype.
 
 ## Conventions
 
@@ -32,6 +43,15 @@ prototypes untouched.
   sed. Their outputs and exit codes are under [Commands run](#commands-run). They write only to
   `$TMPDIR`. Where these probes print result labels such as `PROVED`, the labels are quoted
   tool output; this record makes no evidence claim of its own.
+- **Line drift after preparation.** The analysis keeps its citations at `0d3185f`. At
+  `656680c`, `specification/docs/chapters/limitations.rst` has one more line before its line
+  68, so its cited lines 78–81, 83–84 and 90–94 are lines 79–82, 84–85 and 91–95;
+  `design-history.rst` and `docs/development/orchestration-requirements.md` changed only
+  after their cited lines. Phase 2 moves two more files: it inserts the D0 note and a blank
+  line as lines 78–88 of `specification/docs/chapters/execution-contract.rst`, so that file's
+  cited lines after 76 (106, 108–118, 117–118, 122–132) are 11 higher, and it adds four lines
+  after line 41 of `specification/docs/chapters/proposals.rst`, so that file's cited lines
+  51–55, 54 and 65–73 are 4 higher. Every other cited line is unchanged.
 - **Downstream issues.** The texts of #17, #22, #24 and #27 are not quoted anywhere in
   the repository. This record therefore uses only their numbers, as the #5 issue text relays
   them in the task packet, and does not describe their scope.
@@ -459,31 +479,49 @@ continuation representation is left to #35.
 
 M5 (epic #59, `docs/development/orchestration-requirements.md`, line 83) and #35.
 
-## Decisions for the maintainer
+## Decisions
 
-One line per area. Each names the recommended option; none is decided.
+Decided by the maintainer on #5, 29 October 2026
+([decision comment](https://github.com/quaat/weave/issues/5#issuecomment-6498004593)). Each
+area adopts the recommended option. The decision text of each area is quoted in
+`specification/docs/chapters/core-decisions.rst`.
 
-- [ ] 1. Integer semantics: recommended **1A** (exact integers with declared size and
+- [x] 1. Integer semantics: decided **1A** (exact integers with declared size and
   evaluation budgets), with **D3** Euclidean division (division by zero is a pure fault),
   **L1** ASCII decimal literals and **E1** partial list primitives that fault on empty input.
-- [ ] 2. Pure error propagation: recommended **2B** (closed fault set, left-to-right order,
+- [x] 2. Pure error propagation: decided **2B** (closed fault set, left-to-right order,
   sequential-equivalent fork outcome, budget exhaustion as a separate outcome).
-- [ ] 3. Identity naming: recommended **3A** (nominal identity values, equality within a sort
+- [x] 3. Identity naming: decided **3A** (nominal identity values, equality within a sort
   only, explicit boundary validation and serialization).
-- [ ] 4. Deadline observation: recommended **4A** (`within` bounds observation only; expiry
+- [x] 4. Deadline observation: decided **4A** (`within` bounds observation only; expiry
   is a distinct outcome; a timeout never implies failure).
-- [ ] 5. Cancellation ownership: recommended **5A** (fence, cancel children, move each
+- [x] 5. Cancellation ownership: decided **5A** (fence, cancel children, move each
   obligation exactly once along its declared route to a non-activation owner).
-- [ ] 6. Verification fragment: recommended **6A** (current N1 fragment made explicit;
+- [x] 6. Verification fragment: decided **6A** (current N1 fragment made explicit;
   everything else reported NOT ESTABLISHED; 6B revisited after #22 and #24).
-- [ ] 7. Durable state inventory: recommended **7A** (all nine items persisted with specified
+- [x] 7. Durable state inventory: decided **7A** (all nine items persisted with specified
   commit groups; continuation representation left to #35).
+
+## Rejected alternatives
+
+The options not chosen, with their trade-offs as stated in each area's options table:
+
+- Area 1: **1B** and **1C** ([options](#c-options)); division **D1** and **D2**, literals
+  **L2**, and empty-list primitives **E2** and **E3** (same section).
+- Area 2: **2A** and **2C** ([options](#c-options-1)).
+- Area 3: **3B** and **3C** ([options](#c-options-2)).
+- Area 4: **4B** and **4C** ([options](#c-options-3)).
+- Area 5: **5B** and **5C** ([options](#c-options-4)).
+- Area 6: **6B** and **6C** ([options](#c-options-5)). The 6B additions are explicit
+  exclusions of the M4 fragment, to be revisited once #22 and #24 are specified.
+- Area 7: **7B** and **7C** ([options](#c-options-6)).
 
 ## Prepared D0 note (AC-3)
 
-Phase 2 inserts this note into `specification/docs/chapters/execution-contract.rst` after line
-76, the end of D0-COLOR-2 and before the `D0-ADMIT-1` anchor. The insertion shifts the line
-numbers of later rules, so phase 2 regenerates `specification/rules.json` and the rule
+Phase 2 inserted this note into `specification/docs/chapters/execution-contract.rst` after
+line 76, the end of D0-COLOR-2 (unchanged between `0d3185f` and `656680c`), and before the
+`D0-ADMIT-1` anchor. The note occupies lines 78–87, followed by a blank line; `D0-ADMIT-1`
+moved from line 78 to line 89. Phase 2 regenerated `specification/rules.json` and the rule
 catalogue with `cd specification && python3 scripts/refresh_reference_pages.py`. The wording
 rests on `net-semantics.rst`, lines 62–63 (two positional sorts), and
 `specification/docs/chapters/declarations.rst`, line 101 (two distinct firing variables per
@@ -504,11 +542,11 @@ transition).
 
 ## Acceptance criteria status
 
-| Criterion | Status after this change |
+| Criterion | Status after phase 2 |
 | --- | --- |
-| AC-1 Decisions documented with rationale and rejected alternatives | Options, trade-offs and recommendations prepared. The decided record, with the options not chosen recorded as rejected alternatives, follows in phase 2 |
-| AC-2 Decisions referenced from downstream issues | Phase 2; the downstream issue of each area is listed above |
-| AC-3 D0 colour note in the specification | Wording prepared above; phase 2 edits the specification |
+| AC-1 Decisions documented with rationale and rejected alternatives | Done: `specification/docs/chapters/core-decisions.rst`, one section per area with status, context, decision, rationale, rejected alternatives and downstream issues; this record marks each area decided and lists the [rejected alternatives](#rejected-alternatives) |
+| AC-2 Decisions referenced from downstream issues | Open: a GitHub action for the orchestrator on #17, #22, #24, #27, #35 and the M5 epic #59; the chapter lists the downstream issues of each area |
+| AC-3 D0 colour note in the specification | Done: the note [above](#prepared-d0-note-ac-3) is in `specification/docs/chapters/execution-contract.rst`, lines 78–87 |
 
 ## Commands run
 
