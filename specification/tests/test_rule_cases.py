@@ -193,7 +193,8 @@ class RuleCases(unittest.TestCase):
         branch = "        Unknown(uncertain):\n            await Inventory.handoff(uncertain)\n            return\n"
         extra = "        Unknown(again):\n            await Inventory.handoff(again)\n            return\n"
         # The reference checker reports E003 here; the diagnostics chapter gives E003
-        # for net declarations and E214 for extra match cases, so only rejection is asserted.
+        # for net declarations and E214 for extra match cases (quaat/weave#76), so only
+        # rejection is asserted.
         self.code(lambda: check_flow(self.net, CHECKOUT.replace(branch, branch + extra)))
 
     # SYN-12 and F0-BIND-1

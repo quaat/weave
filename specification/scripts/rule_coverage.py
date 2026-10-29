@@ -147,8 +147,9 @@ def render(rows: list[dict]) -> str:
         "in ``reference/prototype/tests/``.",
         "",
         f"**Summary.** {len(rows)} rule IDs; {len(covered)} with a test or conformance case and",
-        f"no pending entry; {len(pending)} pending implementation, of which {len(untracked)}",
-        "have no tracking issue yet (\"issue to be opened\").",
+        f"no pending entry; {len(pending)} pending implementation"
+        + (f", of which {len(untracked)} have no tracking issue yet (\"issue to be opened\")."
+           if untracked else ", each with a tracking issue."),
     ]
     if one_sided:
         out += ["", "Rules with tests or cases in one direction only: " + ", ".join(one_sided) + "."]

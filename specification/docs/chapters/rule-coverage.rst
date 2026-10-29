@@ -23,8 +23,7 @@ a proof that the rule holds for every input. Tests from ``test_rule_cases`` and
 in ``reference/prototype/tests/``.
 
 **Summary.** 60 rule IDs; 43 with a test or conformance case and
-no pending entry; 17 pending implementation, of which 3
-have no tracking issue yet ("issue to be opened").
+no pending entry; 17 pending implementation, each with a tracking issue.
 
 Rules with tests or cases in one direction only: LEX-REQ-2.
 
@@ -239,17 +238,17 @@ Summary table
      - none
      - 0
      - 0
-     - pending: issue to be opened
+     - pending: quaat/weave#75
    * - :ref:`SEC-CAP-1 <SEC-CAP-1>`
      - none
      - 0
      - 0
-     - pending: issue to be opened
+     - pending: quaat/weave#75
    * - :ref:`SEC-EVIDENCE-1 <SEC-EVIDENCE-1>`
      - none
      - 0
      - 2
-     - pending: issue to be opened
+     - pending: quaat/weave#75
    * - :ref:`SEC-FENCE-1 <SEC-FENCE-1>`
      - none
      - 1
@@ -357,9 +356,9 @@ Pending implementation
 * :ref:`N2-EVIDENCE-1 <N2-EVIDENCE-1>` (quaat/weave#56): N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2.
 * :ref:`N2-EVIDENCE-2 <N2-EVIDENCE-2>` (quaat/weave#56): N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2.
 * :ref:`N2-MIGRATE-1 <N2-MIGRATE-1>` (quaat/weave#56): N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2.
-* :ref:`PROTO-IDENTITY-1 <PROTO-IDENTITY-1>` (issue to be opened): Reporting obligation (name the net and execution model; do not report equal API checks as net equivalence); no test checks report contents. Related: the evidence envelope of quaat/weave#7 is to record the profile and source hashes.
-* :ref:`SEC-CAP-1 <SEC-CAP-1>` (issue to be opened): Deployment requirement; the repository has no deployment or adapter that claims capability enforcement, and no test. Related: the adapter ABI of milestone M2 (quaat/weave#56).
-* :ref:`SEC-EVIDENCE-1 <SEC-EVIDENCE-1>` (issue to be opened): The listed R0 tests cover scripted receipt correlation only. Authentication and account scoping of provider evidence are not implemented (security chapter). Related: the adapter ABI of milestone M2 (quaat/weave#56).
+* :ref:`PROTO-IDENTITY-1 <PROTO-IDENTITY-1>` (quaat/weave#75): Reporting obligation (name the net and execution model; do not report equal API checks as net equivalence); no test checks report contents. Related: the evidence envelope of quaat/weave#7 is to record the profile and source hashes.
+* :ref:`SEC-CAP-1 <SEC-CAP-1>` (quaat/weave#75): Deployment requirement; the repository has no deployment or adapter that claims capability enforcement, and no test. Related: the adapter ABI of milestone M2 (quaat/weave#56).
+* :ref:`SEC-EVIDENCE-1 <SEC-EVIDENCE-1>` (quaat/weave#75): The listed R0 tests cover scripted receipt correlation only. Authentication and account scoping of provider evidence are not implemented (security chapter). Related: the adapter ABI of milestone M2 (quaat/weave#56).
 * :ref:`SEC-MODEL-1 <SEC-MODEL-1>` (quaat/weave#7): Reports MUST identify trusted components' versions and assumptions. The listed test checks that the N0 proof text names some unestablished assumptions; no test checks versions. The evidence envelope of quaat/weave#7 is to record assumptions and tool versions.
 
 Tests by rule
@@ -600,17 +599,17 @@ Tests by rule
 
 * :ref:`PROTO-IDENTITY-1 <PROTO-IDENTITY-1>`
 
-  * Pending: issue to be opened
+  * Pending: quaat/weave#75
 
 * :ref:`SEC-CAP-1 <SEC-CAP-1>`
 
-  * Pending: issue to be opened
+  * Pending: quaat/weave#75
 
 * :ref:`SEC-EVIDENCE-1 <SEC-EVIDENCE-1>`
 
   * negative: ``test_durable.DurableChecks.test_two_orders_and_swapped_receipt``
   * negative: ``test_durable.DurableChecks.test_contradictory_final_evidence_is_quarantined_as_error``
-  * Pending: issue to be opened
+  * Pending: quaat/weave#75
 
 * :ref:`SEC-FENCE-1 <SEC-FENCE-1>`
 

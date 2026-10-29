@@ -170,7 +170,7 @@ checked with N0 and N1 APIs``; ``PASS: N0 20 states / 43 edges; N1 841 states /
 3712 edges``; ``PASS: unchanged reference snapshot; 32 coloured cells / 48 firing
 modes``; ``PASS: 68 EBNF productions; 25/25 corpus pipeline agreements; N1 and
 lease syntax parsed``; ``PASS: conformance table and rule catalogue current``;
-``Ran 58 tests`` and ``OK`` (the specification's own tests, including the rule
+``Ran 59 tests`` and ``OK`` (the specification's own tests, including the rule
 coverage check); ``Ran 143 tests`` and ``OK`` (the snapshot's tests); a Sphinx
 HTML build without warnings; and an HTML audit whose ``errors`` list is empty.
 The single-page and text builds succeed and the single-page audit's ``errors``

@@ -624,14 +624,14 @@
     "PROTO-IDENTITY-1": {
       "tests": [],
       "pending": {
-        "issue": null,
+        "issue": "quaat/weave#75",
         "reason": "Reporting obligation (name the net and execution model; do not report equal API checks as net equivalence); no test checks report contents. Related: the evidence envelope of quaat/weave#7 is to record the profile and source hashes."
       }
     },
     "SEC-CAP-1": {
       "tests": [],
       "pending": {
-        "issue": null,
+        "issue": "quaat/weave#75",
         "reason": "Deployment requirement; the repository has no deployment or adapter that claims capability enforcement, and no test. Related: the adapter ABI of milestone M2 (quaat/weave#56)."
       }
     },
@@ -647,7 +647,7 @@
         }
       ],
       "pending": {
-        "issue": null,
+        "issue": "quaat/weave#75",
         "reason": "The listed R0 tests cover scripted receipt correlation only. Authentication and account scoping of provider evidence are not implemented (security chapter). Related: the adapter ABI of milestone M2 (quaat/weave#56)."
       }
     },

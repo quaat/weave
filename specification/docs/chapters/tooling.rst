@@ -158,7 +158,7 @@ excluded. The builder emits ``weave-check-report.json``. Nine documentation test
 include changed inline enum/runtime contracts, missing fragment context, unknown
 grammar references, trailing syntax, and a lease checked against the wrong net.
 ``tests/test_rule_cases.py`` adds 34 positive and negative rule cases against the
-reference checker, and ``tests/test_rule_coverage.py`` adds 15 tests of the rule
+reference checker, and ``tests/test_rule_coverage.py`` adds 16 tests of the rule
 coverage check.
 
 The generated Earley grammar is derived directly from weave.ebnf. Its independent
@@ -167,7 +167,7 @@ not an independently implemented type checker. Corpus stage results are recorded
 separately in ``validation/grammar-report.json``.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 58 tests (nine documentation tests, the rule cases and the rule
+specification's 59 tests (nine documentation tests, the rule cases and the rule
 coverage check), 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.

@@ -103,6 +103,16 @@ class RuleCoverage(unittest.TestCase):
         coverage["format"] = "weave-rule-coverage-v2"
         self.rejects(coverage, "Unsupported coverage format")
 
+    def test_summary_reports_untracked_pending_rules(self):
+        tracked = render(validate(self.rules, self.manifest, self.coverage))
+        self.assertIn("each with a tracking issue", tracked)
+        self.assertNotIn("issue to be opened", tracked)
+        coverage = self.mutated()
+        coverage["rules"]["SEC-CAP-1"]["pending"]["issue"] = None
+        untracked = render(validate(self.rules, self.manifest, coverage))
+        self.assertIn("of which 1 have no tracking issue yet", untracked)
+        self.assertIn("SEC-CAP-1 <SEC-CAP-1>` (issue to be opened)", untracked)
+
     def test_stale_page_is_detected(self):
         rows = validate(self.rules, self.manifest, self.coverage)
         coverage = self.mutated()
