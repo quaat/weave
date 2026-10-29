@@ -121,7 +121,9 @@ Known evolution
   lines are raw tool output. The prototype and its pinned snapshots are
   unchanged; the agent kit's runner (0.3.0) and the evidence envelopes label
   each claim, and tests in the agent kit and the specification lint tool output
-  for any other label. No label, rule, diagnostic code or profile changed.
+  for any other label. The migration definition in :doc:`stability` now names
+  a change of the label a result receives; the kit change carries a migration
+  note. No label, rule, diagnostic code or profile changed.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

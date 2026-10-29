@@ -57,9 +57,10 @@ to a claim, written exactly as in the table. They are used as follows.
   implies: E320 and E420 report a counterexample (VIOLATED), and E321 and E422
   report NOT ESTABLISHED (:doc:`diagnostics`).
 
-Changing which label a result receives, or what a label means, is a semantic
-change (:ref:`chapters/stability:Migration notes`); changing only the layout of a tool's
-output is an interface change of that tool. The agent kit's
+Changing which label a result receives (including labelling a result that had
+no label), or what a label means, is a semantic change
+(:ref:`chapters/stability:Migration notes`); changing only the layout of a
+tool's output is an interface change of that tool. The agent kit's
 ``tests/test_result_labels.py`` and the specification's
 ``tests/test_result_labels.py`` lint tool output and evidence envelopes against
 these rules.

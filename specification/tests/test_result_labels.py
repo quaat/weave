@@ -94,7 +94,8 @@ class ReportEnvelopeLintTests(unittest.TestCase):
         from weave_labels import lint_json, lint_text
         envelope = self.envelopes[0]
         for change in ({"claim_label": "PASSED"}, {"claim_label": "NOT PROVED"}, {"claim_label": "CHECKED"},
-                       {"runtime_status": "Unknown"}, {"status": "PROVED"}):
+                       {"runtime_status": "Unknown"}, {"status": "PROVED"}, {"check": "CHECKED"},
+                       {"claim": dict(envelope["claim"], statement="PASSED")}):
             with self.subTest(change=change):
                 self.assertEqual(len(lint_json(dict(envelope, **change))), 1)
         for line in ("PASSED 6 crash scenarios", "NOT PROVED stock_conservation", "CHECKED checkout_propagating:"):

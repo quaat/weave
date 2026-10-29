@@ -117,6 +117,11 @@ class LintNegativeTests(unittest.TestCase):
             'status member with a label': {'accounting': {'status': 'PROVED'}},
             'label outside claim_label': {'command': 'run-pure', 'check': 'CHECKED flow'},
             'label in a list': {'labels': ['VIOLATED']},
+            'status word under another member': {'command': 'run-pure', 'check': 'CHECKED'},
+            'status word in a nested member': {'accounting': {'verdict': 'PASSED'}},
+            'status word in a list': {'lines': ['RECHECKED']},
+            'two-word status word': {'invariant': {'result': 'NOT PROVED'}},
+            'status word with a slash': {'run': {'result': 'SCRIPTED / PASSED'}},
             'application outcome as runtime status': {'runtime_status': 'Unknown'},
             'label as runtime status': {'runtime_status': 'NOT ESTABLISHED'},
         }
@@ -129,7 +134,9 @@ class LintNegativeTests(unittest.TestCase):
                     'runs': [{'claim_label': S, 'runtime_status': 'completed', 'outcome': 'Unknown'}],
                     'diagnostic': {'code': 'E112', 'message': 'NOT PROVED: residual', 'details': {'status': 'X'}},
                     'output': 'PASSED\nOK', 'upstream_output': 'CHECKED 2 linear resources',
-                    'scope': 'NOT ESTABLISHED for anything outside the tool', 'runtime_status': None}
+                    'scope': 'NOT ESTABLISHED for anything outside the tool', 'runtime_status': None,
+                    'results': [{'expected': 'ACCEPT', 'actual': 'ACCEPT'}, {'expected': 'E203', 'actual': 'P421'}],
+                    'profiles': ['F0', 'N0', 'N1', 'R0'], 'outcome': 'Unknown', 'mode': 'concurrent'}
         self.assertEqual(lint_json(document), [])
         self.assertEqual(json_claims(document), [('/accounting/claim_label', P), ('/runs/0/claim_label', S)])
 
@@ -153,12 +160,23 @@ class RunnerOutputTests(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         tmp = Path(cls.tmp.name)
         cert, lowered, lowered_json = tmp / 'proof.json', tmp / 'lowered.weave', tmp / 'lowered-json.weave'
+        # Two E321 causes besides the budget: an initial marking above place_bound, and a
+        # place_bound exceeded during the search (charge_requests is in no invariant).
+        net = (ROOT / 'examples/nets/Inventory.weave').read_text()
+        start = 'place charge_requests = 0 owner adapter'
+        assert start in net
+        over, grows = tmp / 'over.weave', tmp / 'grows.weave'
+        over.write_text(net.replace(start, 'place charge_requests = 2 owner adapter'))
+        grows.write_text(net.replace(start, 'place charge_requests = 1 owner adapter'))
         commands = {
             'doctor': (['doctor'], []),
             'check': (['check', GOOD, ROOT / 'examples/valid/checkout.weave', ROOT / 'examples/invalid/reuse_hold.weave'],
                       [P, B, F, F]),
             'check violated': (['check', GOOD, '--net', ROOT / 'examples/nets/unsafe_paid_release.weave'], [P, V]),
             'analyze exhausted': (['analyze', '--max-states', '1'], [P, N]),
+            'analyze no budget': (['analyze', '--max-states', '0'], [P, N]),
+            'analyze initial over bound': (['analyze', '--net', over], [P, N]),
+            'analyze bound exceeded': (['analyze', '--net', grows], [P, N]),
             'analyze': (['analyze', '--certificate', cert], [P, B]),
             'verify': (['verify', cert], [P]),
             'lower': (['lower', GOOD, '--output', lowered], [P, B, F, F]),
@@ -218,6 +236,27 @@ class RunnerOutputTests(unittest.TestCase):
         exhausted = json.loads(self.outputs['analyze exhausted'][1][1])
         self.assertEqual((exhausted['ordering']['claim_label'], exhausted['diagnostic']['code']), (N, 'E321'))
         self.assertFalse(violated['ok'] or exhausted['ok'])
+
+    def test_failed_ordering_claims_carry_property_trace_cause_and_bounds(self):
+        bounds = {'orders': 1, 'stock': 1, 'admission_limit': 1, 'place_bound': 1}
+        violated = json.loads(self.outputs['check violated'][1][1])['ordering']
+        self.assertEqual(violated['property'], 'dispatched_release_requires_rejection')
+        self.assertEqual(violated['trace'], ['reserve', 'arm', 'dispatch', 'charge_ok', 'cancel_paid'])
+        self.assertTrue(violated['marking'].startswith('available=1'))
+        self.assertLessEqual(bounds.items(), violated.items())
+        expected = {'analyze exhausted': ('state budget 1 exhausted', None, 1),
+                    'analyze no budget': ('state budget must be positive', None, 0),
+                    'analyze initial over bound': ('initial marking exceeds place_bound', None, 10000),
+                    'analyze bound exceeded': ('place_bound=1 exceeded', ['reserve', 'arm', 'dispatch'], 10000)}
+        for name, (reason, trace, max_states) in expected.items():
+            with self.subTest(name):
+                data = json.loads(self.outputs[name][1][1])
+                self.assertEqual(data['diagnostic']['code'], 'E321')
+                order = data['ordering']
+                self.assertEqual((order['claim_label'], order['reason'], order['trace'], order['max_states']),
+                                 (N, reason, trace, max_states))
+                self.assertLessEqual(bounds.items(), order.items())
+                self.assertIn(f'NOT ESTABLISHED ordering: {reason} ', self.outputs[name][0][1])
 
     def test_pure_extension_claims_nothing_specified(self):
         data = json.loads(self.outputs['run-pure'][1][1])

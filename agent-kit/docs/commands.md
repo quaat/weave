@@ -67,14 +67,15 @@ else the runner reports is a claim, and it is never written with a label.
 | Diagnostics | `diagnostic` | `file:line:column: CODE (RULE) [stage]` and indented lines |
 | Raw output of another tool | `output`, `upstream_output` | indented under `raw output (…; not a claim):` |
 
-No JSON member is named `status`. Other text lines start with a lower-case name
+No JSON member is named `status`, and no JSON value is another upper-case status word
+such as `PASSED` (the teaching manifest's `ACCEPT` expectation is the one exception). Other text lines start with a lower-case name
 (`prototype:`, `certificate:`, `result:`, `stats:`) or a diagnostic location;
 indented lines belong to the line above.
 
 | Command | Claims (JSON position: label) |
 | --- | --- |
 | `check`, `analyze`, `lower`, `simulate`, `examples` | `accounting`: `PROVED` (the net's invariants); `ordering`: `CHECKED WITHIN BOUNDS` (one bounded exploration) |
-| same, when the ordering check fails | `ordering`: `VIOLATED` with `E320` (a counterexample), `NOT ESTABLISHED` with `E321` (bound or state budget exhausted); `ok` is false and `diagnostic` holds the code |
+| same, when the ordering check fails | `ordering`: `VIOLATED` with `E320` (a counterexample: `property`, `trace`, `marking`) or `NOT ESTABLISHED` with `E321` (`reason`: the specific cause, such as an exhausted or non-positive state budget, an initial marking above `place_bound` or `place_bound` exceeded, with its `trace` where the checker records one); both carry the model bounds (`orders`, `stock`, `admission_limit`, `place_bound`, `max_states`); `ok` is false and `diagnostic` holds the code |
 | `check` | each accepted `files` element: `CHECKED flow` (every flow in that file) |
 | `lower` | `files`: `CHECKED flow` for the source and for the lowered output (`lowered_from`) |
 | `simulate` | each `runs` element: `SCRIPTED / passed scenario`, with `runtime_status: completed`; `outcome` (`Ok`, `Err`, `Unknown`) is the scripted application outcome |

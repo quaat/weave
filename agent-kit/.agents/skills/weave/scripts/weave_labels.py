@@ -10,7 +10,10 @@ a label:
 * JSON: a claim is an object with a ``claim_label`` member. Tool status is the
   boolean ``ok`` (and the exit code); the status of a runtime run is
   ``runtime_status`` (``waiting``, ``timed out`` or ``completed``). No member is
-  named ``status``, and no member other than ``claim_label`` holds a label.
+  named ``status``, no member other than ``claim_label`` holds a label, and no
+  value is any other upper-case status word (``PASSED``, ``CHECKED``, ...);
+  the only upper-case word values that are not claims are listed in
+  ``NON_CLAIM_WORDS``.
 * Text: a claim is an unindented line that begins with its label, followed by
   the statement (``LABEL statement``, the established console form; the six
   labels are distinct as prefixes). Non-claim lines begin with a lower-case name
@@ -41,6 +44,14 @@ RUNTIME_STATUSES = ("waiting", "timed out", "completed")
 # Members whose values are raw output of another tool, diagnostics, or data the
 # producer copied unchanged; they hold no claim and are not linted.
 RAW_MEMBERS = frozenset({"diagnostic", "output", "upstream_output", "events", "detail", "context"})
+
+# An upper-case status word: a whole string value such as "PASSED", "NOT PROVED" or
+# "CHECKED LOWERING". Codes and identifiers with digits or lower case (E320, P421, N0,
+# checkout) do not match.
+_STATUS_WORD = re.compile(r"[A-Z][A-Z _/]*[A-Z]")
+# Upper-case word values that are not claims: ACCEPT is the teaching manifest's expected
+# outcome for an accepted case (``examples`` results), an expectation, not a label.
+NON_CLAIM_WORDS = frozenset({"ACCEPT"})
 
 # An unindented text line whose first word is upper case (two or more capitals)
 # presents a claim, as the prototype's console lines (PROVED, CHECKED, PASSED,
@@ -98,18 +109,27 @@ def lint_json(document, pointer: str = "") -> list[str]:
             elif key == "runtime_status":
                 if value is not None and value not in RUNTIME_STATUSES:
                     errors.append(f"{where}: runtime status {value!r} is not one of {', '.join(RUNTIME_STATUSES)}")
-            elif isinstance(value, str) and value in RESULT_LABELS:
-                errors.append(f"{where}: result label {value!r} outside a claim_label member")
+            elif isinstance(value, str):
+                errors += _value_errors(value, where)
             else:
                 errors += lint_json(value, where)
     elif isinstance(document, list):
         for index, value in enumerate(document):
             where = f"{pointer}/{index}"
-            if isinstance(value, str) and value in RESULT_LABELS:
-                errors.append(f"{where}: result label {value!r} outside a claim_label member")
+            if isinstance(value, str):
+                errors += _value_errors(value, where)
             else:
                 errors += lint_json(value, where)
     return errors
+
+
+def _value_errors(value: str, where: str) -> list[str]:
+    """A string outside claim_label: never a label, and never another upper-case status word."""
+    if value in RESULT_LABELS:
+        return [f"{where}: result label {value!r} outside a claim_label member"]
+    if _STATUS_WORD.fullmatch(value) and value not in NON_CLAIM_WORDS:
+        return [f"{where}: status word {value!r} presents a claim without one of the six result labels"]
+    return []
 
 
 def text_claims(text: str) -> list[tuple[int, str]]:

@@ -7,6 +7,7 @@ import io
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 from contextlib import redirect_stderr, redirect_stdout
@@ -65,10 +66,43 @@ class NetFailure(Exception):
 
 
 # Ordering-check diagnostics that decide the ordering claim (specification, diagnostics
-# chapter): E320 is a modeled counterexample, so the claim is VIOLATED; E321 is an exhausted
-# bound or state budget, reported as NOT ESTABLISHED, never as a successful check.
-ORDERING_FAILURES = {"E320": (VIOLATED, "counterexample in the diagnostic"),
-                     "E321": (NOT_ESTABLISHED, "token bound or state budget exhausted")}
+# chapter): E320 is a modeled counterexample, so the claim is VIOLATED; E321 (a non-positive
+# state budget, an initial marking above place_bound, a place_bound exceeded during the
+# search, or an exhausted state budget) is reported as NOT ESTABLISHED, never as a success.
+# The prototype raises them with message text only; its first lines are fixed by
+# checker.explore_order and are read here to put the property, trace and cause in the claim.
+_VIOLATED = re.compile(r"VIOLATED (?P<property>\S+) within one-order model\.\n"
+                       r"Trace: (?P<trace>.*)\nMarking: (?P<marking>.*)\Z")
+_NOT_ESTABLISHED = re.compile(r"NOT ESTABLISHED: (?P<cause>[^\n]*?)\.?(?:\nTrace: (?P<trace>.*))?\Z")
+
+
+def model_bounds(net, max_states: int) -> dict:
+    """The one-order model's bounds, as recorded for a successful exploration."""
+    model = net.order_check
+    return {"orders": 1, "stock": 1, "admission_limit": 1, "place_bound": model.bound, "max_states": max_states}
+
+
+def path_of(trace: str | None) -> list[str] | None:
+    if trace is None:
+        return None
+    return [] if trace == "<initial marking>" else trace.split(" -> ")
+
+
+def failed_ordering_claim(error: CheckError, net, max_states: int) -> dict | None:
+    """The VIOLATED or NOT ESTABLISHED ordering claim for E320 or E321; None for other codes."""
+    if error.code == "E320":
+        found = _VIOLATED.match(error.message)
+        if found is None:
+            raise ValueError(f"Unrecognised E320 message from the prototype: {error.message!r}")
+        return labelled(VIOLATED, diagnostic_code="E320", property=found["property"],
+                        trace=path_of(found["trace"]), marking=found["marking"], **model_bounds(net, max_states))
+    if error.code == "E321":
+        found = _NOT_ESTABLISHED.match(error.message)
+        if found is None:
+            raise ValueError(f"Unrecognised E321 message from the prototype: {error.message!r}")
+        return labelled(NOT_ESTABLISHED, diagnostic_code="E321", reason=found["cause"],
+                        trace=path_of(found["trace"]), **model_bounds(net, max_states))
+    return None
 
 
 def accounting_claim(certificate: dict) -> dict:
@@ -91,9 +125,9 @@ def checked_net(path: Path, max_states: int = 10000):
     try:
         ordering = explore_order(net, max_states)
     except CheckError as error:
-        if error.code in ORDERING_FAILURES:
-            label, reason = ORDERING_FAILURES[error.code]
-            claims["ordering"] = labelled(label, diagnostic_code=error.code, reason=reason, max_states=max_states)
+        ordering = failed_ordering_claim(error, net, max_states)
+        if ordering is not None:
+            claims["ordering"] = ordering
         raise NetFailure(error, claims) from error
     claims["ordering"] = ordering_claim(ordering)
     return net, certificate, claims
@@ -328,8 +362,15 @@ def net_claim_lines(result: dict) -> None:
             print(claim_line(acc["claim_label"], f"{len(acc['invariants'])} accounting invariants"))
     if "ordering" in result:
         order = result["ordering"]
-        if "diagnostic_code" in order:
-            print(claim_line(order["claim_label"], f"ordering: {order['reason']} ({order['diagnostic_code']} below)"))
+        if order.get("diagnostic_code") == "E320":
+            trace = " -> ".join(order["trace"]) or "<initial marking>"
+            print(claim_line(order["claim_label"], f"{order['property']} within the one-order model "
+                                                   f"(tokens/place<={order['place_bound']}); trace: {trace} (E320 below)"))
+        elif "diagnostic_code" in order:
+            trace = f"; trace: {' -> '.join(order['trace'])}" if order.get("trace") else ""
+            print(claim_line(order["claim_label"], f"ordering: {order['reason']} "
+                                                   f"(max_states={order['max_states']}, tokens/place<={order['place_bound']}"
+                                                   f"{trace}; {order['diagnostic_code']} below)"))
         else:
             print(claim_line(order["claim_label"],
                              f"{order['states']} states/{order['edges']} edges "

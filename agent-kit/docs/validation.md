@@ -113,11 +113,12 @@ envelope. The demo artifacts were regenerated with the commands in the demo READ
 | Check | Result |
 | --- | --- |
 | Original prototype regression suite (`weave.py test`) | 143 tests passed |
-| Kit tests (`tests/`) | 89 passed, including `test_result_labels.py` and the provenance hash check |
+| Kit tests (`tests/`) | 90 passed, including `test_result_labels.py` and the provenance hash check |
 | Teaching manifest (`weave.py examples`) | 34 expectations matched |
 | Merge-sort demo tests | 13 passed |
 | Tiny Shop demo tests | 17 passed |
 | `weave.py doctor` | `tool status: READY` |
 
-Accepted and rejected programs, diagnostic codes and exit codes are unchanged; only the
-output shape changed (see `CHANGELOG.md`).
+Accepted and rejected programs, diagnostic codes and exit codes are unchanged. The output
+shape and, for some inputs, the label a result receives changed; see the migration note in
+`CHANGELOG.md`.

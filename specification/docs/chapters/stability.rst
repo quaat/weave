@@ -114,14 +114,14 @@ Each tool carries its own semantic version. Bump rule:
 A tool's output names claims only with the six result labels, one label per claim,
 and reports tool and runtime status separately
 (:ref:`chapters/verification:Result labels in tool output`). Changing the layout
-of that output is an interface change under the rule above; changing which label
-a result receives is a semantic change.
+of that output is an interface change under the rule above; changing which result
+label a result receives is a semantic change.
 
 A tool version never redefines a profile. Where a tool's behaviour differs from
 the profile it claims, the difference is a discrepancy to report (:doc:`status`).
 A tool change that alters which programs are accepted or rejected, the diagnostic
-code reported or a dynamic outcome is a semantic change and needs a migration
-note.
+code reported, the result label a result receives or a dynamic outcome is a
+semantic change and needs a migration note.
 
 The prototype keeps the integer snapshot version it already has ("version 3").
 Its pinned snapshots change only through a reviewed snapshot refresh recorded in
@@ -441,8 +441,10 @@ Migration notes
 Every semantic change MUST carry a migration note. A semantic change is any
 change that alters, for some input, which programs a profile or tool accepts or
 rejects, the diagnostic code reported, the dynamic outcome of an accepted
-program, the meaning of a rule ID, diagnostic code, profile or result label, or
-how an evidence document or persisted store is read. Editorial changes and
+program, which result label a tool or evidence document gives a result
+(including giving a label to a result that had none, or removing one), the
+meaning of a rule ID, diagnostic code, profile or result label, or how an
+evidence document or persisted store is read. Editorial changes and
 compatible additions that leave every existing input's result unchanged do not
 need one.
 
