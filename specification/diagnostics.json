@@ -1,0 +1,539 @@
+{
+  "description": "Code-to-rule map for every diagnostic code the reference prototype (reference/prototype/checker.py, coloured.py, durable.py) and the agent kit (agent-kit/.agents/skills/weave/scripts/) can emit. Each code has exactly one principal rule and optional secondary rules. Category 'specification': rule IDs from rules.json. Category 'kit-extension': rule IDs of the agent kit's pure fn extension, defined in agent-kit/docs/weave.md, outside the specified fragment. Category 'tool': not a language diagnostic; rule is null. related_roles lists the related-span roles a diagnostic of that code carries. scripts/refresh_reference_pages.py generates the tables in docs/chapters/diagnostics.rst from this file; agent-kit/.agents/skills/weave/assets/diagnostics.json is a byte-identical copy.",
+  "categories": {
+    "specification": "Language diagnostic of the reference prototype; the rule is a rule ID in rules.json",
+    "kit-extension": "Diagnostic of the agent kit's pure fn extension; the rule is a kit rule ID defined in agent-kit/docs/weave.md",
+    "tool": "Runner failure outside the checker; no rule applies"
+  },
+  "codes": {
+    "E001": {
+      "category": "specification",
+      "rule": "LEX-REQ-1",
+      "secondary_rules": [],
+      "meaning": "Tab, invalid indentation, skipped level, unexpected block",
+      "correction": "Use four spaces and a valid block header"
+    },
+    "E002": {
+      "category": "specification",
+      "rule": "SYN-07",
+      "secondary_rules": [
+        "SYN-04",
+        "CONF-REQ-1"
+      ],
+      "meaning": "Invalid type, parameter, brackets, or comma list",
+      "correction": "Use nominal types and identifier indices"
+    },
+    "E003": {
+      "category": "specification",
+      "rule": "SYN-04",
+      "secondary_rules": [
+        "SYN-01",
+        "SYN-09",
+        "SYN-11",
+        "F0-MATCH-1",
+        "CONF-REQ-1"
+      ],
+      "meaning": "Duplicate/invalid net declaration, unexpected nested content, or a duplicated match case tag",
+      "correction": "Check declaration grammar and uniqueness; name each match case once"
+    },
+    "E100": {
+      "category": "specification",
+      "rule": "SYN-08",
+      "secondary_rules": [
+        "N0-DECL-1",
+        "N0-DECL-2",
+        "N0-DECL-3",
+        "N0-DECL-4",
+        "N0-DECL-5",
+        "SYN-04",
+        "SYN-06",
+        "SYN-07",
+        "SYN-09",
+        "SYN-11"
+      ],
+      "meaning": "Invalid ownership/API/runtime contract",
+      "correction": "Make signatures, issuers, cancellations, and arcs agree"
+    },
+    "E101": {
+      "category": "specification",
+      "rule": "N0-SEAL-1",
+      "secondary_rules": [
+        "N0-DECL-3"
+      ],
+      "meaning": "Unauthorized resource/runtime consumption or activation read",
+      "correction": "Use only declared consumers; do not bypass sealing"
+    },
+    "E110": {
+      "category": "specification",
+      "rule": "SYN-13",
+      "secondary_rules": [],
+      "meaning": "Invalid/non-affine invariant",
+      "correction": "Restrict names and integer arithmetic appropriately"
+    },
+    "E111": {
+      "category": "specification",
+      "rule": "SYN-13",
+      "secondary_rules": [],
+      "meaning": "Initial aggregate invariant mismatch",
+      "correction": "Correct initialization or the intended equality"
+    },
+    "E112": {
+      "category": "specification",
+      "rule": "SYN-13",
+      "secondary_rules": [
+        "CONF-REQ-2"
+      ],
+      "meaning": "Transition changes an aggregate invariant",
+      "correction": "Correct the transition or revisit the contract explicitly",
+      "note": "Preservation by every transition column is defined in verification.rst, Aggregate invariants, which has no rule ID of its own."
+    },
+    "E200": {
+      "category": "specification",
+      "rule": "CONF-REQ-1",
+      "secondary_rules": [
+        "SYN-01",
+        "SYN-04",
+        "SYN-14"
+      ],
+      "meaning": "Invalid flow declaration or unsupported statement",
+      "correction": "Use only F0 syntax"
+    },
+    "E201": {
+      "category": "specification",
+      "rule": "F0-CALL-1",
+      "secondary_rules": [],
+      "meaning": "Wrong call argument count",
+      "correction": "Supply all required arguments, including permits"
+    },
+    "E202": {
+      "category": "specification",
+      "rule": "F0-UNITCALL-1",
+      "secondary_rules": [
+        "F0-MATCH-1"
+      ],
+      "meaning": "Discarded non-Unit result or resource payload",
+      "correction": "Bind and handle the obligation"
+    },
+    "E203": {
+      "category": "specification",
+      "rule": "F0-CALL-2",
+      "secondary_rules": [
+        "TYPE-REQ-1",
+        "F0-RETURN-1",
+        "F0-MATCH-1"
+      ],
+      "meaning": "Use after move or double consumption",
+      "correction": "Transfer each live linear binding once",
+      "related_roles": [
+        "binding",
+        "moved"
+      ]
+    },
+    "E204": {
+      "category": "specification",
+      "rule": "F0-RETURN-1",
+      "secondary_rules": [
+        "F0-TRY-3",
+        "F0-MATCH-1"
+      ],
+      "meaning": "Live linear obligations at normal/propagated return",
+      "correction": "Consume, hand off, or return them on every path",
+      "related_roles": [
+        "binding",
+        "propagation"
+      ]
+    },
+    "E205": {
+      "category": "specification",
+      "rule": "F0-CALL-1",
+      "secondary_rules": [
+        "TYPE-REQ-1",
+        "SYN-14"
+      ],
+      "meaning": "Attempt to construct a sealed resource",
+      "correction": "Obtain it from its authorized issuer API"
+    },
+    "E206": {
+      "category": "specification",
+      "rule": "F0-CALL-1",
+      "secondary_rules": [],
+      "meaning": "Unknown/private operation",
+      "correction": "Use an exported API or same-file helper"
+    },
+    "E207": {
+      "category": "specification",
+      "rule": "F0-CALL-1",
+      "secondary_rules": [
+        "SYN-10",
+        "SYN-14"
+      ],
+      "meaning": "Unknown argument or return binding",
+      "correction": "Pass existing in-scope names"
+    },
+    "E208": {
+      "category": "specification",
+      "rule": "F0-CALL-2",
+      "secondary_rules": [
+        "F0-CALL-1",
+        "F0-SIGNATURE-1"
+      ],
+      "meaning": "Wrong nominal type, arity, or unresolved call identity",
+      "correction": "Match the operation signature"
+    },
+    "E209": {
+      "category": "specification",
+      "rule": "F0-CALL-2",
+      "secondary_rules": [],
+      "meaning": "Conflicting identity substitution",
+      "correction": "Use the permit belonging to the requested identity"
+    },
+    "E210": {
+      "category": "specification",
+      "rule": "SYN-12",
+      "secondary_rules": [
+        "F0-RETURN-1"
+      ],
+      "meaning": "Statement after return",
+      "correction": "Remove unreachable source"
+    },
+    "E211": {
+      "category": "specification",
+      "rule": "F0-BIND-1",
+      "secondary_rules": [
+        "SYN-12",
+        "F0-MATCH-1"
+      ],
+      "meaning": "Binding/payload shadows an existing name",
+      "correction": "Choose a new binding name"
+    },
+    "E212": {
+      "category": "specification",
+      "rule": "SYN-14",
+      "secondary_rules": [
+        "F0-BIND-1"
+      ],
+      "meaning": "Operation called without await",
+      "correction": "Use the supported awaited call form"
+    },
+    "E213": {
+      "category": "specification",
+      "rule": "F0-MATCH-1",
+      "secondary_rules": [
+        "SYN-12"
+      ],
+      "meaning": "Invalid or nonterminal match",
+      "correction": "Match a live enum at the end of the block"
+    },
+    "E214": {
+      "category": "specification",
+      "rule": "F0-MATCH-1",
+      "secondary_rules": [
+        "SYN-11"
+      ],
+      "meaning": "Missing or undeclared match cases (a case tag written twice reports E003)",
+      "correction": "Cover exactly the declared case set"
+    },
+    "E215": {
+      "category": "specification",
+      "rule": "SYN-12",
+      "secondary_rules": [
+        "F0-MATCH-1",
+        "F0-RETURN-1"
+      ],
+      "meaning": "Path lacks explicit termination",
+      "correction": "End with return or exhaustive terminal match"
+    },
+    "E216": {
+      "category": "specification",
+      "rule": "F0-SIGNATURE-1",
+      "secondary_rules": [
+        "SYN-06",
+        "SYN-07"
+      ],
+      "meaning": "Invalid flow signature/index binding",
+      "correction": "Bind result indices and use supported types"
+    },
+    "E217": {
+      "category": "specification",
+      "rule": "SYN-10",
+      "secondary_rules": [
+        "F0-RETURN-1",
+        "F0-TAGRETURN-1",
+        "F0-TRY-3"
+      ],
+      "meaning": "Return type mismatch",
+      "correction": "Return exactly the declared type"
+    },
+    "E218": {
+      "category": "specification",
+      "rule": "F0-SIGNATURE-1",
+      "secondary_rules": [
+        "SYN-12"
+      ],
+      "meaning": "Recursive helper cycle",
+      "correction": "Use an acyclic F0 call graph"
+    },
+    "E219": {
+      "category": "specification",
+      "rule": "F0-TAGRETURN-1",
+      "secondary_rules": [
+        "SYN-10"
+      ],
+      "meaning": "Constructor outside declared result enum",
+      "correction": "Use a case of that result"
+    },
+    "E300": {
+      "category": "specification",
+      "rule": "SYN-03",
+      "secondary_rules": [
+        "SYN-02",
+        "N0-ORDER-1"
+      ],
+      "meaning": "Missing/invalid legacy ordering model",
+      "correction": "Supply the required check declarations"
+    },
+    "E320": {
+      "category": "specification",
+      "rule": "N0-ORDER-1",
+      "secondary_rules": [],
+      "meaning": "Legacy safety counterexample",
+      "correction": "Inspect the trace and repair the protocol"
+    },
+    "E321": {
+      "category": "specification",
+      "rule": "N0-ORDER-1",
+      "secondary_rules": [
+        "NET-REQ-1"
+      ],
+      "meaning": "Legacy token/state bound exhausted",
+      "correction": "Report NOT ESTABLISHED; review the model and limits"
+    },
+    "E400": {
+      "category": "specification",
+      "rule": "N1-COLOUR-1",
+      "secondary_rules": [
+        "SYN-01",
+        "SYN-02",
+        "SYN-03",
+        "SYN-04",
+        "SYN-05"
+      ],
+      "meaning": "Invalid coloured syntax, sorts, or model",
+      "correction": "Preserve colour arity and required declarations"
+    },
+    "E411": {
+      "category": "specification",
+      "rule": "N1-FAMILY-1",
+      "secondary_rules": [
+        "SYN-13"
+      ],
+      "meaning": "Invalid family/aggregate initialization or expression",
+      "correction": "Use valid per-colour or aggregate accounting"
+    },
+    "E412": {
+      "category": "specification",
+      "rule": "N1-FAMILY-2",
+      "secondary_rules": [],
+      "meaning": "Nonzero symbolic colour residual",
+      "correction": "Repair per-identity token accounting"
+    },
+    "E420": {
+      "category": "specification",
+      "rule": "N1-ORDER-1",
+      "secondary_rules": [
+        "D0-COLOR-2"
+      ],
+      "meaning": "Coloured safety/correlation/admission violation",
+      "correction": "Inspect the identity-specific counterexample",
+      "note": "durable.py also reports E420 when the R0 model refuses a cross-order firing."
+    },
+    "E421": {
+      "category": "specification",
+      "rule": "N1-FIRE-1",
+      "secondary_rules": [
+        "NET-FIRE-1"
+      ],
+      "meaning": "Disabled or ambiguous coloured firing",
+      "correction": "Check marking and firing-mode selection"
+    },
+    "E422": {
+      "category": "specification",
+      "rule": "N1-ORDER-1",
+      "secondary_rules": [
+        "NET-REQ-1"
+      ],
+      "meaning": "Coloured bound/budget exhausted",
+      "correction": "Report NOT ESTABLISHED, not successful verification"
+    },
+    "P400": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-SYNTAX-1",
+      "secondary_rules": [],
+      "meaning": "Unsupported or malformed pure syntax, operators, or declarations",
+      "correction": "Use only the constructs of the pure extension"
+    },
+    "P401": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-TYPE-1",
+      "secondary_rules": [],
+      "meaning": "Unsupported type, including linear resources, in a pure signature",
+      "correction": "Use Int, Bool, IntList or IntListPair"
+    },
+    "P402": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-NAME-1",
+      "secondary_rules": [],
+      "meaning": "Duplicate declaration or parameter",
+      "correction": "Give each function and parameter its own name"
+    },
+    "P403": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-NAME-1",
+      "secondary_rules": [],
+      "meaning": "Unknown binding, or a function used as a value",
+      "correction": "Bind the name first; call functions instead of passing them"
+    },
+    "P404": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-NAME-1",
+      "secondary_rules": [],
+      "meaning": "Unknown function or primitive",
+      "correction": "Declare the function or use a listed primitive"
+    },
+    "P405": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-CALL-1",
+      "secondary_rules": [],
+      "meaning": "Wrong argument count",
+      "correction": "Pass one argument per parameter"
+    },
+    "P406": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-CALL-1",
+      "secondary_rules": [
+        "KIT-PURE-TYPE-1"
+      ],
+      "meaning": "Wrong argument type, including a <= operand",
+      "correction": "Pass values of the declared types"
+    },
+    "P407": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-PATH-1",
+      "secondary_rules": [],
+      "meaning": "Wrong or missing return value",
+      "correction": "Return a value of the declared return type"
+    },
+    "P408": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-PATH-1",
+      "secondary_rules": [],
+      "meaning": "Malformed branch: missing else, statements after return or if, or a path without return",
+      "correction": "End every path with return or a terminal if/else"
+    },
+    "P409": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-EFFECT-1",
+      "secondary_rules": [],
+      "meaning": "Illegal effect: await, a net or foreign operation, or a flow call",
+      "correction": "Keep effects in flows"
+    },
+    "P410": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-EFFECT-1",
+      "secondary_rules": [],
+      "meaning": "Flow declared in a pure program",
+      "correction": "Put flows and pure functions in separate files"
+    },
+    "P411": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-RECURSION-1",
+      "secondary_rules": [],
+      "meaning": "Mutual or indirect recursion",
+      "correction": "Use direct self-recursion only"
+    },
+    "P412": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-FORK-1",
+      "secondary_rules": [],
+      "meaning": "Fork shape or fork-scope violation",
+      "correction": "Write two branches that call user functions and do not read each other"
+    },
+    "P413": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-NAME-1",
+      "secondary_rules": [],
+      "meaning": "Rebinding or shadowing",
+      "correction": "Choose a new binding name"
+    },
+    "P414": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-TYPE-1",
+      "secondary_rules": [],
+      "meaning": "Non-Bool condition",
+      "correction": "Use a Bool condition"
+    },
+    "P420": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-RUN-1",
+      "secondary_rules": [],
+      "meaning": "head or tail of an empty list at run time",
+      "correction": "Test is_empty before head or tail"
+    },
+    "P421": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-LIMIT-1",
+      "secondary_rules": [],
+      "meaning": "Fuel budget exhausted",
+      "correction": "Raise --fuel or check termination"
+    },
+    "P422": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-LIMIT-1",
+      "secondary_rules": [],
+      "meaning": "Call depth limit exceeded",
+      "correction": "Raise --max-depth or reduce recursion depth"
+    },
+    "P423": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-LIMIT-1",
+      "secondary_rules": [],
+      "meaning": "Live activation limit exceeded",
+      "correction": "Raise --max-tasks or fork less"
+    },
+    "P424": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-ENTRY-1",
+      "secondary_rules": [],
+      "meaning": "Entry arguments are not valid JSON of the declared types",
+      "correction": "Pass a JSON array matching the entry signature"
+    },
+    "P425": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-ENTRY-1",
+      "secondary_rules": [],
+      "meaning": "Unknown entry function",
+      "correction": "Name a declared function with --entry"
+    },
+    "P426": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-SCHED-1",
+      "secondary_rules": [],
+      "meaning": "Internal scheduler deadlock; never expected",
+      "correction": "Report it as a kit defect"
+    },
+    "P427": {
+      "category": "kit-extension",
+      "rule": "KIT-PURE-SCHED-1",
+      "secondary_rules": [],
+      "meaning": "Internal fork/join pairing error; never expected",
+      "correction": "Report it as a kit defect"
+    },
+    "TOOL_ERROR": {
+      "category": "tool",
+      "rule": null,
+      "secondary_rules": [],
+      "meaning": "The agent-kit runner failed outside the checker: unreadable input, invalid usage, a scenario or runtime-model assertion, or a timeout",
+      "correction": "Fix the input or invocation; this is not a language diagnostic"
+    }
+  }
+}

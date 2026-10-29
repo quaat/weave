@@ -160,7 +160,11 @@ An analyser MUST distinguish invariant proof, bounded checking, and execution.
 Search exhaustion MUST NOT be reported as a successful exhaustive check.
 
 Diagnostic wording and internal structures are not standardized. Reference
-diagnostic codes are compatibility anchors, not a complete portable ABI.
+diagnostic codes are compatibility anchors, not a complete portable ABI. The
+reference diagnostics also carry source spans and a principal rule, and can be
+written as ``weave-diagnostic-v1`` documents (:doc:`diagnostics`); spans and the
+rule mapping locate and explain a rejection, they do not change which programs
+a profile accepts.
 
 Versioning
 ----------------

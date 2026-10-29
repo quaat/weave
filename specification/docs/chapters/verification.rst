@@ -77,11 +77,28 @@ All left-side place references use exactly the declared binder and refer to
 indexed places. The right side is a constant. Initial values for involved
 indexed places must be constants per colour.
 
+.. _N1-FAMILY-1:
+
+**N1-FAMILY-1.** A family invariant MUST quantify over two distinct indices. Its
+left side MUST consist of indexed places written with exactly that binder, with
+no unindexed term; its right side MUST be a constant; the initial value of each
+place it names MUST be a constant per colour, and the per-colour initial marking
+MUST satisfy the equality. An aggregate invariant that gives nonzero weight to
+an initially nonzero indexed place depends on the number of colours and is
+rejected as well. Each violation is reported with E411.
+
 For each transition, the checker groups weighted take/put coefficients by their
 symbolic inscription tuple and requires every residual group to be zero.
 This proves preservation for all valuations in this restricted variable-only
 inscription fragment, independent of the finite exploration domain. It is a
 sufficient algebraic check; richer colour expressions are not implemented.
+
+.. _N1-FAMILY-2:
+
+**N1-FAMILY-2.** For every transition, each group of weighted take and put
+coefficients with the same symbolic inscription tuple MUST sum to zero. A
+nonzero group means the family is not proved for every colour; the checker
+reports E412 and names the transition and its residual.
 
 An example mutation consumes ``paid[t, o]`` with
 ``registrations[t, other]``. Its total counts can balance while per-colour
@@ -146,6 +163,14 @@ and that cell's initial count. The default state budget is 100,000.
 Unlike N0, N1 reports a violation if a second reservation for an admitted identity
 is enabled. The supplied identities token disables it structurally.
 Correlation is checked for all enabled modes, including read and output arcs.
+
+.. _N1-ORDER-1:
+
+**N1-ORDER-1.** A complete N1 search checks, in the initial and every reached
+state, each property for every colour, the ``tokens match firing`` correlation
+of every enabled mode, and that no second admission of an admitted identity is
+enabled. A violation MUST report E420 with its trace. Exceeding a cell bound or
+the state budget reports E422 rather than a successful check.
 
 The supplied N1 net explores 841 states and 3,712 edges, reaches all 24
 transitions, and unfolds to 32 cells and 48 firing modes. It does not establish

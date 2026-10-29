@@ -156,6 +156,16 @@ reused. The machine-readable diagnostics schema (quaat/weave#6) and the trace,
 canonical-net and evidence-envelope schemas (quaat/weave#7) are versioned under
 this axis.
 
+quaat/weave#6 added ``weave-diagnostic-v1``, the format of one machine-readable
+diagnostic (``evidence/schemas/diagnostic.v1.schema.json`` in the repository;
+:doc:`diagnostics`). It records the code, its category, its principal rule and
+secondary rules, the severity, the checking stage, the message, a primary source
+span, related spans with their roles, and a ``details`` object. The repository's
+evidence reader (``evidence/weave_evidence``) implements it with the other
+evidence formats and refuses any other version. The agent kit's ``--json``
+output and this document's ``weave-check`` directive write it. This is a
+compatible addition: no existing format, rule ID or code meaning changed.
+
 Persisted store format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -269,9 +279,13 @@ plus the rule-coverage map row, which quaat/weave#4 added later.
      - None yet
      - These files have no ``format`` field; see `Existing evidence files`_
    * - Evidence schemas
-     - Traces, machine-readable diagnostics, canonical net, evidence envelope
+     - Machine-readable diagnostics, added by quaat/weave#6
+     - ``weave-diagnostic-v1``
+     - ``format`` const in ``evidence/schemas/diagnostic.v1.schema.json``
+   * - Evidence schemas
+     - Traces, canonical net, evidence envelope
      - None yet
-     - To be defined by quaat/weave#6 and quaat/weave#7
+     - To be defined by quaat/weave#7
    * - Persisted store format
      - Durable runtime store
      - None yet
@@ -338,7 +352,9 @@ Evidence and artefact files without a ``format`` field:
   ``weave-check-report.json`` (an array) and ``linkcheck-output.json`` (one JSON
   object per line, written by Sphinx), all in ``specification/validation/``.
 
-``specification/rules.json`` (the generated rule index) and the two
+``specification/rules.json`` (the generated rule index),
+``specification/diagnostics.json`` (the code-to-rule map that quaat/weave#6
+added, with its byte-identical copy in the agent kit's skill) and the two
 ``PROVENANCE.json`` manifests also have no ``format`` field; they are index and
 provenance records rather than evidence of a claim, and this policy does not
 classify them as evidence schemas.
@@ -356,7 +372,9 @@ Compatibility anchors
 
 Diagnostic codes (the table in :doc:`diagnostics`) and rule IDs (indexed in
 :doc:`rule-catalogue` and ``specification/rules.json``) are compatibility
-anchors:
+anchors. ``specification/diagnostics.json`` maps each code to exactly one
+principal rule and optional secondary rules; the mapping is a navigation aid and
+may be corrected, but a code's meaning may not change:
 
 * A code or rule ID keeps its meaning in every later language revision, tool
   version and profile.
@@ -391,7 +409,12 @@ A code or rule ID is withdrawn only in these steps:
    as that retired code and never as any other.
 #. **Never reuse it.**
 
-No code or rule ID is deprecated today. Neither the diagnostics table nor
+No code or rule ID of this specification is deprecated today. The agent kit's
+pure ``fn`` extension, which is outside the specified fragment, used ``E4xx``
+codes that overlapped the N1 codes; quaat/weave#6 moved them to ``P4xx`` with
+the same numbers and meanings, with a migration note in
+``agent-kit/CHANGELOG.md``. Those kit codes were never entries of the table in
+:doc:`diagnostics`. Neither the diagnostics table nor
 ``specification/rules.json`` has a deprecated or retired marker yet; the first
 deprecation must add one, for rule IDs through
 ``specification/scripts/refresh_reference_pages.py``, which generates the

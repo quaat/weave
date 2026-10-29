@@ -97,6 +97,17 @@ Known evolution
   inventory for M5. They bind later milestones. A note after D0-COLOR-2 states
   that D0's colour rules assume one tenant/order pair. No identifier, rule or
   profile changed. See :doc:`core-decisions`.
+* Machine-readable diagnostics, added during 0.2-draft (quaat/weave#6): the
+  evidence format ``weave-diagnostic-v1``; source spans for every reference
+  diagnostic and related spans for E203 and E204, from one reviewed refresh of
+  both pinned prototype snapshots (the prototype stays version 3: the same
+  programs are accepted and rejected with the same codes); the code-to-rule map
+  ``diagnostics.json``, from which :doc:`diagnostics` is generated, with one
+  principal rule per code; new rule IDs N1-COLOUR-1, N1-FIRE-1, N1-FAMILY-1,
+  N1-FAMILY-2 and N1-ORDER-1 for the existing N1 checks; corrected rule
+  mappings for E110 to E112, E210, E215 and E217; E003 documented for a
+  duplicated match tag; and the agent kit's pure-extension codes moved from
+  ``E4xx`` to ``P4xx``. No code changed meaning.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

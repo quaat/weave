@@ -83,6 +83,16 @@ the conformance table, run ``python scripts/refresh_reference_pages.py``.
      - :doc:`verification`
    * - :ref:`N0-SEAL-1 <N0-SEAL-1>`
      - :doc:`declarations`
+   * - :ref:`N1-COLOUR-1 <N1-COLOUR-1>`
+     - :doc:`net-semantics`
+   * - :ref:`N1-FAMILY-1 <N1-FAMILY-1>`
+     - :doc:`verification`
+   * - :ref:`N1-FAMILY-2 <N1-FAMILY-2>`
+     - :doc:`verification`
+   * - :ref:`N1-FIRE-1 <N1-FIRE-1>`
+     - :doc:`net-semantics`
+   * - :ref:`N1-ORDER-1 <N1-ORDER-1>`
+     - :doc:`verification`
    * - :ref:`N2-CORRELATION-1 <N2-CORRELATION-1>`
      - :doc:`evidence-design`
    * - :ref:`N2-EVIDENCE-1 <N2-EVIDENCE-1>`

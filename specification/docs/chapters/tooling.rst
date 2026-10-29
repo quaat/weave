@@ -12,7 +12,10 @@ HTML, text, and PDF builders. HTML uses the Furo theme with ``sphinx-design``,
 ``sphinx-copybutton``, and accessible Pygments styles; the PDF is typeset with
 XeLaTeX and the local ``docs/_latex/weave.sty`` style. A local Pygments lexer highlights Weave; it does not parse
 or type-check it. A separate local weave-check extension validates every
-displayed implemented Weave example against the unchanged checker.
+displayed implemented Weave example against the unchanged checker. For an
+expected rejection it shows the code, its principal rule from ``diagnostics.json``
+and the primary span, and records the ``weave-diagnostic-v1`` document in its
+build report.
 
 The dependency lock is ``requirements.txt``. It pins Sphinx 8.2.3, Furo, Lark 1.3.1, and the exact
 dependency versions used for this build; this is a validated baseline, not a
