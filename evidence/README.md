@@ -23,6 +23,7 @@ the result labels mean.
 | `weave_evidence/netexport.py` | Canonical-net exporter, reading the prototype's parser output |
 | `weave_evidence/traces.py` | Converters from existing step records to traces |
 | `weave_evidence/wrap.py` | Wrappers that put each claim of an existing evidence file in an envelope |
+| `weave_evidence/conditions.py` | Cited conditions each kind of claim carries, copied into `assumptions` |
 | `weave_evidence/__main__.py` | Command line |
 | `tests/` | Unit tests |
 
@@ -149,16 +150,47 @@ listed as not wrapped: they record a diagnostic code or summary counts, not a cl
 of the six labels. No existing file
 records a runtime status, so every wrapped envelope has `runtime_status: null`.
 
-Sources and dependencies recorded for each file (paths in the first four rows are under
-`inventory-proof/`):
+`sources` are the inputs a claim is about; `dependencies` are every other repository file the
+file's producer reads or imports. `demo.py` writes all six `inventory-proof/` files, so their
+envelopes share one file set; `specification/scripts/validate.py` writes `report.json`.
 
-| File | `sources` | `dependencies` |
+| File | `sources` | Producer and the files it reads or imports (`sources` plus `dependencies`) |
 | --- | --- | --- |
-| `proof.json`, `ordering.json` | `Inventory.weave` | `checker.py`, `demo.py` |
-| `colour-proof.json`, `colour-check.json` | `Inventory.coloured.weave` | `coloured.py`, `checker.py`, `demo.py` |
-| `scenarios.json` | `Inventory.weave`, `examples/checkout_propagating.weave` | `simulate.py`, `checker.py`, `demo.py` |
-| `durable-scenarios.json` | `Inventory.coloured.weave` | `durable.py`, `coloured.py`, `checker.py`, `demo.py` |
-| `report.json` | the case or scenario source, and the nets it was checked against | `specification/scripts/validate.py`, `specification/examples/manifest.json`, `checker.py`, `coloured.py` and `simulate.py` in `specification/reference/prototype/`; for `VIOLATED`, also the counterexample text |
+| `proof.json`, `ordering.json` | `inventory-proof/Inventory.weave` | `inventory-proof/demo.py`: `demo.py`, `checker.py`, `coloured.py`, `durable.py`, `simulate.py`, `verify_certificate.py`, `Inventory.weave`, `Inventory.coloured.weave`, the seven `examples/*.weave` and the six `mutations/*.weave`, all under `inventory-proof/` |
+| `colour-proof.json`, `colour-check.json`, `durable-scenarios.json` | `inventory-proof/Inventory.coloured.weave` | as above |
+| `scenarios.json` | `inventory-proof/Inventory.weave`, `inventory-proof/examples/checkout_propagating.weave` | as above |
+| `report.json` | the case or scenario source, and the nets it was checked against | `specification/scripts/validate.py`: `validate.py`, `specification/PROVENANCE.json` and every file listed under its `reference_files` (validate.py hashes them; they include the imported `checker.py`, `coloured.py` and `simulate.py`), `specification/examples/manifest.json`, every case and scenario file the manifest names, and the nets and examples validate.py opens by name (`nets/Inventory.weave`, `nets/Inventory.coloured.weave`, `nets/unsafe_paid_release.weave`, `nets/cross_order_read.weave`, `nets/Lease.weave`, `valid/lease_roundtrip.weave`, `valid/checkout_propagating.weave`). A `VIOLATED` envelope also depends on the counterexample text it reads its trace from |
+
+A test runs each producer on a temporary copy of the repository under a Python audit hook
+and checks that the files it opens for reading, including imported modules, are exactly the
+envelope's sources plus dependencies. Reads by child processes are not observed:
+`durable.py` starts copies of itself (`--child`), which read `durable.py`, its imports and
+`Inventory.coloured.weave`, both already in the set.
+
+Assumptions and scope: each envelope's `assumptions` list any assumptions the original
+records (only `ordering.json` has some), followed by the conditions the specification
+attaches to its label for that analysis. Each condition is a verbatim quotation followed by
+its citation, `[<file>, <section>]`; a few quote the producer's docstring instead.
+`weave_evidence/conditions.py` holds them:
+
+| Claims | Conditions (by citation) |
+| --- | --- |
+| `proof.json` (PROVED, N0) | label definition; `Aggregate invariants` (induction over firing sequences; not a reachability or correlation proof, no evidence that guards are truthful); `Proof artifacts and trusted components` (`verify_certificate.py` shares the parser); `checker.py` and `verify_certificate.py` docstrings |
+| `ordering.json` (CHECKED WITHIN BOUNDS, N0) | the four assumptions in the file; label definition (bounds and guard abstraction); `One-order model: N0` (stock one, at most one admission, admission uniqueness not proved); `Safety properties` (guard abstraction, persistent witnesses, provider consistency as an external assumption); SEC-EVIDENCE-1 (guard truthfulness and correlation assumed); `explore_order` docstring; vacuous premises |
+| `colour-proof.json` aggregate (PROVED, N1) | label definition; `Aggregate invariants` (as above, and totals over colours); coloured evidence has no independent verifier; `coloured.py` docstring |
+| `colour-proof.json` families (PROVED, N1) | label definition; `Invariant families` (variable-only inscription fragment; read-only identity mistakes need the correlation check); not a reachability proof; no independent verifier; `coloured.py` docstring |
+| `colour-check.json` (CHECKED WITHIN BOUNDS, N1) | label definition; `Coloured model: N1` (one tenant with N orders, cell bounds, no arbitrary-order cutoff, vacuous premises); the guard and external assumptions as for `ordering.json`; `coloured.py` docstring |
+| `scenarios.json` and `report.json` scenarios (SCRIPTED / passed scenario) | label definition; runtime.rst `Two execution paths` (not a production runtime; the simulator's scalar entry, stock one, one foreign operation, caller-supplied outcome, undrained request queue); `simulate.py` docstring |
+| `durable-scenarios.json` (SCRIPTED / passed scenario, R0) | label definition; runtime.rst (not a production runtime; no arbitrary F0 continuation; simulated provider contract; two-attempt recovery budget; process death on one machine only; liveness unestablished); SEC-EVIDENCE-1 (no webhook signature verification or production account isolation); `durable.py` docstring |
+| `report.json` cases (CHECKED flow) | label definition; status.rst `Scope` (acceptance does not establish that every operation is enabled or completed) |
+| `report.json` counterexamples (VIOLATED) | label definition; E320: `One-order model: N0` and the guard abstraction; E420: `Coloured model: N1` (colour set, bounds, correlation over all enabled modes) and the guard abstraction |
+
+Every envelope also carries the trust boundary: SEC-MODEL-1 (net declarations, guard
+classifications, adapters, parser/model translation and the Python checker are trusted)
+and `Proof artifacts and trusted components` (trusted implementation; no machine-checked
+soundness, progress, termination or refinement theorem). `scope` is the original's own
+`scope` statement where it records one, and otherwise the specification's definition of
+the label, with its citation.
 
 What the hashes show: each hash identifies the bytes of a file present when the envelope was
 made, and `verify` recomputes them. Neither the wrapper nor `verify` re-runs the producer, so a hash does
@@ -168,7 +200,9 @@ original records its own `source_sha256` (`proof.json`, `ordering.json`,
 file and refuses on a mismatch. Regeneration of the originals is checked by the
 `inventory-proof` and `specification` checks in `AGENTS.md`.
 
-Tool versions: each envelope lists the producing modules, this tooling
+Tool versions: each envelope lists the producer's Python modules (for `inventory-proof/`
+files, all six modules `demo.py` imports or is; for `report.json`, `validate.py` and the
+three prototype modules it imports), this tooling
 (`evidence/weave_evidence`, version `0.1.0`) and, for `report.json`, the Python version the
 report records. A prototype module gets version `3`, the `version` of
 `weave-inventory-proof.zip` in `specification/PROVENANCE.json`, only if its bytes match that
@@ -253,6 +287,10 @@ formats yet; a later change will.
   are refused with the file named, and `wrap --out` writes nothing when a generated document
   is invalid; it also compares the tools' supported profiles with the profile table in
   `status.rst`;
+- `test_conditions.py`: every quotation in `conditions.py` occurs in its cited section; for
+  each wrapper, every envelope carries the conditions listed in the test (written
+  independently from the cited lines); and each producer, run on a repository copy under an
+  audit hook, opens exactly the envelope's sources plus dependencies;
 - `test_traces_and_nets.py`: the scenario and crash-case trace conversions keep every
   recorded value, the counterexample and scheduler-run conversions produce valid traces,
   malformed traces and nets are rejected, and the canonical-net exports agree with the

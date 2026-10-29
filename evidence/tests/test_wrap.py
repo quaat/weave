@@ -108,7 +108,8 @@ class WrapRepositoryTests(unittest.TestCase):
         ordering = self.results["inventory-proof/ordering.json"].envelopes[0]
         self.assertEqual(ordering["bounds"]["max_states"], 10000)
         self.assertEqual(ordering["completeness"], {"complete": True, "states": 20, "edges": 43, "unreached_transitions": []})
-        self.assertEqual(len(ordering["assumptions"]), 4)
+        original = json.loads((ROOT / "inventory-proof/ordering.json").read_text())["assumptions"]
+        self.assertEqual(ordering["assumptions"][:4], original)
         colour = self.results["inventory-proof/colour-check.json"].envelopes[0]
         self.assertEqual((colour["completeness"]["states"], colour["completeness"]["edges"]), (841, 3712))
         self.assertEqual(colour["bounds"]["orders"], 2)
