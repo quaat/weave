@@ -3,6 +3,7 @@ import json
 import shutil
 import subprocess
 import unittest
+from unittest import mock
 
 from tools.weave_workflow import docs_audit
 
@@ -134,6 +135,172 @@ class DriftTests(unittest.TestCase):
         (self.repo / "docs/development/new-policy.md").write_text("# New\n")
         _, errors = self.findings(base="HEAD")
         self.assertFinding(errors, "doc-map")
+
+    def test_audited_tree_uses_its_own_documentation_map(self):
+        rel = "tools/weave_workflow/docmap.json"
+        docmap = json.loads((self.repo / rel).read_text())
+        docmap["managed_documents"].append("notes/*.md")
+        (self.repo / rel).write_text(json.dumps(docmap, indent=2))
+        (self.repo / "notes").mkdir()
+        (self.repo / "notes/guide.md").write_text("See `notes/missing-page.md`.\n")
+        gen = self.repo / "docs/development/documentation-map.md"
+        text = gen.read_text()
+        start, end = text.index(docs_audit.GEN_BEGIN), text.index(docs_audit.GEN_END) + len(docs_audit.GEN_END)
+        gen.write_text(text[:start] + docs_audit.render_docs_map(docmap) + text[end:])  # regenerated from the tree's map
+        self.assertEqual(docs_audit.docmap_for(self.repo), docmap)
+        _, errors = self.findings()
+        self.assertFinding(errors, "path", "notes/guide.md")       # managed only by the tree's own map
+        self.assertFalse([e for e in errors if e[0] == "generated"], errors)  # current against the tree's map
+
+    def candidate_map(self, change) -> dict:
+        """Edit the copy's docmap with ``change`` and regenerate its documentation-map section."""
+        rel = "tools/weave_workflow/docmap.json"
+        docmap = json.loads((self.repo / rel).read_text())
+        change(docmap)
+        (self.repo / rel).write_text(json.dumps(docmap, indent=2))
+        gen = self.repo / "docs/development/documentation-map.md"
+        text = gen.read_text()
+        start, end = text.index(docs_audit.GEN_BEGIN), text.index(docs_audit.GEN_END) + len(docs_audit.GEN_END)
+        gen.write_text(text[:start] + docs_audit.render_docs_map(docmap) + text[end:])
+        return docmap
+
+    def test_change_scope_keeps_the_base_map_as_a_floor(self):
+        # Reviewer's probe: a workflow code change plus deleting the `workflow` impact rule.
+        self.edit("tools/weave_workflow/scheduler.py", "\n", "\n# behaviour change\n")
+        self.candidate_map(lambda m: m.__setitem__("impact_rules", [r for r in m["impact_rules"] if r["id"] != "workflow"]))
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        for doc in ("CLAUDE.md", "docs/development/agent-workflow.md", "docs/development/capabilities.md"):
+            self.assertFinding(errors, "impact", doc)          # the base rule still applies
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json",
+                       "impact rule 'workflow' removed relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+        self.assertFalse([e for e in errors if e[0] == "generated"], errors)  # section current against the candidate's map
+        _, errors = self.findings()                             # repository scope: no base, no floor
+        self.assertFalse([e for e in errors if e[0] in ("docmap-floor", "impact")], errors)
+
+    def test_change_scope_admits_a_candidate_that_only_adds_a_managed_glob(self):
+        self.candidate_map(lambda m: m["managed_documents"].append("notes/*.md"))   # the #2 case
+        (self.repo / "notes").mkdir()
+        (self.repo / "notes/guide.md").write_text("See `README.md`.\n")
+        required = docs_audit.required_documents(docs_audit.docmap_for(self.repo), {"tools/weave_workflow/docmap.json": "M"})
+        impact = [{"path": d, "reason": "r", "status": "not-applicable", "justification": "map-only change"}
+                  for d in required if d != "docs/development/documentation-map.md"]
+        res, errors = self.findings(base="HEAD", impact=impact)
+        self.assertEqual(res.result, "PASS", errors)
+        self.assertIn("notes/guide.md", docs_audit.managed_docs(self.repo, docs_audit.docmap_for(self.repo),
+                                                                docs_audit.repo_files(self.repo)))
+
+    def test_change_scope_audits_a_path_the_candidate_marks_historical(self):
+        self.edit("agent-kit/README.md", "\n", "\nSee `agent-kit/docs/no-such-page.md`.\n")
+        self.candidate_map(lambda m: m["historical_documents"]["paths"].append("agent-kit/README.md"))
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "path"])  # exempt by its own map
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "path", "agent-kit/README.md")   # still audited in change scope
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json", "historical-document path 'agent-kit/README.md' "
+                       "added (it stays audited) relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+
+    def test_change_scope_checks_a_changed_claim_with_both_definitions(self):
+        self.edit("README.md", "# 143 tests, including", "# 144 tests, including")
+        def drop_readme(m):
+            claim = next(c for c in m["claims"] if c["id"] == "inventory-proof-test-count")
+            claim["occurrences"] = []  # the README occurrence is no longer checked
+        self.candidate_map(drop_readme)
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "claim"])  # own map: unchecked
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "claim", "README.md")             # the base definition still holds
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json", "claim 'inventory-proof-test-count' "
+                       "definition changed relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+
+    def floor_messages(self, errors):
+        return [m.split(" relative to the base map")[0] for c, _, m in errors if c == "docmap-floor"]
+
+    def test_change_scope_keeps_provenance_manifests(self):
+        self.edit("specification/reference/prototype/checker.py", "\n", "\n# tampered\n")
+        self.candidate_map(lambda m: m.__setitem__(
+            "provenance_manifests", [x for x in m["provenance_manifests"] if x["manifest"] != "specification/PROVENANCE.json"]))
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "provenance"])  # hidden by its own map
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "provenance", "specification/PROVENANCE.json")
+        self.assertEqual(self.floor_messages(errors), ["provenance manifest 'specification/PROVENANCE.json' removed"])
+
+    def test_change_scope_does_not_widen_ignored_path_segments(self):
+        self.edit("docs/development/roles.md", "\n", "\nSee `tools/weave_workflow/no_such_module.py`.\n")
+        self.candidate_map(lambda m: m["ignore_path_segments"].append("weave_workflow"))
+        self.assertFalse([f for f in docs_audit.audit(self.repo).findings if f.check == "path"])  # hidden by its own map
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertFinding(errors, "path", "docs/development/roles.md")
+        self.assertEqual(self.floor_messages(errors), ["ignored path segment 'weave_workflow' added"])
+
+    def test_floor_covers_every_other_key(self):
+        base = {**docs_audit.load_docmap(), "future_rule": ["strict"]}
+        cand = json.loads(json.dumps(base))
+        cand["future_rule"] = []                                      # not floored: any change is reported
+        cand["docmap_version"] = base["docmap_version"] - 1           # a version may rise, never fall
+        del cand["synced_copies"]                                     # a removed key keeps the base value
+        cand["commands"]["make"]["sphinx_builders"].append("everything")
+        cand["path_bases"]["README.md"].append("tools")
+        cand["diagnostic_code_sources"].append("**/*.py")
+        cand["future_key"] = {"anything": True}                       # additive: allowed
+        eff, found = docs_audit.docmap_floor(cand, base)
+        messages = sorted(f.message.split(" relative to the base map")[0] for f in found)
+        self.assertEqual(messages, ["command source 'make' changed", "diagnostic-code source '**/*.py' added",
+                                    f"docmap_version lowered or invalid ({base['docmap_version'] - 1} < {base['docmap_version']})",
+                                    "path base 'tools' for 'README.md' added", "top-level key 'future_rule' changed",
+                                    "top-level key 'synced_copies' removed"])
+        for key in ("docmap_version", "future_rule", "synced_copies", "commands", "path_bases", "diagnostic_code_sources"):
+            self.assertEqual(eff[key], base[key], key)
+        self.assertEqual(eff["future_key"], {"anything": True})
+        bumped = {**base, "docmap_version": base["docmap_version"] + 1}
+        self.assertEqual(docs_audit.docmap_floor(bumped, base), (bumped, []))   # a version bump is allowed
+
+    def test_unchanged_map_adds_no_floor_findings(self):
+        res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "PASS", errors)
+        self.assertFalse([e for e in errors if e[0] == "docmap-floor"])
+
+    def test_floor_reports_removed_or_narrowed_entries_and_unites_the_maps(self):
+        base = docs_audit.load_docmap()
+        cand = json.loads(json.dumps(base))
+        cand["managed_documents"].remove("AGENTS.md")
+        cand["generated_documents"] = [g for g in cand["generated_documents"] if g["check"]["type"] != "docs-map"]
+        workflow = next(r for r in cand["impact_rules"] if r["id"] == "workflow")
+        workflow["require"].remove("README.md")
+        roadmap = next(r for r in cand["impact_rules"] if r["id"] == "roadmap")
+        roadmap["when"].append("tools/weave_workflow/docmap.json")       # an extension is not a finding
+        cand["protected_vocabulary"]["labels"].remove("PROVED")
+        eff, found = docs_audit.docmap_floor(cand, base)
+        messages = [f.message.split(" relative")[0] for f in found]
+        self.assertEqual(messages, ["impact rule 'workflow' narrowed (required document 'README.md')",
+                                    "managed-document glob 'AGENTS.md' removed",
+                                    "generated document 'docs/development/documentation-map.md' removed",
+                                    "protected label 'PROVED' removed"])
+        self.assertIn("AGENTS.md", eff["managed_documents"])
+        self.assertIn("PROVED", eff["protected_vocabulary"]["labels"])
+        self.assertIn("README.md", docs_audit.required_documents(eff, {"tools/weave_workflow/hooks.py": "M"}))
+        self.assertTrue(any(g["check"]["type"] == "docs-map" for g in eff["generated_documents"]))
+        self.assertEqual(docs_audit.docmap_floor(base, base), (base, []))
+
+    def test_tree_without_a_map_falls_back_to_the_module_map_only_in_repository_scope(self):
+        (self.repo / "tools/weave_workflow/docmap.json").unlink()
+        self.assertEqual(docs_audit.docmap_for(self.repo), docs_audit.load_docmap())  # no base: a tree predating the map
+        subprocess.run(["git", "rm", "-q", "--cached", "tools/weave_workflow/docmap.json"], cwd=self.repo, check=True)
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "no map"],
+                       cwd=self.repo, check=True)
+        res, errors = self.findings(base="HEAD")                       # neither tree nor base has a map
+        self.assertFalse([e for e in errors if e[0] == "docmap-floor"], errors)
+
+    def test_change_scope_reports_a_deleted_map_and_audits_with_the_base_map(self):
+        (self.repo / "tools/weave_workflow/docmap.json").unlink()
+        with mock.patch.object(docs_audit, "DOCMAP_PATH", self.repo / "no-module-map.json"):  # the module map is never read
+            res, errors = self.findings(base="HEAD")
+        self.assertEqual(res.result, "FAIL")
+        self.assertIn(("docmap-floor", "tools/weave_workflow/docmap.json",
+                       "documentation map deleted relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
+        self.assertGreater(res.counts["claims"], 5)                    # the base map's claims were checked
 
     def test_protected_vocabulary_is_flagged_for_review(self):
         self.edit("agent-kit/README.md", "\n", "\nThe merge sort is PROVED correct.\n")

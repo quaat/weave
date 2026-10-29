@@ -38,10 +38,31 @@ policy baseline and disagreements are reported.
    `agent:blocked` or `agent:needs-human` label, no cycle, and no contradictory dependency.
 4. Roadmap and epic tracking issues (`epic` label) are aggregate gates, not tasks. Deferred
    issues (`deferred` label, currently #49–#53) are excluded unless explicitly activated.
-5. One active implementation issue by default
-   (`concurrency.max_active_implementation_issues` in the policy). An active claim must be
-   resumed before new work is claimed. Subagents may run in parallel inside an issue only on
-   independent files.
+5. At most `concurrency.max_active_implementation_issues` (currently 3) active
+   implementation issues. An issue is an **active implementation issue** while its claim
+   is CLAIMED, neither RELEASED nor COMPLETED, and not recorded as In Review (work returned
+   from In Review to In Progress is active again), or while its card is In Progress. Work
+   In Review waits for review or merge, so it does not count against the limit, but its
+   claim is still held: an issue with an active or held claim is never selected or claimed
+   again (one claim per issue). `plan`, `claim` and `reconcile`'s limit check count exactly
+   the same set (`active_issues` in `scheduler.py`: ledger claims by this definition plus
+   open cards In Progress). When every slot is occupied, the active issues are resumed
+   before new work is claimed. Returning In Review work to In Progress is never refused for
+   capacity, so it may take the count over the limit; `plan` and `claim` then admit no new claim until
+   the count is back under the limit, and `reconcile` reports this as a note naming the
+   returned issue. Any other over-limit state, such as a claim recorded while every slot was
+   occupied, is a conflict.
+   `claim` also refuses an issue whose allowed paths may overlap those of any other held
+   claim, In Progress or In Review (In Review work keeps its paths reserved, so a return to
+   In Progress never meets an overlapping writer), naming the issue and paths. Overlap is conservative: `**` (the
+   default when no `--allowed-path` is given) overlaps everything; two patterns overlap
+   when either matches the other's literal path or one's fixed directory prefix contains
+   the other's; and both claims conflict when each may touch the same shared generated
+   artefact (`docs/development/documentation-map.md` and the map's generated documents,
+   including the inputs their generators read). A held claim or a card In Progress whose
+   recorded packet cannot be verified counts as `**`. `claim` repeats the selection and both checks under
+   the coordinator lock, so one coordinator administers all active issues. Subagents may
+   run in parallel inside an issue only on independent files.
 6. A blocked task does not block independent tasks in the same milestone. If nothing is
    eligible the run records the blockers and stops; it never jumps ahead.
 7. Early-start exceptions are narrow and inactive by default

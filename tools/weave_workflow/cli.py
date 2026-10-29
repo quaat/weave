@@ -14,8 +14,9 @@ from .github import FakeGitHub, GhCli, GitHubError
 from .model import (acceptance_criteria, digest, requirements_digest, snapshot_from_dict,
                     snapshot_to_dict)
 from .publisher import DeliveryPaused, Publisher, authenticated_events, maintainer_decisions
+from .scheduler import active_implementation_issues, path_conflicts
 from .scheduler import plan as make_plan
-from .state import LockHeld, Store, new_id, utcnow
+from .state import LockHeld, PacketError, Store, new_id, run_issues, utcnow
 from .transitions import TaskView, Transitioner, evaluate
 
 POLICY_PATH = Path(__file__).resolve().parent / "policy.json"
@@ -59,16 +60,18 @@ def claim_expiry(policy: dict) -> str:
 
 
 def active_claims(store: Store) -> list[int]:
-    claimed: dict[int, bool] = {}
+    """Active implementation issues in the ledger (``scheduler.active_implementation_issues``)."""
+    return active_implementation_issues(store.events())
+
+
+def held_claims(store: Store) -> set[int]:
+    """Issues whose latest claim is neither released nor completed (work In Review stays held).
+    Held claims block claiming the same issue again; they do not all count against the limit."""
+    last: dict[int, str] = {}
     for e in store.events():
-        n = int(e["issue"].split("#")[1])
-        if e["kind"] == "CLAIMED":
-            claimed[n] = True
-        elif e["kind"] in ("RELEASED", "COMPLETED"):
-            claimed[n] = False
-        elif e["kind"] == "STATE_CHANGED" and e["to_status"] in ("In Review", "Done", "Todo"):
-            claimed[n] = False
-    return sorted(n for n, v in claimed.items() if v)
+        if e["kind"] in ("CLAIMED", "RELEASED", "COMPLETED"):
+            last[int(e["issue"].split("#")[1])] = e["kind"]
+    return {n for n, kind in last.items() if kind == "CLAIMED"}
 
 
 # ------------------------------------------------------------------ commands
@@ -109,7 +112,7 @@ def cmd_plan(args) -> int:
     policy = load_policy()
     store = Store.for_repo(repo_root())
     snap = adapter_for(args, policy).snapshot()
-    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store), sorted(held_claims(store)))
     data = {
         "current_milestone": p.current, "next": p.next.__dict__ if p.next else None,
         "stop_reason": p.stop_reason, "active": p.active,
@@ -208,9 +211,35 @@ def derive_checks(repo: Path, paths: list[str]) -> list[dict]:
     return checks
 
 
+def claimed_paths(store: Store, issue: int) -> list[str]:
+    """Allowed paths of the issue's latest recorded packet; ``**`` when none can be verified."""
+    recs = [r for r in store.records("packet") if r["issue"] == issue]
+    if not recs:
+        return ["**"]
+    try:
+        return store.packet(issue, recs[-1]["run_id"], recs[-1]["attempt"]).get("allowed_paths") or ["**"]
+    except (PacketError, OSError, ValueError):
+        return ["**"]
+
+
+def path_refusals(store: Store, repo: Path, issue: int, allowed: list[str], reserved: list[int]) -> list[str]:
+    """Conflicts between a new claim's allowed paths and those reserved by other issues: every
+    active implementation issue and every held claim, In Review included, so work returned to
+    In Progress never meets an overlapping writer (no verifiable recorded packet counts as ``**``)."""
+    docmap = docs_audit.docmap_for(repo)
+    reasons = []
+    for other in reserved:
+        if other == issue:
+            continue
+        found = path_conflicts(allowed, claimed_paths(store, other), docmap)
+        if found:
+            reasons.append(f"allowed paths conflict with claimed issue #{other} (In Progress or In Review): " + "; ".join(found))
+    return reasons
+
+
 def select_for_claim(args, store: Store, snap, policy: dict):
     """Returns (plan, candidate, refusal); refusal is None when the issue may be claimed now."""
-    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store), sorted(held_claims(store)))
     cand = next((c for c in p.candidates if c.issue == args.issue), None)
     if cand is None or not cand.eligible:
         return p, cand, {"claimable": False, "issue": args.issue, "stop_reason": p.stop_reason,
@@ -219,6 +248,10 @@ def select_for_claim(args, store: Store, snap, policy: dict):
         return p, cand, {"claimable": False, "issue": args.issue, "reasons": [p.stop_reason or "no task selected"]}
     if p.next.issue != args.issue and not args.override_order:
         return p, cand, {"claimable": False, "reasons": [f"#{p.next.issue} precedes #{args.issue} in the deterministic order"]}
+    conflicts = path_refusals(store, repo_root(), args.issue, args.allowed_path or ["**"],
+                              sorted(set(p.active) | held_claims(store)))
+    if conflicts:
+        return p, cand, {"claimable": False, "issue": args.issue, "reasons": conflicts}
     return p, cand, None
 
 
@@ -247,7 +280,7 @@ def cmd_claim(args) -> int:
     worktree = str(repo / ".worktrees" / branch.replace("/", "-"))
     allowed = args.allowed_path or ["**"]
     impact = [{"path": d, "reason": f"required by {', '.join(sorted(set(r)))}", "status": "required"}
-              for d, r in sorted(docs_audit.required_documents(docs_audit.load_docmap(), {a: "M" for a in allowed if "*" not in a}).items())]
+              for d, r in sorted(docs_audit.required_documents(docs_audit.docmap_for(repo), {a: "M" for a in allowed if "*" not in a}).items())]
     if not args.allowed_path:
         impact.append({"path": "(computed from the final diff)", "reason": "allowed paths unrestricted; impact recomputed at the In Review gate", "status": "required"})
     deps = [f"#{e.blocker} completed ({'; '.join(e.provenance)})" for e in p.graph.blockers_of(args.issue)]
@@ -269,7 +302,14 @@ def cmd_claim(args) -> int:
                 refusal["note"] = "selection changed while waiting for the coordinator lock"
                 emit(args, refusal)
                 return 2
-            store.set_active_run({**run, "run_id": run_id, "active_issue": args.issue, "since": run.get("since", utcnow())})
+            # The run names every issue it holds a claim on, In Review work included; only active
+            # implementation issues count against the concurrency limit. Re-read the record under
+            # the lock so a claim made while this one waited is not dropped.
+            run = store.active_run() or run
+            held = held_claims(store)
+            active_issues = sorted({n for n in run_issues(run) if n in held} | {args.issue})
+            store.set_active_run({**{k: v for k, v in run.items() if k != "active_issue"}, "run_id": run_id,
+                                  "active_issues": active_issues, "since": run.get("since", utcnow())})
             claimed = publisher.publish(events.build("CLAIMED", sender="orchestrator", recipient="orchestrator",
                                                      claim_expires_at=claim_expiry(policy), coordinator_host=socket.gethostname(),
                                                      work_type=cand.work_type, summary=f"Claimed for run {run_id}.", **ctx), origin="claim")
@@ -290,7 +330,7 @@ def cmd_claim(args) -> int:
             view = _view(store, snap, policy, args.issue, packet_valid=True, exclusive=True, worktree=worktree)
             proj = snap.project
             result = Transitioner(store, adapter, publisher, proj, policy, dry_run=False).execute(view, "In Progress", ctx)
-            store.checkpoint({"run_id": run_id, "active_issue": args.issue, "attempt": attempt,
+            store.checkpoint({"run_id": run_id, "issue": args.issue, "active_issues": active_issues, "attempt": attempt,
                               "status": "In Progress" if result.get("applied") else "claimed",
                               "packet": str(packet_path), "next_action": "delegate implementation with the packet"})
     except LockHeld as exc:
@@ -391,15 +431,10 @@ def _task_context(store: Store, snap, policy: dict, number: int) -> dict:
 def recorded_packet(store: Store, snap, policy: dict, number: int) -> dict:
     """The packet recorded when the issue was claimed, verified against its ledger digest."""
     ctx = _task_context(store, snap, policy, number)
-    recs = [r for r in store.records("packet")
-            if r["issue"] == number and r["run_id"] == ctx["run_id"] and r["attempt"] == ctx["attempt"]]
-    if not recs:
-        raise SystemExit(f"no recorded packet for #{number} run {ctx['run_id']} attempt {ctx['attempt']}")
-    rec = recs[-1]
-    text = Path(rec["path"]).read_text(encoding="utf-8")
-    if digest(text) != rec["digest"]:
-        raise SystemExit(f"packet {rec['path']} was modified after the claim")
-    return json.loads(text)
+    try:
+        return store.packet(number, ctx["run_id"], ctx["attempt"])
+    except PacketError as exc:
+        raise SystemExit(str(exc)) from exc
 
 
 def _publish_task_event(args, number: int, kind: str, origin: str, body: str = "", **fields) -> dict | None:
@@ -507,7 +542,7 @@ def cmd_transition(args) -> int:
     view = _view(store, snap, policy, args.issue, head=head, clean=clean, integration=integration,
                  worktree=str(worktree) if worktree else None)
     run = store.active_run() or {}
-    ctx = {"run_id": run.get("run_id") or "run-unset", "attempt": max([e["attempt"] for e in view.events] or [1]),
+    ctx = {"run_id": run.get("run_id") or "run-unset", "attempt": view.attempt,
            "issue": f"{policy['repository']}#{args.issue}", "milestone": view.issue.milestone_key}
     if not args.apply:
         g = evaluate(view, args.to)
@@ -599,7 +634,7 @@ def cmd_docs_audit(args) -> int:
 
 def cmd_docs_map(args) -> int:
     repo = repo_root()
-    docmap = docs_audit.load_docmap()
+    docmap = docs_audit.docmap_for(repo)
     path = repo / "docs/development/documentation-map.md"
     text = path.read_text(encoding="utf-8")
     start, end = text.find(docs_audit.GEN_BEGIN), text.find(docs_audit.GEN_END)

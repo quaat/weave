@@ -7,10 +7,11 @@ import unittest
 from pathlib import Path
 
 from tools.weave_workflow import review
-from tools.weave_workflow.model import requirements_digest
+from tools.weave_workflow.model import PullRequest, requirements_digest
+from tools.weave_workflow.reconcile import reconcile
 from tools.weave_workflow.transitions import Transitioner, evaluate
 
-from .support import BASE, HEAD, Harness, integration, policy
+from .support import BASE, HEAD, MERGE, Harness, integration, policy
 
 N = 10
 
@@ -131,6 +132,24 @@ class DoneGateTests(unittest.TestCase):
         self.h.review_result(N, self.req, "PASS")
         self.assertTrue(any("budget exhausted" in r for r in self.gate().reasons))
 
+    def second_attempt(self, rounds: int) -> dict:
+        """Release attempt 1 (one round, from setUp), claim again and run `rounds` review rounds."""
+        self.h.publish("RELEASED", N, reason="returned for rework")
+        self.h.attempt = 2
+        self.h.ready_for_review(N)
+        for rnd in range(1, rounds + 1):
+            self.req = self.h.request_review(N, rnd=rnd)
+        return self.h.review_result(N, self.req, "PASS")
+
+    def test_review_budget_counts_the_current_attempt_only(self):
+        self.second_attempt(3)  # 1 + 3 rounds overall, 3 in the current attempt
+        g = self.gate()
+        self.assertTrue(g.passed, g.reasons)
+
+    def test_review_budget_exhausted_within_the_current_attempt(self):
+        self.second_attempt(4)
+        self.assertIn("review budget exhausted (4 > 3 rounds); maintainer decision required", self.gate().reasons)
+
     def test_approved_but_unmerged_stays_in_review(self):
         self.h.review_result(N, self.req, "PASS")
         g = self.gate(integration=integration(merged=False))
@@ -160,6 +179,120 @@ class DoneGateTests(unittest.TestCase):
             self.assertTrue(any("maintainer decision" in r for r in g.reasons))
         finally:
             h.close()
+
+
+class AutomationMovedDoneTests(unittest.TestCase):
+    """Project automation moves the card to Done when the merged PR closes the issue; the Done gate
+    is still evaluated in full and recorded, and any other unrecorded move stays a discrepancy."""
+
+    BRANCH = "agent/10-task-10"
+
+    def setUp(self):
+        self.h = Harness()
+        self.tr = Transitioner(self.h.store, self.h.gh, self.h.publisher, self.h.snap.project, self.h.policy, dry_run=False)
+        self.h.ready_for_review(N)
+        self.tr.execute(self.h.view(N, packet_valid=True, exclusive=True, worktree="/wt"), "In Progress", self.h.ctx(N))
+        req = self.h.request_review(N)
+        self.assertTrue(self.tr.execute(self.h.view(N, head=HEAD, clean=True), "In Review", self.h.ctx(N))["applied"])
+        self.h.review_result(N, req, "PASS")
+
+    def tearDown(self):
+        self.h.close()
+
+    def automation(self, closed=True):
+        """What GitHub does on merge: close the issue (completed) and move the card to Done."""
+        if closed:
+            self.h.snap.issues[N].state, self.h.snap.issues[N].state_reason = "closed", "completed"
+        self.h.snap.project.items[N].status = "Done"
+
+    def view(self, integ):
+        return self.h.view(N, head=HEAD, integration=integ)
+
+    def kinds(self):
+        return [e["kind"] for e in self.h.store.events(f"{self.h.ctx(N)['issue']}")]
+
+    def test_gate_is_the_in_review_to_done_gate(self):
+        self.automation()
+        g = evaluate(self.view(integration()), "Done")
+        self.assertTrue(g.passed, g.reasons)
+        self.assertTrue(g.automation_moved)
+        self.assertEqual(g.from_status, "In Review")
+        g = evaluate(self.view(integration(checks_passed=False)), "Done")  # every Done condition still applies
+        self.assertFalse(g.passed)
+        self.assertIn("required checks did not pass on the merged head", g.reasons)
+
+    def test_executor_records_without_writing_the_status(self):
+        self.automation()
+        writes_before = [entry for entry in self.h.gh.log if entry[0] == "status"]
+        out = self.tr.execute(self.view(integration()), "Done", self.h.ctx(N))
+        self.assertTrue(out["applied"], out)
+        self.assertEqual([entry for entry in self.h.gh.log if entry[0] == "status"], writes_before)
+        self.assertEqual(self.h.snap.project.items[N].status, "Done")
+        self.assertEqual(self.kinds()[-3:], ["TRANSITION_INTENT", "STATE_CHANGED", "COMPLETED"])
+        changed = self.h.store.events(self.h.ctx(N)["issue"])[-2]
+        self.assertEqual((changed["from_status"], changed["to_status"]), ("In Review", "Done"))
+        self.assertNotIn("agent:review-requested", self.h.snap.issues[N].labels)
+
+    def test_manual_done_without_a_merged_closing_pr_is_refused(self):
+        cases = {
+            "no integration evidence": (None, True),
+            "PR not merged": (integration(merged=False), True),
+            "PR from another branch": (integration(head_ref="agent/10-elsewhere"), True),
+            "PR does not close the issue": (integration(closes_issue=False), True),
+            "issue still open": (integration(), False),
+        }
+        for name, (integ, closed) in cases.items():
+            with self.subTest(name):
+                self.h.snap.issues[N].state, self.h.snap.issues[N].state_reason = "open", None
+                self.automation(closed=closed)
+                before = self.kinds()
+                g = evaluate(self.view(integ), "Done")
+                self.assertFalse(g.passed)
+                self.assertIn("transition 'Done' -> 'Done' is not permitted", g.reasons)
+                out = self.tr.execute(self.view(integ), "Done", self.h.ctx(N))
+                self.assertFalse(out["applied"])
+                self.assertEqual(self.kinds(), before)  # nothing published
+
+    def test_done_without_a_recorded_in_review_state_is_refused(self):
+        h = Harness()
+        try:
+            h.ready_for_review(N)
+            h.snap.issues[N].state, h.snap.issues[N].state_reason = "closed", "completed"
+            h.snap.project.items[N].status = "Done"  # no STATE_CHANGED was ever recorded
+            self.assertFalse(evaluate(h.view(N, head=HEAD, integration=integration()), "Done").passed)
+        finally:
+            h.close()
+
+    def record_packet(self):
+        path = Path(self.h.tmp) / "packet-10-a1.json"
+        path.write_text(json.dumps({"branch": self.BRANCH}))
+        from tools.weave_workflow.model import digest
+        self.h.store.append({"type": "packet", "issue": N, "run_id": "run-test-0001", "attempt": 1,
+                             "path": str(path), "digest": digest(path.read_text())})
+
+    def pull(self, branch=BRANCH, merged=True):
+        return PullRequest(5, "merged" if merged else "open", merged, branch, HEAD, "main", BASE,
+                           MERGE if merged else None, [N], [], None, "quaat")
+
+    def test_reconcile_classifies_the_automation_move(self):
+        self.record_packet()
+        self.automation()
+        self.h.snap.pulls = [self.pull()]
+        rep = reconcile(Path(self.h.tmp), self.h.store, self.h.gh, self.h.policy)
+        self.assertEqual(rep["conflicts"], [])
+        self.assertIn(f"#{N}: board moved to Done by project automation after merged PR #5; "
+                      f"run `transition {N} Done` to record it", rep["notes"])
+
+    def test_reconcile_reports_other_moves_as_conflicts(self):
+        self.record_packet()
+        cases = {"no PR": [], "unmerged PR": [self.pull(merged=False)], "PR from another branch": [self.pull("agent/10-x")]}
+        for name, pulls in cases.items():
+            with self.subTest(name):
+                self.automation()
+                self.h.snap.pulls = pulls
+                rep = reconcile(Path(self.h.tmp), self.h.store, self.h.gh, self.h.policy)
+                self.assertTrue(any(c.startswith(f"#{N}: board status 'Done' differs") for c in rep["conflicts"]), rep)
+                self.assertFalse(any("project automation" in note for note in rep["notes"]))
 
 
 class InReviewGateTests(unittest.TestCase):

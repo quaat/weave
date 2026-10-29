@@ -27,7 +27,21 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    generators. With `--base` it also checks the impact list, the changelog requirement, new or
    removed documents, moved boundary statements and new uses of protected vocabulary. It runs
    in `ci.yml` and at the In Progress → In Review gate as DOCS_AUDIT_RESULT. A failing audit
-   labels the issue `agent:docs-stale` and blocks the transition.
+   labels the issue `agent:docs-stale` and blocks the transition. The audit, `docs-map` and
+   the claim-time impact list read the map from the audited tree
+   (`tools/weave_workflow/docmap.json` in that worktree or checkout), so a candidate that
+   changes the map is audited against its own map. The running module's map is used only
+   when neither the audited tree nor the base revision has one; a change that deletes the
+   map is audited with the base map and reported as an error. In change scope (`--base`) the base revision's map is a
+   floor: the audit applies the union of both maps' requirements (impact rules, required
+   documents, managed-document globs, generated documents, protected labels, provenance
+   manifests and synced copies; a claim id from the base map is checked with both
+   definitions), only the exemptions both maps grant (vocabulary and historical-record
+   exemptions, ignored path segments, diagnostic-code sources, path bases), and the base
+   map's command sources; `docmap_version` may rise but not fall. Every removal or narrowing, and any change to another top-level
+   key of the base map, is an error: it must be justified and approved by the maintainer.
+   Keys only the candidate adds are allowed. The generated
+   section of `documentation-map.md` is checked against the candidate's own map.
 4. **Boundary statements move with the boundary.** When something documented as
    unimplemented, deferred or not established becomes implemented, every document that stated
    the limitation changes in the same change, including the specification's status profile

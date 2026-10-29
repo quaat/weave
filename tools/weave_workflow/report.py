@@ -17,11 +17,11 @@ def _md_cell(text: str) -> str:
 
 
 def dry_run_report(repo: Path, store: Store, adapter, policy: dict, run_audit: bool = True) -> str:
-    from .cli import active_claims, gate_events
+    from .cli import active_claims, gate_events, held_claims
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True).stdout.strip()
     caps = inspect(repo)
     snap = adapter.snapshot()
-    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store))
+    p = make_plan(snap, policy, gate_events(store, snap, policy), active_claims(store), sorted(held_claims(store)))
     L = [f"# Weave workflow dry-run report", "",
          f"Generated {utcnow()} at `{head[:12]}` with policy version {policy['policy_version']}. "
          "No remote writes were performed.", ""]

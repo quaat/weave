@@ -24,8 +24,16 @@ the orchestrator has published a `DELEGATED` event for that delegation.
 
 ## Isolation
 
-- Each task gets its own worktree and `agent/<issue>-<slug>` branch. Parallel writers never
-  edit the same files or shared generated artefacts.
+- Up to `concurrency.max_active_implementation_issues` (currently 3) issues may be in
+  implementation at once (work In Review does not count), each with exactly one claim;
+  the single coordinator, holding the OS lock, claims and administers all of them
+  ([scheduling.md](scheduling.md)).
+- Each task gets its own worktree and `agent/<issue>-<slug>` branch. `claim` refuses a task
+  whose declared allowed paths may overlap those of another held claim (In Progress or
+  In Review),
+  including shared generated artefacts (conservative rules in
+  [scheduling.md](scheduling.md)). The check compares declared allowed paths, not the
+  diffs that are eventually written; see [capabilities.md](capabilities.md).
 - The orchestrator owns integration. Any integration change invalidates earlier evidence
   for the old head.
 - Subagent definitions restrict tools: reviewers and investigators cannot edit files.

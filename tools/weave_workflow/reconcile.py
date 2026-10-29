@@ -11,14 +11,34 @@ import subprocess
 from pathlib import Path
 
 from .github import GitHubError
+from .integration import find_pr
 from .publisher import DeliveryPaused, Publisher, authenticated_events
-from .state import Store
-from .transitions import TaskView, Transitioner
+from .scheduler import active_implementation_issues, active_issues, capacity_history
+from .state import PacketError, Store, run_issues
+from .transitions import TaskView, Transitioner, automation_moved_done
 
 
 def review_round(view: TaskView) -> int:
-    attempt = max([e["attempt"] for e in view.events] or [1])
-    return 1 + len([e for e in view.all("REVIEW_REQUESTED") if e["attempt"] == attempt])
+    return 1 + len(view.all("REVIEW_REQUESTED", attempt=view.attempt))
+
+
+def automation_done_pr(store: Store, snap, n: int, trusted: list[dict]) -> int | None:
+    """The merged PR whose closure of #n let project automation move the card to Done, when the
+    recorded state is still In Review (see ``transitions.automation_moved_done``); else None."""
+    plan = next((e for e in reversed(trusted) if e["kind"] == "PLAN"), None)
+    if plan is None:
+        return None
+    try:
+        branch = store.packet(n, plan["run_id"], plan["attempt"])["branch"]
+    except (PacketError, OSError, KeyError):
+        return None
+    pr = find_pr(snap, n, None, branch)
+    if pr is None:
+        return None
+    view = TaskView(issue=snap.issues[n], status=snap.status_of(n), events=trusted,
+                    integration={"pr": pr.number, "merged": pr.merged, "head_ref": pr.head_ref,
+                                 "claim_branch": branch, "closes_issue": n in pr.closes})
+    return pr.number if automation_moved_done(view) else None
 
 
 def _worktrees(repo: Path) -> list[dict]:
@@ -71,9 +91,14 @@ def reconcile(repo: Path, store: Store, adapter, policy: dict, apply: bool = Fal
         changes = [e for e in trusted if e["kind"] == "STATE_CHANGED"]
         board = snap.status_of(n)
         if changes and snap.project is not None and board != changes[-1]["to_status"]:
-            report["conflicts"].append(
-                f"#{n}: board status {board!r} differs from last recorded transition {changes[-1]['to_status']!r} "
-                f"(manual change?); record the discrepancy and confirm with the maintainer before acting")
+            pr = automation_done_pr(store, snap, n, trusted)
+            if pr is not None:
+                report["notes"].append(f"#{n}: board moved to Done by project automation after merged PR #{pr}; "
+                                       f"run `transition {n} Done` to record it")
+            else:
+                report["conflicts"].append(
+                    f"#{n}: board status {board!r} differs from last recorded transition {changes[-1]['to_status']!r} "
+                    f"(manual change?); record the discrepancy and confirm with the maintainer before acting")
         claimed = [e for e in trusted if e["kind"] == "CLAIMED"]
         released = [e for e in trusted if e["kind"] in ("RELEASED", "COMPLETED")]
         if claimed and (not released or released[-1]["created_at"] < claimed[-1]["created_at"]):
@@ -92,9 +117,24 @@ def reconcile(repo: Path, store: Store, adapter, policy: dict, apply: bool = Fal
             report["worktrees"].append({"path": tree.get("worktree"), "branch": branch, "claim_active": active})
             if not active:
                 report["notes"].append(f"worktree {tree.get('worktree')} ({branch}) has no active claim; preserved, not removed")
-    if len(report["claims"]) > policy["concurrency"]["max_active_implementation_issues"]:
-        report["conflicts"].append(f"more active claims than permitted: {report['claims']}")
-    run = store.active_run()
-    if run and run.get("active_issue") and not any(c["issue"] == run["active_issue"] for c in report["claims"]):
-        report["notes"].append(f"active run names #{run['active_issue']} but no published claim exists; resume or release explicitly")
+    # Capacity: exactly the planner's set (ledger plus open cards In Progress).
+    ledger = store.events()
+    ledger_active = active_implementation_issues(ledger)
+    active = active_issues(snap, ledger_active)
+    limit = policy["concurrency"]["max_active_implementation_issues"]
+    report["active_implementation_issues"] = active
+    if len(active) > limit:
+        beyond, returned = capacity_history(ledger, limit, set(active) - set(ledger_active))
+        returned = sorted({n for n in returned if n in ledger_active})
+        listed = ", ".join(f"#{n}" for n in active)
+        if returned and not beyond:
+            report["notes"].append(
+                f"{len(active)} active implementation issues exceed the limit of {limit} ({listed}) because "
+                f"{', '.join(f'#{n}' for n in returned)} returned from In Review to In Progress; "
+                "no new claim until the count is back under the limit")
+        else:
+            report["conflicts"].append(f"more active implementation issues than permitted ({len(active)} > {limit}): {listed}")
+    for issue in run_issues(store.active_run()):
+        if not any(c["issue"] == issue for c in report["claims"]):
+            report["notes"].append(f"active run names #{issue} but no published claim exists; resume or release explicitly")
     return report

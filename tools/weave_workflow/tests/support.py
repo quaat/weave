@@ -95,12 +95,13 @@ class Harness:
         self.policy = pol or mini_policy()
         self.gh = FakeGitHub(self.snap)
         self.publisher = Publisher(self.store, self.gh, REPO, self.policy["actors"]["coordinator_logins"])
+        self.attempt = 1  # attempt of the events published next (a new claim starts a new attempt)
 
     def close(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def ctx(self, n: int, attempt: int = 1) -> dict:
-        return {"run_id": "run-test-0001", "attempt": attempt, "issue": f"{REPO}#{n}",
+    def ctx(self, n: int, attempt: int | None = None) -> dict:
+        return {"run_id": "run-test-0001", "attempt": attempt or self.attempt, "issue": f"{REPO}#{n}",
                 "milestone": self.snap.issues[n].milestone_key}
 
     def publish(self, kind: str, n: int, sender="orchestrator", recipient="orchestrator", body="", origin=None, **fields) -> dict:
@@ -149,7 +150,8 @@ class Harness:
 
 
 def integration(**overrides) -> dict:
-    data = {"pr": 1, "merged": True, "pr_head_sha": HEAD, "merge_sha": MERGE, "checks_passed": True,
+    data = {"pr": 1, "merged": True, "head_ref": "agent/10-task-10", "claim_branch": "agent/10-task-10",
+            "closes_issue": True, "pr_head_sha": HEAD, "merge_sha": MERGE, "checks_passed": True,
             "merge_in_base": True, "tree_matches_candidate": True, "required_reviews_passed": True}
     data.update(overrides)
     return data
@@ -172,3 +174,26 @@ def repo_copy() -> Path:
     for args in (["init", "-q"], ["add", "-A"], ["commit", "-q", "-m", "fixture"]):
         subprocess.run(["git", *args], cwd=tmp, check=True, env=env, capture_output=True)
     return tmp
+
+
+GIT_ENV = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
+
+
+def temp_git_repo(parent: Path) -> Path:
+    """An empty Git repository with one commit, for commands that create branches and worktrees."""
+    repo = parent / "repo"
+    repo.mkdir()
+    for args in (["init", "-q"], ["commit", "-q", "--allow-empty", "-m", "base"]):
+        subprocess.run(["git", *args], cwd=repo, check=True, env=GIT_ENV, capture_output=True)
+    return repo
+
+
+def real_repo_refs() -> tuple[list[str], list[str]]:
+    """The real repository's agent/* branches and worktrees (tests must leave them unchanged)."""
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+    branches = git("branch", "--list", "agent/*", "--format=%(refname)")
+    worktrees = [l for l in git("worktree", "list", "--porcelain") if l.startswith(("worktree ", "branch "))]
+    return branches, worktrees
+

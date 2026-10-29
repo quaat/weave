@@ -160,6 +160,115 @@ def milestone_gate(snap: Snapshot, policy: dict, key: str, gate_events: list[dic
 # ---------------------------------------------------------------- selection
 
 
+def _claim_states(events: list[dict]):
+    """Replay claims in order; yields (event, issue, its previous state, all claim states)."""
+    state: dict[int, str] = {}
+    for e in events:
+        n = int(e["issue"].split("#")[1])
+        prev = state.get(n)
+        if e["kind"] == "CLAIMED":
+            state[n] = "claimed"
+        elif e["kind"] in ("RELEASED", "COMPLETED"):
+            state.pop(n, None)
+        elif e["kind"] == "STATE_CHANGED" and n in state:
+            state[n] = e["to_status"]
+        yield e, n, prev, state
+
+
+def _implementing(state: dict[int, str]) -> set[int]:
+    return {n for n, status in state.items() if status not in ("In Review", "Done", "Todo")}
+
+
+def active_implementation_issues(events: list[dict]) -> list[int]:
+    """The one definition of an active implementation issue in the ledger: CLAIMED, neither
+    RELEASED nor COMPLETED, and not recorded as In Review (or Done). Work In Review waits for
+    review or merge, not implementation; work returned from In Review to In Progress is active
+    again."""
+    state: dict[int, str] = {}
+    for *_, state in _claim_states(events):
+        pass
+    return sorted(_implementing(state))
+
+
+def active_issues(snap: Snapshot, ledger_active: list[int]) -> list[int]:
+    """The set counted against ``concurrency.max_active_implementation_issues`` by plan, claim and
+    reconcile: active implementation issues in the ledger plus open cards In Progress."""
+    return sorted(set(ledger_active) | {n for n, i in snap.issues.items()
+                                        if i.state == "open" and snap.status_of(n) == "In Progress"})
+
+
+def capacity_history(events: list[dict], limit: int, board_only: set[int] = frozenset()) -> tuple[list[int], list[int]]:
+    """Replays the ledger against the limit. Returns (issues claimed while every slot was
+    occupied, issues whose return from In Review to In Progress took the count over the limit).
+    ``board_only`` (cards In Progress without an active ledger claim) count throughout."""
+    beyond, returned = [], []
+    for e, n, prev, state in _claim_states(events):
+        over = len(_implementing(state) | set(board_only)) > limit
+        if e["kind"] == "CLAIMED" and over:
+            beyond.append(n)
+        elif e["kind"] == "STATE_CHANGED" and prev == "In Review" and e["to_status"] == "In Progress" and over:
+            returned.append(n)
+    return beyond, returned
+
+
+GLOB_CHARS = re.compile(r"[*?\[]")
+
+
+def _fixed_dir(pattern: str) -> str | None:
+    """The directory prefix before a pattern's first wildcard ("" for none); None for a literal path."""
+    m = GLOB_CHARS.search(pattern)
+    if m is None:
+        return None
+    head = pattern[:m.start()]
+    return head[:head.rfind("/") + 1]
+
+
+def patterns_overlap(p: str, q: str) -> bool:
+    """Conservative: two allowed-path patterns may name a common file. ``**`` overlaps everything;
+    a literal overlaps a pattern it matches or whose fixed directory contains it (or the reverse);
+    two patterns overlap when one fixed directory prefix contains the other."""
+    from .docs_audit import matches
+    fp, fq = _fixed_dir(p), _fixed_dir(q)
+    if fp is None and fq is None:
+        a, b = p.rstrip("/"), q.rstrip("/")
+        return a == b or a.startswith(b + "/") or b.startswith(a + "/")
+    if fp is None:
+        p, q, fp, fq = q, p, fq, fp
+    if fq is None:
+        lit = q.rstrip("/")
+        return matches(lit, [p]) or lit.startswith(fp) or fp.startswith(lit + "/")
+    return fp.startswith(fq) or fq.startswith(fp)
+
+
+def generated_groups(docmap: dict) -> list[tuple[list[str], list[str]]]:
+    """Shared generated artefacts: (artefact paths, patterns whose change regenerates them)."""
+    groups = [(["docs/development/documentation-map.md"],
+               ["docs/development/documentation-map.md", "tools/weave_workflow/docmap.json"])]
+    for g in docmap.get("generated_documents", []):
+        check = g.get("check", {})
+        inputs = list(g["paths"])
+        if check.get("dir"):
+            inputs.append(check["dir"].rstrip("/") + "/**")
+        if check.get("cwd"):
+            inputs.append(check["cwd"].rstrip("/") + "/**")
+        if check.get("source"):
+            inputs.append(check["source"])
+        if check.get("type") == "docs-map":
+            inputs.append("tools/weave_workflow/docmap.json")
+        groups.append((list(g["paths"]), inputs))
+    return groups
+
+
+def path_conflicts(mine: list[str], theirs: list[str], docmap: dict) -> list[str]:
+    """Why two claims' allowed paths may collide (empty when they are disjoint)."""
+    found = [f"{a!r} overlaps {b!r}" for a in mine for b in theirs if patterns_overlap(a, b)]
+    for paths, inputs in generated_groups(docmap):
+        touches = lambda pats: any(patterns_overlap(x, y) for x in pats for y in inputs)  # noqa: E731
+        if touches(mine) and touches(theirs):
+            found.append(f"both may touch generated {', '.join(paths)}")
+    return found
+
+
 @dataclass
 class Candidate:
     issue: int
@@ -188,7 +297,9 @@ class Plan:
 
 
 def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
-         active_claims: list[int] | None = None) -> Plan:
+         active_claims: list[int] | None = None, held_claims: list[int] | None = None) -> Plan:
+    """``active_claims``: active implementation issues (``active_implementation_issues``);
+    ``held_claims``: every unreleased, uncompleted claim, In Review included."""
     gate_events = gate_events or []
     graph = build_graph(snap, policy)
     keys = sorted(policy["milestones"], key=milestone_order)
@@ -206,9 +317,7 @@ def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
     unscheduled = sorted(i.number for i in snap.issues.values()
                          if i.milestone is None and i.state == "open"
                          and not (deferred_labels | tracking) & set(i.labels))
-    active = sorted(set(active_claims or []) | {
-        n for n, i in snap.issues.items()
-        if i.state == "open" and snap.status_of(n) == "In Progress"})
+    active = active_issues(snap, active_claims or [])
     candidates: list[Candidate] = []
     if current:
         missing_preds = [p for p in policy["milestones"][current]["requires"] if not gates[p].passed]
@@ -229,6 +338,14 @@ def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
                         c.notes.append("scope restricted to the exception; no dependency or exit gate is waived")
                     c.sequence = (1, 0, n)
                     candidates.append(c)
+    held = set(held_claims or [])
+    for c in candidates:  # one claim per issue, whatever the concurrency limit
+        if c.issue in active:
+            c.eligible = False
+            c.reasons.append("already an active implementation issue (claimed or In Progress)")
+        elif c.issue in held:
+            c.eligible = False
+            c.reasons.append("claim still held (In Review or not yet released); not claimed again")
     eligible = sorted((c for c in candidates if c.eligible), key=lambda c: c.sequence)
     stop = None
     nxt = None
@@ -236,7 +353,8 @@ def plan(snap: Snapshot, policy: dict, gate_events: list[dict] | None = None,
     if current is None:
         stop = "all milestone gates passed"
     elif len(active) >= max_active:
-        stop = f"active implementation slot occupied by {', '.join(f'#{n}' for n in active)}; resume it before claiming new work"
+        stop = (f"all {max_active} active implementation slot(s) occupied by {', '.join(f'#{n}' for n in active)}; "
+                "resume them before claiming new work")
     elif not eligible:
         stop = f"no eligible task in {current}; blockers recorded"
     elif snap.project is None:
