@@ -83,6 +83,11 @@ Known evolution
   anchors; migration notes for semantic changes; new capability as versioned
   extensions or new profiles rather than changes to F0, N0, N1 or R0. No
   identifier, rule or profile changed. See :doc:`stability`.
+* Profile matrix and baseline, added during 0.2-draft (quaat/weave#4): a profile
+  matrix in :doc:`status`, the public claims with their profile and command and a
+  reproducible baseline procedure with pinned identifiers in :doc:`baseline`, a
+  generated :doc:`rule-coverage` page, and the source-to-model trust boundary in
+  :doc:`security`. No identifier, rule or profile changed.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

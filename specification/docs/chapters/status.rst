@@ -35,6 +35,90 @@ conflated. These profile names are introduced by this draft:
 Supporting N1 does not imply supporting R0. Accepting an F0 program does not
 establish that every operation is enabled or that a real service completes it.
 
+Profile matrix
+--------------------
+
+The matrix records, for each profile of this draft, where it is specified, what
+implements it in the pinned snapshot ``reference/prototype/``, what tests it, and
+a command that produces its evidence. Run each command from ``specification/``
+with Python 3.11 or newer; it needs no third-party package. The last column
+gives the exit status and the result lines at this revision. D0 and N2 are targets: they
+have no implementation, so no command establishes them.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 7 19 18 24 32
+
+   * - Profile
+     - Specified
+     - Implemented
+     - Tested
+     - Evidence command and expected result
+   * - F0
+     - :doc:`static-semantics`, :doc:`flow-semantics`, :doc:`types`,
+       :doc:`grammar`; rules ``F0-*``, ``TYPE-REQ-1``
+     - Yes: ``checker.py`` (``check_flow``, ``lower_flow_source``) against a
+       validated N0 or N1 API environment
+     - Conformance cases C001--C018; ``test_checker.py``,
+       ``test_composition.py``, ``test_rejection_and_propagation.py``;
+       ``tests/test_rule_cases.py``
+     - ``python3 reference/prototype/checker.py check
+       examples/nets/Inventory.weave examples/valid/checkout_propagating.weave``:
+       exit 0, three ``CHECKED`` lines (``checkout_propagating``,
+       ``place_order``, ``pay_with``).
+       ``python3 scripts/validate.py``: exit 0, ``PASS: 25 source expectations;
+       3 scripted scenarios``
+   * - N0
+     - :doc:`declarations`, :doc:`net-semantics` (uncoloured markings),
+       :doc:`verification` (one-order model); rules ``N0-*``, ``NET-*``
+     - Yes: ``checker.py`` (``parse_net``, ``prove``, ``explore_order``)
+     - Conformance cases C019--C025; ``test_checker.py``,
+       ``test_composition.py``, ``test_rejection_and_propagation.py``;
+       ``tests/test_rule_cases.py``
+     - ``python3 reference/prototype/checker.py analyze
+       examples/nets/Inventory.weave``: exit 0; ``PROVED stock_conservation``,
+       ``PROVED registration_balance``, three structural ``CHECKED`` lines and
+       nine ``CHECKED WITHIN BOUNDS`` property lines
+   * - N1
+     - :doc:`net-semantics` (coloured markings), :doc:`verification`
+       (coloured model)
+     - Yes: ``coloured.py`` with the shared ``checker.py`` structure
+       (MODEL-01 in :doc:`limitations`)
+     - ``test_coloured.py``; ``scripts/validate.py`` checks the eight accepted
+       flows against the N1 API projection and the E420 walkthrough. The
+       conformance corpus has no N1 case.
+     - ``python3 reference/prototype/coloured.py analyze
+       examples/nets/Inventory.coloured.weave``: exit 0; two ``PROVED aggregate``
+       and three ``PROVED per-colour`` lines, ``CHECKED WITHIN BOUNDS orders=2,
+       states=841, edges=3712``
+   * - R0
+     - :doc:`runtime`
+     - Inventory protocol only: ``durable.py``; not a general F0 interpreter
+     - ``test_durable.py``
+     - ``python3 reference/prototype/durable.py``: exit 0, six ``PASSED``
+       process-crash scenario lines
+   * - D0 (target)
+     - :doc:`execution-contract`; rules ``D0-*``
+     - No
+     - No conformance suite; the ``D0-*`` rules are pending in
+       :doc:`rule-coverage`
+     - None. A D0 conformance claim is NOT ESTABLISHED (missing model).
+   * - N2 (target)
+     - :doc:`evidence-design`; ``grammar/weave-n2-delta.ebnf``; rules ``N2-*``
+     - No
+     - No conformance suite; the ``N2-*`` rules are pending in
+       :doc:`rule-coverage`
+     - None. An N2 conformance claim is NOT ESTABLISHED (missing model).
+
+Test files in the "Tested" column are in ``reference/prototype/tests/`` unless
+another directory is named. ``python3 scripts/test_reference.py`` runs all five
+prototype test files (exit 0, ``Ran 143 tests``). :doc:`rule-coverage` maps each
+rule ID to its cases and tests or to a pending-implementation entry.
+:doc:`baseline` lists the public claims with their profile and command, and the
+procedure that reproduces the whole baseline from a fresh clone. What the
+checkers trust about parsing and lowering is stated in
+:ref:`source-to-model-trust-boundary`.
+
 Authority and normative language
 --------------------------------------
 

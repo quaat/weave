@@ -29,20 +29,22 @@ Weave is an experimental language that combines **Petri nets** for describing st
 The project is grounded in a working prototype and a specification that only describes what the prototype actually does. Where the design is ahead of the implementation, the specification says so, by name.
 
 > **Status.** Research-stage. There is no general compiler and no distributed runtime. The prototype checks, proves, explores, and executes a restricted fragment against a reference protocol. See [What is not here](#what-is-not-here) before relying on any claim.
+>
+> Each claim below names its profile (F0 flows, N0 and N1 nets, the R0 crash model; see the [profile matrix](specification/docs/chapters/status.rst)) and the command that supports it. The specification's [claims and baseline chapter](specification/docs/chapters/baseline.rst) lists every claim with its expected result and the procedure that reproduces the baseline from a fresh clone; [rule coverage](specification/docs/chapters/rule-coverage.rst) maps each rule ID to its tests.
 
 ## Why
 
 Most production incidents in payment, inventory, booking, and provisioning systems are not computation bugs. They are custody bugs: a reservation that was released while a charge was in flight, a refund that was retried into a double refund, a lost provider response that was treated as a failure. Mainstream languages cannot stop you from writing these; the best they offer is a code-review finding. Weave makes them type errors.
 
-| Guarantee | How Weave gets it |
-|---|---|
-| You cannot write code that forgets a reservation | Handles are **linear**: every path must transfer or discharge every live handle (`E204`) |
-| You cannot charge without the protocol's permission | Operations need a **permit** that only the net's own transitions can mint (`E201`, `E205`) |
-| Stock and money are never created or lost | **P-invariant proofs** over the net's incidence matrix, for any starting quantity (`PROVED`) |
-| "Released while the charge was in flight" is found before deploy | **Bounded exploration** with evidence witnesses and a readable counterexample trace (`E320`, `E420`) |
-| A lost response is not a failure | Foreign operations return `Ok` / `Err` / **`Unknown`**; `Unknown` carries a recovery obligation that propagation preserves |
-| Per-order bookkeeping cannot cross orders | **Coloured** places and per-colour invariant families; `tokens match firing` rejects cross-identity arcs |
-| A crashed worker does not lose the protocol state | A **process-crash model** with six injected crash points, fencing, and immutable final evidence |
+| Guarantee | How Weave gets it | Profile · supporting command |
+|---|---|---|
+| You cannot write code that forgets a reservation | Handles are **linear**: every path must transfer or discharge every live handle (`E204`) | F0 · `cd specification && python3 scripts/validate.py` (cases C010, C016) |
+| You cannot charge without the protocol's permission | Operations need a **permit** that only the net's own transitions can mint (`E201`, `E205`) | F0 · `cd specification && python3 scripts/validate.py` (cases C009, C011) |
+| Stock and money are never created or lost | **P-invariant proofs** over the net's incidence matrix, for any starting quantity (`PROVED`) | N0, N1 · `cd specification && python3 reference/prototype/checker.py analyze examples/nets/Inventory.weave` and `python3 reference/prototype/coloured.py analyze examples/nets/Inventory.coloured.weave` (the declared invariants of these nets) |
+| "Released while the charge was in flight" is found before deploy | **Bounded exploration** with evidence witnesses and a readable counterexample trace (`E320`, `E420`) | N0 (`E320`), N1 (`E420`) · `cd specification && python3 scripts/validate.py` (case C025; coloured walkthrough) |
+| A lost response is not a failure | Foreign operations return `Ok` / `Err` / **`Unknown`**; `Unknown` carries a recovery obligation that propagation preserves | F0 · `cd specification && python3 scripts/validate.py` (cases C014, C016) |
+| Per-order bookkeeping cannot cross orders | **Coloured** places and per-colour invariant families; `tokens match firing` rejects cross-identity arcs | N1 · `cd specification && python3 reference/prototype/coloured.py analyze examples/nets/Inventory.coloured.weave` |
+| A crashed worker does not lose the protocol state | A **process-crash model** with six injected crash points, fencing, and immutable final evidence | R0 · `cd inventory-proof && python3 durable.py` (six `PASSED` scenarios) |
 
 ## A taste
 
@@ -73,6 +75,8 @@ flow pay_with(tenant: TenantId, order: OrderId, amount: Money, hold: Hold[tenant
     return Ok(paid)
 ```
 
+These flows are F0, checked against the N0 API: `cd inventory-proof && python3 checker.py check Inventory.weave examples/checkout_propagating.weave`.
+
 Try to skip the escrow step:
 
 ```weave
@@ -88,7 +92,9 @@ direct_charge.weave:2: E201
   Obtain Escrow through Inventory.arm; its constructor is sealed.
 ```
 
-And what the analyser says about the protocol itself:
+That is F0 conformance case C009, reproduced by `cd inventory-proof && python3 checker.py check Inventory.weave examples/direct_charge.weave` (exit 1 with this message) and checked by `cd specification && python3 scripts/validate.py` (exit 0).
+
+And what the analyser says about the protocol itself (N1, from `cd inventory-proof && python3 demo.py`):
 
 ```text
 PROVED aggregate stock_conservation
@@ -130,7 +136,7 @@ Each directory is self-contained with its own README, tests and requirements. Ru
 Python 3.11 or newer. Only the specification build needs third-party packages.
 
 ```bash
-# Prototype: prove, explore, check, simulate, crash-test
+# Prototype (F0, N0, N1, R0): prove, explore, check, simulate, crash-test
 cd inventory-proof
 python3 demo.py
 python3 -m unittest discover -s tests -v        # 143 tests, including process-crash cases
@@ -180,7 +186,7 @@ The specification keeps a register of these; the short list:
 - **No general computation in flows.** Values are opaque scalars. Pure functions, arithmetic, lists, `if`/`else`, loops and recursion exist only in the agent kit's separate `fn` extension and are not part of the specified fragment ([M1](https://github.com/quaat/weave/issues/55)).
 - **No general runtime.** The simulator fails on a disabled transition instead of waiting; the crash model executes the Inventory protocol, not arbitrary flows. The dynamic contract D0 is specified, not implemented ([M3](https://github.com/quaat/weave/issues/57)).
 - **Payment vocabulary in the check grammar.** `paid_evidence` and `rejected_evidence` are keywords today. Declared evidence classes (N2) are specified, not implemented ([M2](https://github.com/quaat/weave/issues/56)).
-- **Bounded, not general.** Ordering is checked at two orders; conservation is proved for any stock. No liveness, deadlock-freedom, fairness, or arbitrary-order theorem.
+- **Bounded, not general.** Ordering is checked at two orders (N1; N0 checks one order); conservation is proved for any stock (N0, N1). No liveness, deadlock-freedom, fairness, or arbitrary-order theorem.
 - **No provider truth, no network.** Evidence guards are abstract witnesses; adapters, authentication and retention are external contracts.
 - **No modules, no time, no inbound events** yet.
 

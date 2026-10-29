@@ -80,6 +80,12 @@ coloured mutation and durable process-crash cases. The supplied run passes
 143 tests. Expected rejection examples are intentional and must not be repaired
 merely to make every file accepted.
 
+``python scripts/rule_coverage.py`` regenerates :doc:`rule-coverage` from
+``rules.json``, ``examples/manifest.json`` and ``tests/rule-coverage.json``;
+``--check`` fails if a rule has no conformance case, test or pending entry, if a
+listed test is missing, or if the page is stale. ``tests/test_rule_coverage.py``
+runs that check in ``make validate`` and ``make validate-offline``.
+
 For direct reference commands:
 
 .. code-block:: bash
@@ -151,14 +157,18 @@ directives. Target-only N2 examples use clearly labelled text blocks and are
 excluded. The builder emits ``weave-check-report.json``. Nine documentation tests
 include changed inline enum/runtime contracts, missing fragment context, unknown
 grammar references, trailing syntax, and a lease checked against the wrong net.
+``tests/test_rule_cases.py`` adds 34 positive and negative rule cases against the
+reference checker, and ``tests/test_rule_coverage.py`` adds 15 tests of the rule
+coverage check.
 
 The generated Earley grammar is derived directly from weave.ebnf. Its independent
 syntax/layout front end is followed by shared reference semantic checks; it is
 not an independently implemented type checker. Corpus stage results are recorded
 separately in ``validation/grammar-report.json``.
 
-``make validate`` includes the grammar audit, rule-catalogue drift check, nine
-documentation tests, 143 upstream tests, strict HTML with weave-check, the local
+``make validate`` includes the grammar audit, rule-catalogue drift check, the
+specification's 58 tests (nine documentation tests, the rule cases and the rule
+coverage check), 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.
 No unreachable URL is silently ignored.
