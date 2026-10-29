@@ -193,3 +193,8 @@ The profile table above lists implemented reference scopes only.
 A new implementation can claim F0 static conformance without a D0 runtime. It
 must name that limitation. Neither a future N2 implementation nor a D0 scheduler
 is included in this documentation revision.
+
+:doc:`core-decisions` records the maintainer's decisions on integers, pure
+faults, identity values, deadlines, cancellation ownership, the M4 verification
+fragment and the M5 durable state (quaat/weave#5). They bind later milestones;
+they add no rule ID, profile or conformance target to this revision.

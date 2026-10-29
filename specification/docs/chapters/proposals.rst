@@ -40,6 +40,10 @@ Integer range/overflow, primitive error types, pair naming, expression precedenc
 resource exhaustion, and a complete static/dynamic semantics require explicit
 adoption. A fuel or depth limit is not a termination proof.
 
+The maintainer has since decided integer semantics, empty-list failure, pure
+fault propagation and evaluation order for future work; see :doc:`core-decisions`.
+Those decisions do not make this proposal accepted syntax.
+
 Scoped fork/join
 ----------------------
 
