@@ -111,6 +111,12 @@ Each tool carries its own semantic version. Bump rule:
 * PATCH: a fix that changes no interface.
 * While MAJOR is 0, an incompatible change increments MINOR instead.
 
+A tool's output names claims only with the six result labels, one label per claim,
+and reports tool and runtime status separately
+(:ref:`chapters/verification:Result labels in tool output`). Changing the layout
+of that output is an interface change under the rule above; changing which label
+a result receives is a semantic change.
+
 A tool version never redefines a profile. Where a tool's behaviour differs from
 the profile it claims, the difference is a discrepancy to report (:doc:`status`).
 A tool change that alters which programs are accepted or rejected, the diagnostic
@@ -223,8 +229,9 @@ plus the rule-coverage map row, which quaat/weave#4 added later.
        (``version`` of the source archive)
    * - Tools
      - Agent kit, including its CLI ``agent-kit/scripts/weave.py``
-     - ``0.2.0`` (``0.1.0`` when this policy was written; quaat/weave#6 moved the
-       pure-extension codes to ``P4xx``, an incompatible change, so MINOR
+     - ``0.3.0`` (``0.1.0`` when this policy was written; quaat/weave#6 moved the
+       pure-extension codes to ``P4xx`` and quaat/weave#8 changed the output to
+       carry one result label per claim, both incompatible changes, so MINOR
        increments while MAJOR is 0); the CLI has no version option
      - ``agent-kit/PROVENANCE.json`` (``kit_version``)
    * - Tools

@@ -114,6 +114,14 @@ Known evolution
   :ref:`SYN-12 <SYN-12>` rather than :ref:`SYN-10 <SYN-10>`, because SYN-12
   states exactly those checks (no statement after a return, every path
   terminates) and SYN-10 governs how a return is interpreted.
+* Result labels in tool output, added during 0.2-draft (quaat/weave#8): a
+  policy in :doc:`verification` that a label attaches to one claim, that tool
+  and runtime status are separate and are not evidence, that ``Unknown`` is an
+  application outcome and never NOT ESTABLISHED, and that the prototype's console
+  lines are raw tool output. The prototype and its pinned snapshots are
+  unchanged; the agent kit's runner (0.3.0) and the evidence envelopes label
+  each claim, and tests in the agent kit and the specification lint tool output
+  for any other label. No label, rule, diagnostic code or profile changed.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.
