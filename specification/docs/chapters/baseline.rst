@@ -196,6 +196,9 @@ Pinned identifiers
 
 A baseline record names these identifiers. Every value below can be recomputed
 from the baseline commit with the command shown, run from the repository root.
+The hashes are recorded in this chapter rather than in ``examples/manifest.json``,
+because adding fields to that manifest would change the ``weave-conformance-v1``
+schema and, under :doc:`stability`, need a new format version.
 
 .. list-table::
    :header-rows: 1
