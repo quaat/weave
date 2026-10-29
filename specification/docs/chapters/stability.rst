@@ -136,6 +136,11 @@ and an integer version, and names the profile it extends. Bump rule:
   revision, and conformance claims then name the revision they follow.
 * An editorial clarification that changes no accepted program, diagnostic code or
   guarantee does not change the profile identifier.
+* An existing extension's integer version increments for any change to what it
+  accepts, rejects or guarantees; such a change is a semantic change and needs a
+  migration note. Editorial changes do not increment it. An extension name and
+  version pair is never reused with a changed meaning, and a retired extension
+  name is tombstoned as for diagnostic codes (see `Deprecation`_).
 
 Evidence schemas
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -437,8 +442,9 @@ The format-field requirement under `Evidence schemas`_ and these rules bind
 tools that read or write versioned schemas; they do not reinterpret the
 unversioned files listed under `Existing evidence files`_: until those files are
 migrated (by quaat/weave#7 for the files it names; otherwise not yet tracked), a
-tool does not treat them as conformant versioned evidence, and this policy does
-not require rejecting them retroactively.
+tool does not treat them as conformant versioned evidence and reports no
+passing result on them, and this policy does not require rejecting them
+retroactively.
 
 The existing prototype predates this rule. It has two partial safeguards, and
 neither meets the rule in full:
