@@ -67,9 +67,16 @@ changes for these inputs:
 | `verify` of a certificate | `RECHECKED` (not one of the six labels) | `PROVED`, scoped to the recheck (shared parser; ordering not rechecked) |
 | `check-pure` of an accepted file; `run-pure` | `CHECKED` (a kit word the guide listed beside the labels), `EXECUTED` | `NOT ESTABLISHED` (outside every specified profile); the run is `runtime_status: completed` |
 | `check` of an accepted flow file | `ok: true`, text `CHECKED FILE: …` | `CHECKED flow` (the same label, now attached and spelled in full) |
+| `lower` of a flow file | `status: CHECKED LOWERING` (not one of the six labels), text `CHECKED LOWERING -> PATH` | two `CHECKED flow` claims in `files`: the source and the lowered output (`lowered_from`) |
 | each `simulate` run | top-level `SCRIPTED` for the command | `SCRIPTED / passed scenario` per run (the same label, spelled in full and per claim) |
 
-`PROVED` accounting and `CHECKED WITHIN BOUNDS` ordering keep their labels.
+`PROVED` accounting and `CHECKED WITHIN BOUNDS` ordering (`check`, `analyze`, `lower`,
+`simulate`, `examples`) keep their labels. The other 0.2.0 status words were not claims and
+still are not: `READY`/`NOT READY` (`doctor`), `PASS`/`FAIL` (`examples`), `FAILED` (`test`),
+`CERTIFICATE ->` (`analyze --certificate`), `EXECUTED`, `RESULT` and `STATS` (`run-pure`) became
+`tool status:`, `certificate:`, `runtime status:`, `result:` and `stats:` lines, and
+`EXECUTED` became `runtime_status: completed`. Every 0.2.0 command is covered: `doctor`,
+`check`, `analyze`, `lower`, `simulate`, `verify`, `examples`, `test`, `check-pure`, `run-pure`.
 
 **Who is affected.** Weave programs: none. Implementations claiming a profile: none.
 Evidence and artefact consumers: scripts that read the runner's or the demos' JSON or text

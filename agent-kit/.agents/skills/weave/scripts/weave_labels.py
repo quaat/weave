@@ -13,7 +13,8 @@ a label:
   named ``status``, no member other than ``claim_label`` holds a label, and no
   value is any other upper-case status word (``PASSED``, ``CHECKED``, ...);
   the only upper-case word values that are not claims are listed in
-  ``NON_CLAIM_WORDS``.
+  ``NON_CLAIM_WORDS``, and user-chosen names under ``IDENTIFIER_MEMBERS`` are
+  not checked.
 * Text: a claim is an unindented line that begins with its label, followed by
   the statement (``LABEL statement``, the established console form; the six
   labels are distinct as prefixes). Non-claim lines begin with a lower-case name
@@ -52,6 +53,20 @@ _STATUS_WORD = re.compile(r"[A-Z][A-Z _/]*[A-Z]")
 # Upper-case word values that are not claims: ACCEPT is the teaching manifest's expected
 # outcome for an accepted case (``examples`` results), an expectation, not a label.
 NON_CLAIM_WORDS = frozenset({"ACCEPT"})
+# Members whose string values (or lists of strings) are user-chosen identifiers or paths,
+# which the grammar lets be upper case (``\w+``): invariant, property, transition, flow,
+# function, entry, enum type and case names, and file paths, as they occur in the runner's,
+# the demos' and the envelopes' output. They are names, never claims, so the status-word
+# check does not apply to them.
+IDENTIFIER_MEMBERS = frozenset({
+    "invariants", "properties", "property", "trace", "marking", "flows", "functions", "entry",
+    "return_type", "return_tag", "outcome", "net_transitions", "name",
+    "file", "net", "source", "certificate", "lowered_from", "prototype", "missing",
+})
+
+
+def _identifiers(value) -> bool:
+    return isinstance(value, str) or (isinstance(value, list) and all(isinstance(v, str) for v in value))
 
 # An unindented text line whose first word is upper case (two or more capitals)
 # presents a claim, as the prototype's console lines (PROVED, CHECKED, PASSED,
@@ -109,6 +124,8 @@ def lint_json(document, pointer: str = "") -> list[str]:
             elif key == "runtime_status":
                 if value is not None and value not in RUNTIME_STATUSES:
                     errors.append(f"{where}: runtime status {value!r} is not one of {', '.join(RUNTIME_STATUSES)}")
+            elif key in IDENTIFIER_MEMBERS and _identifiers(value):
+                continue
             elif isinstance(value, str):
                 errors += _value_errors(value, where)
             else:

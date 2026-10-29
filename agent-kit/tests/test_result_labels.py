@@ -140,6 +140,26 @@ class LintNegativeTests(unittest.TestCase):
         self.assertEqual(lint_json(document), [])
         self.assertEqual(json_claims(document), [('/accounting/claim_label', P), ('/runs/0/claim_label', S)])
 
+    def test_upper_case_identifiers_are_not_status_words(self):
+        """User-chosen names may be upper case (the grammar accepts \\w+); they are not claims."""
+        net = (ROOT / 'examples/nets/Inventory.weave').read_text()
+        for old, new in (('paid_never_available', 'NO_RELEASE'), ('stock_conservation', 'STOCK_CONSERVATION')):
+            self.assertIn(old, net)
+            net = net.replace(old, new)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'Upper.weave'
+            path.write_text(net)
+            code, out, err = run(CLI, '--json', 'analyze', '--net', path)
+        self.assertEqual((code, err), (0, ''), out)
+        data = json.loads(out)
+        self.assertIn('NO_RELEASE', data['ordering']['properties'])
+        self.assertIn('STOCK_CONSERVATION', data['accounting']['invariants'])
+        self.assertEqual(lint_json(data), [])
+        self.assertEqual([label for _, label in json_claims(data)], [P, B])
+        # The same word in a member that is not an identifier is still a status word.
+        self.assertEqual(len(lint_json({'ordering': {'verdict': 'NO_RELEASE'}})), 1)
+        self.assertEqual(len(lint_json({'ordering': {'properties': ['NO_RELEASE'], 'result': 'PASSED'}})), 1)
+
     def test_mutated_real_output_fails(self):
         """Claim positions come from the structure: edit one claim of real output and the lint fails."""
         _, out, _ = run(CLI, '--json', 'check', GOOD)
