@@ -2,6 +2,8 @@
 import io
 import json
 import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -130,6 +132,23 @@ class LifecycleHookTests(HookHarness):
         self.assertEqual([r["agent_type"] for r in self.store.records("subagent")], ["weave-implementer"])
         self.assertTrue(self.store.records("evidence")[0]["docs_audit_queued"])
         self.assertIn("agent-kit/README.md", json.loads((self.store.root / "docs-audit-pending.json").read_text()))
+
+    def test_docs_audit_queue_uses_the_edited_files_own_tree(self):
+        self.start_run()
+        other = Path(tempfile.mkdtemp()) / "tree"
+        self.addCleanup(shutil.rmtree, other.parent, True)
+        (other / "tools/weave_workflow").mkdir(parents=True)
+        (other / "notes").mkdir()
+        subprocess.run(["git", "init", "-q"], cwd=other, check=True)
+        docmap = json.loads((ROOT / "tools/weave_workflow/docmap.json").read_text())
+        docmap["managed_documents"].append("notes/*.md")    # managed only by the other tree's map
+        (other / "tools/weave_workflow/docmap.json").write_text(json.dumps(docmap))
+        for name in ("notes/guide.md", "scratch.md"):
+            (other / name).write_text("x\n")
+            self.call("PostToolUse", tool_name="Edit", tool_input={"file_path": str(other / name)})  # cwd: ROOT
+        queued = json.loads((self.store.root / "docs-audit-pending.json").read_text())
+        self.assertEqual(len(queued), 1)
+        self.assertTrue(queued[0].endswith("notes/guide.md"), queued)
 
     def test_session_start_context(self):
         self.start_run()  # a run record from before concurrent claims: a single active_issue

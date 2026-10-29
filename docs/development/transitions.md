@@ -61,6 +61,9 @@ In Review → Done gate with every condition above unchanged. On PASS, `--apply`
 TRANSITION_INTENT, reads the Status back as Done without writing it, and publishes
 STATE_CHANGED (In Review → Done) and COMPLETED. `reconcile` reports the case as a note
 ("board moved to Done by project automation after merged PR #N"), not as a conflict.
+Known limitation: `reconcile` classifies this case from the board, the issue and the PR
+alone and does not evaluate the Done gate; the gate runs only when `transition N Done` is
+invoked, so a note does not mean the gate would pass.
 
 Any other unrecorded status, including Done without such a merged PR, stays a conflict and
 the Done gate refuses it. The workflow cannot read the automations through the API: inspect

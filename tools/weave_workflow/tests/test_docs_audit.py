@@ -302,6 +302,31 @@ class DriftTests(unittest.TestCase):
                        "documentation map deleted relative to the base map; the change " + docs_audit.FLOOR_NOTE), errors)
         self.assertGreater(res.counts["claims"], 5)                    # the base map's claims were checked
 
+    MAP_FILES = ("docs/development/documentation-map.md", "tools/weave_workflow/docmap.json")
+
+    def justified(self):
+        return [{"path": d, "reason": "new-or-removed-doc", "status": "not-applicable",
+                 "justification": "the document is covered by an existing managed glob"} for d in self.MAP_FILES]
+
+    def test_added_document_under_a_base_glob_accepts_a_justified_impact_list(self):
+        (self.repo / "docs/decisions/0005-x.md").write_text("# Decision 0005\n")   # the #5 case
+        res, errors = self.findings(base="HEAD", impact=self.justified())
+        self.assertEqual(res.result, "PASS", errors)
+
+    def test_added_document_still_needs_the_map_without_justification(self):
+        (self.repo / "docs/decisions/0005-x.md").write_text("# Decision 0005\n")
+        _, errors = self.findings(base="HEAD")
+        for doc in self.MAP_FILES:
+            self.assertFinding(errors, "doc-map", doc)
+
+    def test_added_document_outside_every_base_glob_fails_even_when_justified(self):
+        (self.repo / "specification/validation/NEW_REPORT.md").write_text("# Report\n")  # historical, not managed
+        _, errors = self.findings(base="HEAD", impact=self.justified())
+        for doc in self.MAP_FILES:
+            self.assertFinding(errors, "doc-map", doc)
+        self.assertTrue(all("not covered by a managed glob of the base map: specification/validation/NEW_REPORT.md" in m
+                            for c, _, m in errors if c == "doc-map"), errors)
+
     def test_protected_vocabulary_is_flagged_for_review(self):
         self.edit("agent-kit/README.md", "\n", "\nThe merge sort is PROVED correct.\n")
         res, warnings = self.findings(base="HEAD", severity="warning")

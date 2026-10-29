@@ -637,11 +637,12 @@ def audit(repo: Path, docmap: dict | None = None, base: str | None = None, impac
     result.counts["generated"] = check_generated(repo, docmap, f, section_map=section_map)
     f.extend(floor)
     if base:
-        _change_checks(repo, docmap, base, impact, result)
+        _change_checks(repo, docmap, base, impact, result, base_map)
     return result
 
 
-def _change_checks(repo: Path, docmap: dict, base: str, impact: list[dict] | None, result: AuditResult) -> None:
+def _change_checks(repo: Path, docmap: dict, base: str, impact: list[dict] | None, result: AuditResult,
+                   base_map: dict | None = None) -> None:
     f = result.findings
     changes = changed_files(repo, base)
     result.counts["changed_files"] = len(changes)
@@ -668,9 +669,18 @@ def _change_checks(repo: Path, docmap: dict, base: str, impact: list[dict] | Non
     hist = docmap["historical_documents"]["paths"]
     doc_like = [p for p, s in changes.items() if s in "AD" and (matches(p, docmap["managed_documents"]) or matches(p, hist))]
     if doc_like:
+        # A justified not-applicable entry clears the requirement only when every added or removed
+        # document is already covered by a managed glob of the base map; otherwise the map is out of date.
+        uncovered = sorted(p for p in doc_like if not matches(p, (base_map or {}).get("managed_documents", [])))
         for need in docmap["new_or_removed_document_rule"]["require"]:
-            if need not in changes:
-                f.append(Finding("error", "doc-map", need, f"documents added or removed ({', '.join(sorted(doc_like))}) but the documentation map was not updated"))
+            if need in changes:
+                continue
+            item = declared.get(need)
+            if not uncovered and item and item.get("status") == "not-applicable" and item.get("justification"):
+                continue
+            detail = f"; not covered by a managed glob of the base map: {', '.join(uncovered)}" if uncovered else ""
+            f.append(Finding("error", "doc-map", need, f"documents added or removed ({', '.join(sorted(doc_like))}) "
+                                                       f"but the documentation map was not updated{detail}"))
     boundary = docmap["boundary"]
     authoritative = docmap["protected_vocabulary"]["authoritative"]
     flagged: set[tuple[str, str]] = set()

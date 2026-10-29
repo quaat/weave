@@ -42,6 +42,11 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    key of the base map, is an error: it must be justified and approved by the maintainer.
    Keys only the candidate adds are allowed. The generated
    section of `documentation-map.md` is checked against the candidate's own map.
+   Known limitation: the tooling records no approval that clears a docmap-floor error, so a
+   legitimate narrowing keeps the change-scope audit, and with it the In Review gate,
+   failing until the maintainer decides how to land it. Known limitation: CI (`ci.yml`) runs
+   `docs-audit` without `--base`, so the floor and the other change-scope checks apply only
+   where the audit is run with a base, such as the DOCS_AUDIT_RESULT for the In Review gate.
 4. **Boundary statements move with the boundary.** When something documented as
    unimplemented, deferred or not established becomes implemented, every document that stated
    the limitation changes in the same change, including the specification's status profile

@@ -133,12 +133,19 @@ def post_tool_use(payload: dict, failed: bool) -> int:
         rel = _rel(path, payload.get("cwd") or ".")
         rec["path"] = rel
         from .docs_audit import docmap_for, load_docmap, matches
+        # The edited file's own tree (which may be another worktree than the cwd) and its map.
+        target = Path(path) if Path(path).is_absolute() else Path(payload.get("cwd") or ".") / path
+        folder = next((d for d in target.parents if d.is_dir()), Path("."))
         try:
-            top = _toplevel(payload.get("cwd") or ".")
+            top = _toplevel(str(folder))
         except OSError:
             top = ""
-        docmap = docmap_for(Path(top)) if top else load_docmap()  # the edited tree's own map
-        if not failed and matches(rel, docmap["managed_documents"]):
+        docmap = docmap_for(Path(top)) if top else load_docmap()
+        try:
+            tree_rel = str(target.resolve().relative_to(Path(top).resolve())) if top else rel
+        except ValueError:
+            tree_rel = rel
+        if not failed and matches(tree_rel, docmap["managed_documents"]):
             pending = store.root / "docs-audit-pending.json"
             items = json.loads(pending.read_text()) if pending.exists() else []
             if rel not in items:
