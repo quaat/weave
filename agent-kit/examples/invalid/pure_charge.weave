@@ -1,4 +1,4 @@
-# E409: pure functions cannot invoke foreign or net operations.
+# P409: pure functions cannot invoke foreign or net operations.
 fn sneaky(xs: IntList) -> IntList:
     let result = Payments.charge(xs)
     return xs

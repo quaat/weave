@@ -49,7 +49,7 @@ class RuntimeFault(PureError):
 
 def _nonempty(xs: IntList, name: str, line: int) -> IntList:
     if not xs.length:
-        raise RuntimeFault("E420", f"{name}() of an empty list.", line)
+        raise RuntimeFault("P420", f"{name}() of an empty list.", line)
     return xs
 
 
@@ -83,7 +83,7 @@ def _is_int(value) -> bool:
 def decode(value, type_name: str, where: str):
     """Convert a JSON value into a runtime value of the declared type."""
     def bad(expected):
-        return RuntimeFault("E424", f"{where}: expected {expected}, got {value!r}.")
+        return RuntimeFault("P424", f"{where}: expected {expected}, got {value!r}.")
     if type_name == "Int":
         if not _is_int(value):
             raise bad("an integer")
@@ -100,7 +100,7 @@ def decode(value, type_name: str, where: str):
         if not isinstance(value, list) or len(value) != 2:
             raise bad("a two-element list of integer lists")
         return IntListPair(decode(value[0], "IntList", where), decode(value[1], "IntList", where))
-    raise RuntimeFault("E424", f"{where}: unsupported type {type_name}.")
+    raise RuntimeFault("P424", f"{where}: unsupported type {type_name}.")
 
 
 def encode(value):

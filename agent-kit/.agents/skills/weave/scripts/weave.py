@@ -22,6 +22,7 @@ from checker import CheckError, check_flow, explore_order, lower_flow_source, pa
 from simulate import simulate
 from verify_certificate import verify
 import weave_pure.cli as pure_cli
+from weave_diagnostics import from_check_error, from_pure_error, location, tool_error
 from weave_pure import PureError, check_source as check_pure_source
 
 
@@ -29,9 +30,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def diagnostic(error: CheckError, path: Path, stage: str) -> dict:
-    return {"code": error.code, "message": error.message, "file": str(path),
-            "line": error.line, "stage": stage}
+def diagnostic(error: CheckError, path: Path, stage: str, source: str | None = None) -> dict:
+    """A weave-diagnostic-v1 document for a checker error found in ``path``."""
+    if source is None:
+        try:
+            source = read(Path(path))
+        except (OSError, UnicodeDecodeError):
+            source = ""
+    return from_check_error(error, str(path), source, stage)
+
+
+def appended_diagnostic(error: CheckError, net_path: Path, net_source: str, file: Path, fragment: str,
+                        stage: str) -> dict:
+    """A diagnostic for a fragment appended to a net: spans in the fragment refer to the fragment's file."""
+    combined = net_source + "\n" + fragment
+    document = from_check_error(error, str(file), combined, stage)
+    offset = len((net_source + "\n").splitlines())
+    for span in [document["span"]] + [r["span"] for r in document["related"]]:
+        if span["start"]["line"] > offset:
+            for point in (span["start"], span["end"]):
+                point["line"] -= offset
+        else:
+            span["file"] = str(net_path)
+    return document
 
 
 def checked_net(path: Path, max_states: int = 10000):
@@ -77,24 +98,30 @@ def run_examples(path: Path) -> tuple[dict, int]:
     for item in manifest["cases"]:
         file = base / item["file"]
         actual, error_detail = "ACCEPT", None
+        text = read(file)
         try:
             if item["kind"] == "flow":
-                names = check_flow(net, read(file))
+                names = check_flow(net, text)
                 if "flows" in item and names != item["flows"]:
                     raise ValueError(f"Unexpected flow names in {file}: {names}")
             elif item["kind"] == "net_append":
-                mutated = parse_net(source + "\n" + read(file))
+                mutated = parse_net(source + "\n" + text)
                 prove(mutated)
                 explore_order(mutated)
             elif item["kind"] == "net":
                 checked_net(file)
             elif item["kind"] == "pure":
-                check_pure_source(read(file))
+                check_pure_source(text)
             else:
                 raise ValueError(f"Unknown example kind: {item['kind']}")
-        except (CheckError, PureError) as error:
+        except PureError as error:
+            actual, error_detail = error.code, from_pure_error(error, str(file), text)
+        except CheckError as error:
             actual = error.code
-            error_detail = diagnostic(error, file, item["kind"])
+            if item["kind"] == "net_append":
+                error_detail = appended_diagnostic(error, net_path, source, file, text, "net")
+            else:
+                error_detail = diagnostic(error, file, "net" if item["kind"] == "net" else item["kind"], text)
         expected = item["expect"]
         results.append({"file": item["file"], "expected": expected, "actual": actual,
                         "ok": actual == expected, "lesson": item["lesson"],
@@ -196,13 +223,14 @@ def execute(args) -> tuple[dict, int]:
             result["files"] = []
             for file in args.files:
                 stage, label = "flow", file
+                text = read(file)
                 try:
-                    names = check_flow(net, read(file))
+                    names = check_flow(net, text)
                     result["files"].append({"file": str(file), "ok": True, "flows": names})
                 except CheckError as error:
                     result["ok"] = False
                     result["files"].append({"file": str(file), "ok": False,
-                                            "diagnostic": diagnostic(error, file, "flow")})
+                                            "diagnostic": diagnostic(error, file, "flow", text)})
         elif args.command == "lower":
             stage, label = "flow", args.file
             source = read(args.file)
@@ -229,14 +257,15 @@ def execute(args) -> tuple[dict, int]:
     except CheckError as error:
         return {"command": args.command, "ok": False, "diagnostic": diagnostic(error, label, stage)}, 1
     except (OSError, ValueError, KeyError, TypeError, AssertionError, subprocess.TimeoutExpired) as error:
-        return {"command": args.command, "ok": False,
-                "diagnostic": {"code": "TOOL_ERROR", "stage": stage, "file": str(label),
-                               "line": 0, "message": str(error)}}, 2
+        return {"command": args.command, "ok": False, "diagnostic": tool_error(str(error), label, stage)}, 2
 
 
 def print_diagnostic(d: dict) -> None:
-    where = f"{d['file']}:{d['line']}" if d.get("line") else d["file"]
-    print(f"{where}: {d['code']} [{d['stage']}]\n  " + d["message"].replace("\n", "\n  "))
+    rule = f" ({d['rule']})" if d.get("rule") else ""
+    print(f"{location(d)}: {d['code']}{rule} [{d['stage']}]\n  " + d["message"].replace("\n", "\n  "))
+    for item in d.get("related", []):
+        start = item["span"]["start"]
+        print(f"  {item['span']['file']}:{start['line']}:{start['column']}: {item['role']}: {item['label']}")
 
 
 def render(result: dict) -> None:

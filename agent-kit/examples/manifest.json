@@ -167,25 +167,25 @@
     {
       "file": "invalid/pure_mutual.weave",
       "kind": "pure",
-      "expect": "E411",
+      "expect": "P411",
       "lesson": "Extension: mutual recursion stays unsupported."
     },
     {
       "file": "invalid/pure_hold.weave",
       "kind": "pure",
-      "expect": "E401",
+      "expect": "P401",
       "lesson": "Extension: pure code cannot receive linear handles."
     },
     {
       "file": "invalid/pure_charge.weave",
       "kind": "pure",
-      "expect": "E409",
+      "expect": "P409",
       "lesson": "Extension: pure code cannot perform foreign effects."
     },
     {
       "file": "invalid/pure_fork_sibling.weave",
       "kind": "pure",
-      "expect": "E412",
+      "expect": "P412",
       "lesson": "Extension: fork branches are independent."
     }
   ],

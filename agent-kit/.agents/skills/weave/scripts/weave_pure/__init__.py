@@ -16,9 +16,9 @@ def run_source(source: str, entry: str, json_args: list, **options):
     program = check_source(source)
     fn = next((f for f in program.functions if f.name == entry), None)
     if fn is None:
-        raise RuntimeFault("E425", f"Unknown entry function `{entry}`.")
+        raise RuntimeFault("P425", f"Unknown entry function `{entry}`.")
     if not isinstance(json_args, list) or len(json_args) != len(fn.params):
-        raise RuntimeFault("E424", f"`{entry}` expects a JSON array of {len(fn.params)} argument(s).")
+        raise RuntimeFault("P424", f"`{entry}` expects a JSON array of {len(fn.params)} argument(s).")
     args = [decode(value, type_name, f"argument `{name}`")
             for value, (name, type_name) in zip(json_args, fn.params)]
     machine = Machine(program, **options)

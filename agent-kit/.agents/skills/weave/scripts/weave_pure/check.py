@@ -13,9 +13,9 @@ class _Checker:
         self.calls = {}  # function -> set of called user functions
         for fn in program.functions:
             if fn.name in PRIMITIVES:
-                raise PureError("E402", f"`{fn.name}` collides with a list primitive.", fn.line)
+                raise PureError("P402", f"`{fn.name}` collides with a list primitive.", fn.line)
             if fn.name in self.sigs or fn.name in self.flows:
-                raise PureError("E402", f"Duplicate declaration `{fn.name}`.", fn.line)
+                raise PureError("P402", f"Duplicate declaration `{fn.name}`.", fn.line)
             self.sigs[fn.name] = fn
 
     def expr(self, e, env: dict, current: str, hidden: dict | None = None) -> str:
@@ -25,28 +25,28 @@ class _Checker:
             return "Bool"
         if isinstance(e, Var):
             if hidden and e.name in hidden:
-                raise PureError("E412", f"Fork branch uses sibling result `{e.name}` before the join; "
+                raise PureError("P412", f"Fork branch uses sibling result `{e.name}` before the join; "
                                         "fork results are visible only after both branches complete.", e.line)
             if e.name in env:
                 return env[e.name]
             if "." in e.name:
-                raise PureError("E409", f"Pure functions cannot reference net or foreign operation `{e.name}`.",
+                raise PureError("P409", f"Pure functions cannot reference net or foreign operation `{e.name}`.",
                                 e.line)
             if e.name in self.sigs or e.name in PRIMITIVES or e.name in self.flows:
-                raise PureError("E403", f"`{e.name}` is a function, not a value; higher-order functions are "
+                raise PureError("P403", f"`{e.name}` is a function, not a value; higher-order functions are "
                                         "unsupported.", e.line)
-            raise PureError("E403", f"Unknown binding `{e.name}`.", e.line)
+            raise PureError("P403", f"Unknown binding `{e.name}`.", e.line)
         if isinstance(e, Le):
             for side in (e.left, e.right):
                 if self.expr(side, env, current, hidden) != "Int":
-                    raise PureError("E406", "`<=` compares two Int values.", e.line)
+                    raise PureError("P406", "`<=` compares two Int values.", e.line)
             return "Bool"
         if isinstance(e, Call):
             if "." in e.name:
-                raise PureError("E409", f"Pure functions cannot invoke net or foreign operation `{e.name}`.",
+                raise PureError("P409", f"Pure functions cannot invoke net or foreign operation `{e.name}`.",
                                 e.line)
             if e.name in self.flows:
-                raise PureError("E409", f"Pure function cannot call effectful flow `{e.name}`.", e.line)
+                raise PureError("P409", f"Pure function cannot call effectful flow `{e.name}`.", e.line)
             if e.name in PRIMITIVES:
                 params, ret, _ = PRIMITIVES[e.name]
             elif e.name in self.sigs:
@@ -54,23 +54,23 @@ class _Checker:
                 params, ret = tuple(t for _, t in fn.params), fn.ret
                 self.calls[current].add(e.name)
             else:
-                raise PureError("E404", f"Unknown function or primitive `{e.name}`.", e.line)
+                raise PureError("P404", f"Unknown function or primitive `{e.name}`.", e.line)
             if len(e.args) != len(params):
-                raise PureError("E405", f"`{e.name}` expects {len(params)} argument(s), got {len(e.args)}.",
+                raise PureError("P405", f"`{e.name}` expects {len(params)} argument(s), got {len(e.args)}.",
                                 e.line)
             for i, (arg, expected) in enumerate(zip(e.args, params), 1):
                 actual = self.expr(arg, env, current, hidden)
                 if actual != expected:
-                    raise PureError("E406", f"Argument {i} of `{e.name}` must be {expected}, got {actual}.",
+                    raise PureError("P406", f"Argument {i} of `{e.name}` must be {expected}, got {actual}.",
                                     e.line)
             return ret
-        raise PureError("E400", "Unsupported expression.", getattr(e, "line", 0))
+        raise PureError("P400", "Unsupported expression.", getattr(e, "line", 0))
 
     def bind(self, name: str, env: dict, line: int) -> None:
         if name in env:
-            raise PureError("E413", f"`{name}` is already bound; rebinding and shadowing are unsupported.", line)
+            raise PureError("P413", f"`{name}` is already bound; rebinding and shadowing are unsupported.", line)
         if name in self.sigs or name in PRIMITIVES:
-            raise PureError("E413", f"Binding `{name}` collides with a function name.", line)
+            raise PureError("P413", f"Binding `{name}` collides with a function name.", line)
 
     def block(self, stmts: tuple, env: dict, fn) -> None:
         env = dict(env)
@@ -84,32 +84,32 @@ class _Checker:
             elif isinstance(stmt, Return):
                 actual = self.expr(stmt.expr, env, fn.name)
                 if actual != fn.ret:
-                    raise PureError("E407", f"`{fn.name}` returns {fn.ret}, but this returns {actual}.", stmt.line)
+                    raise PureError("P407", f"`{fn.name}` returns {fn.ret}, but this returns {actual}.", stmt.line)
                 if not last:
-                    raise PureError("E408", "Statements after `return` are unreachable.", stmts[index + 1].line)
+                    raise PureError("P408", "Statements after `return` are unreachable.", stmts[index + 1].line)
             elif isinstance(stmt, If):
                 if self.expr(stmt.cond, env, fn.name) != "Bool":
-                    raise PureError("E414", "An `if` condition must be Bool.", stmt.line)
+                    raise PureError("P414", "An `if` condition must be Bool.", stmt.line)
                 self.block(stmt.then, env, fn)
                 self.block(stmt.other, env, fn)
                 if not last:
-                    raise PureError("E408", "`if`/`else` is terminal; no statements may follow it.",
+                    raise PureError("P408", "`if`/`else` is terminal; no statements may follow it.",
                                     stmts[index + 1].line)
             if last and not isinstance(stmt, (Return, If)):
-                raise PureError("E408", f"Every path of `{fn.name}` must end in `return` or a terminal "
+                raise PureError("P408", f"Every path of `{fn.name}` must end in `return` or a terminal "
                                         "`if`/`else`.", stmt.line)
 
     def fork(self, stmt: Fork, env: dict, fn) -> None:
         if len(stmt.branches) != 2:
-            raise PureError("E412", f"`fork` requires exactly two branches, got {len(stmt.branches)}.", stmt.line)
+            raise PureError("P412", f"`fork` requires exactly two branches, got {len(stmt.branches)}.", stmt.line)
         names = [b.name for b in stmt.branches]
         if names[0] == names[1]:
-            raise PureError("E412", "Fork branches must bind distinct names.", stmt.line)
+            raise PureError("P412", "Fork branches must bind distinct names.", stmt.line)
         results = {}
         for branch, sibling in zip(stmt.branches, reversed(names)):
             call = branch.expr
             if not isinstance(call, Call) or call.name not in self.sigs:
-                raise PureError("E412", "Each fork branch must call a user-defined pure function; primitives "
+                raise PureError("P412", "Each fork branch must call a user-defined pure function; primitives "
                                         "and plain expressions are not activations.", branch.line)
             self.bind(branch.name, env, branch.line)
             results[branch.name] = self.expr(call, env, fn.name, hidden={sibling: True})
@@ -154,7 +154,7 @@ class _Checker:
                             break
                     if len(component) > 1:
                         first = min(component, key=lambda n: self.sigs[n].line)
-                        raise PureError("E411", "Mutual recursion is unsupported: "
+                        raise PureError("P411", "Mutual recursion is unsupported: "
                                                 + ", ".join(sorted(component)) + ".", self.sigs[first].line)
 
         for name in self.sigs:
@@ -165,14 +165,14 @@ class _Checker:
 def check_program(program: Program) -> Program:
     checker = _Checker(program)
     if not program.functions:
-        raise PureError("E400", "No pure functions to check.")
+        raise PureError("P400", "No pure functions to check.")
     for fn in program.functions:
         checker.calls[fn.name] = set()
         checker.block(fn.body, dict(fn.params), fn)
     checker.recursion()
     if program.flows:
         name, line = program.flows[0]
-        raise PureError("E410", f"Effectful flow `{name}` cannot appear in a pure program; check flows with "
+        raise PureError("P410", f"Effectful flow `{name}` cannot appear in a pure program; check flows with "
                                 "`check` and keep pure functions in separate files.", line)
     return program
 

@@ -155,7 +155,7 @@ class Machine:
     # -- tasks --------------------------------------------------------------------------------
     def spawn(self, fn_name, args, parent=None, fork=None, branch=None, line=0) -> Task:
         if self.live + 1 > self.limits.max_tasks:
-            raise RuntimeFault("E423", f"Live activation limit {self.limits.max_tasks} exceeded.", line)
+            raise RuntimeFault("P423", f"Live activation limit {self.limits.max_tasks} exceeded.", line)
         task = Task(self.next_task, parent, fork, branch, fn_name)
         self.next_task += 1
         self.tasks[task.id] = task
@@ -169,7 +169,7 @@ class Machine:
 
     def push_frame(self, task: Task, fn_name: str, args: list, line: int, store_into=None) -> None:
         if len(task.frames) >= self.limits.max_depth:
-            raise RuntimeFault("E422", f"Call depth limit {self.limits.max_depth} exceeded in `{fn_name}`.", line)
+            raise RuntimeFault("P422", f"Call depth limit {self.limits.max_depth} exceeded in `{fn_name}`.", line)
         task.frames.append(Frame(self.program[fn_name], args, store_into))
         self.stats["max_frames"] = max(self.stats["max_frames"], len(task.frames))
 
@@ -198,7 +198,7 @@ class Machine:
     # -- execution ----------------------------------------------------------------------------
     def run(self, entry: str, args: list):
         if entry not in self.program:
-            raise RuntimeFault("E425", f"Unknown entry function `{entry}`.")
+            raise RuntimeFault("P425", f"Unknown entry function `{entry}`.")
         root = self.spawn(entry, args)
         while self.root_value is None and self.root_fault is None:
             batch = []
@@ -208,7 +208,7 @@ class Machine:
                     break
                 batch.append(task)
             if not batch:
-                raise RuntimeFault("E426", "Scheduler deadlock: no runnable activation and no root result.")
+                raise RuntimeFault("P426", "Scheduler deadlock: no runnable activation and no root result.")
             self.stats["slices"] += 1
             for task in batch:
                 if task.state != RUNNABLE:
@@ -218,7 +218,7 @@ class Machine:
                     while steps < self.limits.quantum and task.state == RUNNABLE:
                         if self.steps >= self.limits.fuel:
                             frame = task.frames[-1]
-                            raise RuntimeFault("E421", f"Fuel budget of {self.limits.fuel} instructions exhausted "
+                            raise RuntimeFault("P421", f"Fuel budget of {self.limits.fuel} instructions exhausted "
                                                        f"in `{frame.fn.name}` (resource limit; termination is "
                                                        "not checked).", frame.fn.code[frame.pc][2])
                         self.steps += 1
@@ -233,7 +233,7 @@ class Machine:
                     self.queue.append(task.id)
         pending = self.live, len(self.joins), len(self.waiting_on)
         if pending != (0, 0, 0):
-            raise RuntimeFault("E427", f"Internal error: pending tasks/joins after root completion: {pending}.")
+            raise RuntimeFault("P427", f"Internal error: pending tasks/joins after root completion: {pending}.")
         self.stats.update(steps=self.steps, pending_tasks=self.live, pending_joins=len(self.joins),
                           root_task=root.id)
         if self.root_fault is not None:
@@ -314,7 +314,7 @@ class Machine:
         left_args = self.pop_args(frame.stack, spec.left_argc)
         frame.pc += 1
         if self.live + 2 > self.limits.max_tasks:
-            raise RuntimeFault("E423", f"Live activation limit {self.limits.max_tasks} would be exceeded by a fork.",
+            raise RuntimeFault("P423", f"Live activation limit {self.limits.max_tasks} would be exceeded by a fork.",
                                spec.line)
         fork_id = self.next_fork
         self.next_fork += 1
@@ -336,7 +336,7 @@ class Machine:
             return
         join = self.joins[task.fork]
         if task.branch in join.results or task.id not in (join.left, join.right):
-            raise RuntimeFault("E427", f"Internal error: duplicate or mismatched completion for task {task.id}.")
+            raise RuntimeFault("P427", f"Internal error: duplicate or mismatched completion for task {task.id}.")
         join.results[task.branch] = value
         self.emit("child_complete", task=task.id, parent=task.parent, fork=task.fork, branch=task.branch)
         if len(join.results) == 2:

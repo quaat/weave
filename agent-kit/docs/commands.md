@@ -39,12 +39,16 @@ python3 scripts/weave.py test --pattern test_composition.py --verbose
 ```
 
 Put `--json` **before** the subcommand. It emits one JSON object with `command`
-and `ok`. Rejections contain `diagnostic` with `code`, `message`, `file`, `line`,
-and `stage`. Batch checks put diagnostics in corresponding `files` elements.
+and `ok`. Rejections contain `diagnostic`, a `weave-diagnostic-v1` document with
+`format`, `code`, `category`, `rule`, `secondary_rules`, `severity`, `stage`,
+`message`, `span` (file, start and end line and column), `related` and
+`details`; see the Diagnostics section of `docs/weave.md`. Batch checks put
+diagnostics in corresponding `files` elements.
 Results separate `accounting` from `ordering`, including bounds and assumptions.
 Simulation returns `runs` with final `marking`; `--trace` adds complete `events`.
 
-Text successes are compact; diagnostics retain full explanations. There is no
+Text successes are compact; diagnostics retain full explanations and print
+`file:line:column: CODE (RULE) [stage]`, followed by any related locations. There is no
 persistent result cache. Only explicit `--certificate` and `--output` write files.
 Output directories must exist; existing outputs are replaced, but input paths
 cannot be output paths. The runner suppresses bytecode writes.
@@ -79,9 +83,9 @@ python3 scripts/weave.py run-pure demos/merge_sort/merge_sort.weave --entry merg
 | `--schedule` / `--seed` | `fifo` / `0` | Run-queue order: `fifo`, `lifo`, or seeded `random` |
 | `--workers N` | 4 | Runnable tasks dispatched per scheduling round, all on one OS thread |
 | `--quantum N` | 16 | Instructions a task runs before yielding |
-| `--fuel N` | 10000000 | Total instruction budget (`E421`) |
-| `--max-depth N` | 100000 | Interpreter frames per activation (`E422`) |
-| `--max-tasks N` | 4096 | Live activations (`E423`) |
+| `--fuel N` | 10000000 | Total instruction budget (`P421`) |
+| `--max-depth N` | 100000 | Interpreter frames per activation (`P422`) |
+| `--max-tasks N` | 4096 | Live activations (`P423`) |
 | `--trace` | off | Include scheduler events |
 
 `run-pure` JSON contains `status: EXECUTED`, `check: CHECKED`, `result`,

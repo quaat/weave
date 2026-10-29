@@ -46,7 +46,8 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(code, 1)
         d = data['files'][0]['diagnostic']
         self.assertEqual(d['code'], 'E204')
-        self.assertEqual(d['line'], 3)
+        self.assertEqual(d['span']['start'], {'line': 3, 'column': 5})
+        self.assertEqual(d['rule'], 'F0-RETURN-1')
 
     def test_lowering_is_written_only_after_checks(self):
         with tempfile.TemporaryDirectory() as tmp:

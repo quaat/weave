@@ -11,7 +11,7 @@ checks, and scripted single-order execution. Version 3 also bundles coloured net
 does not expose them yet; see `docs/prototype-status.md`. This kit adds packaging and tooling,
 plus one explicitly separate extension: pure `fn` programs with integer lists,
 direct recursion, and a cooperative fork/join scheduler (`check-pure`/`run-pure`,
-implemented outside the unchanged vendored prototype). See
+implemented outside the vendored prototype, which it does not modify). See
 `docs/prototype-status.md` for limitations.
 
 ## Start
