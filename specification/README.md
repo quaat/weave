@@ -51,7 +51,10 @@ checks. `scripts/rule_coverage.py` regenerates `docs/chapters/rule-coverage.rst`
 from `rules.json`, `examples/manifest.json` and `tests/rule-coverage.json`; its
 `--check` mode runs in `make validate` through `tests/test_rule_coverage.py`.
 `tests/test_diagnostics.py` runs the `scripts/diagnostic_map.py` check and one
-diagnostic fixture per code. `make validate-offline` omits only the external linkcheck step.
+diagnostic fixture per code. `tests/test_result_labels.py` checks the result-label policy in
+`docs/chapters/verification.rst` against the envelope schema and the agent kit's label lint,
+and lints the envelopes wrapped from `validation/report.json` (quaat/weave#8).
+`make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 
 ### PDF

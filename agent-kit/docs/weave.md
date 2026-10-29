@@ -179,10 +179,18 @@ line numbers and does not contain a separate source map. Comments are not retain
 | --- | --- |
 | `PROVED` | Exact integer P-invariant accounting for every finite firing sequence and nonnegative initial stock, under the parsed net semantics |
 | `CHECKED WITHIN BOUNDS` | Exhaustive exploration of the declared one-order abstraction within its explicit bounds and assumptions |
-| `CHECKED` flow | Nominal types, indexed identities, exhaustive outcomes, linear moves, and no normal drops in the supported fragment |
-| `SCRIPTED` | A concrete synchronous run with a chosen foreign outcome |
+| `CHECKED flow` | Nominal types, indexed identities, exhaustive outcomes, linear moves, and no normal drops in the supported fragment |
+| `SCRIPTED / passed scenario` | A concrete synchronous run with a chosen foreign outcome completed without a disabled transition |
 | `VIOLATED` | A counterexample was found |
 | `NOT ESTABLISHED` | Missing model, exceeded bounds/budget, or an unimplemented guarantee |
+
+These six labels, written exactly as above, are the only labels the runner attaches
+to a claim, one label per claim. Tool status (`ok`, `tool status: PASS`) and the
+runtime status of a run (`runtime_status`: `waiting`, `timed out`, `completed`) are
+separate fields and are not evidence. `Unknown` is an application outcome, never
+`NOT ESTABLISHED`. Lines the vendored prototype prints itself (`PASSED`,
+`RECHECKED`, a bare `CHECKED …`, `NOT PROVED` in a diagnostic) are raw tool output,
+not claims. See "Claims, tool status and runtime status" in `docs/commands.md`.
 
 An invariant has one equality whose left side is affine in place counts and whose
 right side is affine in the stock parameter. The checker validates the initial
@@ -353,10 +361,12 @@ IDs; the extension is outside the specified fragment:
 | `KIT-PURE-ENTRY-1` | `run-pure` names a declared entry function and passes a JSON array of its argument types |
 | `KIT-PURE-SCHED-1` | The scheduler pairs every fork with one join and ends with no pending activation; a violation is a kit defect |
 
-Status labels: `CHECKED` (pure) means the rules above passed. `EXECUTED` means one
-run completed within its limits. Scheduler pairing, cleanup, and identical results
-across modes are **tested**, not proved. No net or certificate covers this task
-system.
+Result labels: pure programs are outside F0 and every specified profile, so the
+runner's only claim about one is `NOT ESTABLISHED` (missing model); its statement
+says that the kit checker accepted the rules above. A completed run has
+`runtime_status: completed`, a runtime status that is not evidence. Scheduler
+pairing, cleanup, and identical results across modes are **tested**, not proved.
+No net or certificate covers this task system.
 
 ## Unsupported and unestablished
 

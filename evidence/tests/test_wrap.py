@@ -318,6 +318,22 @@ class VerifyRederivationTests(unittest.TestCase):
         self.assertIn("claim_label: differs from the envelope re-derived from inventory-proof/ordering.json/properties/0", out)
         self.assertNotIn("verified", out)
 
+    def test_non_label_or_runtime_status_fails_verify(self):
+        # quaat/weave#8: verify refuses an envelope whose label is not one of the six, or whose
+        # runtime status is an application outcome or a label, before any re-derivation.
+        source = sorted((self.out / "envelopes").glob("*.json"))[0]
+        for change in ({"claim_label": "PASSED"}, {"claim_label": "NOT PROVED"},
+                       {"runtime_status": "Unknown"}, {"runtime_status": "NOT ESTABLISHED"}):
+            with self.subTest(change=change):
+                envelope = dict(json.loads(source.read_text()), **change)
+                target = source.with_name("non-label.json")
+                target.write_bytes(canonical_bytes(envelope))
+                self.addCleanup(target.unlink)
+                code, out = self.run_cli("verify", str(target))
+                self.assertEqual(code, 1, out)
+                self.assertIn(next(iter(change)), out)
+                self.doCleanups()
+
     def test_every_tampered_claim_field_fails_verify(self):
         changes = {
             "claim_label": lambda e: e.update(claim_label="NOT ESTABLISHED"),

@@ -68,8 +68,8 @@ class TinyShopTests(unittest.TestCase):
         code, data = runner('check', SHOP)
         self.assertEqual(code, 0, data)
         self.assertTrue(data['ok'])
-        self.assertEqual(data['accounting']['status'], 'PROVED')
-        self.assertEqual(data['ordering']['status'], 'CHECKED WITHIN BOUNDS')
+        self.assertEqual(data['accounting']['claim_label'], 'PROVED')
+        self.assertEqual(data['ordering']['claim_label'], 'CHECKED WITHIN BOUNDS')
         self.assertTrue(data['files'][0]['ok'], data['files'][0])
         self.assertEqual(self.lower_code, 0, self.lower_data)
         lowered = self.lowered.read_text()
@@ -79,7 +79,8 @@ class TinyShopTests(unittest.TestCase):
 
     # 2. Final markings
     def test_all_scenarios_reach_expected_final_marking(self):
-        self.assertEqual(self.source_sim['status'], 'SCRIPTED')
+        self.assertEqual({r['claim_label'] for r in self.source_sim['runs']}, {'SCRIPTED / passed scenario'})
+        self.assertEqual({r['runtime_status'] for r in self.source_sim['runs']}, {'completed'})
         self.assertEqual(set(self.source_runs), set(EXPECTED_FINAL))
         for outcome, expected in EXPECTED_FINAL.items():
             with self.subTest(outcome=outcome):
@@ -149,13 +150,13 @@ class TinyShopTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         report = json.loads(proc.stdout)
         self.assertTrue(report['ok'])
-        self.assertEqual(report['status'], 'SCRIPTED')
-        self.assertEqual(report['accounting']['status'], 'PROVED')
+        self.assertEqual({s['claim_label'] for s in report['scenarios']}, {'SCRIPTED / passed scenario'})
+        self.assertEqual(report['accounting']['claim_label'], 'PROVED')
         by_outcome = {s['outcome']: s for s in report['scenarios']}
         for outcome in EXPECTED_NET:
             s = by_outcome[outcome]
             self.assertEqual(s['net_transitions'], EXPECTED_NET[outcome])
-            self.assertEqual(s['result'], EXPECTED_RESULT[outcome])
+            self.assertEqual(s['settlement'], EXPECTED_RESULT[outcome])
             self.assertEqual(s['final_marking'], self.source_runs[outcome]['marking'])
             self.assertNotIn('events', s)
 

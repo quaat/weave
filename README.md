@@ -119,6 +119,8 @@ Weave's tooling uses six words, and the specification forbids using one when ano
 | **VIOLATED** | A counterexample was found; the trace is printed. |
 | **NOT ESTABLISHED** | Missing model, exhausted budget, or a guarantee outside the tool. Never reported as a pass. |
 
+Each label belongs to one claim. Tool status (a command or test passed) and the runtime status of a run (`waiting`, `timed out`, `completed`) are reported separately and are not evidence; `Unknown` is an application outcome and never means NOT ESTABLISHED. The prototype's own console lines, such as the `demo.py` output above, `PASSED` and `RECHECKED`, are raw tool output: the agent kit's runner and the evidence envelopes (`evidence/`) state the claims with exactly these six labels, and tests in the agent kit and the specification fail on any other label. See "Result labels in tool output" in the [verification chapter](specification/docs/chapters/verification.rst).
+
 ## Repository map
 
 Each directory is self-contained with its own README, tests and requirements. Run commands from inside the directory.

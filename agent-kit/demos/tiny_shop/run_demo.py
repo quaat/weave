@@ -19,6 +19,11 @@ SOURCE = DEMO_DIR / 'shop.weave'
 ENTRY = 'checkout'
 OUTCOMES = ('Ok', 'Err', 'Unknown', 'all')
 
+# Unindented text lines that are not claims, besides the runner's (weave_labels.NON_CLAIM_PREFIXES).
+# Claims are 'LABEL statement' lines; tests/test_result_labels.py lints the output with these.
+# The payment-outcome heading is followed by the scripted application outcome (Ok, Err, Unknown).
+TEXT_PREFIXES = ('Tiny Shop - ', ('== Payment outcome: ', ('Ok', 'Err', 'Unknown')), 'note: ')
+
 STOCK_PLACES = ('available', 'sold', 'recovery_queue', 'registrations')
 TRANSIENT_PLACES = ('held', 'escrow', 'inflight', 'paid', 'unpaid', 'uncertain', 'manual')
 
@@ -68,8 +73,11 @@ def summarize_run(run, with_trace):
     settled_by = transitions[-1] if transitions else None
     label, explanation = SETTLEMENT.get(settled_by, ('Unexpected result', 'No recognized settlement transition was executed.'))
     scenario = {
+        # The runner's claim for this run and the run's own status, relayed unchanged.
+        'claim_label': run['claim_label'],
+        'runtime_status': run['runtime_status'],
         'outcome': run['outcome'],
-        'result': label,
+        'settlement': label,
         'explanation': explanation,
         'return_type': run.get('return_type'),
         'return_tag': run.get('return_tag'),
@@ -90,7 +98,7 @@ def build_report(args):
                                             'message': 'Runner did not return JSON. ' + stderr})
         return report
     report['ok'] = bool(code == 0 and data.get('ok'))
-    for key in ('status', 'accounting', 'ordering', 'diagnostic'):
+    for key in ('accounting', 'ordering', 'diagnostic'):
         if key in data:
             report[key] = data[key]
     if report['ok']:
@@ -108,14 +116,17 @@ def fmt_marking(marking, places):
 def render_text(report):
     acc, order = report['accounting'], report['ordering']
     print('Tiny Shop - buy the last item (stock = 1, fresh simulation per run)')
-    print(f"Net accounting: {acc['status']} ({', '.join(acc['invariants'])})")
-    print(f"Order model: {order['status']} ({order['states']} states/{order['edges']} edges, "
+    # Claims are printed as 'LABEL statement' lines with the runner's labels; other lines are not claims.
+    print(f"{acc['claim_label']} net accounting ({', '.join(acc['invariants'])})")
+    print(f"{order['claim_label']} order model ({order['states']} states/{order['edges']} edges, "
           f"orders={order['orders']}, stock={order['stock']}, tokens/place<={order['place_bound']})")
-    print(f"Flow execution: {report['status']} (chosen payment outcome; no real payment I/O)")
     for s in report['scenarios']:
         m = s['final_marking']
         print()
-        print(f"== Payment outcome: {s['outcome']} -> {s['result']}")
+        print(f"== Payment outcome: {s['outcome']} -> {s['settlement']}")
+        print(f"{s['claim_label']} flow execution with chosen payment outcome {s['outcome']} "
+              "(no real payment I/O)")
+        print(f"   runtime status: {s['runtime_status']}")
         print(f"   NET transitions: {' -> '.join(s['net_transitions'])}")
         if 'events' in s:
             print('   Trace:')
@@ -126,7 +137,7 @@ def render_text(report):
         print(f"          {fmt_marking(m, TRANSIENT_PLACES)}  charge_requests={m['charge_requests']}")
         print(f"   {s['explanation']}")
     print()
-    print('charge_requests=1 remains because the simulator does not drain the adapter queue.')
+    print('note: charge_requests=1 remains because the simulator does not drain the adapter queue.')
 
 
 def main(argv=None):
@@ -140,7 +151,7 @@ def main(argv=None):
         d = report['diagnostic']
         span = d.get('span') or {}
         loc = f" {span['file']}:{span['start']['line']}" if span else (f" {d.get('file')}:{d.get('line')}" if d.get('file') else '')
-        print(f"FAILED {d.get('code')} [{d.get('stage')}]{loc}: {d.get('message')}", file=sys.stderr)
+        print(f"error: {d.get('code')} [{d.get('stage')}]{loc}: {d.get('message')}", file=sys.stderr)
     if report['ok']:
         return 0
     return report['runner_exit'] if report['runner_exit'] not in (0, None) else 1

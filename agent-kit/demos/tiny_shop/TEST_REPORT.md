@@ -6,6 +6,11 @@ preserve. All commands below were run from the kit root unless noted. Default
 bundled `Inventory.weave` net (byte-identical to `examples/nets/Inventory.weave`);
 no `--net` override was used, and the vendored prototype was not modified.
 
+Note (kit 0.3.0, quaat/weave#8): the outputs quoted below are those of the kit at the
+time of this report. The runner and demos now print each claim as a `LABEL statement`
+line with one of the six result labels and report tool and runtime status separately
+(`docs/commands.md`); the files in `artifacts/` were regenerated with the current output.
+
 ## Baseline (before any changes)
 
 | Command | Exit | Result |
@@ -55,7 +60,7 @@ Compared final marking, `(return_type, return_tag)`, and ordered NET transition 
 
 ### Observed scenario results (`artifacts/scenarios.json`)
 
-| Outcome | Result | NET transitions | available | sold | recovery_queue | registrations | charge_requests |
+| Outcome | Settlement | NET transitions | available | sold | recovery_queue | registrations | charge_requests |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | Ok | Purchase completed | reserve, arm, dispatch, charge_ok, sell | 0 | 1 | 0 | 0 | 1 |
 | Err | Payment rejected; item released | reserve, arm, dispatch, charge_err, release | 1 | 0 | 0 | 0 | 1 |

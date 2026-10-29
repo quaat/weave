@@ -170,8 +170,9 @@ not an independently implemented type checker. Corpus stage results are recorded
 separately in ``validation/grammar-report.json``.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 59 tests (nine documentation tests, the rule cases and the rule
-coverage check), 143 upstream tests, strict HTML with weave-check, the local
+specification's 80 tests (nine documentation tests, the rule cases, the rule
+coverage check, the diagnostic map tests and the result-label lint of
+:ref:`chapters/verification:Result labels in tool output`), 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.
 No unreachable URL is silently ignored.

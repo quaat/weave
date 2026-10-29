@@ -113,6 +113,11 @@ the ideal span is O(n), not O(log n), and this small demo promises no speedup.
   schedules.
 - No Inventory net, accounting certificate, or bounded ordering check applies to
   this task system. `check-pure` and `run-pure` never analyze a net.
+- **Result label:** pure programs are outside F0 and every specified profile, so the
+  runner's only claim is `NOT ESTABLISHED` (missing model), printed as a
+  `NOT ESTABLISHED …` line and relayed as `check.claim_label` in `--json`. Its
+  statement says that the kit's pure checker accepted the program. A finished run has
+  `runtime status: completed` (`runtime_status`), which is not evidence.
 - The extension supports only what this demo needs: no loops, arithmetic beyond
   `<=`, generics, mutual recursion, higher-order functions, effects, or linear
   handles in pure code, and no `fn` code inside flows.

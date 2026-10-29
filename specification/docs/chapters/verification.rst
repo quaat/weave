@@ -27,6 +27,44 @@ Result vocabulary
    * - NOT ESTABLISHED
      - Missing model, budget/bound exhaustion, or a guarantee outside the tool
 
+Result labels in tool output
+----------------------------------
+
+The six labels above are the only labels a tool or an evidence document attaches
+to a claim, written exactly as in the table. They are used as follows.
+
+* **One label per claim.** A label attaches to an individual claim: one stated
+  result about one subject, such as the invariants of one net, one bounded
+  exploration, the flows of one source file, one scenario run or one
+  counterexample. A label never summarises a command, a test run or a report as
+  a whole.
+* **Runtime status is not evidence.** The status of a run (``waiting``,
+  ``timed out`` or ``completed``) and the status of a tool or test step (for
+  example pass or fail) are separate fields. They never take the place of a
+  label, and a successful step establishes nothing beyond the claims it labels.
+* **Unknown is an application outcome.** :term:`Unknown` is an unresolved
+  foreign outcome of the application (:doc:`flow-semantics`). It is never equated with
+  NOT ESTABLISHED, which is an evidence result about a claim: a scripted run
+  whose outcome is ``Unknown`` can be a passed scenario, and a claim can be
+  NOT ESTABLISHED whatever the application outcome.
+* **Prototype console lines are raw tool output.** The version-3 prototype
+  prints its own words, such as ``PASSED``, ``RECHECKED``, bare ``CHECKED``
+  lines and ``NOT PROVED`` in a diagnostic message. These lines stay unchanged
+  in the pinned snapshots and are not claims. The agent kit's runner and the
+  evidence envelopes state the corresponding claims with the labels above.
+* **Diagnostics are not claims.** A diagnostic reports a code. Where a check's
+  result is decided by its diagnostic, the claim takes the label the code
+  implies: E320 and E420 report a counterexample (VIOLATED), and E321 and E422
+  report NOT ESTABLISHED (:doc:`diagnostics`).
+
+Changing which label a result receives (including labelling a result that had
+no label), or what a label means, is a semantic change
+(:ref:`chapters/stability:Migration notes`); changing only the layout of a
+tool's output is an interface change of that tool. The agent kit's
+``tests/test_result_labels.py`` and the specification's
+``tests/test_result_labels.py`` lint tool output and evidence envelopes against
+these rules.
+
 Aggregate invariants
 --------------------------
 

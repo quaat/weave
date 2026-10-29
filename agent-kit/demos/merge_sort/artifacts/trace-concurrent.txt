@@ -2,7 +2,8 @@ Input:  [8, 3, 5, 1, 9, 2, 7, 4, 6]
 Sorted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
 Work:   677 instructions, 17 activations, 8 forks, 8 joins, max live 15, max frames 10
-Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+NOT ESTABLISHED for this pure fn program: no specified guarantee (kit extension outside F0); accepted by the kit's pure checker, termination not checked
+runtime status: completed (executed by the Weave runner)
 Trace:
       1 activation_created task=1 fn=merge_sort
       2 fork               task=1 fork=1 line=13
