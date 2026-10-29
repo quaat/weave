@@ -181,7 +181,10 @@ Each code has exactly one principal rule, the requirement its rejection most
 directly enforces, and may name secondary rules that some of its messages also
 enforce. The map is a navigation aid, not a new diagnostic precedence rule. The
 normative corpus gives the required first diagnostic for its particular inputs
-in :doc:`conformance`. E110 to E112 map to :ref:`SYN-13 <SYN-13>`; the
+in :doc:`conformance`. E210 and E215 map to :ref:`SYN-12 <SYN-12>`, which
+states that every path terminates and nothing follows a return; E217 maps to
+:ref:`SYN-10 <SYN-10>`, which governs what a return means. E110 to E112 map to
+:ref:`SYN-13 <SYN-13>`; the
 accounting itself, including preservation by every transition (E112), is
 defined in :doc:`verification`, "Aggregate invariants", which has no rule ID of
 its own.

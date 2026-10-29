@@ -213,7 +213,7 @@ file and refuses on a mismatch. Regeneration of the originals is checked by the
 Tool versions: each envelope lists the producer's Python modules (for `inventory-proof/`
 files, all six modules `demo.py` imports or is; for `report.json`, `validate.py` and the
 three prototype modules it imports), this tooling
-(`evidence/weave_evidence`, version `0.1.0`) and, for `report.json`, the Python version the
+(`evidence/weave_evidence`, version `0.2.0`) and, for `report.json`, the Python version the
 report records. A prototype module gets version `3`, the `version` of
 `weave-inventory-proof.zip` in `specification/PROVENANCE.json`, only if its bytes match that
 manifest's hash for the pinned snapshot copy; otherwise its version is `null`. Supported
@@ -275,7 +275,9 @@ The formats follow the evidence-schema axis of
 - The existing evidence files keep their bytes and their own identifiers; the envelopes wrap
   them alongside. They remain unversioned or prototype-versioned files, and this reader does
   not treat them as documents in the four formats.
-- `evidence/weave_evidence` carries its own semantic version (`__version__`, `0.1.0`).
+- `evidence/weave_evidence` carries its own semantic version (`__version__`). It was `0.1.0`
+  with the three #7 formats; adding the supported schema `weave-diagnostic-v1` (#6) is a
+  compatible addition, so it is `0.2.0`.
 
 Adding these formats changes no existing artefact, rule ID, diagnostic code, profile or
 label, so this change carries no migration note. The specification does not describe the

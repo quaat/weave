@@ -52,6 +52,14 @@ orchestrator. Neither phase changes a rule ID, a checker or a prototype.
   cited lines after 76 (106, 108–118, 117–118, 122–132) are 11 higher, and it adds four lines
   after line 41 of `specification/docs/chapters/proposals.rst`, so that file's cited lines
   51–55, 54 and 65–73 are 4 higher. Every other cited line is unchanged.
+- **Kit pure-extension codes.** This record names the pure extension's diagnostic codes by
+  their current `P4nn` names. At base the kit printed the same codes with an `E` prefix and
+  the same digits (`E4nn`, for nn from 00 to 27); quaat/weave#6 renamed them to `P4nn`
+  because they overlapped the specification's N1 codes, without changing any meaning. The
+  probe outputs quoted under [Commands run](#commands-run) are the base output with only that
+  prefix rewritten, and are marked "(printed `E4nn` at base)": for example, P4's output began
+  with the code printed as `E` followed by `424`. quaat/weave#6 also changed the runner's
+  text layout to `file:line:column: CODE (RULE)`; the quoted lines keep the base layout.
 - **Downstream issues.** The texts of #17, #22, #24 and #27 are not quoted anywhere in
   the repository. This record therefore uses only their numbers, as the #5 issue text relays
   them in the task packet, and does not describe their scope.
@@ -93,7 +101,7 @@ Prototypes:
   they are a JSON integer of any size (`agent-kit/.agents/skills/weave/scripts/weave_pure/values.py`, lines 79–90).
   - P1 returns a 39-digit literal unchanged.
   - P3 accepts a 26-digit list element.
-  - P4 rejects `1e3` with E424.
+  - P4 rejects `1e3` with P424.
   - P2: the literal `٣٤` (Arabic-Indic digits) evaluates to `34`.
 - **Comparison is the only operator.** `<=` is the only operator in the pure extension
   (`agent-kit/docs/weave.md`, lines 331–333; `agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py`, lines 253–255).
@@ -110,10 +118,10 @@ Prototypes:
   operators "will panic when they overflow when compiled in debug mode", and compiler flags
   control this ([Rust Reference, operator expressions](https://doc.rust-lang.org/reference/expressions/operator-expr.html),
   fetched for this record). The two hosts therefore disagree on negative division and overflow.
-- **Empty lists.** `head` and `tail` of an empty list raise E420 (`agent-kit/.agents/skills/weave/scripts/weave_pure/values.py`,
+- **Empty lists.** `head` and `tail` of an empty list raise P420 (`agent-kit/.agents/skills/weave/scripts/weave_pure/values.py`,
   lines 50–53; `agent-kit/docs/weave.md`, lines 264–265). `length` and `is_empty` are total.
 - **Evaluation budgets exist only as implementation defaults.** `fuel`, `max_depth` and
-  `max_tasks` are runner defaults (`agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py`, lines 22–28) that raise E421–E423.
+  `max_tasks` are runner defaults (`agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py`, lines 22–28) that raise P421–P423.
   No integer-size budget exists.
 
 ### (b) Question
@@ -182,8 +190,8 @@ Specification:
 Prototype (`agent-kit/.agents/skills/weave/scripts/weave_pure/`):
 - **Faults are one exception class.** Primitive failures and budget exhaustion are both
   raised as a `RuntimeFault` exception (`agent-kit/.agents/skills/weave/scripts/weave_pure/values.py`, lines 45–53;
-  `agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py`, lines 220–223). Only the code tells them apart: E420 for a
-  primitive failure, E421–E423 for budgets.
+  `agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py`, lines 220–223). Only the code tells them apart: P420 for a
+  primitive failure, P421–P423 for budgets.
 - **No catching in pure code.** The statements are `let`, `return`, terminal `if`/`else`
   and `fork` (`agent-kit/docs/weave.md`, line 256); none handles a fault. A failing child fails its parent, cancels the sibling
   subtree and propagates to the root (`agent-kit/.agents/skills/weave/scripts/weave_pure/runtime.py`, lines 354–382;
@@ -559,10 +567,10 @@ Run from the repository root unless a directory is shown. `$TMPDIR` was `/tmp/cl
 | P1 | in `agent-kit/`: `printf 'fn big() -> Int:\n    return 123456789012345678901234567890123456789\n' > "$TMPDIR/big.weave"; python3 scripts/weave.py run-pure "$TMPDIR/big.weave" --entry big` | `RESULT 123456789012345678901234567890123456789` (0) |
 | P2 | in `agent-kit/`: `printf 'fn digits() -> Int:\n    return \xd9\xa3\xd9\xa4\n' > "$TMPDIR/digits.weave"; python3 scripts/weave.py run-pure "$TMPDIR/digits.weave" --entry digits` | `RESULT 34` (0) |
 | P3 | in `agent-kit/`: `printf 'fn echo(xs: IntList) -> IntList:\n    return xs\n' > "$TMPDIR/echo.weave"; python3 scripts/weave.py run-pure "$TMPDIR/echo.weave" --entry echo --args '[[99999999999999999999999999]]'` | `RESULT [99999999999999999999999999]` (0) |
-| P4 | as P3 with `--args '[[1e3]]'` | `E424 [runtime] argument xs: expected a JSON list of integers, got [1000.0].` (2) |
-| P5 | in `agent-kit/`: `printf 'fn both(a: IntList, b: IntList) -> IntList:\n    return cons(head(a), tail(b))\n' > "$TMPDIR/both.weave"; python3 scripts/weave.py run-pure "$TMPDIR/both.weave" --entry both --args '[[], []]'` | `both.weave:2: E420 head() of an empty list.` (2) |
-| P6 | in `agent-kit/`: `printf 'fn hd(xs: IntList) -> Int:\n    return head(xs)\nfn tl(xs: IntList) -> IntList:\n    return tail(xs)\nfn race(a: IntList, b: IntList) -> IntList:\n    fork:\n        let x = hd(a)\n        let y = tl(b)\n    return cons(x, y)\n' > "$TMPDIR/race.weave"; python3 scripts/weave.py run-pure "$TMPDIR/race.weave" --entry race --args '[[], []]' --schedule fifo` | `race.weave:2: E420 head() of an empty list.` (2) |
-| P7 | as P6 with `--schedule lifo`; then with `--mode sequential` | `race.weave:4: E420 tail() of an empty list.` (2); sequential: `race.weave:2: E420 head() of an empty list.` (2) |
+| P4 | as P3 with `--args '[[1e3]]'` | `P424 [runtime] argument xs: expected a JSON list of integers, got [1000.0].` (2) (printed `E4nn` at base) |
+| P5 | in `agent-kit/`: `printf 'fn both(a: IntList, b: IntList) -> IntList:\n    return cons(head(a), tail(b))\n' > "$TMPDIR/both.weave"; python3 scripts/weave.py run-pure "$TMPDIR/both.weave" --entry both --args '[[], []]'` | `both.weave:2: P420 head() of an empty list.` (2) (printed `E4nn` at base) |
+| P6 | in `agent-kit/`: `printf 'fn hd(xs: IntList) -> Int:\n    return head(xs)\nfn tl(xs: IntList) -> IntList:\n    return tail(xs)\nfn race(a: IntList, b: IntList) -> IntList:\n    fork:\n        let x = hd(a)\n        let y = tl(b)\n    return cons(x, y)\n' > "$TMPDIR/race.weave"; python3 scripts/weave.py run-pure "$TMPDIR/race.weave" --entry race --args '[[], []]' --schedule fifo` | `race.weave:2: P420 head() of an empty list.` (2) (printed `E4nn` at base) |
+| P7 | as P6 with `--schedule lifo`; then with `--mode sequential` | `race.weave:4: P420 tail() of an empty list.` (2); sequential: `race.weave:2: P420 head() of an empty list.` (2) (printed `E4nn` at base) |
 | P8 | `python3 -c "print(-7 // 2, -7 % 2, 7 // -2)"` | `-4 1 -4` (0) |
 | P9 | `python3 -c "max([])"` | `ValueError: max() iterable argument is empty` (1) |
 | C1 | in `inventory-proof/`: `sed 's/manual == 0$/manual == 0x0/' Inventory.weave > "$TMPDIR/hex.weave"; python3 checker.py prove "$TMPDIR/hex.weave"` | prints `PROVED registration_balance` for the invariant ending `== 0x0` (0) |

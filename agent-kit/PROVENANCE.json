@@ -1,5 +1,5 @@
 {
-  "kit_version": "0.1.0",
+  "kit_version": "0.2.0",
   "snapshot_date": "2026-10-28",
   "source": {
     "filename": "weave-inventory-proof.zip",
@@ -78,7 +78,8 @@
       "version": "3",
       "date": "2026-10-29",
       "issue": "quaat/weave#6",
-      "note": "Reviewed snapshot refresh for quaat/weave#6 (maintainer decision recorded on the issue as ANSWER ev-20261029163316-c9543754: refresh both pinned snapshots (this one and specification/reference/prototype/, hash-verified against specification/PROVENANCE.json) once). checker.py, coloured.py and durable.py were changed in inventory-proof/ so that every CheckError carries a primary source span and, for E203 and E204, related spans, and can be written as a weave-diagnostic-v1 document; errors that had no line now take the line of the enclosing statement or net header, and errors in a coloured net's erased projection report the coloured source line. The same programs are accepted and rejected with the same codes; the generated outputs of demo.py are byte-identical. The changed files were copied byte-identically from inventory-proof/ into both pinned snapshots. The prototype keeps version 3: acceptance, rejection codes and outcomes are unchanged (stability.rst, Tools).",
+      "version_justification": "The prototype stays version 3 (maintainer answer ev-20261029170831-fc858210): under stability.rst, Tools, behaviour means the accepted and rejected programs, the diagnostic codes and the dynamic outcomes, and none of these changes; the refresh adds span metadata and corrects reported locations.",
+      "note": "Reviewed snapshot refresh for quaat/weave#6 (maintainer decision recorded on the issue as ANSWER ev-20261029163316-c9543754: refresh both pinned snapshots (this one and specification/reference/prototype/, hash-verified against specification/PROVENANCE.json) once). checker.py, coloured.py and durable.py were changed in inventory-proof/ so that every CheckError carries a primary source span and, for E203 and E204, related spans, and can be written as a weave-diagnostic-v1 document; errors that had no line now take the line of the enclosing statement or net header, and errors in a coloured net's erased projection report the coloured source line. The same programs are accepted and rejected with the same codes; the generated outputs of demo.py are byte-identical. The changed files were copied byte-identically from inventory-proof/ into both pinned snapshots.",
       "files": {
         "README.md": {
           "before": "6ef77f40ccc9a12c130e02659211a5e4ba63fc240bf97ec90020f77891cb616f",

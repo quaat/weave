@@ -15,7 +15,7 @@ the chapter differ, the chapter wins.
 | Axis | Owner (role) | Format | Current identifier |
 | --- | --- | --- | --- |
 | Language (this specification) | Language maintainer | `MAJOR.MINOR`, `-draft` suffix for drafts | `0.2-draft` (`specification/docs/conf.py`, `specification/PROVENANCE.json`) |
-| Tools (checker, analyser, runtime, CLI) | Toolchain maintainer | Semantic versioning per tool | Prototype version 3 (`specification/PROVENANCE.json`); agent kit `0.1.0` (`agent-kit/PROVENANCE.json`); production toolchain: none yet |
+| Tools (checker, analyser, runtime, CLI) | Toolchain maintainer | Semantic versioning per tool | Prototype version 3 (`specification/PROVENANCE.json`); agent kit `0.2.0` (`agent-kit/PROVENANCE.json`); evidence tooling `0.2.0` (`evidence/weave_evidence/__init__.py`); production toolchain: none yet |
 | Profiles (F0, N0, N1, R0; targets D0, N2) | Language maintainer | Profile name plus the specification revision that defines it | Defined by 0.2-draft |
 | Evidence schemas (certificates, conformance artefacts, traces, machine-readable diagnostics) | Toolchain maintainer | `weave-<artefact>-v<N>` in the `format` field | Format strings such as `weave-place-invariant-v1` (`inventory-proof/proof.json`); machine-readable diagnostics use `weave-diagnostic-v1` (`evidence/schemas/diagnostic.v1.schema.json`, added by #6); many existing files, including scenario results and the agent-kit traces, have no `format` field yet |
 | Persisted store format | Runtime maintainer | `weave-store-v<N>` in the store's metadata, checked before any other access (a convention, not a storage design) | None yet; first identifier assigned in M5 (#59) |

@@ -146,10 +146,14 @@ Evidence schemas
 ~~~~~~~~~~~~~~~~~~~~~~
 
 An evidence document MUST name its schema in a top-level ``format`` field of
-the form ``weave-<artefact>-v<N>``. Eight format strings use this form (seven
-existed when this policy was written; quaat/weave#4 added
+the form ``weave-<artefact>-v<N>``. Eight format strings are used by committed
+files (seven existed when this policy was written; quaat/weave#4 added
 ``weave-rule-coverage-v1``), but many existing evidence files have no ``format``
-field; both groups are listed under `Existing evidence files`_. Bump rule: any change to
+field; both groups are listed under `Existing evidence files`_. Four more are
+defined by JSON Schemas in ``evidence/schemas/`` and written by tools rather than
+committed: ``weave-trace-v1``, ``weave-canonical-net-v1`` and
+``weave-evidence-envelope-v1`` (quaat/weave#7), and ``weave-diagnostic-v1``
+(quaat/weave#6). Bump rule: any change to
 the fields, their meaning or the checks a reader performs needs the next ``N``.
 A format string never changes meaning, and a retired format string is never
 reused. The machine-readable diagnostics schema (quaat/weave#6) and the trace,
@@ -219,7 +223,9 @@ plus the rule-coverage map row, which quaat/weave#4 added later.
        (``version`` of the source archive)
    * - Tools
      - Agent kit, including its CLI ``agent-kit/scripts/weave.py``
-     - ``0.1.0``; the CLI has no version option
+     - ``0.2.0`` (``0.1.0`` when this policy was written; quaat/weave#6 moved the
+       pure-extension codes to ``P4xx``, an incompatible change, so MINOR
+       increments while MAJOR is 0); the CLI has no version option
      - ``agent-kit/PROVENANCE.json`` (``kit_version``)
    * - Tools
      - Production checker, runtime and CLI
@@ -283,9 +289,11 @@ plus the rule-coverage map row, which quaat/weave#4 added later.
      - ``weave-diagnostic-v1``
      - ``format`` const in ``evidence/schemas/diagnostic.v1.schema.json``
    * - Evidence schemas
-     - Traces, canonical net, evidence envelope
-     - None yet
-     - To be defined by quaat/weave#7
+     - Traces, canonical net, evidence envelope, added by quaat/weave#7
+     - ``weave-trace-v1``, ``weave-canonical-net-v1``,
+       ``weave-evidence-envelope-v1``
+     - ``format`` const in ``evidence/schemas/trace.v1.schema.json``,
+       ``canonical-net.v1.schema.json`` and ``evidence-envelope.v1.schema.json``
    * - Persisted store format
      - Durable runtime store
      - None yet

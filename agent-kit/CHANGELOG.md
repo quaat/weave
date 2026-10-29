@@ -4,11 +4,12 @@ All notable changes to the agent kit. Entries are newest first. The documentatio
 (`docs/development/documentation-map.md` at the repository root) requires an entry for every
 change to the kit's runner, skills, examples or policy.
 
-## Unreleased
+## 2026-10-29: 0.2.0
 
-- **Axis and identifier:** tools: agent kit `0.1.0` (unchanged; no release cut); evidence
-  schemas: `weave-diagnostic-v1` added.
-- **Kind:** new schema version; kit diagnostic codes moved; JSON diagnostic shape changed.
+- **Axis and identifier:** tools: agent kit `0.1.0` -> `0.2.0`; evidence schemas:
+  `weave-diagnostic-v1` added.
+- **Kind:** minor (an incompatible change while MAJOR is 0: kit diagnostic codes moved and the
+  JSON diagnostic shape changed); new schema version.
 - **Change:** `--json` diagnostics are `weave-diagnostic-v1` documents with the code's rule
   and source spans, the pure-extension codes moved to `P4xx`, and the vendored prototype was
   refreshed once from `inventory-proof/` for diagnostic spans (quaat/weave#6). Updated
@@ -30,7 +31,7 @@ change to the kit's runner, skills, examples or policy.
 
 | Axis | Before | After | Source of the identifier |
 | --- | --- | --- | --- |
-| Tools | agent kit `0.1.0` | unchanged (no release cut) | `PROVENANCE.json` (`kit_version`) |
+| Tools | agent kit `0.1.0` | `0.2.0` | `PROVENANCE.json` (`kit_version`) |
 | Tools | prototype version 3 | version 3, refreshed once | `PROVENANCE.json` (`prototype_history`) |
 | Evidence schemas | none for diagnostics | `weave-diagnostic-v1` | `evidence/schemas/diagnostic.v1.schema.json` |
 
@@ -74,6 +75,8 @@ doctor`, `python3 -B -m unittest discover -s tests`, `python3 scripts/weave.py e
 
 **Not established.** Other consumers of the old JSON shape outside this repository were
 not searched for.
+
+### Earlier changes included in 0.2.0
 
 - Added this changelog as the target of the documentation-currency rule for the kit.
 - Clarified in `docs/prototype-status.md` that the kit and the vendored prototype are

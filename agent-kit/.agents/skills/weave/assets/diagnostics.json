@@ -194,7 +194,8 @@
         "F0-RETURN-1"
       ],
       "meaning": "Statement after return",
-      "correction": "Remove unreachable source"
+      "correction": "Remove unreachable source",
+      "note": "SYN-12 (Flow control) states this check: every path terminates and no statement follows a return. SYN-10 governs how a return is interpreted, which E217 enforces."
     },
     "E211": {
       "category": "specification",
@@ -241,7 +242,8 @@
         "F0-RETURN-1"
       ],
       "meaning": "Path lacks explicit termination",
-      "correction": "End with return or exhaustive terminal match"
+      "correction": "End with return or exhaustive terminal match",
+      "note": "SYN-12 (Flow control) states this check: every path terminates and no statement follows a return. SYN-10 governs how a return is interpreted, which E217 enforces."
     },
     "E216": {
       "category": "specification",
