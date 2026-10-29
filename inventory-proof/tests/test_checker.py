@@ -144,7 +144,9 @@ class InventoryChecks(unittest.TestCase):
 
     def test_handle_cannot_be_reused(self):
         bad = GOOD.replace("    let result =", "    let second = await Inventory.arm(hold)\n    let result =")
-        self.error("E203", lambda: check_flow(self.net, bad))
+        e = self.error("E203", lambda: check_flow(self.net, bad))
+        self.assertEqual([r.role for r in e.related], ["binding", "moved"])
+        self.assertEqual([r.span.line for r in e.related], [GOOD.splitlines().index("    let hold = await Inventory.reserve(tenant, order)") + 1, e.line - 1])
 
     def test_paid_handle_cannot_be_released(self):
         bad = GOOD.replace("Inventory.sell(paid)", "Inventory.release(paid)")
@@ -164,7 +166,10 @@ class InventoryChecks(unittest.TestCase):
 
     def test_no_open_union_types(self):
         bad = GOOD.replace("amount: Money", "amount: Money | Text")
-        self.error("E002", lambda: check_flow(self.net, bad))
+        e = self.error("E002", lambda: check_flow(self.net, bad))
+        # The type parser has no line of its own; the error is placed on the flow header.
+        self.assertEqual(e.line, 1)
+        self.assertEqual((e.span.line, e.span.column), (1, 1))
 
     def test_every_stock_place_is_bounded_by_stock(self):
         certificate = prove(self.net)

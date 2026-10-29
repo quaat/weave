@@ -50,6 +50,9 @@ class ColourChecks(unittest.TestCase):
         self.assertIn('take registrations[tenant,order2]',e.message)
         self.assertIn('sell[t=tenant,o=order1,other=order2]',e.message)
         self.assertGreater(e.line,0)
+        line = SOURCE.splitlines()[e.line-1]
+        self.assertEqual(line.strip(),'transition sell[t, o]:')
+        self.assertEqual((e.span.line,e.span.column,e.span.end_column),(e.line,5,len(line)+1))
 
     def test_cross_order_read_preserves_counts_but_fails_correlation(self):
         source = SOURCE.replace('read 1 registrations[t, o]', 'read 1 registrations[t, other]')
@@ -104,6 +107,11 @@ class ColourChecks(unittest.TestCase):
     def test_nested_ignored_syntax_is_rejected(self):
         source=SOURCE.replace('guard authoritative_paid_evidence\n','guard authoritative_paid_evidence:\n            unsafe unknown\n',1)
         self.error('E003',lambda:parse_coloured(source))
+        # Rejected by the erased projection, but reported at the coloured source line.
+        source=SOURCE.replace('place available = stock owner domain','place available = stock owner nobody')
+        e=self.error('E003',lambda:parse_coloured(source))
+        self.assertEqual(SOURCE.splitlines()[e.line-1].strip(),'place available = stock owner domain')
+        self.assertEqual((e.span.line,e.span.column),(e.line,5))
 
     def test_budget_exhaustion_is_not_success(self):
         self.error('E422',lambda:explore_colours(self.net,max_states=1))
@@ -131,6 +139,8 @@ class ColourChecks(unittest.TestCase):
         self.assertIn('hold2',e.message)
         self.assertNotIn('normal return',e.message)
         self.assertIn('example.weave:4',e.render('example.weave'))
+        self.assertEqual((e.span.line,e.span.column),(4,5))
+        self.assertEqual({(r.role,r.span.line) for r in e.related},{('binding',1),('propagation',4)})
 
 
 if __name__=='__main__':unittest.main()
