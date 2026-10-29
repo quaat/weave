@@ -7,13 +7,12 @@ specification (``verification.rst``), verbatim. A claim carries exactly one of
 them; anything else the runner reports is not a claim and is never written with
 a label:
 
-* JSON: a claim is an object with a ``claim_label`` member. Tool status is the
-  boolean ``ok`` (and the exit code); the status of a runtime run is
-  ``runtime_status`` (``waiting``, ``timed out`` or ``completed``). No member is
-  named ``status``; a member whose name contains a verdict word appears only at
-  the paths, in the outputs and with the values ``ALLOWED_VERDICT_NAMES`` lists;
-  and no string value is a label, contains an upper-case status word or begins
-  with a verdict word (see ``lint_json``).
+* JSON: a claim is an object with a ``claim_label`` member, the only place a
+  verdict can appear. The JSON is a closed schema (``SCHEMA``): every path each
+  runner command, demo and evidence envelope emits is declared with the kind of
+  value it holds, and any undeclared path or value of another kind is an error.
+  Tool status is the boolean ``ok`` (and the exit code); the status of a runtime
+  run is ``runtime_status`` (``waiting``, ``timed out`` or ``completed``).
 * Text: a claim is an unindented line that begins with its exact label,
   followed by the statement (``LABEL statement``, the established console form;
   the six labels are distinct as prefixes). Every other unindented line has one
@@ -59,24 +58,6 @@ RAW_MEMBERS = frozenset({"diagnostic", "output", "upstream_output", "events", "d
 # "CHECKED LOWERING". Codes and identifiers with digits or lower case (E320, P421, N0,
 # checkout) do not match.
 _STATUS_WORD = re.compile(r"[A-Z][A-Z _/]*[A-Z]")
-# Upper-case word values that are not claims: ACCEPT is the teaching manifest's expected
-# outcome for an accepted case (``examples`` results), an expectation, not a label.
-NON_CLAIM_WORDS = frozenset({"ACCEPT"})
-# Members whose string values (or lists of strings) are user-chosen identifiers or paths,
-# which the grammar lets be upper case (``\w+``): invariant, property, transition, flow,
-# function, entry, enum type and case names, and file paths, as they occur in the runner's,
-# the demos' and the envelopes' output. They are names, never claims, so the status-word
-# check does not apply to them.
-IDENTIFIER_MEMBERS = frozenset({
-    "invariants", "properties", "property", "trace", "marking", "flows", "functions", "entry",
-    "return_type", "return_tag", "net_transitions", "name",
-    "file", "net", "source", "certificate", "lowered_from", "prototype", "missing",
-})
-
-
-def _identifiers(value) -> bool:
-    return isinstance(value, str) or (isinstance(value, list) and all(isinstance(v, str) for v in value))
-
 # The unindented non-claim lines the runner prints, a closed set: tool status
 # (doctor, examples, test), runtime status, result and stats (run-pure), the
 # prototype directory and missing files (doctor), a written certificate (analyze),
@@ -131,68 +112,6 @@ def _begins_with_verdict(text: str) -> bool:
     return _CLAIM_WORD.match(text.lstrip(_LEADING_NOISE)) is not None
 
 
-# Member names that read as a verdict: a name whose parts (split on '_', '-' and camelCase,
-# case-insensitive) include one of these words. In kit JSON the only verdict position is
-# claim_label; runtime_status is a run's status and ok the tool status. Every other
-# verdict-like name is an error unless ALLOWED_VERDICT_NAMES lists its exact path, the
-# output it occurs in and its value domain.
-VERDICT_NAME_WORDS = frozenset({
-    "proved", "proven", "proof", "proofs", "verified", "verify", "established", "holds", "passed", "pass",
-    "success", "successful", "succeeded", "result", "results", "verdict", "verdicts", "outcome", "outcomes",
-    "claim", "claims", "label", "labels", "status", "statuses", "check", "checks", "checked", "conclusion",
-    "conclusions", "finding", "findings", "assessment", "evaluation", "judgement", "judgment", "decision",
-    "violated", "violation", "scripted", "fail", "failed", "failure", "rechecked", "executed",
-})
-APPLICATION_OUTCOMES = ("Ok", "Err", "Unknown")
-
-
-def _command(*names):
-    return lambda root: isinstance(root, dict) and root.get("command") in names
-
-
-def _demo(name):
-    return lambda root: isinstance(root, dict) and root.get("demo") == name
-
-
-def _envelope(root):
-    return isinstance(root, dict) and root.get("format") == ENVELOPE_FORMAT
-
-
-def _count(value):
-    return isinstance(value, int) and not isinstance(value, bool)
-
-
-# (path with '*' for any array index, which output it occurs in, allowed value), each the
-# only place the name may appear. The JSON detail line of a failed `examples` expectation
-# is linted as /results/<n> of an `examples` result.
-ALLOWED_VERDICT_NAMES = (
-    ("/runs/*/outcome", _command("simulate"), lambda v: v in APPLICATION_OUTCOMES),
-    ("/results", _command("examples"), lambda v: isinstance(v, list) and all(isinstance(r, dict) and "ok" in r for r in v)),
-    ("/results/*/outcome", _command("examples"), lambda v: v in APPLICATION_OUTCOMES),
-    ("/checks", _command("examples"), _count),
-    ("/passed", _command("examples"), _count),
-    ("/result", _command("run-pure"), lambda v: not isinstance(v, (str, dict))),
-    ("/check", _command("run-pure"), lambda v: isinstance(v, dict) and "claim_label" in v),
-    ("/check", _demo("merge_sort"), lambda v: isinstance(v, dict) and "claim_label" in v),
-    ("/requested_outcome", _demo("tiny_shop"), lambda v: v in APPLICATION_OUTCOMES + ("all",)),
-    ("/scenarios/*/outcome", _demo("tiny_shop"), lambda v: v in APPLICATION_OUTCOMES),
-    ("/claim", _envelope, lambda v: isinstance(v, dict) and "claim_label" not in v),
-)
-# Members whose keys are user-chosen place names (markings), not member names.
-NAME_KEYED_MEMBERS = frozenset({"marking", "final_marking", "expected", "actual"})
-
-
-def _verdict_name(key: str) -> bool:
-    """A member name with a verdict word among its parts (``check_result``, ``isProven``, ``holds``)."""
-    return bool({part.lower() for part in re.split(r"_|-|(?<=[a-z])(?=[A-Z])", key)} & VERDICT_NAME_WORDS)
-
-
-def _allowed_name(path: str, root, value) -> bool:
-    shape = re.sub(r"/\d+(?=/|$)", "/*", path)
-    return any(shape == pattern and context(root) and allowed(value)
-               for pattern, context, allowed in ALLOWED_VERDICT_NAMES)
-
-
 _CLAIM_LINE = re.compile("^(" + "|".join(re.escape(label) for label in RESULT_LABELS) + r")(?=[ :]|$)")
 
 
@@ -227,96 +146,243 @@ def json_claims(document, pointer: str = "") -> list[tuple[str, object]]:
     return found
 
 
-# Quotations in evidence envelopes (format weave-evidence-envelope-v1), the only JSON
-# strings outside claim_label that may contain a status token: each entry of the top-level
-# ``assumptions`` is a verbatim, cited quotation of the specification or a producer's
-# docstring (evidence/weave_evidence/conditions.py; one quotes "PROVED labels apply only
-# ..." from checker.py), and ``claim.statement`` is the wrapped file's own wording (for
-# example the prototype's "VIOLATED <property> ..." in report.json). Both are re-derived
-# and hash-checked by the evidence verifier; neither is the envelope's claim, which is
-# ``claim_label``. They may contain a status token in their wording, but are never a bare
-# label or status word.
 ENVELOPE_FORMAT = "weave-evidence-envelope-v1"
-ENVELOPE_QUOTATIONS = (re.compile(r"/assumptions/\d+"), re.compile(r"/claim/statement"))
+TRACE_FORMAT = "weave-trace-v1"
+APPLICATION_OUTCOMES = ("Ok", "Err", "Unknown")
+
+# ------------------------------------------------------------------ closed JSON schema
+#
+# Every JSON path the kit emits, per output, with the kind of value it holds. A path not
+# declared here, or a value of another kind, is an error: ``claim_label`` is the only
+# place a verdict can appear, and every other member is named and typed below.
+# ``*`` stands for any array index, or any key of a ``map`` (whose keys are user-chosen
+# place names). The table is checked in both directions against real output by
+# agent-kit/tests/test_result_labels.py: every real path must be declared, and every
+# declared path must occur in some real output the tests produce.
+#
+# Kinds: ``label`` (exactly one of the six labels); ``("enum", values)``; ``identifier``
+# (a user-chosen name, file path, version or hash; not inspected); ``prose`` (free text,
+# checked by the verdict rules of ``_prose_errors``); ``quotation`` (an envelope's cited
+# wording: may contain a status word, but is never a bare label or status word);
+# ``integer``; ``boolean``; ``data`` (a computed value: numbers, Booleans and lists of
+# them); ``expectation`` (a teaching expectation: ACCEPT, a mapped diagnostic code, or a
+# marking of place counts); ``diagnostic`` (a weave-diagnostic-v1 document or a demo's
+# error record; its message is tool text, not inspected); ``raw`` (another tool's output,
+# not inspected, only at its exact path); and the containers ``object`` (named members,
+# each declared), ``array`` and ``map``. A kind ending in ``?`` also allows null.
+
+LABEL, IDENT, PROSE, QUOTE, INT, BOOL, DATA, RAW, DIAG = (
+    "label", "identifier", "prose", "quotation", "integer", "boolean", "data", "raw", "diagnostic")
+OBJ, ARR, MAP = "object", "array", "map"
 
 
-def lint_json(document, pointer: str = "", root=None) -> list[str]:
-    """Violations of the JSON claim rules in ``document``; an empty list when there are none.
+def _enum(*values):
+    return ("enum", values)
 
-    The only verdict position is ``claim_label``, exactly one of the six labels.
 
-    1. Member names: no ``status``; ``runtime_status`` only with a runtime status; any other
-       member whose name contains a verdict word (``VERDICT_NAME_WORDS``) is an error unless
-       ``ALLOWED_VERDICT_NAMES`` lists its path, output and value domain.
-    2. String values: none is a label or an upper-case status word, contains a status word
-       as a whole upper-case token, or begins (after whitespace and quotes, in any case) with
-       a verdict word (``CLAIM_LEXICON``).
+_RUNTIME = _enum(*RUNTIME_STATUSES)
+_OUTCOME = _enum(*APPLICATION_OUTCOMES)
+_DIAGNOSTIC_KEYS = frozenset({"format", "code", "category", "rule", "secondary_rules", "severity", "stage",
+                              "message", "span", "related", "details", "line"})
 
-    Exempt from rule 2: raw members (``RAW_MEMBERS``), user-chosen names
-    (``IDENTIFIER_MEMBERS``; marking keys under ``NAME_KEYED_MEMBERS``), the teaching
-    manifest's ``ACCEPT`` and, in an evidence envelope, its quotations
-    (``ENVELOPE_QUOTATIONS``), which may contain a token but are never a bare label.
-    ``root`` is the whole output, when ``document`` is part of one (``pointer`` is then
-    its path); it decides which allowed paths apply. The runner's JSON has no tool status
-    string: ``ok`` is a boolean.
+
+def _with(prefix: str, entries: dict) -> dict:
+    return {prefix + path: kind for path, kind in entries.items()}
+
+
+_COMMON = {"": OBJ, "/ok": BOOL, "/diagnostic": DIAG, "/upstream_output": RAW}
+_ACCOUNTING = {"/accounting": OBJ, "/accounting/claim_label": LABEL, "/accounting/invariants": ARR,
+               "/accounting/invariants/*": IDENT}
+_ORDERING = {"/ordering": OBJ, "/ordering/claim_label": LABEL, "/ordering/states": INT, "/ordering/edges": INT,
+             "/ordering/orders": INT, "/ordering/stock": INT, "/ordering/admission_limit": INT,
+             "/ordering/place_bound": INT, "/ordering/max_states": INT, "/ordering/properties": ARR,
+             "/ordering/properties/*": IDENT, "/ordering/assumptions": ARR, "/ordering/assumptions/*": PROSE}
+# E320 (VIOLATED) and E321 (NOT ESTABLISHED) ordering claims, on a failed net check
+_ORDERING_FAILED = {"/ordering/diagnostic_code": _enum("E320", "E321"), "/ordering/property": IDENT,
+                    "/ordering/trace": "array?", "/ordering/trace/*": IDENT, "/ordering/marking": IDENT,
+                    "/ordering/reason": PROSE}
+_NET = {**_ACCOUNTING, **_ORDERING, **_ORDERING_FAILED}
+_FLOW_FILES = {"/files": ARR, "/files/*": OBJ, "/files/*/file": IDENT, "/files/*/ok": BOOL,
+               "/files/*/claim_label": LABEL, "/files/*/flows": ARR, "/files/*/flows/*": IDENT}
+_PURE_CLAIM = {"": OBJ, "/file": IDENT, "/ok": BOOL, "/claim_label": LABEL, "/functions": ARR,
+               "/functions/*": IDENT, "/reason": PROSE}
+_EXECUTION = {"/execution": OBJ, "/execution/mode": _enum("concurrent", "sequential"),
+              "/execution/scheduler": PROSE, "/execution/schedule": _enum("fifo", "lifo", "random"),
+              "/execution/seed": INT, "/execution/limits": OBJ,
+              **{f"/execution/limits/{k}": INT for k in ("workers", "quantum", "fuel", "max_tasks", "max_depth")},
+              "/stats": OBJ, **{f"/stats/{k}": INT for k in ("tasks_created", "max_live_tasks", "forks", "joins",
+                                                           "slices", "max_frames", "steps", "pending_tasks",
+                                                           "pending_joins", "root_task")}}
+_RUN = {"/runs": ARR, "/runs/*": OBJ, "/runs/*/claim_label": LABEL, "/runs/*/runtime_status": _RUNTIME,
+        "/runs/*/outcome": _OUTCOME, "/runs/*/entry": IDENT, "/runs/*/return_type": "identifier?",
+        "/runs/*/return_tag": "identifier?", "/runs/*/marking": MAP, "/runs/*/marking/*": INT,
+        "/runs/*/events": RAW}
+
+
+def _command(name: str, *parts: dict) -> dict:
+    """A runner command's schema; a part may remove a common path by declaring it None."""
+    schema = {**_COMMON, "/command": _enum(name)}
+    for part in parts:
+        schema.update(part)
+    return {path: kind for path, kind in schema.items() if kind is not None}
+
+
+SCHEMA = {
+    "doctor": _command("doctor", {"/diagnostic": None, "/python": IDENT, "/minimum_python": IDENT, "/reference_python": IDENT,
+                                  "/third_party_dependencies": ARR, "/third_party_dependencies/*": IDENT,
+                                  "/prototype": IDENT, "/missing": ARR, "/missing/*": IDENT}),
+    "check": _command("check", _NET, {"/net": IDENT}, _FLOW_FILES, {"/files/*/diagnostic": DIAG}),
+    "analyze": _command("analyze", _NET, {"/net": IDENT, "/certificate": IDENT}),
+    "lower": _command("lower", _NET, {"/net": IDENT}, _FLOW_FILES, {"/output": IDENT, "/flows": ARR, "/flows/*": IDENT,
+                                                   "/files/*/lowered_from": IDENT}),
+    "simulate": _command("simulate", _NET, {"/net": IDENT}, _RUN),
+    "verify": _command("verify", _ACCOUNTING, {"/certificate": IDENT, "/accounting/method": _enum("certificate recheck"),
+                                               "/accounting/scope": PROSE}),
+    "examples": _command("examples", _NET, {"/checks": INT, "/passed": INT, "/results": ARR, "/results/*": OBJ,
+                                            "/results/*/file": IDENT, "/results/*/ok": BOOL,
+                                            "/results/*/lesson": PROSE, "/results/*/outcome": _OUTCOME,
+                                            "/results/*/expected": "expectation", "/results/*/actual": "expectation",
+                                            "/results/*/diagnostic": DIAG}),
+    "test": _command("test", {"/output": RAW}),
+    "check-pure": _command("check-pure", {"/scope": PROSE, "/files": ARR, "/files/*/diagnostic": DIAG},
+                           _with("/files/*", _PURE_CLAIM)),
+    "run-pure": _command("run-pure", {"/scope": PROSE, "/runtime_status": _RUNTIME, "/file": IDENT, "/entry": IDENT,
+                                      "/result": DATA, "/events": RAW}, _with("/check", _PURE_CLAIM), _EXECUTION),
+    "demo:tiny_shop": {"": OBJ, "/demo": _enum("tiny_shop"), "/ok": BOOL, "/source": IDENT, "/entry": IDENT,
+                       "/requested_outcome": _enum(*APPLICATION_OUTCOMES, "all"), "/runner_exit": INT,
+                       "/diagnostic": DIAG, **_ACCOUNTING, **_ORDERING,
+                       "/scenarios": ARR, "/scenarios/*": OBJ, "/scenarios/*/claim_label": LABEL,
+                       "/scenarios/*/runtime_status": _RUNTIME, "/scenarios/*/outcome": _OUTCOME,
+                       "/scenarios/*/settlement": PROSE, "/scenarios/*/explanation": PROSE,
+                       "/scenarios/*/return_type": "identifier?", "/scenarios/*/return_tag": "identifier?",
+                       "/scenarios/*/net_transitions": ARR, "/scenarios/*/net_transitions/*": IDENT,
+                       "/scenarios/*/final_marking": MAP, "/scenarios/*/final_marking/*": INT,
+                       "/scenarios/*/events": RAW},
+    "demo:merge_sort": {"": OBJ, "/demo": _enum("merge_sort"), "/ok": BOOL, "/source": IDENT, "/entry": IDENT,
+                        "/input": ARR, "/input/*": INT, "/runner_exit": INT, "/output": DATA,
+                        "/runtime_status": _RUNTIME, "/scope": PROSE, "/diagnostic": DIAG, "/events": RAW,
+                        **_with("/check", _PURE_CLAIM), **_EXECUTION},
+    "envelope": {"": OBJ, "/format": _enum(ENVELOPE_FORMAT), "/claim_label": LABEL,
+                 "/runtime_status": ("enum", RUNTIME_STATUSES + (None,)),
+                 "/claim": OBJ, "/claim/name": IDENT, "/claim/pointer": IDENT, "/claim/statement": "quotation?",
+                 "/claim/detail": RAW, "/assumptions": ARR, "/assumptions/*": QUOTE, "/scope": "prose?",
+                 "/profiles": ARR, "/profiles/*": OBJ, "/profiles/*/name": IDENT, "/profiles/*/revision": IDENT,
+                 "/bounds": "object?", **{f"/bounds/{k}": INT for k in ("admission_limit", "max_states", "orders",
+                                                                       "place_bound", "stock", "token_bound_per_colour")},
+                 "/bounds/admission": IDENT, "/bounds/dispatch": IDENT, "/bounds/colours": ARR,
+                 "/bounds/colours/*": ARR, "/bounds/colours/*/*": IDENT,
+                 "/completeness": "object?", "/completeness/complete": BOOL, "/completeness/states": INT,
+                 "/completeness/edges": INT, "/completeness/unreached_transitions": ARR,
+                 "/completeness/unreached_transitions/*": IDENT,
+                 "/wrapped": OBJ, "/wrapped/path": IDENT, "/wrapped/sha256": IDENT, "/wrapped/format": "identifier?",
+                 **{f"/{group}": ARR for group in ("sources", "dependencies")},
+                 **{f"/{group}/*": OBJ for group in ("sources", "dependencies")},
+                 **{f"/{group}/*/{k}": IDENT for group in ("sources", "dependencies") for k in ("path", "sha256")},
+                 "/tools": ARR, "/tools/*": OBJ, "/tools/*/name": IDENT, "/tools/*/version": "identifier?",
+                 "/tools/*/supported_profiles": ARR, "/tools/*/supported_profiles/*": IDENT,
+                 "/trace": "object?", "/trace/format": _enum(TRACE_FORMAT), "/trace/sha256": IDENT},
+}
+DECLARED_PATHS = sum(len(paths) for paths in SCHEMA.values())
+
+
+def output_kind(root) -> str | None:
+    """Which declared output ``root`` is: a runner command, a demo, or an evidence envelope."""
+    if not isinstance(root, dict):
+        return None
+    if root.get("format") == ENVELOPE_FORMAT:
+        return "envelope"
+    if isinstance(root.get("demo"), str):
+        return f"demo:{root['demo']}"
+    if isinstance(root.get("command"), str):
+        return root["command"]
+    return None
+
+
+def lint_json(document, pointer: str = "", root=None, used: set | None = None) -> list[str]:
+    """Violations of the closed JSON schema in ``document``; an empty list when there are none.
+
+    ``root`` is the whole output when ``document`` is part of one at ``pointer`` (the JSON
+    line of a failed ``examples`` expectation); it decides which output's schema applies.
+    ``used`` collects ``(output, declared path)`` pairs, for the tests' coverage check.
     """
     root = document if root is None else root
-    return _lint(document, pointer, root, _envelope(root))
+    kind = output_kind(root)
+    if kind not in SCHEMA:
+        return [f"{pointer or '/'}: not a declared kit output (command, demo or evidence envelope): {kind!r}"]
+    pattern = re.sub(r"/\d+(?=/|$)", "/*", pointer)
+    return _walk(document, pointer, pattern, SCHEMA[kind], kind, used)
 
 
-def _lint(document, pointer: str, root, quotations: bool, name_keyed: bool = False) -> list[str]:
-    errors = []
-    if isinstance(document, dict):
-        items = [(f"{pointer}/{key}", key, value) for key, value in document.items()]
-    elif isinstance(document, list):
-        items = [(f"{pointer}/{index}", None, value) for index, value in enumerate(document)]
-    else:
-        return errors
-    for where, key, value in items:
-        if key in RAW_MEMBERS:
-            continue
-        if key == "claim_label":
-            if value not in RESULT_LABELS:
-                errors.append(f"{where}: claim label {value!r} is not one of the six result labels")
-            continue
-        if key == "runtime_status":
-            if value is not None and value not in RUNTIME_STATUSES:
-                errors.append(f"{where}: runtime status {value!r} is not one of {', '.join(RUNTIME_STATUSES)}")
-            continue
-        if key == "status":
-            errors.append(f"{where}: a member named 'status' ({value!r}) does not say whether it is a claim; "
-                          "use claim_label for a claim, ok for tool status, runtime_status for a run")
-            continue
-        if key is not None and not name_keyed and _verdict_name(key):
-            if not _allowed_name(where, root, value):
-                errors.append(f"{where}: member name {key!r} reads as a verdict here; claims use claim_label only")
-                continue
-            if isinstance(value, str):
-                continue  # an allow-listed application outcome; its value domain is already checked
-        if key in IDENTIFIER_MEMBERS and _identifiers(value):
-            continue
-        if isinstance(value, str):
-            quoted = quotations and any(q.fullmatch(where) for q in ENVELOPE_QUOTATIONS)
-            errors += _value_errors(value, where, quoted)
-        else:
-            errors += _lint(value, where, root, quotations, name_keyed=key in NAME_KEYED_MEMBERS)
-    return errors
+def _walk(value, where: str, pattern: str, schema: dict, output: str, used) -> list[str]:
+    kind = schema.get(pattern)
+    if kind is None:
+        return [f"{where or '/'}: path {pattern or '/'} is not declared for {output} output"]
+    if used is not None:
+        used.add((output, pattern))
+    if isinstance(kind, str) and kind.endswith("?"):
+        if value is None:
+            return []
+        kind = kind[:-1]
+    if isinstance(kind, tuple):
+        values = kind[1]
+        return [] if value in values else [f"{where}: {value!r} is not one of {list(values)!r}"]
+    if kind == RAW:
+        return []
+    if kind == OBJ:
+        if not isinstance(value, dict):
+            return [f"{where or '/'}: expected an object"]
+        return [e for key, item in value.items()
+                for e in _walk(item, f"{where}/{key}", f"{pattern}/{key}", schema, output, used)]
+    if kind in (ARR, MAP):
+        if not isinstance(value, list if kind == ARR else dict):
+            return [f"{where}: expected {'an array' if kind == ARR else 'a map'}"]
+        items = enumerate(value) if kind == ARR else value.items()
+        return [e for key, item in items for e in _walk(item, f"{where}/{key}", f"{pattern}/*", schema, output, used)]
+    return _leaf_errors(kind, value, where)
 
 
-def _value_errors(value: str, where: str, quoted: bool = False) -> list[str]:
-    """A string outside claim_label: never a label or status word, no status token, no leading verdict word.
+def _leaf_errors(kind: str, value, where: str) -> list[str]:
+    if kind == LABEL:
+        return [] if value in RESULT_LABELS else [f"{where}: claim label {value!r} is not one of the six result labels"]
+    if kind == INT:
+        return [] if isinstance(value, int) and not isinstance(value, bool) else [f"{where}: expected an integer"]
+    if kind == BOOL:
+        return [] if isinstance(value, bool) else [f"{where}: expected a Boolean"]
+    if kind == DATA:
+        return [] if _data(value) else [f"{where}: expected numbers, Booleans or lists of them"]
+    if kind == DIAG:
+        if not isinstance(value, dict) or not isinstance(value.get("code"), str) or set(value) - _DIAGNOSTIC_KEYS:
+            return [f"{where}: expected a diagnostic with the weave-diagnostic-v1 members"]
+        return []
+    if kind == "expectation":
+        if isinstance(value, str) and (value == "ACCEPT" or value in _CODES):
+            return []
+        if isinstance(value, dict) and all(isinstance(v, int) and not isinstance(v, bool) for v in value.values()):
+            return []
+        return [f"{where}: expected ACCEPT, a diagnostic code or a marking"]
+    if not isinstance(value, str):
+        return [f"{where}: expected a string ({kind})"]
+    if kind == IDENT:
+        return []
+    if kind == QUOTE:
+        if value in RESULT_LABELS or _STATUS_WORD.fullmatch(value.strip(_LEADING_NOISE)):
+            return [f"{where}: a quotation is never a bare label or status word: {value!r}"]
+        return []
+    return _prose_errors(value, where)
 
-    A ``quoted`` string (an envelope quotation) may contain a status token or begin with
-    one in its wording, but is still never a bare label or status word.
-    """
+
+def _data(value) -> bool:
+    if isinstance(value, list):
+        return all(_data(item) for item in value)
+    return isinstance(value, (int, float, bool))
+
+
+def _prose_errors(value: str, where: str) -> list[str]:
+    """Free text: never a label or upper-case status word, no status token, no leading verdict word."""
     if value in RESULT_LABELS:
         return [f"{where}: result label {value!r} outside a claim_label member"]
-    if value in NON_CLAIM_WORDS:
-        return []
     if _STATUS_WORD.fullmatch(value.strip(_LEADING_NOISE)):
         return [f"{where}: status word {value!r} presents a claim without one of the six result labels"]
-    if quoted:
-        return []
     if _begins_with_verdict(value):
         return [f"{where}: {value!r} begins with a verdict word outside a claim_label member"]
     token = _STATUS_TOKEN.search(value)
@@ -371,8 +437,7 @@ def lint_text(text: str, extra_prefixes=()) -> list[str]:
             if not isinstance(document, dict):
                 errors.append(f"line {number}: {line!r} starts with '{{' but is not a JSON object")
             else:
-                errors += [f"line {number}: {e}" for e in
-                           lint_json(document, "/results/0", {"command": "examples", "results": [document]})]
+                errors += [f"line {number}: {e}" for e in lint_json(document, "/results/0", {"command": "examples"})]
             continue
         runner = next((p for p in NON_CLAIM_PREFIXES if line.startswith(p)), None)
         own = next(((p, w) for p, w in declared if line.startswith(p)), None)

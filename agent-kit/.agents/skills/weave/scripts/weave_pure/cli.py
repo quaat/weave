@@ -97,15 +97,15 @@ def execute(args) -> tuple[dict, int]:
 
 
 def render(result: dict, print_diagnostic) -> None:
+    if "diagnostic" in result:  # a failure before any file was checked or any run started
+        print_diagnostic(result["diagnostic"])
+        return
     if result["command"] == "check-pure":
         for item in result["files"]:
             if item["ok"]:
                 print(claim_text(item))
             else:
                 print_diagnostic(item["diagnostic"])
-        return
-    if "diagnostic" in result:
-        print_diagnostic(result["diagnostic"])
         return
     ex, stats = result["execution"], result["stats"]
     print(claim_text(result["check"]))

@@ -67,48 +67,33 @@ else the runner reports is a claim, and it is never written with a label.
 | Diagnostics | `diagnostic` | `file:line:column: CODE (RULE) [stage]` and indented lines |
 | Raw output of another tool | `output`, `upstream_output` | indented under `raw output (…; not a claim):` |
 
-The JSON rules `tests/test_result_labels.py` enforces (`lint_json` in `weave_labels.py`).
-The only verdict position is `claim_label`, which holds exactly one of the six labels;
-`runtime_status` holds `waiting`, `timed out`, `completed` or `null`; `ok` is the tool status.
+The JSON output is a closed schema: `SCHEMA` in
+`.agents/skills/weave/scripts/weave_labels.py` declares every path each command, each
+demo and each evidence envelope emits, with the kind of value it holds, and
+`tests/test_result_labels.py` fails on any path not declared there or any value of another
+kind. That table is the reference; this section only states the rule.
 
-1. **Member names.** No member is named `status`. A member whose name has a verdict word
-   among its parts (case-insensitive, split on `_`, `-` and camelCase; `VERDICT_NAME_WORDS`:
-   proved, proven, proof, verified, established, holds, passed, success, result, verdict,
-   outcome, claim, label, status, check, conclusion, finding, assessment, evaluation,
-   judgement, decision, violated, scripted, fail, failed, failure, rechecked, executed and
-   plurals) is an error, whatever its value, except at these paths (`*` is any array index):
+- `claim_label` is the only place a verdict appears, and it holds exactly one of the six
+  labels.
+- Enumerated paths hold only their listed values: for example `outcome` is `Ok`, `Err` or
+  `Unknown`, `runtime_status` is `waiting`, `timed out` or `completed`, and `command` is the
+  command's own name. `ok` is a Boolean, only at the paths the table lists.
+- Identifier paths hold user-chosen names, file paths, versions or hashes, and are not
+  inspected. Raw paths (the `test` command's unittest `output`, simulation and scheduler
+  `events`, `upstream_output`, an envelope's `claim.detail`) hold another tool's output and
+  are not inspected, and they exist only at their declared paths. Diagnostic paths hold a
+  `weave-diagnostic-v1` document whose message is tool text.
+- Prose paths (such as `scope`, `reason`, `lesson`, `assumptions`) may not be a label or an
+  upper-case status word. They may not contain a label word or a status word (`PASSED`,
+  `FAIL`, `RECHECKED`, `NOT PROVED`, …) as a whole upper-case token. Nor may they begin,
+  after whitespace and quotes and in any case, with a verdict word (`CLAIM_LEXICON`).
+- An envelope's cited quotations (`assumptions` and `claim.statement`) may contain such a
+  word in their wording, but are never a bare label or status word.
 
-   | Path | Only in | Value |
-   | --- | --- | --- |
-   | `/runs/*/outcome` | `simulate` | `Ok`, `Err` or `Unknown` |
-   | `/results` | `examples` | the expectation records, each with `ok` |
-   | `/results/*/outcome` | `examples` | `Ok`, `Err` or `Unknown` |
-   | `/checks`, `/passed` | `examples` | an integer count |
-   | `/result` | `run-pure` | the computed value: a number, Boolean or list |
-   | `/check` | `run-pure`, the `merge_sort` demo | the claim object, with `claim_label` |
-   | `/requested_outcome` | the `tiny_shop` demo | `Ok`, `Err`, `Unknown` or `all` |
-   | `/scenarios/*/outcome` | the `tiny_shop` demo | `Ok`, `Err` or `Unknown` |
-   | `/claim` | an evidence envelope | its claim object (the label is the sibling `claim_label`) |
-
-   Keys of a marking (`marking`, `final_marking`, and `expected`/`actual` in `examples`)
-   are place names, not member names.
-2. **String values.** No string value is a label or an upper-case status word, contains a
-   label word or a status word (`PASSED`, `PASS`, `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`,
-   `CHECKED`, `EXECUTED`, …) as a whole upper-case token, or begins, after any whitespace
-   and quotes and in any case, with a verdict word not followed by a letter or digit
-   (`CLAIM_LEXICON`: proved, proven, unproved, checked, scripted, violated, not established,
-   established, verified, passed, pass, success, succeeded, ok, fail, failed, failure, holds,
-   rechecked, executed, bounded), so `Proved.`, `"ok"` and `SUCCESS: …` all fail. Prose
-   such as `scope` may use these words in lower case after its first word.
-
-The exceptions to rule 2, listed in `weave_labels.py`, are: the allow-listed values of rule 1
-above; raw-output members (`diagnostic`, `output`,
-`upstream_output`, `events`, `detail`, `context`); members holding user-chosen names or
-paths (`IDENTIFIER_MEMBERS`, so an upper-case property name is not a status word); the
-teaching manifest's `ACCEPT` expectation; and, in an evidence envelope only, its cited
-quotations (`assumptions` entries and `claim.statement`), which may contain such a word in
-their wording but are never a bare label or status word. The JSON has no tool status
-string: `ok` is a boolean. The prototype's own certificate written by
+The test checks the table in both directions. Every path in real output (all commands with
+`--json`, both demos and their artifacts, every wrapped envelope) must be declared. Every
+declared path must occur in that output, except a short list in the test of paths no test
+run can produce, each with its reason. The prototype's own certificate written by
 `analyze --certificate` is raw tool output and keeps its `status: PROVED` fields.
 
 Text output is a closed set of line forms. An unindented line is a claim only if it

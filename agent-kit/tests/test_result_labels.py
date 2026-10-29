@@ -27,13 +27,20 @@ VERIFICATION = REPO / 'specification/docs/chapters/verification.rst'
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(SCRIPTS))
 
-from weave_labels import (RESULT_LABELS, RUNTIME_STATUSES, json_claims, labelled, lint_json,  # noqa: E402
-                          lint_text, text_claims)
+from weave_labels import (DECLARED_PATHS, RESULT_LABELS, RUNTIME_STATUSES, SCHEMA, json_claims,  # noqa: E402
+                          labelled, lint_json, lint_text, text_claims)
 
 HAVE_EVIDENCE = (REPO / 'evidence/weave_evidence/wrap.py').is_file()
 GOOD = ROOT / 'examples/valid/checkout_propagating.weave'
 MERGE_SORT = ROOT / 'demos/merge_sort/merge_sort.weave'
 P, B, F, S, V, N = RESULT_LABELS
+
+
+def in_output(document):
+    """A synthetic fragment placed in a declared output (check), unless it names its own."""
+    if any(key in document for key in ('command', 'demo', 'format')):
+        return document
+    return {'command': 'check', **document}
 
 
 def spec_labels():
@@ -122,7 +129,7 @@ class LintNegativeTests(unittest.TestCase):
                      'runtime status: completed (NOT PROVED)', 'result: CHECKED_WITHIN BOUNDS'):
             with self.subTest(line=line):
                 self.assertEqual(len(lint_text(line)), 1, lint_text(line))
-        for line in ('{"file": "x.weave", "ok": false, "diagnostic": {"message": "NOT PROVED"}}',
+        for line in ('{"file": "x.weave", "ok": false, "diagnostic": {"code": "E112", "message": "NOT PROVED"}}',
                      'examples/invalid/reuse_hold.weave:4:5: E203 (F0-CALL-2) [flow]',
                      '/tmp/weave-skill/a.weave:2:1: P411 (KIT-PURE-RECURSION-1) [pure]',
                      'x.weave:3:5: E204 (F0-RETURN-1) [flow]',
@@ -164,7 +171,16 @@ class LintNegativeTests(unittest.TestCase):
 
     def test_json_claims_with_other_labels_fail(self):
         cases = {
-            'claim label PASSED': {'runs': [{'claim_label': 'PASSED'}]},
+            # delta review of cb1d0d1: exemptions and name splitting no longer apply anywhere
+            'expected map under accounting': {'accounting': {'expected': {'holds': True}}},
+            'detail at the root': {'command': 'check', 'detail': 'PROVED stock conserved'},
+            'dotted member name': {'accounting': {'stock.holds': True}},
+            'unproved member': {'accounting': {'unproved': False}},
+            'ok under accounting': {'accounting': {'ok': True}},
+            'diagnostic under accounting': {'accounting': {'diagnostic': {'code': 'E204'}}},
+            'raw events under accounting': {'accounting': {'events': ['PROVED']}},
+            'unknown output': {'verdict': 'fine'},
+            'claim label PASSED': {'command': 'simulate', 'runs': [{'claim_label': 'PASSED'}]},
             'claim label NOT PROVED': {'accounting': {'claim_label': 'NOT PROVED'}},
             'claim label CHECKED': {'files': [{'claim_label': 'CHECKED'}]},
             'status member (0.2.0 verify)': {'command': 'verify', 'status': 'RECHECKED'},
@@ -211,7 +227,7 @@ class LintNegativeTests(unittest.TestCase):
         }
         for name, document in cases.items():
             with self.subTest(name):
-                self.assertEqual(len(lint_json(document)), 1, lint_json(document))
+                self.assertTrue(lint_json(in_output(document)), document)
 
     def test_json_non_claims_pass(self):
         simulate = {'command': 'simulate', 'ok': True, 'accounting': {'claim_label': P, 'invariants': ['a']},
@@ -224,7 +240,7 @@ class LintNegativeTests(unittest.TestCase):
                                 {'outcome': 'Err', 'expected': {'sold': 0}, 'actual': {'sold': 1}, 'ok': False}]}
         run_pure = {'command': 'run-pure', 'ok': True, 'check': {'claim_label': N, 'functions': ['f'],
                     'reason': 'pure fn kit extension outside F0; missing model; not established here'},
-                    'runtime_status': 'completed', 'result': [1, 2], 'output': 'PASSED\nOK',
+                    'runtime_status': 'completed', 'result': [1, 2], 'upstream_output': 'PASSED\nOK',
                     'scope': 'nothing is established outside the tool; the kit checked types'}
         tiny_shop = {'demo': 'tiny_shop', 'requested_outcome': 'all', 'ok': True,
                      'scenarios': [{'claim_label': S, 'runtime_status': 'completed', 'outcome': 'Ok',
@@ -259,7 +275,7 @@ class LintNegativeTests(unittest.TestCase):
         }
         for name, document in cases.items():
             with self.subTest(name):
-                self.assertEqual(len(lint_json(document)), 1, lint_json(document))
+                self.assertTrue(lint_json(in_output(document)), document)
 
     def test_leading_verdict_words_with_punctuation_and_padding(self):
         """Delta review F-2."""
@@ -316,7 +332,8 @@ class EnvelopeQuotationTests(unittest.TestCase):
                     'claim': {'name': 'x', 'statement': 'VIOLATED p within one-order model'},
                     'assumptions': ['PROVED labels apply only to exact integer linear invariants. [checker.py, docstring]']}
         self.assertEqual(lint_json(envelope), [])
-        self.assertEqual(len(lint_json(dict(envelope, format='other'))), 2)
+        self.assertTrue(lint_json(dict(envelope, format='other')))
+        self.assertTrue(lint_json({'command': 'check', 'assumptions': envelope['assumptions']}))
         self.assertEqual(len(lint_json(dict(envelope, scope='PASSED'))), 1)
         for bare in ('PASSED', 'PROVED', 'NOT PROVED'):
             with self.subTest(bare=bare):
@@ -344,6 +361,17 @@ class ArtifactTests(unittest.TestCase):
             self.assertEqual(lint_text((ROOT / rel).read_text(encoding='utf-8'), prefixes), [])
 
 
+class SchemaTests(unittest.TestCase):
+    def test_declared_paths(self):
+        self.assertEqual(DECLARED_PATHS, sum(len(paths) for paths in SCHEMA.values()))
+        for output, paths in SCHEMA.items():
+            with self.subTest(output):
+                self.assertEqual(paths[''], 'object')
+                labels = [p for p, kind in paths.items() if kind == 'label']
+                self.assertTrue(all(p.endswith('/claim_label') for p in labels), labels)
+                self.assertEqual(bool(labels), output not in ('doctor', 'test'), output)
+
+
 class RunnerOutputTests(unittest.TestCase):
     """Every runner command, in both forms: only the six labels, the same claims, nothing vacuous."""
 
@@ -360,6 +388,11 @@ class RunnerOutputTests(unittest.TestCase):
         over, grows = tmp / 'over.weave', tmp / 'grows.weave'
         over.write_text(net.replace(start, 'place charge_requests = 2 owner adapter'))
         grows.write_text(net.replace(start, 'place charge_requests = 1 owner adapter'))
+        unsafe = ROOT / 'examples/nets/unsafe_paid_release.weave'
+        unsafe_manifest = tmp / 'unsafe-manifest.json'
+        unsafe_manifest.write_text(json.dumps({'net': str(unsafe), 'cases': []}))
+        grows_manifest = tmp / 'grows-manifest.json'
+        grows_manifest.write_text(json.dumps({'net': str(grows), 'cases': []}))
         commands = {
             'doctor': (['doctor'], []),
             'check': (['check', GOOD, ROOT / 'examples/valid/checkout.weave', ROOT / 'examples/invalid/reuse_hold.weave'],
@@ -382,6 +415,22 @@ class RunnerOutputTests(unittest.TestCase):
             'run-pure': (['run-pure', MERGE_SORT, '--entry', 'merge_sort', '--args', '[[3,1,2]]', '--trace'], [N]),
             'run-pure fault': (['run-pure', MERGE_SORT, '--entry', 'merge_sort', '--args', '[[3,1,2]]',
                                 '--fuel', '5'], []),
+            # failure paths of the closed JSON schema
+            'simulate violated': (['simulate', GOOD, '--entry', 'checkout_propagating', '--net', unsafe], [P, V]),
+            'lower exhausted': (['lower', GOOD, '--output', tmp / 'never.weave', '--max-states', '1'], [P, N]),
+            'lower rejected': (['lower', ROOT / 'examples/invalid/early_return_leak.weave', '--output',
+                                tmp / 'never.weave'], []),
+            'examples violated': (['examples', '--manifest', unsafe_manifest], [P, V]),
+            'examples bound exceeded': (['examples', '--manifest', grows_manifest], [P, N]),
+            'check exhausted': (['check', GOOD, '--max-states', '1'], [P, N]),
+            'analyze violated': (['analyze', '--net', unsafe], [P, V]),
+            'lower violated': (['lower', GOOD, '--output', tmp / 'never.weave', '--net', unsafe], [P, V]),
+            'simulate bound exceeded': (['simulate', GOOD, '--entry', 'checkout_propagating', '--net', grows], [P, N]),
+            'examples missing manifest': (['examples', '--manifest', tmp / 'missing.json'], []),
+            'verify missing': (['verify', tmp / 'missing.json'], []),
+            'check missing': (['check', tmp / 'missing.weave'], []),
+            'check-pure missing': (['check-pure', tmp / 'missing.weave'], []),
+            'run-pure rejected': (['run-pure', ROOT / 'examples/invalid/pure_mutual.weave', '--entry', 'ping'], []),
         }
         cls.outputs = {}
         for name, (args, expected) in commands.items():
@@ -396,6 +445,46 @@ class RunnerOutputTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.tmp.cleanup()
+
+    # Declared paths that no run here produces, each with the reason it stays declared.
+    NOT_PRODUCED_HERE = {
+        **{(command, '/upstream_output'): 'only when upstream code prints; the runner captures it'
+           for command in ('analyze', 'check', 'check-pure', 'doctor', 'examples', 'lower', 'run-pure',
+                           'simulate', 'test', 'verify')},
+        ('doctor', '/missing/*'): 'only when the bundled prototype is incomplete',
+        ('doctor', '/third_party_dependencies/*'): 'the kit has none',
+        ('test', '/diagnostic'): 'only when the prototype suite times out',
+        ('envelope', '/completeness/unreached_transitions/*'): 'every wrapped exploration reaches all transitions',
+    }
+
+    def test_schema_matches_real_output_in_both_directions(self):
+        """Every real path is declared (lint) and every declared path occurs in real output."""
+        used = set()
+        for name, (_, (_, out, _), _) in self.outputs.items():
+            self.assertEqual(lint_json(json.loads(out), used=used), [], name)
+        for script, args in ((ROOT / 'demos/tiny_shop/run_demo.py', ['--outcome', 'all', '--trace']),
+                             (ROOT / 'demos/tiny_shop/run_demo.py', ['--source', ROOT / 'missing.weave']),
+                             (ROOT / 'demos/merge_sort/run_demo.py', ['--values', '[3,1,2]', '--trace']),
+                             (ROOT / 'demos/merge_sort/run_demo.py', ['--values', '[1,true]']),
+                             (ROOT / 'demos/merge_sort/run_demo.py', ['--values', '[5,4,3]', '--fuel', '5'])):
+            _, out, _ = run(script, *args, '--json')
+            self.assertEqual(lint_json(json.loads(out), used=used), [], (script.parent.name, args))
+        for path in sorted((ROOT / 'demos').glob('*/artifacts/*.json')):
+            data = json.loads(path.read_text(encoding='utf-8'))
+            if data.get('format') != 'weave-place-invariant-v1':
+                self.assertEqual(lint_json(data, used=used), [], path.name)
+        declared = {(output, path) for output, paths in SCHEMA.items() for path in paths}
+        if HAVE_EVIDENCE:
+            sys.path.insert(0, str(REPO))
+            from evidence.weave_evidence.wrap import wrap_all
+            for wrapped in wrap_all(REPO):
+                for envelope in wrapped.envelopes:
+                    self.assertEqual(lint_json(envelope, used=used), [], wrapped.path)
+        else:
+            declared = {item for item in declared if item[0] != 'envelope'}
+        self.assertEqual(used - declared, set())
+        self.assertEqual(declared - used, set(self.NOT_PRODUCED_HERE) & declared)
+        self.assertLessEqual(set(self.NOT_PRODUCED_HERE), {(o, p) for o, ps in SCHEMA.items() for p in ps})
 
     def test_every_command_ran(self):
         for name, ((text_code, _, _), (json_code, out, err), _) in self.outputs.items():
