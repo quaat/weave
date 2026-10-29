@@ -199,6 +199,12 @@ class RejectionAndPropagation(unittest.TestCase):
         e = self.error("E203", lambda: check_flow(self.net, source))
         related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
         self.assertEqual(related, [("binding", 1, 8, 9), ("moved", 2, 18, 19)])
+        # A callee spelled like the handle is skipped: `moved` is inside the argument list.
+        source = ("flow f(h: Hold[t, o]):\n    await h(h, h)\n    return\n"
+                  "flow h(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
+        e = self.error("E203", lambda: check_flow(self.net, source))
+        related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
+        self.assertEqual(related, [("binding", 1, 8, 9), ("moved", 2, 13, 14)])
 
     def test_unknown_payload_identity_cannot_be_widened(self):
         source = FLOW.replace("-> CheckoutOutcome[tenant, order]", "-> CheckoutOutcome[order, tenant]")

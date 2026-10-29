@@ -18,7 +18,7 @@
     "README.md": "ef4ce22e54096b4f48b28d06fcd3213e591b1d7ee9e7472103c470a18a8b4c00",
     "REPORT.md": "46a1aacea1ab097f228d1926b1cc6c89f03275b74278f927fa87fd6ac3ed7203",
     "TEST_OUTPUT.txt": "573c2fc7de8f091b6f7b4741dfd7ec1134148197ebcaf2b7949878a0d57d8a6b",
-    "checker.py": "03cdb26d8853266bb5159f6704b9068cb8316264c5c7b685ebc96c8e2e0e76d2",
+    "checker.py": "c30de55022ad91b87015f188c450b61dfed4c7bfbce99e9349200b9e4f971362",
     "colour-check.json": "d840f7fc893b0c6d8bdfb620a478f4572bf42778a3bd6206960246df99cbf7a3",
     "colour-proof.json": "a6b6a0436d153275c899db7b3e02f56c22fbf5788bc3ea3c9e218ebe85619d93",
     "coloured.py": "b8de87295de7083afa4cae05f918954cb3eab9ec493d0f75b67a644aeddf3596",
@@ -47,7 +47,7 @@
     "tests/test_coloured.py": "31c70d6fcddb394f7208f04597a2a1f7ab463514f16179cbf511c3d5010c31fd",
     "tests/test_composition.py": "a4a02584196b1253a7fc2b217852c8f4f2c58aa05bfb0cbe36f65e04110823ad",
     "tests/test_durable.py": "e2922583de12ea79d087b041ee716a99841c2c27829d607c94b7b142037ecb1f",
-    "tests/test_rejection_and_propagation.py": "73da74a0a667b674fd6143925977575092e4f7d21099ffc38234e970d381d5f5",
+    "tests/test_rejection_and_propagation.py": "d1c8fabbdd006e015ed527a8d92905f566bf6f83cbf6331f7645bfbbfebf2bb7",
     "verify_certificate.py": "f3db51a4877436565adbf0320f7cc8ce71cafac503822b42125571df13bb8404"
   },
   "kit_extensions": [
@@ -87,7 +87,7 @@
         },
         "checker.py": {
           "before": "5b129240e2687ed5ce7476b31c0690f0def0f9f6de6cff5196fbd92c93623fa1",
-          "after": "03cdb26d8853266bb5159f6704b9068cb8316264c5c7b685ebc96c8e2e0e76d2"
+          "after": "c30de55022ad91b87015f188c450b61dfed4c7bfbce99e9349200b9e4f971362"
         },
         "coloured.py": {
           "before": "1778b3d4ed66e0f6fed56809feb408aba0b8425336854a09b730273a59eb1421",
@@ -107,7 +107,7 @@
         },
         "tests/test_rejection_and_propagation.py": {
           "before": "46b1cf0b5539a6cb11145f4e01dd1f3ba45f6c9433f9d39636a7490973927cba",
-          "after": "73da74a0a667b674fd6143925977575092e4f7d21099ffc38234e970d381d5f5"
+          "after": "d1c8fabbdd006e015ed527a8d92905f566bf6f83cbf6331f7645bfbbfebf2bb7"
         }
       }
     }

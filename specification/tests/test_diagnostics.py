@@ -277,12 +277,37 @@ class DiagnosticPerCode(unittest.TestCase):
                       "flow helper(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
         reused_return = "flow f(h: Hold[t, o]) -> Escrow[t, o]:\n    let e = await Inventory.arm(h)\n    return h\n"
         reused_match = ("flow f(r: ChargeOutcome[t, o]):\n    let p = r?\n    match r:\n        Ok(x):\n            return\n")
-        for source, moved in ((call_twice, (2, "h")), (reused_return, (2, "h")), (reused_match, (2, "r"))):
+        callee_named_h = ("flow f(h: Hold[t, o]):\n    await h(h, h)\n    return\n"
+                          "flow h(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
+        for source, moved in ((call_twice, (2, "h")), (reused_return, (2, "h")), (reused_match, (2, "r")),
+                              (callee_named_h, (2, "h"))):
             with self.subTest(source=source):
                 code, roles = self.related(source)
                 self.assertEqual(code, "E203")
                 self.assertEqual(roles["moved"], moved)
                 self.assertEqual(roles["binding"][0], 1)
+        # The callee `h` is at columns 11-12; the moved span is the first argument at 13-14.
+        with self.assertRaises(CheckError) as raised:
+            check_flow(parse_net(N0), callee_named_h)
+        moved = [r.span for r in raised.exception.related if r.role == "moved"][0]
+        self.assertEqual((moved.line, moved.column, moved.end_column), (2, 13, 14))
+
+    def test_spans_skip_earlier_names_spelled_like_the_handle(self):
+        # A flow named like its parameter: the binding span is the parameter, not the flow name.
+        code, roles = self.related("flow h(h: Hold[t, o]):\n    return\n")
+        self.assertEqual(code, "E204")
+        with self.assertRaises(CheckError) as raised:
+            check_flow(parse_net(N0), "flow h(h: Hold[t, o]):\n    return\n")
+        binding = raised.exception.related[0].span
+        self.assertEqual((binding.line, binding.column, binding.end_column), (1, 8, 9))
+        # A handle spelled like a field of the called operation's qualified name is not matched there.
+        source = ("flow f(arm: Hold[t, o]):\n    let e = await Inventory.arm(arm)\n"
+                  "    let x = await Inventory.arm(arm)\n    return\n")
+        with self.assertRaises(CheckError) as raised:
+            check_flow(parse_net(N0), source)
+        self.assertEqual(raised.exception.code, "E203")
+        moved = [r.span for r in raised.exception.related if r.role == "moved"][0]
+        self.assertEqual((moved.line, moved.column, moved.end_column), (2, 33, 36))
 
     def test_e204_at_ordinary_return_has_no_propagation_span(self):
         code, roles = self.related("flow f(h: Hold[t, o]):\n    return\n")

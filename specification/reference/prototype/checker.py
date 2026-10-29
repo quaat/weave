@@ -59,8 +59,27 @@ def statement_span(source: str, line: int) -> Span:
     return Span(1, 1, len(lines), len(lines[-1]) + 1)
 
 
-def name_span(source: str, line: int, name: str | None) -> Span:
-    """The first occurrence of ``name`` on ``line`` (after the parameter list opens on a flow header)."""
+def name_anchor(text: str, role: str | None) -> int:
+    """Where to start looking for a binding's name on its line, so an earlier callee,
+    flow, constructor or binding name that happens to be spelled the same is skipped."""
+    stripped = text.lstrip()
+    if stripped.startswith("flow "):
+        return text.find("(") + 1  # a parameter: inside the parameter list
+    if role == "moved":
+        if stripped.startswith("match "):
+            return text.find("match") + len("match")
+        if match := re.match(r"\s*return(?:\s+\w+\()?", text):
+            return match.end()  # the returned name, after any constructor
+        if match := re.search(r"[\w.]\(", text):
+            return match.end()  # an argument: inside the called operation's parentheses
+        return text.find("=") + 1  # a `?` operand: after the binding it initialises
+    if stripped.startswith("let "):
+        return text.find("let") + len("let")  # the bound name
+    return text.find("(") + 1  # a match payload: Case(name):
+
+
+def name_span(source: str, line: int, name: str | None, role: str | None = None) -> Span:
+    """The occurrence of identifier ``name`` on ``line`` that ``role`` refers to ("?": the operator)."""
     lines = source.splitlines()
     if name and 1 <= line <= len(lines):
         text = lines[line - 1].split("#", 1)[0].rstrip()
@@ -69,8 +88,8 @@ def name_span(source: str, line: int, name: str | None) -> Span:
             if found >= 0:
                 return Span(line, found + 1, line, found + 2)
         else:
-            start = text.find("(") + 1 if text.lstrip().startswith("flow ") else 0
-            match = re.compile(rf"(?<!\w){re.escape(name)}(?!\w)").search(text, start)
+            pattern = re.compile(rf"(?<![\w.]){re.escape(name)}(?!\w)")
+            match = pattern.search(text, max(name_anchor(text, role), 0)) or pattern.search(text)
             if match:
                 return Span(line, match.start() + 1, line, match.end() + 1)
     return statement_span(source, line)
@@ -99,7 +118,7 @@ class CheckError(Exception):
         if self.span is None or force:
             self.span = statement_span(source, self.line)
             for item in self.related:
-                item.span = name_span(source, item.line, item.name) if item.line else None
+                item.span = name_span(source, item.line, item.name, item.role) if item.line else None
         return self
 
     def diagnostic(self, file: str, source: str | None = None, stage: str = "check", rule: str | None = None,
