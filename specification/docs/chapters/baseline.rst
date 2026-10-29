@@ -117,14 +117,15 @@ workflow tooling on 3.11; the workflow file is authoritative where it and this
 list differ. Only the specification job needs third-party packages, pinned in
 ``specification/requirements.txt`` and installed from the network.
 
-Start from a fresh clone at the baseline commit (the tag proposed below, once the
-maintainer has created it):
+Start from a fresh clone at the baseline tag proposed below. The tag exists once
+the maintainer has created and pushed it; the clone fetches it with the
+repository's other tags:
 
 .. code-block:: bash
 
    git clone https://github.com/quaat/weave.git weave-baseline
    cd weave-baseline
-   git checkout --detach baseline-0.2-draft-prototype-v3   # or the commit ID
+   git checkout baseline-0.2-draft-prototype-v3
 
 **inventory-proof** (from ``inventory-proof/``):
 
@@ -208,8 +209,9 @@ schema and, under :doc:`stability`, need a new format version.
      - Value at the baseline
      - How to recompute
    * - Repository commit
-     - The merge commit of the change that adds this chapter; recorded on
-       quaat/weave#4 when the tag is created (a commit cannot name its own ID)
+     - The reviewed head commit of the change that adds this chapter, which
+       the tag points to; recorded on quaat/weave#4 when the tag is created (a
+       commit cannot name its own ID)
      - ``git rev-parse baseline-0.2-draft-prototype-v3^{commit}``
    * - Specification revision
      - ``0.2-draft`` (``version`` ``0.2``)
@@ -262,8 +264,17 @@ Proposed baseline tag
 Creating the tag is a maintainer action; this specification only proposes it.
 
 * **Name:** ``baseline-0.2-draft-prototype-v3``.
-* **Target:** the merge commit on ``main`` of the pull request that adds this
-  chapter for quaat/weave#4, after the procedure above passes on that commit.
+* **Target:** the reviewed head of the change that adds this chapter for
+  quaat/weave#4: the last commit of its ``agent/`` branch that passed
+  review, which contains this chapter in its final form. A commit cannot name
+  its own ID, so the ID is recorded on quaat/weave#4 when the tag is created.
+  The maintainer can create the tag before the pull request is merged, after
+  the procedure above passes on that commit.
+* **Reachability:** the tag is created on the agent-branch commit, not on a
+  commit made by the merge. Merging the pull request with a merge commit (not a
+  squash or rebase) keeps that commit in the history of ``main``, so the tag
+  stays reachable from ``main`` after the branch is deleted. A squash or
+  rebase merge would leave the tag on a commit that is not in ``main``.
 * **Why not** ``spec-v``: :doc:`stability` reserves the ``spec-v`` prefix for a
   specification release, and pushing such a tag makes
   ``.github/workflows/pdf.yml`` create a GitHub release with the PDF. The
@@ -275,12 +286,12 @@ Creating the tag is a maintainer action; this specification only proposes it.
   workflow trigger: ``ci.yml`` and ``docs.yml`` run on branch pushes, pull
   requests and manual dispatch, and ``pdf.yml`` on ``spec-v*`` tags.
 
-Command for the maintainer, with ``<merge-commit>`` replaced by the full commit
-ID:
+Command for the maintainer, with ``<reviewed-head>`` replaced by the full ID of
+that commit:
 
 .. code-block:: bash
 
    git fetch origin
-   git tag -a baseline-0.2-draft-prototype-v3 <merge-commit> \
+   git tag -a baseline-0.2-draft-prototype-v3 <reviewed-head> \
      -m "Weave baseline: specification 0.2-draft, prototype version 3 (quaat/weave#4)"
    git push origin baseline-0.2-draft-prototype-v3
