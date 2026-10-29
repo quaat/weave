@@ -195,6 +195,8 @@ Before accepting a result, verify schema, provenance, identity, current head, re
 
 After fixes, rerun affected checks and the documentation audit, then request a fresh review of the current candidate. Reuse finding IDs; record whether the review was full or a justified delta. Never relabel an old approval with a new SHA. Default to three review-and-fix rounds per attempt with configurable time and token limits. On exhaustion, preserve work, return genuine rework to In Progress, mark `agent:needs-human`, and summarise the disagreement.
 
+Clarification (2026-10-29, maintainer decision, #72): three rounds remain the standard; up to two extra rounds are allowed only for narrow remaining findings, with the reason recorded on the issue; larger findings or failure after round five return to the maintainer (`review.max_rounds_per_attempt` = 5).
+
 ### 9. Documentation currency
 
 Documentation is a deliverable of every change, not a follow-up. The repository is unusual in that its documents make verifiable claims (test counts, state counts, diagnostic codes, snapshot hashes, command names, profile boundaries), and the specification is built so that displayed examples are re-checked at build time. Extend that discipline to the whole repository.

@@ -35,5 +35,8 @@ sandbox.
    relayed comment, never a GitHub approval, published READY_TO_MERGE and set
    `agent:ready-to-merge`. If the PR is opened later, link the issue's REVIEW_RESULT from its
    description. The issue stays In Review until the maintainer merges.
-8. Budget: at most three review rounds per attempt. On exhaustion, preserve the work, return
-   genuine rework to In Progress, add `agent:needs-human` and summarise the disagreement.
+8. Budget: three standard review rounds per attempt, plus up to two extra rounds only when
+   the remaining findings are narrow (wording, documentation, small fixes); record on the
+   issue why each extra round is used. Otherwise, or when findings remain after the fifth
+   round, preserve the work, return genuine rework to In Progress, add `agent:needs-human`
+   and summarise the disagreement for the maintainer.
