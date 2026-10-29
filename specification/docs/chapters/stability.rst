@@ -59,7 +59,8 @@ and a new evidence format does not change a profile.
      - Durable runtime state: admissions, markings, operation and result
        ledgers, continuations, timers
      - Runtime maintainer
-     - Reserved; chosen when the first durable store is specified
+     - ``weave-store-v<N>`` in the store's metadata, checked before any other
+       access; first identifier assigned in M5
 
 Owners are roles, not people. The repository does not record who holds each
 role; until it does, the maintainer holds all of them, and decisions that change
@@ -147,13 +148,25 @@ a retired format string is never reused. The machine-readable diagnostics schema
 Persisted store format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This axis is reserved now and used from the durable service milestone (M5,
-quaat/weave#59), whose scope includes version binding. The store format
-identifier MUST be recorded inside the store itself. Bump rule: any change to
-the layout or meaning of stored data needs a new store format identifier and a
-migration note, and a runtime MUST NOT open a store whose format it does not
-implement (see `Unrecognised versions`_). How stores are migrated is not decided
-here; :doc:`limitations` lists upgrade and schema migration rules as an open
+This section fixes the identifier convention now; it is a format convention, not
+a storage design. The first durable store, its layout and its migration mechanism
+belong to the durable service milestone (M5, quaat/weave#59).
+
+* **Format.** A store format identifier has the form ``weave-store-v<N>``, where
+  ``N`` is a positive integer major version. It is recorded in the store's own
+  metadata, and a runtime reads and checks it before any other access to the
+  store: before creating, reading or writing any other data.
+* **Bump rule.** Any change that a runtime implementing ``weave-store-v<N>``
+  could not safely read or write raises ``N``: a changed layout, a changed
+  meaning of stored data, or a new constraint that older writers could violate.
+  Every such change needs a migration note.
+* **Unrecognised identifiers.** A runtime that does not implement the recorded
+  identifier, or finds none, MUST NOT open or modify the store
+  (see `Unrecognised versions`_).
+
+No store uses this convention yet; the first concrete identifier is assigned when
+M5 specifies the store. How stores are migrated is not decided here;
+:doc:`limitations` lists upgrade and schema migration rules as an open
 production decision.
 
 Current identifiers
@@ -347,11 +360,30 @@ not established. An input that lacks a version identifier where its schema
 requires one is treated the same way. The same holds for a conformance claim
 naming a language revision or profile the tool does not implement.
 
-Existing tools already behave this way in two places:
-``inventory-proof/verify_certificate.py`` rejects a certificate whose ``format``
-is not ``weave-place-invariant-v1`` ("Unsupported certificate format"), and the
-R0 model in ``inventory-proof/durable.py`` refuses a store whose recorded net
-digest differs ("Persisted net revision differs; migration is required").
-quaat/weave#7 implements this rule for the schemas it defines and adds a test
-that unknown schema versions are never interpreted as successful evidence; its
-scope also covers converting or wrapping the existing unversioned evidence files.
+The existing prototype predates this rule. It has two partial safeguards, and
+neither meets the rule in full:
+
+* ``inventory-proof/verify_certificate.py`` (lines 19--20) rejects a certificate
+  whose ``format`` is not ``weave-place-invariant-v1``, including one with no
+  ``format`` field, so an unrecognised certificate is never accepted. The
+  message, "Unsupported certificate format", does not name the unrecognised
+  identifier, as the rule requires.
+* The R0 model in ``inventory-proof/durable.py`` checks a source digest, not a
+  store format. Lines 100--108 compare the SHA-256 of the net source with the
+  ``metadata`` key ``source`` and refuse a mismatch ("Persisted net revision
+  differs; migration is required"). The store records no store format
+  identifier; lines 92--99 create its tables before that check; and a store
+  without a ``source`` entry is initialised rather than refused (lines
+  104--106).
+
+The vendored copies of these files in the pinned snapshots behave the same way.
+The prototype is pinned regression evidence and is not changed by this policy.
+
+Tracking: quaat/weave#7 implements this rule for the trace, canonical-net and
+evidence-envelope schemas it defines, adds a test that unknown schema versions
+are never interpreted as successful evidence, and converts or wraps the existing
+evidence files. Neither quaat/weave#6 (machine-readable diagnostics) nor
+quaat/weave#7 covers the wording of the prototype verifier's message or the R0
+store's checks; bringing those into line is not yet tracked. Stores first follow
+the ``weave-store-v<N>`` convention in the durable service milestone
+(quaat/weave#59).

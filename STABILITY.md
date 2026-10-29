@@ -18,7 +18,7 @@ the chapter differ, the chapter wins.
 | Tools (checker, analyser, runtime, CLI) | Toolchain maintainer | Semantic versioning per tool | Prototype version 3 (`specification/PROVENANCE.json`); agent kit `0.1.0` (`agent-kit/PROVENANCE.json`); production toolchain: none yet |
 | Profiles (F0, N0, N1, R0; targets D0, N2) | Language maintainer | Profile name plus the specification revision that defines it | Defined by 0.2-draft |
 | Evidence schemas (certificates, conformance artefacts, traces) | Toolchain maintainer | `weave-<artefact>-v<N>` in the `format` field | For example `weave-place-invariant-v1` (`inventory-proof/proof.json`); traces: none yet |
-| Persisted store format | Runtime maintainer | Reserved until the durable store is specified (M5) | None yet |
+| Persisted store format | Runtime maintainer | `weave-store-v<N>` in the store's metadata, checked before any other access (a convention, not a storage design) | None yet; first identifier assigned in M5 (#59) |
 
 The chapter gives the bump rule for each axis and the source of every current identifier.
 
@@ -35,4 +35,6 @@ The chapter gives the bump rule for each axis and the source of every current id
   execution arrive as versioned extensions or new profiles, never by changing F0, N0, N1
   or R0.
 - **Unrecognised versions are never success.** A tool rejects evidence or a store whose
-  format it does not implement, or reports the claim as not established.
+  format it does not implement, naming the identifier, or reports the claim as not
+  established. The v3 prototype meets this only partly; the chapter states the gaps and
+  what tracks them.
