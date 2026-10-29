@@ -1015,8 +1015,11 @@ def apply_call(net: Net, name: str, arguments: str, env: dict[str, Binding], lin
             substitutions[wanted] = found
         if is_linear(net, expected):
             if arg in to_move:
+                # The first argument occurrence on this line is the move the repeat conflicts with.
+                first_use = Related("moved", f"{arg} is first consumed by this call", line, arg)
                 raise CheckError("E203", f"{arg} would be consumed twice by one call.", line,
-                                 binding_spans(arg, env[arg]), {"binding": arg, "type": str(env[arg].type)})
+                                 binding_spans(arg, env[arg]) + [first_use],
+                                 {"binding": arg, "type": str(env[arg].type)})
             to_move.append(arg)
     for arg in to_move:
         env[arg].live = False

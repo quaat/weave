@@ -233,8 +233,10 @@ class DiagnosticPerCode(unittest.TestCase):
                 self.assertEqual(document["span"]["file"], f"{code}.weave")
                 self.assertEqual(document["span"]["start"]["line"], primary[0])
                 self.assertEqual(span_text(source, document["span"]), primary[1])
-                roles = MAP[code].get("related_roles", [])
-                self.assertEqual(sorted({r["role"] for r in document["related"]}), sorted(roles))
+                roles = MAP[code].get("related_roles", {})
+                found = {r["role"] for r in document["related"]}
+                self.assertLessEqual(found, set(roles))
+                self.assertLessEqual({r for r, when in roles.items() if when == "always"}, found)
                 for role, (line, text) in (related or {}).items():
                     spans = [r["span"] for r in document["related"] if r["role"] == role]
                     self.assertTrue(spans, role)
@@ -253,11 +255,39 @@ class DiagnosticPerCode(unittest.TestCase):
 
     def test_ownership_codes_have_related_spans(self):
         self.assertEqual({c for c, e in MAP.items() if e.get("related_roles")}, {"E203", "E204"})
+        self.assertEqual(MAP["E203"]["related_roles"], {"binding": "always", "moved": "always"})
+        self.assertEqual(MAP["E204"]["related_roles"]["binding"], "always")
+        self.assertNotEqual(MAP["E204"]["related_roles"]["propagation"], "always")
         for code in ("E203", "E204"):
             with self.subTest(code=code):
                 self.assertIsNotNone(FIXTURES[code][3])
                 _, document = self.diagnostic(code)
                 self.assertTrue(document["related"])
+
+    def related(self, source):
+        with self.assertRaises(CheckError) as raised:
+            check_flow(parse_net(N0), source)
+        document = as_diagnostic(raised.exception, "f.weave", source, "flow")
+        self.assertTrue(assess(document).accepted)
+        return raised.exception.code, {r["role"]: (r["span"]["start"]["line"], span_text(source, r["span"]))
+                                       for r in document["related"]}
+
+    def test_every_e203_path_has_binding_and_moved(self):
+        call_twice = ("flow f(h: Hold[t, o]):\n    await helper(h, h)\n    return\n"
+                      "flow helper(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
+        reused_return = "flow f(h: Hold[t, o]) -> Escrow[t, o]:\n    let e = await Inventory.arm(h)\n    return h\n"
+        reused_match = ("flow f(r: ChargeOutcome[t, o]):\n    let p = r?\n    match r:\n        Ok(x):\n            return\n")
+        for source, moved in ((call_twice, (2, "h")), (reused_return, (2, "h")), (reused_match, (2, "r"))):
+            with self.subTest(source=source):
+                code, roles = self.related(source)
+                self.assertEqual(code, "E203")
+                self.assertEqual(roles["moved"], moved)
+                self.assertEqual(roles["binding"][0], 1)
+
+    def test_e204_at_ordinary_return_has_no_propagation_span(self):
+        code, roles = self.related("flow f(h: Hold[t, o]):\n    return\n")
+        self.assertEqual(code, "E204")
+        self.assertEqual(roles, {"binding": (1, "h")})
 
     def test_weave_check_helper_returns_valid_diagnostics(self):
         source = (EXAMPLES / "invalid/early_return_leak.weave").read_text(encoding="utf-8")

@@ -193,6 +193,12 @@ class RejectionAndPropagation(unittest.TestCase):
         self.assertEqual((e.span.line, e.span.column, e.span.end_column), (3, 5, 18))
         related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
         self.assertEqual(related, [("binding", 1, 12, 18), ("moved", 2, 16, 22)])
+        # Passing one handle twice to a single call: `moved` is its first argument occurrence.
+        source = ("flow f(h: Hold[t, o]):\n    await helper(h, h)\n    return\n"
+                  "flow helper(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
+        e = self.error("E203", lambda: check_flow(self.net, source))
+        related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
+        self.assertEqual(related, [("binding", 1, 8, 9), ("moved", 2, 18, 19)])
 
     def test_unknown_payload_identity_cannot_be_widened(self):
         source = FLOW.replace("-> CheckoutOutcome[tenant, order]", "-> CheckoutOutcome[order, tenant]")
