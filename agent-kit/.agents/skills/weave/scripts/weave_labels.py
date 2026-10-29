@@ -21,9 +21,12 @@ a label:
   of a closed set of forms: a blank line, a line that begins with one of
   ``NON_CLAIM_PREFIXES`` (``tool status:``, ``runtime status:``, ``result:``,
   ``raw output (``, ``error:``, ...), a diagnostic header
-  (``file:line:column: CODE (RULE) [stage]``, or ``file: TOOL_ERROR [stage]``), a
-  JSON object (linted with ``lint_json``), or a non-empty prefix ending with a
-  separator that a caller declares for its own output (the demos declare theirs). Indented lines belong to the line above,
+  (``file:line:column: CODE (RULE) [stage]`` with a mapped code and its principal
+  rule, or ``file: TOOL_ERROR [stage]``), a JSON object (linted with
+  ``lint_json``), or a non-empty prefix ending with a separator that a caller
+  declares for its own output (the demos declare theirs). No such line carries a
+  label or another upper-case status word, except the tool status word right
+  after ``tool status:`` (``TOOL_STATUS_WORDS``). Indented lines belong to the line above,
   and raw output of another tool is printed indented under a ``raw output`` line.
 
 ``lint_json`` and ``lint_text`` check these rules and return one message per
@@ -35,6 +38,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 
 RESULT_LABELS = (
     "PROVED",
@@ -76,16 +80,38 @@ def _identifiers(value) -> bool:
 # The unindented non-claim lines the runner prints, a closed set: tool status
 # (doctor, examples, test), runtime status, result and stats (run-pure), the
 # prototype directory and missing files (doctor), a written certificate (analyze),
-# the header of raw output (test), an error line, and the JSON detail of a failed
-# teaching expectation (examples).
+# the header of raw output (test) and an error line. (The JSON detail of a failed
+# teaching expectation is an unindented JSON object, linted as JSON.)
 NON_CLAIM_PREFIXES = ("tool status: ", "runtime status: ", "result: ", "stats: ", "prototype: ", "missing: ",
-                      "certificate: ", "raw output (", "error: ", "{")
-# A diagnostic header as weave.py print_diagnostic writes it: a checker or pure-extension
-# code after its span ``file:line:column``, with its rule; or TOOL_ERROR, which has no
-# span or rule, after a file path without spaces (or nothing). Prose before a code is
-# not a location.
-_DIAGNOSTIC = re.compile(r"^(?:[^\s:][^:]*:\d+:\d+: [EP]\d{3} \([A-Z][A-Z0-9-]*\)"
-                         r"|(?:[^\s:]+)?: TOOL_ERROR) \[[a-z-]+\]$")
+                      "certificate: ", "raw output (", "error: ")
+# The one place a non-claim line may carry a status word: the word right after
+# "tool status: " is the tool status itself (doctor, examples, test).
+TOOL_STATUS_WORDS = ("PASS", "FAIL", "READY", "NOT READY")
+# A whole upper-case status token: a word of the six labels or a known non-canonical
+# status word (PASSED, PASS, FAIL, FAILED, RECHECKED, NOT PROVED, CHECKED, EXECUTED, ...).
+# Outside a claim line no line carries one, except the tool status word above.
+_STATUS_TOKEN = re.compile(r"(?<![A-Za-z0-9_])(?:PROVED|CHECKED|SCRIPTED|VIOLATED|ESTABLISHED|BOUNDS|PASSED|PASS|"
+                           r"FAILED|FAIL|FAILURE|RECHECKED|EXECUTED|VERIFIED|BOUNDED|EXPECTED)(?![A-Za-z0-9_])")
+# The diagnostic code-to-rule map the runner uses (assets/diagnostics.json in this skill).
+_CODES = json.loads((Path(__file__).resolve().parents[1] / "assets" / "diagnostics.json")
+                    .read_text(encoding="utf-8"))["codes"]
+# A diagnostic header as weave.py print_diagnostic writes it: ``file:line:column: CODE
+# (RULE) [stage]`` for a checker or pure-extension code, whose span always has a line and
+# column; ``file: TOOL_ERROR [stage]`` (or ``: TOOL_ERROR [stage]``) for a tool error,
+# which has no span and no rule. The file is a path without whitespace; the code must be
+# in the map and the rule must be the code's principal rule from the map.
+_DIAGNOSTIC = re.compile(r"(?P<location>[^\s:]*(?::\d+:\d+)?): (?P<code>[A-Z][A-Z0-9_]*)"
+                         r"(?: \((?P<rule>[^()\s]+)\))? \[[a-z-]+\]")
+
+
+def is_diagnostic_header(line: str) -> bool:
+    found = _DIAGNOSTIC.fullmatch(line)
+    if found is None or found["code"] not in _CODES:
+        return False
+    spanned = found["location"].count(":") == 2
+    if found["code"] == "TOOL_ERROR":
+        return not spanned and found["rule"] is None and _CODES["TOOL_ERROR"]["rule"] is None
+    return spanned and found["rule"] is not None and found["rule"] == _CODES[found["code"]]["rule"]
 # A declared prefix: a non-empty heading that ends with a separator.
 _DECLARED_PREFIX = re.compile(r"\S.*?(?::|: | - )")
 # Words that begin a claim, in any case or spelling: the label words and the
@@ -206,6 +232,16 @@ def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
                 errors.append(f"line {number}: {line!r} starts with '{{' but is not a JSON object")
             else:
                 errors += [f"line {number}: {e}" for e in lint_json(document)]
-        elif not (line.startswith(NON_CLAIM_PREFIXES + tuple(extra_prefixes)) or _DIAGNOSTIC.match(line)):
+        elif line.startswith(NON_CLAIM_PREFIXES + tuple(extra_prefixes)) or is_diagnostic_header(line):
+            body = line
+            if line.startswith("tool status: "):
+                rest = line[len("tool status: "):]
+                word = next((w for w in sorted(TOOL_STATUS_WORDS, key=len, reverse=True)
+                             if rest == w or rest.startswith(w + " ")), None)
+                body = rest[len(word):] if word else rest
+            token = _STATUS_TOKEN.search(body)
+            if token:
+                errors.append(f"line {number}: {line!r} is not a claim but carries the status word {token.group()!r}")
+        else:
             errors.append(f"line {number}: {line!r} is not a claim, a declared non-claim line or a diagnostic")
     return errors

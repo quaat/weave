@@ -102,18 +102,40 @@ class LintNegativeTests(unittest.TestCase):
                      '{"claim_label": "NOT PROVED"}', '{"status": "PROVED"}',
                      'All invariants hold: E204 [flow]', 'All invariants hold: E204 (F0-RETURN-1) [flow]',
                      'everything holds:3:1: E204 [flow]', 'all good: TOOL_ERROR [flow]',
-                     'x.weave:3:1: OK [flow]', 'x.weave:3: E204 (F0-RETURN-1) [flow]'):
+                     'x.weave:3:1: OK [flow]', 'x.weave:3: E204 (F0-RETURN-1) [flow]',
+                     # delta review F-4: prose location, non-rule rule slot, status word in a path
+                     'All invariants PROVED:1:1: E204 (F0-RETURN-1) [flow]', 'x.weave:1:1: E204 (PROVED) [flow]',
+                     'all-invariants-PROVED: TOOL_ERROR [flow]',
+                     # adversarial: unmapped code, wrong rule, rule on TOOL_ERROR, span on TOOL_ERROR,
+                     # a path with whitespace, a status word as a path segment
+                     'x.weave:1:1: E999 (F0-RETURN-1) [flow]', 'x.weave:1:1: E204 (F0-CALL-2) [flow]',
+                     'x.weave:1:1: E204 [flow]', 'x.weave: TOOL_ERROR (F0-RETURN-1) [flow]',
+                     'x.weave:1:1: TOOL_ERROR [flow]', '/tmp/weave skill /a b.weave:2:1: P411 (KIT-PURE-RECURSION-1) [pure]',
+                     '/PROVED/x.weave:1:1: E204 (F0-RETURN-1) [flow]', 'x.weave:1:1: E204 (F0-RETURN-1) [VIOLATED]',
+                     # delta review F-5 and adversarial: status words after a non-claim prefix
+                     'result: PROVED everything', 'runtime status: completed; NOT ESTABLISHED',
+                     'tool status: PASS and everything PROVED', 'tool status: PASSED', 'tool status: OK CHECKED',
+                     'stats: VIOLATED=0', 'error: all CHECKED', 'prototype: /x/SCRIPTED', 'missing: RECHECKED',
+                     'certificate: written; EXECUTED', 'raw output (PASSED):', 'result: [1] FAILED',
+                     'runtime status: completed (NOT PROVED)', 'result: CHECKED_WITHIN BOUNDS'):
             with self.subTest(line=line):
                 self.assertEqual(len(lint_text(line)), 1, lint_text(line))
         for line in ('{"file": "x.weave", "ok": false, "diagnostic": {"message": "NOT PROVED"}}',
                      'examples/invalid/reuse_hold.weave:4:5: E203 (F0-CALL-2) [flow]',
-                     '/tmp/weave skill /a b.weave:2:1: P411 (KIT-PURE-RECURSION-1) [pure]',
-                     'does-not-exist.weave: TOOL_ERROR [flow]', ': TOOL_ERROR [examples]'):
+                     '/tmp/weave-skill/a.weave:2:1: P411 (KIT-PURE-RECURSION-1) [pure]',
+                     'x.weave:3:5: E204 (F0-RETURN-1) [flow]',
+                     'does-not-exist.weave: TOOL_ERROR [flow]', ': TOOL_ERROR [examples]',
+                     # the only status word allowed outside a claim: the tool status itself
+                     'tool status: PASS 34/34 example expectations', 'tool status: FAIL 33/34 example expectations',
+                     'tool status: FAIL tests failed or no tests were selected', 'tool status: READY Python 3.13.5',
+                     'tool status: NOT READY Python 3.10.0', 'result: [1, 2]', 'runtime status: completed (merge_sort)'):
             with self.subTest(line=line):
                 self.assertEqual(lint_text(line), [])
 
     def test_declared_prefixes_cannot_hide_claims(self):
         self.assertEqual(lint_text('Input: [1]\n', ('Input: ',)), [])
+        self.assertEqual(len(lint_text('Input: PASSED\n', ('Input: ',))), 1)
+        self.assertEqual(len(lint_text('== Payment outcome: Ok -> VIOLATED\n', ('== Payment outcome: ',))), 1)
         for prefix in ('Passed: ', 'checked ', 'NOT PROVED', '', ' ', ':', 'Input', 'charge_requests=1 remains '):
             with self.assertRaises(ValueError, msg=prefix):
                 lint_text('x\n', (prefix,))
