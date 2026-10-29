@@ -97,9 +97,24 @@ class LintNegativeTests(unittest.TestCase):
                 self.assertEqual(len(errors), 1, errors)
                 self.assertIn('line 2', errors[0])
 
+    def test_json_and_diagnostic_lines_cannot_hide_claims(self):
+        for line in ('{PASSED everything holds', '{"a": 1', '["PASSED"]', '{"accounting": {"verdict": "PASSED"}}',
+                     '{"claim_label": "NOT PROVED"}', '{"status": "PROVED"}',
+                     'All invariants hold: E204 [flow]', 'All invariants hold: E204 (F0-RETURN-1) [flow]',
+                     'everything holds:3:1: E204 [flow]', 'all good: TOOL_ERROR [flow]',
+                     'x.weave:3:1: OK [flow]', 'x.weave:3: E204 (F0-RETURN-1) [flow]'):
+            with self.subTest(line=line):
+                self.assertEqual(len(lint_text(line)), 1, lint_text(line))
+        for line in ('{"file": "x.weave", "ok": false, "diagnostic": {"message": "NOT PROVED"}}',
+                     'examples/invalid/reuse_hold.weave:4:5: E203 (F0-CALL-2) [flow]',
+                     '/tmp/weave skill /a b.weave:2:1: P411 (KIT-PURE-RECURSION-1) [pure]',
+                     'does-not-exist.weave: TOOL_ERROR [flow]', ': TOOL_ERROR [examples]'):
+            with self.subTest(line=line):
+                self.assertEqual(lint_text(line), [])
+
     def test_declared_prefixes_cannot_hide_claims(self):
         self.assertEqual(lint_text('Input: [1]\n', ('Input: ',)), [])
-        for prefix in ('Passed: ', 'checked ', 'NOT PROVED'):
+        for prefix in ('Passed: ', 'checked ', 'NOT PROVED', '', ' ', ':', 'Input', 'charge_requests=1 remains '):
             with self.assertRaises(ValueError, msg=prefix):
                 lint_text('x\n', (prefix,))
 

@@ -21,8 +21,9 @@ a label:
   of a closed set of forms: a blank line, a line that begins with one of
   ``NON_CLAIM_PREFIXES`` (``tool status:``, ``runtime status:``, ``result:``,
   ``raw output (``, ``error:``, ...), a diagnostic header
-  (``location: CODE (RULE) [stage]``), or a prefix a caller declares for its own
-  output (the demos declare theirs). Indented lines belong to the line above,
+  (``file:line:column: CODE (RULE) [stage]``, or ``file: TOOL_ERROR [stage]``), a
+  JSON object (linted with ``lint_json``), or a non-empty prefix ending with a
+  separator that a caller declares for its own output (the demos declare theirs). Indented lines belong to the line above,
   and raw output of another tool is printed indented under a ``raw output`` line.
 
 ``lint_json`` and ``lint_text`` check these rules and return one message per
@@ -32,6 +33,7 @@ output) are not claims and are not linted.
 """
 from __future__ import annotations
 
+import json
 import re
 
 RESULT_LABELS = (
@@ -78,8 +80,14 @@ def _identifiers(value) -> bool:
 # teaching expectation (examples).
 NON_CLAIM_PREFIXES = ("tool status: ", "runtime status: ", "result: ", "stats: ", "prototype: ", "missing: ",
                       "certificate: ", "raw output (", "error: ", "{")
-# A diagnostic header: location, code, optional rule, stage (weave.py print_diagnostic).
-_DIAGNOSTIC = re.compile(r"^.*: (?:[EP]\d{3}|TOOL_ERROR)(?: \([A-Z0-9-]+\))? \[[a-z-]+\]$")
+# A diagnostic header as weave.py print_diagnostic writes it: a checker or pure-extension
+# code after its span ``file:line:column``, with its rule; or TOOL_ERROR, which has no
+# span or rule, after a file path without spaces (or nothing). Prose before a code is
+# not a location.
+_DIAGNOSTIC = re.compile(r"^(?:[^\s:][^:]*:\d+:\d+: [EP]\d{3} \([A-Z][A-Z0-9-]*\)"
+                         r"|(?:[^\s:]+)?: TOOL_ERROR) \[[a-z-]+\]$")
+# A declared prefix: a non-empty heading that ends with a separator.
+_DECLARED_PREFIX = re.compile(r"\S.*?(?::|: | - )")
 # Words that begin a claim, in any case or spelling: the label words and the
 # prototype's and earlier kit's non-canonical ones. A line starting with one of
 # them must start with an exact label.
@@ -178,6 +186,8 @@ def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
     (a demo's headings); they may not begin with a claim word.
     """
     for prefix in extra_prefixes:
+        if not isinstance(prefix, str) or not _DECLARED_PREFIX.fullmatch(prefix):
+            raise ValueError(f"declared prefix {prefix!r} must be a non-empty heading ending with ':', ': ' or ' - '")
         if _CLAIM_WORD.match(prefix):
             raise ValueError(f"declared prefix {prefix!r} begins with a claim word")
     errors = []
@@ -186,6 +196,16 @@ def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
             continue
         if _CLAIM_WORD.match(line):
             errors.append(f"line {number}: {line!r} presents a claim without an exact result label")
+        elif line.startswith("{"):
+            # Only a JSON object (a failed example's detail), linted as JSON.
+            try:
+                document = json.loads(line)
+            except ValueError:
+                document = None
+            if not isinstance(document, dict):
+                errors.append(f"line {number}: {line!r} starts with '{{' but is not a JSON object")
+            else:
+                errors += [f"line {number}: {e}" for e in lint_json(document)]
         elif not (line.startswith(NON_CLAIM_PREFIXES + tuple(extra_prefixes)) or _DIAGNOSTIC.match(line)):
             errors.append(f"line {number}: {line!r} is not a claim, a declared non-claim line or a diagnostic")
     return errors

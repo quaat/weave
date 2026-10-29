@@ -74,11 +74,13 @@ user-chosen names such as an upper-case property, invariant or flow name are not
 Text output is a closed set of line forms. An unindented line is a claim only if it
 begins with one of the six labels exactly as written (not `proved`, `Checked flow` or
 `CHECKED FLOW`). Every other unindented line is blank, a diagnostic header
-`location: CODE (RULE) [stage]`, the JSON detail of a failed `examples` expectation
-(`{…}`), or begins with one of these prefixes: `tool status: `, `runtime status: `,
-`result: `, `stats: `, `prototype: `, `missing: `, `certificate: `, `raw output (`,
-`error: ` (`NON_CLAIM_PREFIXES` in `weave_labels.py`). Indented lines belong to the line
-above. The demos declare their own headings (`TEXT_PREFIXES` in each `run_demo.py`).
+(`file:line:column: CODE (RULE) [stage]`, or `file: TOOL_ERROR [stage]` with a file path
+or nothing before it), the JSON detail of a failed `examples` expectation (a JSON object,
+itself linted as JSON), or begins with one of these prefixes: `tool status: `,
+`runtime status: `, `result: `, `stats: `, `prototype: `, `missing: `, `certificate: `,
+`raw output (`, `error: ` (`NON_CLAIM_PREFIXES` in `weave_labels.py`). Indented lines
+belong to the line above. The demos declare their own headings (`TEXT_PREFIXES` in each
+`run_demo.py`), each non-empty and ending with `:`, `: ` or ` - `.
 `tests/test_result_labels.py` fails on any other unindented line.
 
 | Command | Claims (JSON position: label) |

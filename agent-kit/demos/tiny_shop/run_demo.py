@@ -21,7 +21,7 @@ OUTCOMES = ('Ok', 'Err', 'Unknown', 'all')
 
 # Unindented text lines that are not claims, besides the runner's (weave_labels.NON_CLAIM_PREFIXES).
 # Claims are 'LABEL statement' lines; tests/test_result_labels.py lints the output with these.
-TEXT_PREFIXES = ('Tiny Shop - ', '== Payment outcome: ', 'charge_requests=1 remains ')
+TEXT_PREFIXES = ('Tiny Shop - ', '== Payment outcome: ', 'note: ')
 
 STOCK_PLACES = ('available', 'sold', 'recovery_queue', 'registrations')
 TRANSIENT_PLACES = ('held', 'escrow', 'inflight', 'paid', 'unpaid', 'uncertain', 'manual')
@@ -136,7 +136,7 @@ def render_text(report):
         print(f"          {fmt_marking(m, TRANSIENT_PLACES)}  charge_requests={m['charge_requests']}")
         print(f"   {s['explanation']}")
     print()
-    print('charge_requests=1 remains because the simulator does not drain the adapter queue.')
+    print('note: charge_requests=1 remains because the simulator does not drain the adapter queue.')
 
 
 def main(argv=None):
