@@ -15,8 +15,11 @@ the two differ, this chapter is authoritative.
 The policy elaborates :ref:`CONF-REQ-3 <CONF-REQ-3>` in :doc:`status`. It adds no
 rule ID and does not change any existing rule, diagnostic code, profile meaning or
 version identifier; it states how they may change from now on. Every artefact,
-claim or report SHOULD name its identifier on each axis it depends on, as
-:ref:`CONF-REQ-1 <CONF-REQ-1>` already requires for conformance claims.
+claim or report SHOULD name its identifier on each axis it depends on. This
+extends two existing requirements: :ref:`CONF-REQ-1 <CONF-REQ-1>` requires a
+conformance claim to name the document revision and supported profiles, and
+:ref:`CONF-REQ-3 <CONF-REQ-3>` asks programs and evidence to include the source
+and tool revision.
 
 Version axes
 ------------------
@@ -73,9 +76,9 @@ Language
 
 The language identifier is the specification revision. ``version`` in
 ``specification/docs/conf.py`` holds ``MAJOR.MINOR``; ``release`` adds
-``-draft`` while the document is a draft, and the editions display it as
-"Draft MAJOR.MINOR". ``specification/PROVENANCE.json`` records the same
-identifier as ``document``.
+``-draft`` while the document is a draft. The HTML title (``html_title`` in
+the same file) and the index page show "Draft 0.2".
+``specification/PROVENANCE.json`` records the same identifier as ``document``.
 
 Bump rule:
 
@@ -91,9 +94,9 @@ Bump rule:
   no accepted program, diagnostic code, outcome or guarantee.
 * Editorial changes (wording, examples, presentation) need no new identifier.
 
-A published edition is tagged with the ``spec-v`` prefix, which
-``.github/workflows/pdf.yml`` uses to attach the PDF to the release. Tagging and
-releasing are maintainer actions.
+A specification release is to be tagged with the ``spec-v`` prefix; on such a
+tag ``.github/workflows/pdf.yml`` builds the PDF and attaches it to the release.
+Tagging and releasing are maintainer actions.
 
 Tools
 ~~~~~~~~~~~
@@ -137,9 +140,10 @@ and an integer version, and names the profile it extends. Bump rule:
 Evidence schemas
 ~~~~~~~~~~~~~~~~~~~~~~
 
-An evidence document names its schema in a top-level ``format`` field of the
-form ``weave-<artefact>-v<N>``, the convention the existing files already
-follow. Bump rule: any change to the fields, their meaning or the checks a
+An evidence document MUST name its schema in a top-level ``format`` field of
+the form ``weave-<artefact>-v<N>``. Seven existing format strings already use
+this form, but many existing evidence files have no ``format`` field; both
+groups are listed under `Existing evidence files`_. Bump rule: any change to the fields, their meaning or the checks a
 reader performs needs the next ``N``. A format string never changes meaning, and
 a retired format string is never reused. The machine-readable diagnostics schema
 (quaat/weave#6) and the trace, canonical-net and evidence-envelope schemas
@@ -196,13 +200,16 @@ These are the identifiers in the repository at the time this policy was written.
      - ``specification/PROVENANCE.json`` and ``agent-kit/PROVENANCE.json``
        (``version`` of the source archive)
    * - Tools
-     - Agent kit, including its CLI ``scripts/weave.py``
+     - Agent kit, including its CLI ``agent-kit/scripts/weave.py``
      - ``0.1.0``; the CLI has no version option
      - ``agent-kit/PROVENANCE.json`` (``kit_version``)
    * - Tools
      - Production checker, runtime and CLI
      - None yet
-     - No such tool exists; see :doc:`status`
+     - The repository contains no production compiler or runtime: no Rust
+       source exists yet (``docs/development/implementation-language.md``
+       sets Rust as the default), and the root ``README.md`` states there is
+       no general compiler and no distributed runtime
    * - Profiles
      - F0, N0, N1, R0
      - Defined by 0.2-draft; no separate revision
@@ -210,7 +217,8 @@ These are the identifiers in the repository at the time this policy was written.
    * - Profiles
      - D0, N2 (targets, unimplemented)
      - Defined by 0.2-draft; no separate revision
-     - :doc:`execution-contract` (D-02); :doc:`evidence-design` (D-01)
+     - Decisions D-01 and D-02 in :doc:`status`; :doc:`evidence-design`
+       (N2); :doc:`execution-contract` (D0)
    * - Profiles
      - Pure ``fn`` extension of the agent kit
      - None yet; outside the specified fragment
@@ -244,9 +252,10 @@ These are the identifiers in the repository at the time this policy was written.
      - ``weave-teaching-examples-v1``
      - ``format`` in ``agent-kit/examples/manifest.json``
    * - Evidence schemas
-     - Scenario results (``scenarios.json``, ``durable-scenarios.json``)
+     - Scenario results, agent-kit demo traces and artefacts, specification
+       audit reports
      - None yet
-     - The files in ``inventory-proof/`` have no ``format`` field
+     - These files have no ``format`` field; see `Existing evidence files`_
    * - Evidence schemas
      - Traces, machine-readable diagnostics, canonical net, evidence envelope
      - None yet
@@ -256,6 +265,69 @@ These are the identifiers in the repository at the time this policy was written.
      - None yet
      - The R0 model's SQLite store records only the net source digest
        (``metadata`` key ``source`` in ``inventory-proof/durable.py``)
+
+Existing evidence files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The command below prints every JSON file tracked at base commit ``0d3185f``
+(the revision this policy was written against) with its top-level ``format``
+value. Run it from the repository root. The lists after it give its output,
+omitting the files under ``.claude/`` and ``tools/weave_workflow/``, which are
+outside this policy.
+
+.. code-block:: bash
+
+   git ls-tree -r --name-only 0d3185f | grep '\.json$' | while read p; do
+     printf '%s %s\n' "$p" "$(git show "0d3185f:$p" | python3 -c 'import json,sys
+   try: d=json.load(sys.stdin)
+   except ValueError: print("(not one JSON document)")
+   else: print(d.get("format", "(no format field)") if isinstance(d, dict) else "(array, no format field)")')"
+   done
+
+Files with a ``format`` field (seven distinct format strings):
+
+* ``weave-place-invariant-v1``: ``inventory-proof/proof.json``,
+  ``agent-kit/demos/tiny_shop/artifacts/inventory-proof.json``
+* ``weave-one-order-check-v2``: ``inventory-proof/ordering.json``
+* ``weave-colour-invariant-v1``: ``inventory-proof/colour-proof.json``
+* ``weave-colour-exploration-v1``: ``inventory-proof/colour-check.json``
+* ``weave-conformance-v1``: ``specification/examples/manifest.json``
+* ``weave-specification-validation-v1``: ``specification/validation/report.json``
+* ``weave-teaching-examples-v1``: ``agent-kit/examples/manifest.json``
+
+The byte-identical prototype copies in
+``agent-kit/.agents/skills/weave/assets/prototype/`` and
+``specification/reference/prototype/`` carry the same four prototype format
+strings.
+
+Evidence and artefact files without a ``format`` field:
+
+* Prototype scenario results, JSON arrays: ``inventory-proof/scenarios.json``,
+  ``inventory-proof/durable-scenarios.json`` and their copies in both pinned
+  snapshots.
+* Agent-kit demo artefacts, JSON objects:
+  ``agent-kit/demos/merge_sort/artifacts/mixed-sign.json``,
+  ``trace-concurrent.json``, ``trace-concurrent-quantum1.json`` and
+  ``trace-sequential.json`` in the same directory;
+  ``agent-kit/demos/tiny_shop/artifacts/lowered-trace.json``,
+  ``scenarios.json`` and ``source-trace.json`` in the same directory.
+* Specification build reports: ``specification/validation/grammar-report.json``,
+  ``html-audit.json`` and ``singlehtml-audit.json`` (objects),
+  ``weave-check-report.json`` (an array) and ``linkcheck-output.json`` (one JSON
+  object per line, written by Sphinx), all in ``specification/validation/``.
+
+``specification/rules.json`` (the generated rule index) and the two
+``PROVENANCE.json`` manifests also have no ``format`` field; they are index and
+provenance records rather than evidence of a claim, and this policy does not
+classify them as evidence schemas.
+
+Tracking: the context of quaat/weave#7 names ``proof.json``, ``ordering.json``,
+``colour-proof.json``, ``scenarios.json``, ``durable-scenarios.json`` and
+``specification/validation/report.json`` as the existing evidence files, and its
+criteria include "Existing evidence files converted or wrapped". The migration of
+the two scenario files is therefore tracked by quaat/weave#7. The agent-kit demo
+traces and artefacts and the specification build reports are not named in its
+scope, so their migration is not yet tracked.
 
 Compatibility anchors
 ---------------------------
@@ -333,14 +405,15 @@ F0, N0, N1 and R0 keep the meanings defined in 0.2-draft. The following arrive a
 versioned extensions or new profiles, never by changing those four:
 
 * **New pure syntax**: pure functions, arithmetic, lists, conditionals, loops
-  and recursion. Today they exist only in the agent kit's separate ``fn``
-  extension, outside the specified fragment.
+  and recursion in flows. F0 flows have none of them; the root ``README.md``
+  places this computation only in the agent kit's separate ``fn`` extension,
+  outside the specified fragment.
 * **Generalised identity**: identity sorts beyond N1's two positional colour
   sorts, tenant and order (:doc:`net-semantics`).
 * **Durable execution**: execution of arbitrary flows with persisted state,
   beyond R0's concrete process-crash model of the Inventory protocol.
 
-A checker for an existing profile continues to reject such constructs, as
+A checker for an existing profile MUST continue to reject such constructs, as
 :ref:`CONF-REQ-1 <CONF-REQ-1>` requires for unsupported constructs. Supporting a
 profile or extension implies nothing about another; :doc:`status` already states
 this for N1 and R0. D0 and N2 are targets specified in 0.2-draft; D0's colour
@@ -376,13 +449,15 @@ neither meets the rule in full:
   without a ``source`` entry is initialised rather than refused (lines
   104--106).
 
-The vendored copies of these files in the pinned snapshots behave the same way.
+The copies of both files in the pinned snapshots
+(``agent-kit/.agents/skills/weave/assets/prototype/`` and
+``specification/reference/prototype/``) are byte-identical to these.
 The prototype is pinned regression evidence and is not changed by this policy.
 
 Tracking: quaat/weave#7 implements this rule for the trace, canonical-net and
 evidence-envelope schemas it defines, adds a test that unknown schema versions
 are never interpreted as successful evidence, and converts or wraps the existing
-evidence files. Neither quaat/weave#6 (machine-readable diagnostics) nor
+evidence files it names (see `Existing evidence files`_). Neither quaat/weave#6 (machine-readable diagnostics) nor
 quaat/weave#7 covers the wording of the prototype verifier's message or the R0
 store's checks; bringing those into line is not yet tracked. Stores first follow
 the ``weave-store-v<N>`` convention in the durable service milestone
