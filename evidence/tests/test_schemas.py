@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
 # SPDX-License-Identifier: MIT
-"""AC-1: three published JSON Schemas, each with a fixed format identifier."""
+"""AC-1: the published JSON Schemas, each with a fixed format identifier (three from #7, one from #6)."""
 import json
 import re
 import unittest
@@ -8,7 +8,7 @@ import unittest
 from evidence.weave_evidence import documents, schema
 from evidence.weave_evidence.documents import RESULT_LABELS, RUNTIME_STATUSES, assess
 
-from .support import ROOT, minimal_envelope, minimal_net, minimal_trace
+from .support import ROOT, minimal_diagnostic, minimal_envelope, minimal_net, minimal_trace
 
 try:
     import jsonschema
@@ -19,6 +19,7 @@ EXPECTED = {
     "weave-canonical-net-v1": "canonical-net.v1.schema.json",
     "weave-trace-v1": "trace.v1.schema.json",
     "weave-evidence-envelope-v1": "evidence-envelope.v1.schema.json",
+    "weave-diagnostic-v1": "diagnostic.v1.schema.json",
 }
 
 
@@ -30,7 +31,7 @@ def spec_labels() -> list[str]:
 
 
 class SchemaFileTests(unittest.TestCase):
-    def test_exactly_three_schemas_with_fixed_format_identifiers(self):
+    def test_exactly_four_schemas_with_fixed_format_identifiers(self):
         self.assertEqual(documents.SCHEMA_FILES, EXPECTED)
         self.assertEqual(sorted(p.name for p in schema.SCHEMA_DIR.glob("*.json")), sorted(EXPECTED.values()))
         for fmt, name in EXPECTED.items():
@@ -71,13 +72,79 @@ class SchemaFileTests(unittest.TestCase):
 
 class ExampleTests(unittest.TestCase):
     def test_minimal_documents_are_accepted(self):
-        for document in (minimal_trace(), minimal_envelope(), minimal_net()):
+        for document in (minimal_trace(), minimal_envelope(), minimal_net(), minimal_diagnostic()):
             result = assess(document)
             self.assertTrue(result.accepted, result.errors)
 
     def test_each_runtime_status_and_null_is_accepted(self):
         for status in list(RUNTIME_STATUSES) + [None]:
             self.assertTrue(assess(minimal_envelope(runtime_status=status)).accepted, status)
+
+
+TOOL_ERROR = {"category": "tool", "code": "TOOL_ERROR", "rule": None, "secondary_rules": [], "stage": "net",
+              "span": None, "related": []}
+INVALID_DIAGNOSTICS = [
+    {"rule": None},                                   # a language diagnostic needs its principal rule
+    {"span": None},                                   # and a primary span
+    {"rule": "f0-return-1"},                          # rule IDs are upper case
+    {"secondary_rules": ["F0-TRY-3", "F0-TRY-3"]},    # without repeats
+    {"category": "rule"},                             # closed category set
+    {"severity": "fatal"},                            # closed severity set
+    {"span": {"file": "flow.weave", "start": {"line": 0, "column": 1}, "end": {"line": 1, "column": 1}}},  # 1-based
+    {"span": {"file": "flow.weave", "start": {"line": 1}, "end": {"line": 1, "column": 2}}},  # column required
+    {"related": [{"role": "binding", "label": "x", "span": None}]},  # a related location has a span
+    {"related": [{"role": "Binding", "label": "x", "span": minimal_diagnostic()["span"]}]},
+    {"details": []},
+    {"message": ""},
+    dict(TOOL_ERROR, rule="F0-RETURN-1"),             # a tool failure has no rule
+    dict(TOOL_ERROR, secondary_rules=["F0-RETURN-1"]),
+]
+
+
+class DiagnosticSchemaTests(unittest.TestCase):
+    def test_tool_failure_without_rule_or_span_is_accepted(self):
+        result = assess(minimal_diagnostic(**TOOL_ERROR))
+        self.assertTrue(result.accepted, result.errors)
+
+    def test_kit_extension_rule_is_accepted(self):
+        result = assess(minimal_diagnostic(code="P420", category="kit-extension", rule="KIT-PURE-RUN-1",
+                                           secondary_rules=[], related=[], stage="runtime"))
+        self.assertTrue(result.accepted, result.errors)
+
+    def test_invalid_diagnostics_are_rejected(self):
+        for change in INVALID_DIAGNOSTICS:
+            with self.subTest(change=change):
+                self.assertFalse(assess(minimal_diagnostic(**change)).accepted)
+
+    def test_reader_checks_span_order_and_repeated_principal_rule(self):
+        backwards = {"file": "f", "start": {"line": 3, "column": 1}, "end": {"line": 2, "column": 9}}
+        result = assess(minimal_diagnostic(span=backwards))
+        self.assertIn("span: span ends before it starts", result.errors)
+        result = assess(minimal_diagnostic(related=[{"role": "binding", "label": "x", "span": backwards}]))
+        self.assertIn("related[0]: span ends before it starts", result.errors)
+        result = assess(minimal_diagnostic(secondary_rules=["F0-RETURN-1"]))
+        self.assertIn("principal rule 'F0-RETURN-1' is repeated in secondary_rules", result.errors)
+
+    def test_prototype_checker_output_is_a_valid_diagnostic(self):
+        """The working-copy checker's diagnostic() output, with the map's rules, conforms to the schema."""
+        import sys
+        sys.path.insert(0, str(ROOT / "inventory-proof"))
+        sys.dont_write_bytecode = True
+        try:
+            from checker import CheckError, check_flow, parse_net
+        finally:
+            sys.path.remove(str(ROOT / "inventory-proof"))
+        rules = json.loads((ROOT / "specification/diagnostics.json").read_text(encoding="utf-8"))["codes"]
+        net = parse_net((ROOT / "inventory-proof/Inventory.weave").read_text(encoding="utf-8"))
+        source = ("flow leak(result: ChargeOutcome[t, o], extra: Paid[u, v]) -> ChargeOutcome[t, o]:\n"
+                  "    let paid = result?\n    await Inventory.sell(extra)\n    return Ok(paid)\n")
+        with self.assertRaises(CheckError) as raised:
+            check_flow(net, source)
+        entry = rules[raised.exception.code]
+        document = raised.exception.diagnostic("leak.weave", source, "flow", entry["rule"], entry["secondary_rules"])
+        result = assess(document)
+        self.assertTrue(result.accepted, result.errors)
+        self.assertEqual([r["role"] for r in document["related"]], ["binding", "propagation"])
 
 
 @unittest.skipIf(jsonschema is None, "jsonschema is not installed; the meta-schema cross-check is optional")
@@ -98,7 +165,9 @@ class MetaSchemaTests(unittest.TestCase):
             (minimal_envelope(sources=[]), False),
             (minimal_envelope(claim_label="VIOLATED", trace=None), False),
             (dict(minimal_trace(), steps=[{"sequence": 1, "kind": "fire"}]), False),
-        ]
+            (minimal_diagnostic(), True),
+            (minimal_diagnostic(**TOOL_ERROR), True),
+        ] + [(minimal_diagnostic(**change), False) for change in INVALID_DIAGNOSTICS]
         for document, expected in cases:
             validator = jsonschema.Draft202012Validator(schema.load(documents.SCHEMA_FILES[document["format"]]))
             ours = not schema.validate(document, schema.load(documents.SCHEMA_FILES[document["format"]]))

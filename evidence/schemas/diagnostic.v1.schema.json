@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:weave:schema:weave-diagnostic-v1",
+  "title": "Weave diagnostic, format weave-diagnostic-v1",
+  "description": "One machine-readable diagnostic: its code, the principal and secondary rules the code maps to (specification/diagnostics.json), severity, checking stage, message, primary source span, related spans and structured details. Lines and columns are 1-based; an end column is one past the last character of the region. Readers also perform the checks listed in evidence/README.md.",
+  "type": "object",
+  "required": [
+    "format",
+    "code",
+    "category",
+    "rule",
+    "secondary_rules",
+    "severity",
+    "stage",
+    "message",
+    "span",
+    "related",
+    "details"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "weave-diagnostic-v1"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^(?:[EP][0-9]{3}|[A-Z][A-Z_]*[A-Z])$"
+    },
+    "category": {
+      "description": "specification: the rule is a specification rule ID; kit-extension: a rule ID of the agent kit's pure extension; tool: a runner failure outside the checker, with no rule.",
+      "enum": [
+        "specification",
+        "kit-extension",
+        "tool"
+      ]
+    },
+    "rule": {
+      "description": "The code's one principal rule; null only for category tool.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]+$"
+    },
+    "secondary_rules": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]+$"
+      }
+    },
+    "severity": {
+      "enum": [
+        "error",
+        "warning",
+        "note"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "pattern": "^[a-z][a-z-]*$"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "span": {
+      "description": "Primary span; null only for category tool when no source location is known.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/span"
+        }
+      ]
+    },
+    "related": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/related"
+      }
+    },
+    "details": {
+      "description": "Producer-specific structured data; v1 readers do not interpret it.",
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "tool"
+          }
+        },
+        "required": [
+          "category"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rule": {
+            "type": "null"
+          },
+          "secondary_rules": {
+            "const": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "enum": [
+              "specification",
+              "kit-extension"
+            ]
+          }
+        },
+        "required": [
+          "category"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "span": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "position": {
+      "type": "object",
+      "required": [
+        "line",
+        "column"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "span": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "file",
+        "start",
+        "end"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "$ref": "#/$defs/position"
+        },
+        "end": {
+          "$ref": "#/$defs/position"
+        }
+      }
+    },
+    "related": {
+      "type": "object",
+      "required": [
+        "role",
+        "label",
+        "span"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "span": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/span"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
