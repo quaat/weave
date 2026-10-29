@@ -52,6 +52,7 @@ followed by static and dynamic semantics. For reviewers, use
    chapters/examples
    chapters/lease-tutorial
    chapters/counterexamples
+   chapters/stability
    chapters/conformance
    chapters/rule-catalogue
    chapters/limitations

@@ -244,6 +244,7 @@ Issues and pull requests are welcome. Contributions are accepted under the [MIT 
 - Read [`agent-kit/AGENTS.md`](agent-kit/AGENTS.md) for the working conventions, whether or not you use an agent.
 - Prototype changes need tests, an updated boundary in `docs/prototype-status.md`, and a refreshed `PROVENANCE.json`.
 - Specification changes are built with `-W` (warnings are errors) and every displayed example is re-checked by the build.
+- Versioning, compatibility anchors (diagnostic codes, rule IDs) and migration notes follow the stability policy: [`STABILITY.md`](STABILITY.md) summarises it, and the specification chapter [`specification/docs/chapters/stability.rst`](specification/docs/chapters/stability.rst) is authoritative.
 
 ## Citing
 

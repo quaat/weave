@@ -1,0 +1,357 @@
+.. SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
+.. SPDX-License-Identifier: MIT
+
+Stability and versioning policy
+=====================================
+
+.. index:: stability, versioning, deprecation, migration note, compatibility anchor
+
+This chapter is the project's stability and versioning policy. It is normative
+for every Weave artefact kept in the project repository: this specification, its
+profiles, the tools, the evidence they write and, from the durable service
+milestone, persisted runtime state. The root ``STABILITY.md`` summarises it; where
+the two differ, this chapter is authoritative.
+
+The policy elaborates :ref:`CONF-REQ-3 <CONF-REQ-3>` in :doc:`status`. It adds no
+rule ID and does not change any existing rule, diagnostic code, profile meaning or
+version identifier; it states how they may change from now on. Every artefact,
+claim or report SHOULD name its identifier on each axis it depends on, as
+:ref:`CONF-REQ-1 <CONF-REQ-1>` already requires for conformance claims.
+
+Version axes
+------------------
+
+Weave is versioned on five independent axes. A change on one axis does not imply
+a change on another: a new tool release does not create a new language revision,
+and a new evidence format does not change a profile.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 16 30 18 36
+
+   * - Axis
+     - Covers
+     - Owner (role)
+     - Format
+   * - Language
+     - This specification: grammar, static and dynamic semantics, rule IDs,
+       diagnostic code meanings, result vocabulary
+     - Language maintainer
+     - ``MAJOR.MINOR``; a draft carries the ``-draft`` suffix
+   * - Tools
+     - Each tool separately: checker, analyser, runtime, command-line interface,
+       and the distributions that bundle them
+     - Toolchain maintainer
+     - Semantic versioning ``MAJOR.MINOR.PATCH`` per tool
+   * - Profiles
+     - F0, N0, N1 and R0; the targets D0 and N2; later profiles and versioned
+       extensions
+     - Language maintainer
+     - Profile name qualified by the specification revision that defines it;
+       an extension has a name and an integer version
+   * - Evidence schemas
+     - Machine-readable output that carries or supports a claim: certificates,
+       exploration results, conformance artefacts, scenario results, traces,
+       machine-readable diagnostics
+     - Toolchain maintainer
+     - ``weave-<artefact>-v<N>`` in the top-level ``format`` field
+   * - Persisted store format
+     - Durable runtime state: admissions, markings, operation and result
+       ledgers, continuations, timers
+     - Runtime maintainer
+     - Reserved; chosen when the first durable store is specified
+
+Owners are roles, not people. The repository does not record who holds each
+role; until it does, the maintainer holds all of them, and decisions that change
+semantics stay with the maintainer (``CLAUDE.md``). The development workflow
+tooling in ``tools/weave_workflow/`` is not a Weave tool; its own version string
+and event schema are outside this policy.
+
+Language
+~~~~~~~~~~~~~~
+
+The language identifier is the specification revision. ``version`` in
+``specification/docs/conf.py`` holds ``MAJOR.MINOR``; ``release`` adds
+``-draft`` while the document is a draft, and the editions display it as
+"Draft MAJOR.MINOR". ``specification/PROVENANCE.json`` records the same
+identifier as ``document``.
+
+Bump rule:
+
+* While MAJOR is 0, each published draft increments MINOR, as 0.1-draft was
+  followed by 0.2-draft. Changes merged between published drafts accumulate
+  under the current identifier and are summarised in the change history in
+  :doc:`provenance` when the next draft is cut.
+* From 1.0, MAJOR increments for a change that can make a previously conformant
+  program or implementation non-conformant, such as removing a profile or
+  extension, or tombstoning a rule ID or diagnostic code.
+* MINOR increments for compatible additions: a new profile, a new versioned
+  extension, a new rule ID or diagnostic code, or a clarification that changes
+  no accepted program, diagnostic code, outcome or guarantee.
+* Editorial changes (wording, examples, presentation) need no new identifier.
+
+A published edition is tagged with the ``spec-v`` prefix, which
+``.github/workflows/pdf.yml`` uses to attach the PDF to the release. Tagging and
+releasing are maintainer actions.
+
+Tools
+~~~~~~~~~~~
+
+Each tool carries its own semantic version. Bump rule:
+
+* MAJOR: an incompatible interface change, such as a command or option removed
+  or given a different meaning, a changed exit-status meaning, or a supported
+  profile, extension or schema version dropped.
+* MINOR: a compatible addition, such as a new command or option, or a newly
+  supported profile, extension or schema version.
+* PATCH: a fix that changes no interface.
+* While MAJOR is 0, an incompatible change increments MINOR instead.
+
+A tool version never redefines a profile. Where a tool's behaviour differs from
+the profile it claims, the difference is a discrepancy to report (:doc:`status`).
+A tool change that alters which programs are accepted or rejected, the diagnostic
+code reported or a dynamic outcome is a semantic change and needs a migration
+note.
+
+The prototype keeps the integer snapshot version it already has ("version 3").
+Its pinned snapshots change only through a reviewed snapshot refresh recorded in
+``PROVENANCE.json``; a refresh that changes behaviour takes the next integer.
+
+Profiles
+~~~~~~~~~~~~~~
+
+A profile is identified by its name and the specification revision that defines
+it, for example "F0 as defined in 0.2-draft". A versioned extension has a name
+and an integer version, and names the profile it extends. Bump rule:
+
+* New capability arrives as a new profile or a versioned extension, never by
+  changing an existing profile (see `Profile meanings are preserved`_).
+* A correction of a defect in an existing profile that changes which programs it
+  accepts or rejects, its diagnostic codes or its guarantees is a semantic
+  change. It needs a maintainer decision, a migration note and a new language
+  revision, and conformance claims then name the revision they follow.
+* An editorial clarification that changes no accepted program, diagnostic code or
+  guarantee does not change the profile identifier.
+
+Evidence schemas
+~~~~~~~~~~~~~~~~~~~~~~
+
+An evidence document names its schema in a top-level ``format`` field of the
+form ``weave-<artefact>-v<N>``, the convention the existing files already
+follow. Bump rule: any change to the fields, their meaning or the checks a
+reader performs needs the next ``N``. A format string never changes meaning, and
+a retired format string is never reused. The machine-readable diagnostics schema
+(quaat/weave#6) and the trace, canonical-net and evidence-envelope schemas
+(quaat/weave#7) are versioned under this axis.
+
+Persisted store format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This axis is reserved now and used from the durable service milestone (M5,
+quaat/weave#59), whose scope includes version binding. The store format
+identifier MUST be recorded inside the store itself. Bump rule: any change to
+the layout or meaning of stored data needs a new store format identifier and a
+migration note, and a runtime MUST NOT open a store whose format it does not
+implement (see `Unrecognised versions`_). How stores are migrated is not decided
+here; :doc:`limitations` lists upgrade and schema migration rules as an open
+production decision.
+
+Current identifiers
+-------------------------
+
+These are the identifiers in the repository at the time this policy was written.
+"None yet" means the repository has no identifier for that item.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 26 24 32
+
+   * - Axis
+     - Item
+     - Identifier
+     - Source
+   * - Language
+     - This specification
+     - ``0.2-draft`` (``version`` ``0.2``), displayed as "Draft 0.2"
+     - ``specification/docs/conf.py`` (``version``, ``release``);
+       ``specification/PROVENANCE.json`` (``document``); :doc:`status`
+       (:ref:`CONF-REQ-3 <CONF-REQ-3>`); root ``README.md``
+   * - Tools
+     - Prototype (``checker.py``, ``coloured.py``, ``simulate.py``,
+       ``durable.py``, ``verify_certificate.py``)
+     - Version ``3`` of ``weave-inventory-proof.zip``; no per-tool version
+     - ``specification/PROVENANCE.json`` and ``agent-kit/PROVENANCE.json``
+       (``version`` of the source archive)
+   * - Tools
+     - Agent kit, including its CLI ``scripts/weave.py``
+     - ``0.1.0``; the CLI has no version option
+     - ``agent-kit/PROVENANCE.json`` (``kit_version``)
+   * - Tools
+     - Production checker, runtime and CLI
+     - None yet
+     - No such tool exists; see :doc:`status`
+   * - Profiles
+     - F0, N0, N1, R0
+     - Defined by 0.2-draft; no separate revision
+     - Profile table in :doc:`status`
+   * - Profiles
+     - D0, N2 (targets, unimplemented)
+     - Defined by 0.2-draft; no separate revision
+     - :doc:`execution-contract` (D-02); :doc:`evidence-design` (D-01)
+   * - Profiles
+     - Pure ``fn`` extension of the agent kit
+     - None yet; outside the specified fragment
+     - Root ``README.md``; ``agent-kit/README.md``
+   * - Evidence schemas
+     - Place-invariant certificate (``proof.json``)
+     - ``weave-place-invariant-v1``
+     - ``format`` in ``inventory-proof/proof.json``
+   * - Evidence schemas
+     - One-order check (``ordering.json``)
+     - ``weave-one-order-check-v2``
+     - ``format`` in ``inventory-proof/ordering.json``
+   * - Evidence schemas
+     - Coloured invariants (``colour-proof.json``)
+     - ``weave-colour-invariant-v1``
+     - ``format`` in ``inventory-proof/colour-proof.json``
+   * - Evidence schemas
+     - Coloured exploration (``colour-check.json``)
+     - ``weave-colour-exploration-v1``
+     - ``format`` in ``inventory-proof/colour-check.json``
+   * - Evidence schemas
+     - Conformance corpus manifest
+     - ``weave-conformance-v1``
+     - ``format`` in ``specification/examples/manifest.json``
+   * - Evidence schemas
+     - Specification validation report
+     - ``weave-specification-validation-v1``
+     - ``format`` in ``specification/validation/report.json``
+   * - Evidence schemas
+     - Agent-kit teaching manifest
+     - ``weave-teaching-examples-v1``
+     - ``format`` in ``agent-kit/examples/manifest.json``
+   * - Evidence schemas
+     - Scenario results (``scenarios.json``, ``durable-scenarios.json``)
+     - None yet
+     - The files in ``inventory-proof/`` have no ``format`` field
+   * - Evidence schemas
+     - Traces, machine-readable diagnostics, canonical net, evidence envelope
+     - None yet
+     - To be defined by quaat/weave#6 and quaat/weave#7
+   * - Persisted store format
+     - Durable runtime store
+     - None yet
+     - The R0 model's SQLite store records only the net source digest
+       (``metadata`` key ``source`` in ``inventory-proof/durable.py``)
+
+Compatibility anchors
+---------------------------
+
+Diagnostic codes (the table in :doc:`diagnostics`) and rule IDs (indexed in
+:doc:`rule-catalogue` and ``specification/rules.json``) are compatibility
+anchors:
+
+* A code or rule ID keeps its meaning in every later language revision, tool
+  version and profile.
+* A code or rule ID is never reused for another meaning, including after it is
+  retired.
+* A narrower or new condition gets a new code or rule ID; it does not change the
+  meaning of an existing one.
+* Human wording may evolve: diagnostic messages, rule titles, explanatory prose,
+  and the order of several diagnostics except where :doc:`conformance` requires
+  a particular first diagnostic. Chapter, line and section numbers are not
+  anchors.
+
+This agrees with :doc:`status` ("Reference diagnostic codes are compatibility
+anchors, not a complete portable ABI") and :doc:`diagnostics` ("Exact wording
+and ordering are not stable language semantics"). Profile names and evidence
+format strings are never reused either.
+
+Deprecation
+~~~~~~~~~~~~~~~~~
+
+A code or rule ID is withdrawn only in these steps:
+
+#. **Mark it deprecated.** Its entry states that it is deprecated, the language
+   revision that deprecated it and its replacement, if any. The change carries a
+   migration note.
+#. **Keep its meaning.** A deprecated code or rule ID means what it meant before.
+#. **Keep recognising it.** Tools, manifests and evidence readers that emit or
+   read the code continue to accept it with its meaning until it is tombstoned.
+#. **Retire it only by tombstoning,** in a language revision later than the one
+   that deprecated it. The entry stays, marked retired, with its last meaning and
+   the revision that retired it. A reader that meets a tombstoned code reports it
+   as that retired code and never as any other.
+#. **Never reuse it.**
+
+No code or rule ID is deprecated today. Neither the diagnostics table nor
+``specification/rules.json`` has a deprecated or retired marker yet; the first
+deprecation must add one, for rule IDs through
+``specification/scripts/refresh_reference_pages.py``, which generates the
+catalogue.
+
+Migration notes
+---------------------
+
+Every semantic change MUST carry a migration note. A semantic change is any
+change that alters, for some input, which programs a profile or tool accepts or
+rejects, the diagnostic code reported, the dynamic outcome of an accepted
+program, the meaning of a rule ID, diagnostic code, profile or result label, or
+how an evidence document or persisted store is read. Editorial changes and
+compatible additions that leave every existing input's result unchanged do not
+need one.
+
+The note is part of the change's pull request and is recorded in the changelog
+of each affected component: the change history in :doc:`provenance` for the
+specification, ``agent-kit/CHANGELOG.md`` for the agent kit. Use the template
+``docs/templates/migration-note.md``
+(`repository copy <https://github.com/quaat/weave/blob/main/docs/templates/migration-note.md>`_),
+reproduced below. Changelog entries follow
+``docs/templates/changelog-entry.md``.
+
+.. literalinclude:: ../../../docs/templates/migration-note.md
+   :language: markdown
+   :start-after: -->
+
+Profile meanings are preserved
+------------------------------------
+
+F0, N0, N1 and R0 keep the meanings defined in 0.2-draft. The following arrive as
+versioned extensions or new profiles, never by changing those four:
+
+* **New pure syntax**: pure functions, arithmetic, lists, conditionals, loops
+  and recursion. Today they exist only in the agent kit's separate ``fn``
+  extension, outside the specified fragment.
+* **Generalised identity**: identity sorts beyond N1's two positional colour
+  sorts, tenant and order (:doc:`net-semantics`).
+* **Durable execution**: execution of arbitrary flows with persisted state,
+  beyond R0's concrete process-crash model of the Inventory protocol.
+
+A checker for an existing profile continues to reject such constructs, as
+:ref:`CONF-REQ-1 <CONF-REQ-1>` requires for unsupported constructs. Supporting a
+profile or extension implies nothing about another; :doc:`status` already states
+this for N1 and R0. D0 and N2 are targets specified in 0.2-draft; D0's colour
+rules use one tenant/order pair (:ref:`D0-COLOR-2 <D0-COLOR-2>`), so arbitrary
+declared identity sorts need a documented amendment with a migration note, not a
+reinterpretation of D0.
+
+Unrecognised versions
+---------------------------
+
+A tool that reads an evidence document, conformance artefact or persisted store
+whose format or version it does not implement MUST NOT treat it as success. It
+MUST NOT report a passing result, MUST NOT read it as a nearby version it does
+implement, and MUST NOT open or modify such a store. It MUST reject the input
+with a message naming the unrecognised identifier, or report that the claim is
+not established. An input that lacks a version identifier where its schema
+requires one is treated the same way. The same holds for a conformance claim
+naming a language revision or profile the tool does not implement.
+
+Existing tools already behave this way in two places:
+``inventory-proof/verify_certificate.py`` rejects a certificate whose ``format``
+is not ``weave-place-invariant-v1`` ("Unsupported certificate format"), and the
+R0 model in ``inventory-proof/durable.py`` refuses a store whose recorded net
+digest differs ("Persisted net revision differs; migration is required").
+quaat/weave#7 implements this rule for the schemas it defines and adds a test
+that unknown schema versions are never interpreted as successful evidence; its
+scope also covers converting or wrapping the existing unversioned evidence files.
