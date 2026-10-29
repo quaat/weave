@@ -4,6 +4,10 @@ All notable changes to the agent kit. Entries are newest first. The documentatio
 (`docs/development/documentation-map.md` at the repository root) requires an entry for every
 change to the kit's runner, skills, examples or policy.
 
+## Unreleased
+
+No changes since 0.2.0.
+
 ## 2026-10-29: 0.2.0
 
 - **Axis and identifier:** tools: agent kit `0.1.0` -> `0.2.0`; evidence schemas:
