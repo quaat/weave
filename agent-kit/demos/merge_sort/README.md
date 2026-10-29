@@ -42,8 +42,8 @@ Results: `[1,2,3,4,5,6,7,8,9]` (both modes), `[]`, and `[-2,-2,0,5,5]`.
 | `--source PATH` | `merge_sort.weave` | Alternative source (used by tests) |
 
 Exit codes: 0 means success. 1 means the Weave checker rejected the source.
-2 means invalid input or usage, a runtime fault (`E420`), or an exhausted limit
-(`E421` fuel, `E422` depth, `E423` live activations). A failed run never prints a
+2 means invalid input or usage, a runtime fault (`P420`), or an exhausted limit
+(`P421` fuel, `P422` depth, `P423` live activations). A failed run never prints a
 partial result.
 
 Direct runner use:

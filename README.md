@@ -232,8 +232,8 @@ The v3 prototype lives in three places. Keep them identical unless you also upda
 | Location | Role | Pinned by |
 |---|---|---|
 | `inventory-proof/` | Working copy for further development | Started byte-identical to the specification snapshot |
-| `agent-kit/.agents/skills/weave/assets/prototype/` | Vendored, unchanged; the pure `fn` extension lives beside it in `.agents/skills/weave/scripts/weave_pure/` | `agent-kit/PROVENANCE.json` |
-| `specification/reference/prototype/` | Snapshot the specification is grounded in | `specification/PROVENANCE.json`, verified by `scripts/validate.py` |
+| `agent-kit/.agents/skills/weave/assets/prototype/` | Vendored and pinned, byte-identical to the specification snapshot; changed only by reviewed snapshot refreshes recorded in `PROVENANCE.json` (one so far, quaat/weave#6: diagnostic spans). The pure `fn` extension lives beside it in `.agents/skills/weave/scripts/weave_pure/` | `agent-kit/PROVENANCE.json` (`prototype_history`) |
+| `specification/reference/prototype/` | Snapshot the specification is grounded in; refreshed only by reviewed snapshot refreshes | `specification/PROVENANCE.json` (`snapshot_refreshes`), verified by `scripts/validate.py` |
 
 Changes in `inventory-proof/` reach the specification only through a deliberate snapshot refresh and a new `PROVENANCE.json`.
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from weave_diagnostics import from_pure_error
+
 from . import Limits, MODES, SCHEDULES, PureError, check_source, encode, run_source
 
 SCOPE = ("CHECKED covers types, terminal branches, effect exclusion, fork scope, and recursion shape; "
@@ -26,9 +28,9 @@ def add_commands(sub, positive_int) -> None:
         s.add_argument("--" + name.replace("_", "-"), type=positive_int, default=getattr(defaults, name))
 
 
-def diagnostic(error: PureError, path: Path) -> dict:
-    return {"code": error.code, "message": error.message, "file": str(path), "line": error.line,
-            "stage": error.stage}
+def diagnostic(error: PureError, path: Path, source: str = "") -> dict:
+    """A weave-diagnostic-v1 document; the span is the reported statement of ``source``."""
+    return from_pure_error(error, str(path), source)
 
 
 def execute(args) -> tuple[dict, int]:
@@ -45,20 +47,22 @@ def execute(args) -> tuple[dict, int]:
                                         "functions": [f.name for f in program.functions]})
             except PureError as error:
                 result["ok"] = False
-                result["files"].append({"file": str(file), "ok": False, "diagnostic": diagnostic(error, file)})
+                result["files"].append({"file": str(file), "ok": False,
+                                        "diagnostic": diagnostic(error, file, source)})
         return result, 0 if result["ok"] else 1
+    source = ""
     try:
         source = args.file.read_text(encoding="utf-8")
         try:
             json_args = json.loads(args.args)
         except json.JSONDecodeError as error:
-            raise PureError("E424", f"--args is not valid JSON: {error}", stage="input") from None
+            raise PureError("P424", f"--args is not valid JSON: {error}", stage="input") from None
         limits = Limits(fuel=args.fuel, max_tasks=args.max_tasks, max_depth=args.max_depth,
                         workers=args.workers, quantum=args.quantum)
         value, machine = run_source(source, args.entry, json_args, mode=args.mode, limits=limits,
                                     schedule=args.schedule, seed=args.seed, trace=args.trace)
     except PureError as error:
-        result = {"command": "run-pure", "ok": False, "diagnostic": diagnostic(error, args.file)}
+        result = {"command": "run-pure", "ok": False, "diagnostic": diagnostic(error, args.file, source)}
         return result, 1 if error.stage == "pure" else 2
     result = {"command": "run-pure", "ok": True, "status": "EXECUTED", "check": "CHECKED", "scope": SCOPE,
               "file": str(args.file), "entry": args.entry, "result": encode(value),

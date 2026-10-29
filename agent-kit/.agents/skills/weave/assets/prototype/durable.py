@@ -151,7 +151,8 @@ class Runtime:
         # Execute the source inscriptions, not hand-written marking deltas.
         for kind in ('take', 'read', 'put'):
             if any(c is not None and c != mode.colour for i in getattr(mode, kind) for _, c in [self.unfolding.rows[i]]):
-                raise CheckError('E420', 'Cross-order firing rejected by runtime')
+                raise CheckError('E420', 'Cross-order firing rejected by runtime',
+                                 self.net.base.transitions[transition].line).locate(self.net.source)
         classes = {self.net.base.order_check.guards[g] for g in self.net.base.transitions[transition].guards}
         operation = self.db.execute('SELECT * FROM operations WHERE key=?', (key(colour),)).fetchone()
         if 'establishes_paid' in classes and (not operation or operation['state'] != 'Paid'):

@@ -76,6 +76,27 @@ The equations above apply to each selected cell. Shared cells have no colour.
 In the finite unfolding, the selected primary colour and every indexed arc cell
 must belong to the declared colour set; impossible bindings are omitted.
 
+.. _N1-COLOUR-1:
+
+**N1-COLOUR-1.** An N1 net MUST give each indexed place two distinct indices in
+the tenant and order positions, and each transition a primary binder of two
+distinct variables. Each indexed arc MUST have its place's arity and use every
+colour variable only in its positional sort; an indexed place written without an
+inscription is rejected, not read as a wildcard. A coloured source that violates
+these rules, repeats a coloured place, arc, invariant family, exploration
+declaration or correlation property, or lacks the order bound, the
+``tokens match firing`` property or a family invariant, is rejected with E400.
+Rules of the erased N0 view, such as SYN-04 and SYN-05, still apply to it.
+
+.. _N1-FIRE-1:
+
+**N1-FIRE-1.** A firing request against the finite unfolding names a transition
+and a colour. It MUST select exactly one firing mode, and that mode MUST be
+enabled in the current marking; otherwise the request is refused with E421 and
+the marking is not changed. E421 is a failure of the analyser's or a runtime
+model's firing interface. It is not a D0 outcome: :ref:`D0-AWAIT-1 <D0-AWAIT-1>`
+requires a disabled await to wait.
+
 Correlation is an additional safety property
 --------------------------------------------------
 

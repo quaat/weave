@@ -11,7 +11,7 @@ from sphinx.util.docutils import SphinxDirective
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/"scripts"))
-from spec_checks import check_example
+from spec_checks import check_example_diagnostic
 
 class WeaveCheck(SphinxDirective):
     optional_arguments=1
@@ -39,10 +39,11 @@ class WeaveCheck(SphinxDirective):
         else:
             source="\n".join(self.content)+"\n";label=f"{self.env.docname}:{self.lineno}"
         net=(current/self.options["net"]).resolve() if "net" in self.options else None
-        actual=check_example(source,self.options["profile"],self.options.get("context","file"),net)
+        actual,diagnostic=check_example_diagnostic(source,self.options["profile"],self.options.get("context","file"),net,label)
         expected=self.options["expect"]
         if actual!=expected:
-            raise self.error(f"Weave example {label}: expected {expected}; got {actual}")
+            where=f" ({describe(diagnostic)})" if diagnostic else ""
+            raise self.error(f"Weave example {label}: expected {expected}; got {actual}{where}")
         display=source
         if "start-at" in self.options:
             lines=display.splitlines()
@@ -62,12 +63,22 @@ class WeaveCheck(SphinxDirective):
         if "caption" in self.options:
             container+=nodes.paragraph(text=self.options["caption"],classes=["rubric"])
         container+=code
-        container+=nodes.paragraph(text=f"Checked: {self.options['profile']} · {expected}",classes=["weave-check-status"])
+        status=f"Checked: {self.options['profile']} · {expected}"
+        if diagnostic: status+=f" · {describe(diagnostic)}"
+        container+=nodes.paragraph(text=status,classes=["weave-check-status"])
         if not hasattr(self.env,"weave_checks"):self.env.weave_checks={}
         self.env.weave_checks[f"{self.env.docname}:{self.lineno}"]={
             "doc":self.env.docname,"source":label,"profile":self.options["profile"],
-            "context":self.options.get("context","file"),"expected":expected,"actual":actual}
+            "context":self.options.get("context","file"),"expected":expected,"actual":actual,
+            **({"diagnostic":diagnostic} if diagnostic else {})}
         return [container]
+
+def describe(diagnostic):
+    """Rule and primary span of a weave-diagnostic-v1 document, for display."""
+    span=diagnostic["span"];start,end=span["start"],span["end"]
+    where=f"line {start['line']}, columns {start['column']}–{end['column']-1}" if start["line"]==end["line"] else \
+          f"lines {start['line']}:{start['column']}–{end['line']}:{end['column']-1}"
+    return f"rule {diagnostic['rule']} · {where}"
 
 def audit_source(app,docname,source):
     if re.search(r"^\.\. code-block:: weave\s*$|^\.\. literalinclude:: .*\.weave\s*$",source[0],re.M):

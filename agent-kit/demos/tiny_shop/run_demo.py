@@ -138,7 +138,8 @@ def main(argv=None):
         render_text(report)
     else:
         d = report['diagnostic']
-        loc = f" {d.get('file')}:{d.get('line')}" if d.get('file') else ''
+        span = d.get('span') or {}
+        loc = f" {span['file']}:{span['start']['line']}" if span else (f" {d.get('file')}:{d.get('line')}" if d.get('file') else '')
         print(f"FAILED {d.get('code')} [{d.get('stage')}]{loc}: {d.get('message')}", file=sys.stderr)
     if report['ok']:
         return 0

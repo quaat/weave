@@ -164,7 +164,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('--max-values', proc.stdout)
 
     def test_runtime_errors_and_resource_exhaustion(self):
-        for args, code in ((['--fuel', '20'], 'E421'), (['--max-tasks', '2'], 'E423'), (['--max-depth', '2'], 'E422')):
+        for args, code in ((['--fuel', '20'], 'P421'), (['--max-tasks', '2'], 'P423'), (['--max-depth', '2'], 'P422')):
             proc = self.app('--values', '[5,4,3,2,1]', '--json', *args)
             self.assertEqual(proc.returncode, 2, proc.stdout)
             data = json.loads(proc.stdout)
@@ -179,13 +179,13 @@ class CliTests(unittest.TestCase):
             proc = self.app('--values', '[2,1]', '--source', broken)
             self.assertEqual(proc.returncode, 1)
             self.assertEqual(proc.stdout, '')
-            self.assertIn('E400', proc.stderr)
+            self.assertIn('P400', proc.stderr)
             faulty = Path(tmp) / 'faulty.weave'
             faulty.write_text(SOURCE.replace('return cons(head(right), merge(left, tail(right)))',
                                              'return cons(head(right), merge(left, tail(tail(right))))'))
             proc = self.app('--values', '[2,1]', '--source', faulty, '--json')
             self.assertEqual(proc.returncode, 2)
-            self.assertEqual(json.loads(proc.stdout)['diagnostic']['code'], 'E420')
+            self.assertEqual(json.loads(proc.stdout)['diagnostic']['code'], 'P420')
 
     def test_absolute_path_from_other_directory(self):
         with tempfile.TemporaryDirectory() as tmp:

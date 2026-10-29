@@ -101,6 +101,18 @@ example.weave:4: E204
   Consume them before '?', or handle the outcome explicitly and return the obligations.
 ```
 
+Every `CheckError` also carries source locations (quaat/weave#6). Its `span` is
+the statement the error is reported at: 1-based line and column, ending one
+column past the last character, without indentation or comment. E203 and E204
+also have `related` spans: where each live or reused handle was bound
+(`binding`), where a moved handle was consumed (`moved`), and the `?` that
+propagates (`propagation`). `error.diagnostic(file, source, stage, rule, ...)`
+returns the error as a `weave-diagnostic-v1` document (schema in
+`evidence/schemas/` of the repository); the caller supplies the rule from the
+code-to-rule map `specification/diagnostics.json`. An error with no single line
+keeps `line` 0, and its span covers the whole source. A coloured net's errors
+found in its erased projection are reported at the coloured source line.
+
 `LOWERED_PROPAGATION.weave` is the separately checkable expansion. The flow fragment
 still excludes general expressions, ordinary conditionals, loops, `parallel`,
 recursion, higher-order flows, `within`, and `retry`. The broader ergonomics claim

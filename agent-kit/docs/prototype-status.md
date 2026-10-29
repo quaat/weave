@@ -1,9 +1,12 @@
 # Prototype status and provenance
 
 Snapshot date: 2026-10-28. Source: `weave-inventory-proof.zip`, version 3.
-Original files are preserved byte-for-byte under
-`.agents/skills/weave/assets/prototype/`. `PROVENANCE.json` records source identity
-and original-file integrity. The runner calls the existing Python API without
+The files are kept under `.agents/skills/weave/assets/prototype/`, byte-identical
+to the specification's reference snapshot. They are the original bytes except for
+the reviewed snapshot refresh of 2026-10-29 (quaat/weave#6), which replaced
+`checker.py`, `coloured.py`, `durable.py`, `README.md` and three test files.
+`PROVENANCE.json` records source identity, the current per-file hashes and the
+refresh (`prototype_history`). The runner calls the existing Python API without
 changing language rules.
 
 ## Implemented
@@ -37,6 +40,19 @@ or `?` listed as unimplemented refer to an older snapshot.
   The runner's `check`, `simulate`, and `verify` still use the uncoloured N0
   net, so the boundaries below describe the runner.
 
+### Snapshot refresh for quaat/weave#6 (2026-10-29)
+
+- Every `CheckError` carries a primary source span (1-based line and column; the
+  end column is one past the last character). `E203` and `E204` also carry
+  related spans: where each held or reused handle was bound, where it was
+  consumed, and the `?` that propagates. `CheckError.diagnostic()` writes the
+  error as a `weave-diagnostic-v1` document.
+- Errors that had no line now take the line of the enclosing statement or net
+  header, and errors found in a coloured net's erased projection report the
+  coloured source line. A diagnostic about a whole source keeps line 0.
+- The accepted and rejected programs, the codes and the generated outputs of
+  `demo.py` are unchanged; the 143 tests now also assert spans.
+
 ## Kit extension: pure functions with fork/join
 
 The kit adds a separate module, `.agents/skills/weave/scripts/weave_pure/`, that
@@ -44,10 +60,10 @@ implements pure `fn` declarations over `Int`, `Bool`, immutable `IntList`, and
 `IntListPair`. It adds `<=`, terminal `if`/`else`, a closed set of list
 primitives, direct self-recursion, and a two-branch `fork:`/join. It also provides
 an instruction-level interpreter with a bounded cooperative scheduler, exposed
-through the runner's `check-pure` and `run-pure` commands. The vendored prototype
-is byte-for-byte unchanged (`PROVENANCE.json`, `prototype_changes: none`). Flows
-still reject recursion (`E218`) and `fn` (`E200`). See the
-[language guide](weave.md#pure-function-extension-kit-addition).
+through the runner's `check-pure` and `run-pure` commands. The extension does
+not modify the vendored prototype. Its diagnostics use the `P4xx` codes and the
+kit rule IDs listed in the guide. Flows still reject recursion (`E218`) and `fn`
+(`E200`). See the [language guide](weave.md#pure-function-extension-kit-addition).
 
 | Area | Boundary |
 | --- | --- |

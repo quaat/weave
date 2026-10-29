@@ -80,3 +80,24 @@ the new source and per-file hashes. No kit code, example, or expectation changed
 
 The only behaviour difference observed is the more specific `E204` message for
 `?` early returns. Demo artifacts were not regenerated.
+
+## Addendum: diagnostics with rules and spans (2026-10-29, quaat/weave#6)
+
+Environment: Python 3.13 on Linux. The vendored prototype was refreshed once from
+`inventory-proof/` (`checker.py`, `coloured.py`, `durable.py`, `README.md` and three test
+files), byte-identical to the specification's reference snapshot; `PROVENANCE.json`
+records the hashes before and after. The pure extension's codes moved to `P4xx`, the
+teaching manifest's four pure expectations and fixture comments were updated, and
+`--json` diagnostics became `weave-diagnostic-v1` documents.
+
+| Check | Result |
+| --- | --- |
+| Original prototype regression suite (`weave.py test`) | 143 tests passed |
+| Kit tests (`tests/`) | 69 passed, including the provenance hash check and `test_diagnostics.py` |
+| Teaching manifest (`weave.py examples`) | 34 expectations matched |
+| Merge-sort demo tests | 13 passed |
+| Tiny Shop demo tests | 17 passed |
+| `weave.py doctor` | READY |
+
+Accepted and rejected programs are unchanged; only the pure-extension code prefix and the
+diagnostic format changed. Demo artifacts and test reports were not regenerated.

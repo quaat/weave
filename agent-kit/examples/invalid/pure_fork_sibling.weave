@@ -1,4 +1,4 @@
-# E412: a fork branch cannot use its sibling's result before the join.
+# P412: a fork branch cannot use its sibling's result before the join.
 fn chained(xs: IntList) -> IntList:
     fork:
         let a = keep(xs)

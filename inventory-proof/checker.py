@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import ast
 import copy
+import functools
 import hashlib
 import json
 import re
@@ -20,14 +21,145 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+DIAGNOSTIC_FORMAT = "weave-diagnostic-v1"
+
+
+@dataclass(frozen=True)
+class Span:
+    """A source region. Lines and columns are 1-based; end_column is one past the last character."""
+    line: int
+    column: int
+    end_line: int
+    end_column: int
+
+
+@dataclass
+class Related:
+    """A secondary location of a diagnostic, such as where a live handle was bound.
+
+    ``name`` selects an identifier on ``line`` ("?" selects the propagation operator);
+    without it, or when it is not found, the span covers the statement on that line.
+    """
+    role: str
+    label: str
+    line: int
+    name: str | None = None
+    span: Span | None = None
+
+
+def statement_span(source: str, line: int) -> Span:
+    """The statement on ``line`` without indentation or comment; the whole source when there is no such line."""
+    lines = source.splitlines()
+    if 1 <= line <= len(lines):
+        text = lines[line - 1].split("#", 1)[0].rstrip()
+        if text.strip():
+            return Span(line, len(text) - len(text.lstrip()) + 1, line, len(text) + 1)
+    if not lines:
+        return Span(1, 1, 1, 1)
+    return Span(1, 1, len(lines), len(lines[-1]) + 1)
+
+
+def name_anchor(text: str, role: str | None) -> int:
+    """Where to start looking for a binding's name on its line, so an earlier callee,
+    flow, constructor or binding name that happens to be spelled the same is skipped."""
+    stripped = text.lstrip()
+    if stripped.startswith("flow "):
+        return text.find("(") + 1  # a parameter: inside the parameter list
+    if role == "moved":
+        if stripped.startswith("match "):
+            return text.find("match") + len("match")
+        if match := re.match(r"\s*return(?:\s+\w+\()?", text):
+            return match.end()  # the returned name, after any constructor
+        if match := re.search(r"[\w.]\(", text):
+            return match.end()  # an argument: inside the called operation's parentheses
+        return text.find("=") + 1  # a `?` operand: after the binding it initialises
+    if stripped.startswith("let "):
+        return text.find("let") + len("let")  # the bound name
+    return text.find("(") + 1  # a match payload: Case(name):
+
+
+def name_span(source: str, line: int, name: str | None, role: str | None = None) -> Span:
+    """The occurrence of identifier ``name`` on ``line`` that ``role`` refers to ("?": the operator)."""
+    lines = source.splitlines()
+    if name and 1 <= line <= len(lines):
+        text = lines[line - 1].split("#", 1)[0].rstrip()
+        if name == "?":
+            found = text.rfind("?")
+            if found >= 0:
+                return Span(line, found + 1, line, found + 2)
+        else:
+            pattern = re.compile(rf"(?<![\w.]){re.escape(name)}(?!\w)")
+            match = pattern.search(text, max(name_anchor(text, role), 0)) or pattern.search(text)
+            if match:
+                return Span(line, match.start() + 1, line, match.end() + 1)
+    return statement_span(source, line)
+
+
 class CheckError(Exception):
-    def __init__(self, code: str, message: str, line: int = 0):
+    """A rejection with a code, a message and its source location.
+
+    ``line`` is the legacy 1-based line (0 when no single line applies). After
+    ``locate`` the primary ``span`` and the spans of ``related`` locations are set.
+    """
+
+    def __init__(self, code: str, message: str, line: int = 0, related=(), details: dict | None = None):
         self.code, self.message, self.line = code, message, line
+        self.span: Span | None = None
+        self.related: list[Related] = list(related)
+        self.details: dict = dict(details or {})
         super().__init__(message)
 
     def render(self, source: str) -> str:
         where = f"{source}:{self.line}" if self.line else source
         return f"{where}: {self.code}\n  " + self.message.replace("\n", "\n  ")
+
+    def locate(self, source: str, force: bool = False) -> CheckError:
+        """Compute spans against the checked source text; an already located error is kept unless forced."""
+        if self.span is None or force:
+            self.span = statement_span(source, self.line)
+            for item in self.related:
+                item.span = name_span(source, item.line, item.name, item.role) if item.line else None
+        return self
+
+    def diagnostic(self, file: str, source: str | None = None, stage: str = "check", rule: str | None = None,
+                   secondary_rules=(), category: str = "specification") -> dict:
+        """This error as a weave-diagnostic-v1 document; the rule mapping is supplied by the caller."""
+        if source is not None:
+            self.locate(source)
+
+        def region(span: Span | None):
+            if span is None:
+                return None
+            return {"file": file, "start": {"line": span.line, "column": span.column},
+                    "end": {"line": span.end_line, "column": span.end_column}}
+
+        return {"format": DIAGNOSTIC_FORMAT, "code": self.code, "category": category, "rule": rule,
+                "secondary_rules": list(secondary_rules), "severity": "error", "stage": stage,
+                "message": self.message, "span": region(self.span),
+                "related": [{"role": r.role, "label": r.label, "span": region(r.span)}
+                            for r in self.related if r.span is not None],
+                "details": dict(self.details)}
+
+
+def located(source_of):
+    """Locate any CheckError raised by the wrapped function against the source text it checked."""
+    def wrap(function):
+        @functools.wraps(function)
+        def inner(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except CheckError as error:
+                error.locate(source_of(*args, **kwargs))
+                raise
+        return inner
+    return wrap
+
+
+def at_line(error: CheckError, line: int) -> CheckError:
+    """Give an error raised without a line (by a helper parser) the line of the enclosing statement."""
+    if not error.line:
+        error.line = line
+    return error
 
 
 @dataclass
@@ -189,6 +321,13 @@ class Net:
     runtime_cancels: dict[str, str] = field(default_factory=dict)
     runtime_consumers: dict[str, tuple[tuple[str, ...], int]] = field(default_factory=dict)
     order_check: OrderCheck | None = None
+    header_line: int = 0
+    # Text that diagnostic lines refer to, when it differs from ``source`` (a coloured net's erased view).
+    span_source: str | None = None
+
+
+def net_text(net: Net, *_, **__) -> str:
+    return net.span_source or net.source
 
 
 def insert(mapping: dict, name: str, value: object, line: int) -> None:
@@ -202,126 +341,134 @@ def leaf(node: Node) -> None:
         raise CheckError("E003", "This declaration cannot contain a block.", node.line)
 
 
+@located(lambda source: source)
 def parse_net(source: str) -> Net:
     roots = tree(source)
     match = re.fullmatch(r"net (\w+)\((\w+): Nat\):", roots[0].text) if len(roots) == 1 else None
     if not match:
-        raise CheckError("E003", "Expected one net Name(stock: Nat) block.")
-    net = Net(match[1], match[2], source)
+        raise CheckError("E003", "Expected one net Name(stock: Nat) block.", roots[-1].line if roots else 0)
+    net = Net(match[1], match[2], source, header_line=roots[0].line)
     for node in roots[0].children:
-        line, text = node.line, node.text
-        if m := re.fullmatch(r"place (\w+) = (\w+) owner (domain|activation|runtime|adapter)", text):
-            leaf(node)
-            if m[2] != net.parameter and not m[2].isdigit():
-                raise CheckError("E003", "Initial count must be Nat or the stock parameter.", line)
-            insert(net.places, m[1], Place(m[2], m[3]), line)
-        elif m := re.fullmatch(r"linear (\w+)\[([\w, ]+)\] at (\w+) issuer (\w+) cancel (\w+)(?: registered (\w+))?", text):
-            leaf(node)
-            r = Resource(m[1], tuple(split_commas(m[2])), m[3], m[4], m[5], m[6], line)
-            insert(net.resources, r.name, r, line)
-        elif m := re.fullmatch(r"enum (\w+)\[([\w, ]+)\]:", text):
-            cases = {}
-            for child in node.children:
-                leaf(child)
-                case = re.fullmatch(r"(\w+)\((.+)\)", child.text)
-                if not case:
-                    raise CheckError("E003", "Expected a named enum constructor with one payload.", child.line)
-                insert(cases, case[1], type_of(case[2]), child.line)
-            if not cases:
-                raise CheckError("E003", "An enum needs at least one case.", line)
-            insert(net.enums, m[1], Enum(tuple(split_commas(m[2])), cases), line)
-        elif m := re.fullmatch(r"invariant (\w+):", text):
-            if len(node.children) != 1:
-                raise CheckError("E003", "An invariant needs one equality.", line)
-            leaf(node.children[0])
-            insert(net.invariants, m[1], (node.children[0].text, node.children[0].line), line)
-        elif m := re.fullmatch(r"check (\w+) for one_order:", text):
-            if net.order_check is not None:
-                raise CheckError("E300", "Only one order-check model is supported.", line)
-            clauses, guards, properties = {}, {}, {}
-            for child in node.children:
-                leaf(child)
-                if clause := re.fullmatch(r"admit (\w+) once", child.text):
-                    insert(clauses, "admission", clause[1], child.line)
-                elif clause := re.fullmatch(r"observe dispatch (\w+)", child.text):
-                    insert(clauses, "dispatch", clause[1], child.line)
-                elif clause := re.fullmatch(r"place_bound ([1-9]\d*)", child.text):
-                    insert(clauses, "bound", int(clause[1]), child.line)
-                elif clause := re.fullmatch(r"guard (\w+) (establishes_paid|establishes_rejected|nondeterministic)", child.text):
-                    insert(guards, clause[1], clause[2], child.line)
-                elif clause := re.fullmatch(r"property (\w+): marked (\w+) requires (paid_evidence|rejected_evidence|marked \w+)", child.text):
-                    insert(properties, clause[1], ("requires", clause[2], clause[3]), child.line)
-                elif clause := re.fullmatch(r"property (\w+): after paid_evidence forbid (\w+)", child.text):
-                    insert(properties, clause[1], ("forbid", clause[2], "paid_evidence"), child.line)
-                elif clause := re.fullmatch(r"property (\w+): after dispatch marked (\w+) requires rejected_evidence", child.text):
-                    insert(properties, clause[1], ("after_dispatch", clause[2], "rejected_evidence"), child.line)
-                else:
-                    raise CheckError("E300", f"Unsupported order-check clause: {child.text}", child.line)
-            if set(clauses) != {"admission", "dispatch", "bound"} or not properties:
-                raise CheckError("E300", "Order check needs admission, dispatch observation, place_bound, and properties.", line)
-            net.order_check = OrderCheck(m[1], clauses["admission"], clauses["dispatch"], clauses["bound"], guards, properties, line)
-        elif m := re.fullmatch(r"transition (\w+):", text):
-            transition = Transition(m[1], line)
-            for child in node.children:
-                leaf(child)
-                if arc := re.fullmatch(r"(take|put|read) ([1-9]\d*) (\w+)", child.text):
-                    insert(getattr(transition, arc[1]), arc[3], int(arc[2]), child.line)
-                elif guard := re.fullmatch(r"guard (\w+)", child.text):
-                    transition.guards.append(guard[1])
-                else:
-                    raise CheckError("E003", f"Unsupported transition statement: {child.text}", child.line)
-            if not node.children:
-                raise CheckError("E003", "Empty transition.", line)
-            insert(net.transitions, transition.name, transition, line)
-        elif m := re.fullmatch(r"runtime_cancel (\w+) via (\w+)", text):
-            leaf(node)
-            insert(net.runtime_cancels, m[1], m[2], line)
-        elif m := re.fullmatch(r"runtime_state (\w+) (?:consumers ([\w, ]+)|terminal)", text):
-            leaf(node)
-            consumers = tuple(split_commas(m[2])) if m[2] else ()
-            if len(set(consumers)) != len(consumers):
-                raise CheckError("E100", "Duplicate runtime consumer.", line)
-            insert(net.runtime_consumers, m[1], (consumers, line), line)
-        elif m := re.fullmatch(r"api (\w+)\((.*)\) -> (.+) via (\w+)", text):
-            leaf(node)
-            insert(net.apis, net.name + "." + m[1], Signature(parameters(m[2]), type_of(m[3]), m[4], line), line)
-        elif m := re.fullmatch(r"foreign ([\w.]+)\((.*)\) -> (.+):", text):
-            sig = Signature(parameters(m[2]), type_of(m[3]), "", line)
-            seen = set()
-            for child in node.children:
-                leaf(child)
-                if clause := re.fullmatch(r"(dispatch|pending) (\w+)", child.text):
-                    if clause[1] in seen:
-                        raise CheckError("E003", "Duplicate foreign clause.", child.line)
-                    seen.add(clause[1])
-                    if clause[1] == "dispatch":
-                        sig.via = clause[2]
-                    else:
-                        sig.pending = clause[2]
-                elif clause := re.fullmatch(r"keyed by ([\w, ]+)", child.text):
-                    if sig.key_source:
-                        raise CheckError("E003", "Duplicate key source.", child.line)
-                    sig.key_source = tuple(split_commas(clause[1]))
-                elif child.text == "correlate client_key or provider_reference":
-                    if sig.correlation:
-                        raise CheckError("E003", "Duplicate correlation clause.", child.line)
-                    sig.correlation = "client_key or provider_reference"
-                elif clause := re.fullmatch(r"outcome (\w+) via (\w+)", child.text):
-                    insert(sig.outcomes, clause[1], clause[2], child.line)
-                else:
-                    raise CheckError("E003", "Unsupported foreign clause.", child.line)
-            if not sig.via or not sig.pending or not sig.key_source or not sig.correlation:
-                raise CheckError("E003", "Foreign operation needs dispatch, pending, key source, and correlation.", line)
-            insert(net.apis, m[1], sig, line)
-        else:
-            raise CheckError("E003", f"Unsupported net declaration: {text}", line)
+        try:
+            parse_declaration(net, node)
+        except CheckError as error:
+            raise at_line(error, node.line)
     validate(net)
     return net
 
 
+def parse_declaration(net: Net, node: Node) -> None:
+    line, text = node.line, node.text
+    if m := re.fullmatch(r"place (\w+) = (\w+) owner (domain|activation|runtime|adapter)", text):
+        leaf(node)
+        if m[2] != net.parameter and not m[2].isdigit():
+            raise CheckError("E003", "Initial count must be Nat or the stock parameter.", line)
+        insert(net.places, m[1], Place(m[2], m[3]), line)
+    elif m := re.fullmatch(r"linear (\w+)\[([\w, ]+)\] at (\w+) issuer (\w+) cancel (\w+)(?: registered (\w+))?", text):
+        leaf(node)
+        r = Resource(m[1], tuple(split_commas(m[2])), m[3], m[4], m[5], m[6], line)
+        insert(net.resources, r.name, r, line)
+    elif m := re.fullmatch(r"enum (\w+)\[([\w, ]+)\]:", text):
+        cases = {}
+        for child in node.children:
+            leaf(child)
+            case = re.fullmatch(r"(\w+)\((.+)\)", child.text)
+            if not case:
+                raise CheckError("E003", "Expected a named enum constructor with one payload.", child.line)
+            insert(cases, case[1], type_of(case[2]), child.line)
+        if not cases:
+            raise CheckError("E003", "An enum needs at least one case.", line)
+        insert(net.enums, m[1], Enum(tuple(split_commas(m[2])), cases), line)
+    elif m := re.fullmatch(r"invariant (\w+):", text):
+        if len(node.children) != 1:
+            raise CheckError("E003", "An invariant needs one equality.", line)
+        leaf(node.children[0])
+        insert(net.invariants, m[1], (node.children[0].text, node.children[0].line), line)
+    elif m := re.fullmatch(r"check (\w+) for one_order:", text):
+        if net.order_check is not None:
+            raise CheckError("E300", "Only one order-check model is supported.", line)
+        clauses, guards, properties = {}, {}, {}
+        for child in node.children:
+            leaf(child)
+            if clause := re.fullmatch(r"admit (\w+) once", child.text):
+                insert(clauses, "admission", clause[1], child.line)
+            elif clause := re.fullmatch(r"observe dispatch (\w+)", child.text):
+                insert(clauses, "dispatch", clause[1], child.line)
+            elif clause := re.fullmatch(r"place_bound ([1-9]\d*)", child.text):
+                insert(clauses, "bound", int(clause[1]), child.line)
+            elif clause := re.fullmatch(r"guard (\w+) (establishes_paid|establishes_rejected|nondeterministic)", child.text):
+                insert(guards, clause[1], clause[2], child.line)
+            elif clause := re.fullmatch(r"property (\w+): marked (\w+) requires (paid_evidence|rejected_evidence|marked \w+)", child.text):
+                insert(properties, clause[1], ("requires", clause[2], clause[3]), child.line)
+            elif clause := re.fullmatch(r"property (\w+): after paid_evidence forbid (\w+)", child.text):
+                insert(properties, clause[1], ("forbid", clause[2], "paid_evidence"), child.line)
+            elif clause := re.fullmatch(r"property (\w+): after dispatch marked (\w+) requires rejected_evidence", child.text):
+                insert(properties, clause[1], ("after_dispatch", clause[2], "rejected_evidence"), child.line)
+            else:
+                raise CheckError("E300", f"Unsupported order-check clause: {child.text}", child.line)
+        if set(clauses) != {"admission", "dispatch", "bound"} or not properties:
+            raise CheckError("E300", "Order check needs admission, dispatch observation, place_bound, and properties.", line)
+        net.order_check = OrderCheck(m[1], clauses["admission"], clauses["dispatch"], clauses["bound"], guards, properties, line)
+    elif m := re.fullmatch(r"transition (\w+):", text):
+        transition = Transition(m[1], line)
+        for child in node.children:
+            leaf(child)
+            if arc := re.fullmatch(r"(take|put|read) ([1-9]\d*) (\w+)", child.text):
+                insert(getattr(transition, arc[1]), arc[3], int(arc[2]), child.line)
+            elif guard := re.fullmatch(r"guard (\w+)", child.text):
+                transition.guards.append(guard[1])
+            else:
+                raise CheckError("E003", f"Unsupported transition statement: {child.text}", child.line)
+        if not node.children:
+            raise CheckError("E003", "Empty transition.", line)
+        insert(net.transitions, transition.name, transition, line)
+    elif m := re.fullmatch(r"runtime_cancel (\w+) via (\w+)", text):
+        leaf(node)
+        insert(net.runtime_cancels, m[1], m[2], line)
+    elif m := re.fullmatch(r"runtime_state (\w+) (?:consumers ([\w, ]+)|terminal)", text):
+        leaf(node)
+        consumers = tuple(split_commas(m[2])) if m[2] else ()
+        if len(set(consumers)) != len(consumers):
+            raise CheckError("E100", "Duplicate runtime consumer.", line)
+        insert(net.runtime_consumers, m[1], (consumers, line), line)
+    elif m := re.fullmatch(r"api (\w+)\((.*)\) -> (.+) via (\w+)", text):
+        leaf(node)
+        insert(net.apis, net.name + "." + m[1], Signature(parameters(m[2]), type_of(m[3]), m[4], line), line)
+    elif m := re.fullmatch(r"foreign ([\w.]+)\((.*)\) -> (.+):", text):
+        sig = Signature(parameters(m[2]), type_of(m[3]), "", line)
+        seen = set()
+        for child in node.children:
+            leaf(child)
+            if clause := re.fullmatch(r"(dispatch|pending) (\w+)", child.text):
+                if clause[1] in seen:
+                    raise CheckError("E003", "Duplicate foreign clause.", child.line)
+                seen.add(clause[1])
+                if clause[1] == "dispatch":
+                    sig.via = clause[2]
+                else:
+                    sig.pending = clause[2]
+            elif clause := re.fullmatch(r"keyed by ([\w, ]+)", child.text):
+                if sig.key_source:
+                    raise CheckError("E003", "Duplicate key source.", child.line)
+                sig.key_source = tuple(split_commas(clause[1]))
+            elif child.text == "correlate client_key or provider_reference":
+                if sig.correlation:
+                    raise CheckError("E003", "Duplicate correlation clause.", child.line)
+                sig.correlation = "client_key or provider_reference"
+            elif clause := re.fullmatch(r"outcome (\w+) via (\w+)", child.text):
+                insert(sig.outcomes, clause[1], clause[2], child.line)
+            else:
+                raise CheckError("E003", "Unsupported foreign clause.", child.line)
+        if not sig.via or not sig.pending or not sig.key_source or not sig.correlation:
+            raise CheckError("E003", "Foreign operation needs dispatch, pending, key source, and correlation.", line)
+        insert(net.apis, m[1], sig, line)
+    else:
+        raise CheckError("E003", f"Unsupported net declaration: {text}", line)
+
+
 def validate(net: Net) -> None:
     def fail(message: str, line: int = 0) -> None:
-        raise CheckError("E100", message, line)
+        raise CheckError("E100", message, line or net.header_line)
 
     def transition(name: str) -> Transition:
         if name not in net.transitions:
@@ -534,6 +681,7 @@ def linear_expression(text: str) -> tuple[dict[str, int], int]:
     return visit(expression)
 
 
+@located(net_text)
 def prove(net: Net) -> dict:
     places, transitions = list(net.places), list(net.transitions)
     incidence = [[net.transitions[t].put.get(p, 0) - net.transitions[t].take.get(p, 0)
@@ -544,8 +692,11 @@ def prove(net: Net) -> dict:
         parts = expression.split("==")
         if len(parts) != 2:
             raise CheckError("E110", "Invariant must be an equality.", line)
-        lhs, lc = linear_expression(parts[0])
-        rhs, rc = linear_expression(parts[1])
+        try:
+            lhs, lc = linear_expression(parts[0])
+            rhs, rc = linear_expression(parts[1])
+        except CheckError as error:
+            raise at_line(error, line)
         if set(lhs) - set(places) or set(rhs) - {net.parameter}:
             raise CheckError("E110", "Left side must name places; right side may name only the stock parameter.", line)
         weights = [lhs.get(p, 0) for p in places]
@@ -569,6 +720,7 @@ def prove(net: Net) -> dict:
             "scope": "All finite firing sequences, every nonnegative integer stock; named guards relaxed. No reachability enumeration."}
 
 
+@located(net_text)
 def explore_order(net: Net, max_states: int = 10000) -> dict:
     """Exhaust the declared one-order abstraction, or fail without a safety label.
 
@@ -579,9 +731,9 @@ def explore_order(net: Net, max_states: int = 10000) -> dict:
     """
     model = net.order_check
     if model is None:
-        raise CheckError("E300", "NOT ESTABLISHED: no one-order check declared.")
+        raise CheckError("E300", "NOT ESTABLISHED: no one-order check declared.", net.header_line)
     if max_states < 1:
-        raise CheckError("E321", "NOT ESTABLISHED: state budget must be positive.")
+        raise CheckError("E321", "NOT ESTABLISHED: state budget must be positive.", model.line)
     places = list(net.places)
     index = {p: i for i, p in enumerate(places)}
     initial = tuple(1 if p.initial == net.parameter else int(p.initial) for p in net.places.values())
@@ -688,12 +840,22 @@ class Binding:
     symbol: str
     line: int
     live: bool = True
+    moved: int = 0  # line of the statement that consumed a linear binding
+
+
+def binding_spans(name: str, binding: Binding) -> list[Related]:
+    """Where a linear binding was bound and, once moved, where it was consumed."""
+    related = [Related("binding", f"{name}: {binding.type} is bound here", binding.line, name)] if binding.line else []
+    if binding.moved:
+        related.append(Related("moved", f"{name} was consumed here", binding.moved, name))
+    return related
 
 
 def is_linear(net: Net, typ: Type) -> bool:
     return typ.name in net.resources or typ.name in net.enums
 
 
+@located(lambda source: source)
 def lower_questions(source: str) -> list[Node]:
     """Lower ? to ordinary terminal matches with source-line diagnostics.
 
@@ -738,6 +900,7 @@ def lower_questions(source: str) -> list[Node]:
     return lower(tree(source))
 
 
+@located(lambda source: source)
 def lower_flow_source(source: str) -> str:
     def render(nodes, depth=0):
         lines = []
@@ -748,6 +911,7 @@ def lower_flow_source(source: str) -> str:
     return "\n".join(render(lower_questions(source))) + "\n"
 
 
+@located(lambda net, source: source)
 def check_flow(net: Net, source: str) -> list[str]:
     roots = lower_questions(source)
     helpers = {}
@@ -759,7 +923,10 @@ def check_flow(net: Net, source: str) -> list[str]:
         name = match[1]
         if name in net.resources or name in net.enums or name == "Unit":
             raise CheckError("E200", "Flow name collides with a type declaration.", root.line)
-        sig = Signature(parameters(match[2]), type_of(match[3] or "Unit"), "", root.line)
+        try:
+            sig = Signature(parameters(match[2]), type_of(match[3] or "Unit"), "", root.line)
+        except CheckError as error:
+            raise at_line(error, root.line)
         bound = set()
         linear_names = {p for p, typ in sig.params if is_linear(net, typ)}
         for param, typ in sig.params:
@@ -813,7 +980,10 @@ def check_flow(net: Net, source: str) -> list[str]:
         env = {}
         for param, typ in helpers[name].params:
             env[param] = Binding(typ, param, root.line)
-        check_body(net, root.children, env, helpers, helpers[name].result)
+        try:
+            check_body(net, root.children, env, helpers, helpers[name].result)
+        except CheckError as error:
+            raise at_line(error, root.line)
     return list(helpers)
 
 
@@ -826,7 +996,10 @@ def apply_call(net: Net, name: str, arguments: str, env: dict[str, Binding], lin
     signatures = net.apis | (helpers or {})
     if name not in signatures:
         raise CheckError("E206", f"Unknown or private operation: {name}. Only declared APIs are callable.", line)
-    sig, args = signatures[name], split_commas(arguments)
+    try:
+        sig, args = signatures[name], split_commas(arguments)
+    except CheckError as error:
+        raise at_line(error, line)
     if len(args) != len(sig.params):
         missing = sig.params[len(args):]
         detail = ", ".join(f"{n}: {t}" for n, t in missing) if missing else "too many arguments"
@@ -842,7 +1015,8 @@ def apply_call(net: Net, name: str, arguments: str, env: dict[str, Binding], lin
             raise CheckError("E207", f"Unknown argument binding: {arg}", line)
         binding = env[arg]
         if is_linear(net, binding.type) and not binding.live:
-            raise CheckError("E203", f"{arg} was already moved; linear handles cannot be reused.", line)
+            raise CheckError("E203", f"{arg} was already moved; linear handles cannot be reused.", line,
+                             binding_spans(arg, binding), {"binding": arg, "type": str(binding.type)})
         actual.append(binding)
     substitutions = {}
     for (param, expected), binding in zip(sig.params, actual):
@@ -860,10 +1034,15 @@ def apply_call(net: Net, name: str, arguments: str, env: dict[str, Binding], lin
             substitutions[wanted] = found
         if is_linear(net, expected):
             if arg in to_move:
-                raise CheckError("E203", f"{arg} would be consumed twice by one call.", line)
+                # The first argument occurrence on this line is the move the repeat conflicts with.
+                first_use = Related("moved", f"{arg} is first consumed by this call", line, arg)
+                raise CheckError("E203", f"{arg} would be consumed twice by one call.", line,
+                                 binding_spans(arg, env[arg]) + [first_use],
+                                 {"binding": arg, "type": str(env[arg].type)})
             to_move.append(arg)
     for arg in to_move:
         env[arg].live = False
+        env[arg].moved = line
     try:
         return Type(sig.result.name, tuple(substitutions[k] for k in sig.result.keys))
     except KeyError as error:
@@ -893,16 +1072,23 @@ def check_body(net: Net, nodes: list[Node], env: dict[str, Binding],
                 if value is None:
                     raise CheckError("E207", f"Unknown return binding: {value_name}", line)
                 if not value.live and is_linear(net, value.type):
-                    raise CheckError("E203", f"{value_name} was already moved.", line)
+                    raise CheckError("E203", f"{value_name} was already moved.", line,
+                                     binding_spans(value_name, value), {"binding": value_name, "type": str(value.type)})
                 if value.type != expected:
                     raise CheckError("E217", f"Return expects {expected}, got {value.type}.", line)
                 if is_linear(net, value.type):
                     value.live = False
-            outstanding = [f"{name}: {b.type}" for name, b in env.items() if b.live and is_linear(net, b.type)]
+                    value.moved = line
+            held = [(name, b) for name, b in env.items() if b.live and is_linear(net, b.type)]
+            outstanding = [f"{name}: {b.type}" for name, b in held]
             if outstanding:
+                related = [r for name, b in held for r in binding_spans(name, b)]
+                details = {"outstanding": [{"name": name, "type": str(b.type)} for name, b in held],
+                           "propagation": node.origin == "?"}
                 if node.origin == "?":
-                    raise CheckError("E204", f"'?' on line {line} may propagate Err/Unknown while these linear handles are still held: " + ", ".join(outstanding) + ".\nConsume them before '?', or handle the outcome explicitly and return the obligations.", line)
-                raise CheckError("E204", "Linear obligations left at normal return: " + ", ".join(outstanding) + ".\nConsume or hand off every handle. Cancellation routes do not permit silent normal drops.", line)
+                    related.append(Related("propagation", "'?' may propagate Err/Unknown here", line, "?"))
+                    raise CheckError("E204", f"'?' on line {line} may propagate Err/Unknown while these linear handles are still held: " + ", ".join(outstanding) + ".\nConsume them before '?', or handle the outcome explicitly and return the obligations.", line, related, details)
+                raise CheckError("E204", "Linear obligations left at normal return: " + ", ".join(outstanding) + ".\nConsume or hand off every handle. Cancellation routes do not permit silent normal drops.", line, related, details)
             if position != len(nodes) - 1:
                 raise CheckError("E210", "Unreachable statements after return.", line)
             return
@@ -927,7 +1113,8 @@ def check_body(net: Net, nodes: list[Node], env: dict[str, Binding],
                 raise CheckError("E213", "Match requires a declared nominal outcome enum.", line)
             binding = env[name]
             if not binding.live:
-                raise CheckError("E203", f"{name} was already moved.", line)
+                raise CheckError("E203", f"{name} was already moved.", line,
+                                 binding_spans(name, binding), {"binding": name, "type": str(binding.type)})
             enum = net.enums[binding.type.name]
             cases = {}
             for child in node.children:
@@ -940,6 +1127,7 @@ def check_body(net: Net, nodes: list[Node], env: dict[str, Binding],
                 extra = sorted(set(cases) - set(enum.cases))
                 raise CheckError("E214", f"Non-exhaustive or invalid {binding.type.name} match. Missing {missing}; extra {extra}.", line)
             binding.live = False
+            binding.moved = line
             substitutions = dict(zip(enum.keys, binding.type.keys))
             for tag, (variable, child) in cases.items():
                 branch = copy.deepcopy(env)
@@ -951,7 +1139,10 @@ def check_body(net: Net, nodes: list[Node], env: dict[str, Binding],
                     branch[variable] = Binding(typ, variable, child.line)
                 elif typ != Type("Unit"):
                     raise CheckError("E202", f"Discarded {typ}; bind the branch payload.", child.line)
-                check_body(net, child.children, branch, helpers, result)
+                try:
+                    check_body(net, child.children, branch, helpers, result)
+                except CheckError as error:
+                    raise at_line(error, child.line)
             return
         else:
             raise CheckError("E200", f"Unsupported flow statement: {text}", line)

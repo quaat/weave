@@ -224,7 +224,19 @@ scenario. It does not drain the adapter queue, so `charge_requests` may remain.
 | `E300` / `E320` / `E321` | Invalid or missing order model / counterexample / bound or budget exceeded |
 
 This table is a shortcut, not an exhaustive diagnostic specification. Preserve
-the code, source line, and explanatory message when reporting a failure.
+the code, source location, and explanatory message when reporting a failure.
+
+With `--json`, every diagnostic is a `weave-diagnostic-v1` document: `code`,
+`category`, the principal `rule` and `secondary_rules` from the specification's
+code-to-rule map (copied to `.agents/skills/weave/assets/diagnostics.json`),
+`severity`, `stage`, `message`, the primary `span` (file, 1-based start and end
+line and column; the end column is one past the last character), `related`
+spans and `details`. E203 and E204 name related locations: where each held or
+reused handle was bound (`binding`), where it was consumed (`moved`), and the
+`?` that propagates (`propagation`). `TOOL_ERROR` reports a runner failure
+outside the checker; it has category `tool`, no rule and no span. The schema is
+`evidence/schemas/diagnostic.v1.schema.json` in the repository. Text output
+prints `file:line:column: CODE (RULE) [stage]`, then any related locations.
 
 ## Pure-function extension (kit addition)
 
@@ -261,8 +273,8 @@ recursive `merge`.
 | --- | --- | --- |
 | `length(xs)` | `IntList -> Int` | O(1); cached in each node |
 | `is_empty(xs)` | `IntList -> Bool` | O(1) |
-| `head(xs)` | `IntList -> Int` | O(1); `E420` at run time on an empty list |
-| `tail(xs)` | `IntList -> IntList` | O(1), shares nodes; `E420` on an empty list |
+| `head(xs)` | `IntList -> Int` | O(1); `P420` at run time on an empty list |
+| `tail(xs)` | `IntList -> IntList` | O(1), shares nodes; `P420` on an empty list |
 | `cons(x, xs)` | `Int, IntList -> IntList` | O(1) new node; `xs` is shared, not copied |
 | `split_half(xs)` | `IntList -> IntListPair` | Order-preserving; first half has floor(n/2) items (copied), second half shares the suffix |
 | `first(p)`, `second(p)` | `IntListPair -> IntList` | Pair projections |
@@ -272,14 +284,14 @@ every body is checked, including unused functions. Each path must end in `return
 or a terminal `if`/`else` (no `elif`, no statements after either). Conditions must
 be `Bool`; return values must match the declared type. Bindings cannot be rebound
 or shadowed. Direct self-recursion is allowed; mutual or indirect recursion is
-rejected (`E411`). Functions are not values. Pure functions cannot take or return
-linear or nominal flow types such as `Hold[t, o]` (`E401`), use `await`, call
-`Inventory.*`/`Payments.*`, or call a flow (`E409`). A file that declares a flow is
-not a pure program (`E410`).
+rejected (`P411`). Functions are not values. Pure functions cannot take or return
+linear or nominal flow types such as `Hold[t, o]` (`P401`), use `await`, call
+`Inventory.*`/`Payments.*`, or call a flow (`P409`). A file that declares a flow is
+not a pure program (`P410`).
 
 `fork:` contains exactly two `let name = function(args)` lines, each calling a
 user-defined pure function. The parent evaluates both argument lists first. A
-branch cannot read its sibling's binding (`E412`); both bindings become visible
+branch cannot read its sibling's binding (`P412`); both bindings become visible
 only after the join. A fork is a statement and must be followed by more statements.
 
 Execution: the checked program is compiled to a small instruction list. Each
@@ -297,25 +309,49 @@ the same activation. Both modes execute the same compiled source.
 When a child fails, its parent fails, the sibling subtree is cancelled, and the
 failure propagates to the root. No join result is fabricated and no output is
 returned. Resource limits are explicit errors: `fuel` caps total instructions
-(`E421`), `max_depth` caps frames per activation (`E422`), and `max_tasks` caps live
-activations (`E423`). Termination is **not** checked statically. The fuel and depth
+(`P421`), `max_depth` caps frames per activation (`P422`), and `max_tasks` caps live
+activations (`P423`). Termination is **not** checked statically. The fuel and depth
 limits are resource limits, not termination proofs. Trace events are
 `activation_created`, `run`, `fork`, `wait`, `child_complete`, `join`,
 `root_complete`, `failure`, and `cancelled`, plus `fork_inline` and `join_inline`
 in sequential mode.
 
-| Code | Meaning |
+| Code | Meaning | Rule |
+| --- | --- | --- |
+| `P400` | Unsupported or malformed pure syntax, operators, or declarations | `KIT-PURE-SYNTAX-1` |
+| `P401` | Unsupported type, including linear resources, in a pure signature | `KIT-PURE-TYPE-1` |
+| `P402` / `P403` / `P404` | Duplicate declaration / unknown binding or function used as a value / unknown function | `KIT-PURE-NAME-1` |
+| `P405` / `P406` | Wrong argument count / wrong argument type | `KIT-PURE-CALL-1` |
+| `P407` / `P408` | Wrong or missing return value / malformed branch: missing `else`, statements after `return` or `if`, or a path without `return` | `KIT-PURE-PATH-1` |
+| `P409` / `P410` | Illegal effect (`await`, net/foreign operation, flow call) / flow declared in a pure program | `KIT-PURE-EFFECT-1` |
+| `P411` | Mutual or indirect recursion | `KIT-PURE-RECURSION-1` |
+| `P412` | Fork shape or fork-scope violation | `KIT-PURE-FORK-1` |
+| `P413` | Rebinding or shadowing | `KIT-PURE-NAME-1` |
+| `P414` | Non-Bool condition | `KIT-PURE-TYPE-1` |
+| `P420` | Run time: empty `head`/`tail` | `KIT-PURE-RUN-1` |
+| `P421`–`P423` | Run time: fuel, depth, live-task limit | `KIT-PURE-LIMIT-1` |
+| `P424` / `P425` | Entry argument decoding / unknown entry function | `KIT-PURE-ENTRY-1` |
+| `P426` / `P427` | Internal scheduler deadlock / pairing error; never expected | `KIT-PURE-SCHED-1` |
+
+These codes carried the same numbers with an `E` prefix until quaat/weave#6, overlapping
+the specification's N1 codes; they kept their numbers and meanings in the `P4xx`
+range (see `CHANGELOG.md`). Their rules are kit rule IDs, not specification rule
+IDs; the extension is outside the specified fragment:
+
+| Rule | Statement |
 | --- | --- |
-| `E400` | Unsupported or malformed pure syntax, operators, or declarations |
-| `E401` | Unsupported type, including linear resources, in a pure signature |
-| `E402` / `E403` / `E404` | Duplicate declaration / unknown binding or function used as a value / unknown function |
-| `E405` / `E406` / `E407` | Wrong argument count / wrong argument type / wrong or missing return value |
-| `E408` | Malformed branch: missing `else`, statements after `return` or `if`, or a path without `return` |
-| `E409` / `E410` | Illegal effect (`await`, net/foreign operation, flow call) / flow declared in a pure program |
-| `E411` / `E412` / `E413` / `E414` | Mutual recursion / fork-scope violation / rebinding / non-Bool condition |
-| `E420`–`E423` | Runtime: empty `head`/`tail`, fuel, depth, live-task limit |
-| `E424` / `E425` | Entry argument decoding / unknown entry function |
-| `E426` / `E427` | Internal scheduler deadlock / pairing error; never expected |
+| `KIT-PURE-SYNTAX-1` | A pure program contains only `fn` declarations written with the constructs and four-space layout listed above |
+| `KIT-PURE-TYPE-1` | Signatures use only `Int`, `Bool`, `IntList` and `IntListPair`; a condition is `Bool`; `<=` compares two `Int` values |
+| `KIT-PURE-NAME-1` | Function and parameter names are unique; every name used is bound; a binding is never rebound or shadowed; functions are not values |
+| `KIT-PURE-CALL-1` | A call names a primitive or a declared pure function and passes one argument of the declared type per parameter |
+| `KIT-PURE-PATH-1` | Every path ends in `return` of the declared type or a terminal `if`/`else`; nothing follows either |
+| `KIT-PURE-EFFECT-1` | Pure functions use no `await`, net or foreign operation or flow call, and a pure program declares no flow |
+| `KIT-PURE-RECURSION-1` | Recursion is direct self-recursion only |
+| `KIT-PURE-FORK-1` | A `fork:` has exactly two `let name = function(args)` branches with distinct names that call user functions and do not read each other |
+| `KIT-PURE-RUN-1` | `head` and `tail` of an empty list fail at run time |
+| `KIT-PURE-LIMIT-1` | A run stops with an error when it exceeds its fuel, depth or live-activation limit |
+| `KIT-PURE-ENTRY-1` | `run-pure` names a declared entry function and passes a JSON array of its argument types |
+| `KIT-PURE-SCHED-1` | The scheduler pairs every fork with one join and ends with no pending activation; a violation is a kit defect |
 
 Status labels: `CHECKED` (pure) means the rules above passed. `EXECUTED` means one
 run completed within its limits. Scheduler pairing, cleanup, and identical results

@@ -30,9 +30,10 @@ stable language release; it is not a list of newly implemented features.
      - Contextual keywords and incomplete namespace collision checks
      - Contextual words remain allowed; avoid special-type and operation collisions
    * - DIAG-01
-     - Some coloured errors use erased-source positions; flow CLI labels can use
-       the net filename
-     - Preserve source identity; implement a real source map
+     - Flow CLI labels can use the net filename; a lowered file has its own line
+       numbers. Since quaat/weave#6, errors found in a coloured net's erased
+       view report the coloured source line, and every diagnostic has a span
+     - Preserve source identity; implement a real source map for lowered output
    * - TYPE-01
      - Opaque scalar names have no schema or runtime representation
      - Specify validation, equality, serialization, and ABI in a future profile

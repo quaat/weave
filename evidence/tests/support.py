@@ -76,6 +76,26 @@ def minimal_envelope(**changes) -> dict:
     return envelope
 
 
+def minimal_diagnostic(**changes) -> dict:
+    span = {"file": "flow.weave", "start": {"line": 2, "column": 5}, "end": {"line": 2, "column": 23}}
+    diagnostic = {
+        "format": "weave-diagnostic-v1",
+        "code": "E204",
+        "category": "specification",
+        "rule": "F0-RETURN-1",
+        "secondary_rules": ["F0-TRY-3"],
+        "severity": "error",
+        "stage": "flow",
+        "message": "'?' on line 2 may propagate Err/Unknown while these linear handles are still held.",
+        "span": span,
+        "related": [{"role": "binding", "label": "extra is bound here",
+                     "span": {"file": "flow.weave", "start": {"line": 1, "column": 40}, "end": {"line": 1, "column": 45}}}],
+        "details": {"outstanding": [{"name": "extra", "type": "Paid[u, v]"}]},
+    }
+    diagnostic.update(copy.deepcopy(changes))
+    return diagnostic
+
+
 def minimal_net() -> dict:
     return {
         "format": "weave-canonical-net-v1",

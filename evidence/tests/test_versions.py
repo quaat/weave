@@ -14,12 +14,13 @@ from evidence.weave_evidence.documents import assess, assess_file, assess_text
 from evidence.weave_evidence.traces import ConversionError
 from evidence.weave_evidence.wrap import wrap
 
-from .support import ALL_FILES, ROOT, minimal_envelope, minimal_net, minimal_trace, repo_copy
+from .support import ALL_FILES, ROOT, minimal_diagnostic, minimal_envelope, minimal_net, minimal_trace, repo_copy
 
 VALID = {"weave-canonical-net-v1": minimal_net, "weave-trace-v1": minimal_trace,
-         "weave-evidence-envelope-v1": minimal_envelope}
+         "weave-evidence-envelope-v1": minimal_envelope, "weave-diagnostic-v1": minimal_diagnostic}
 NEAR = ["weave-trace-v2", "weave-trace-v0", "weave-trace-v10", "weave-trace", "weave-trace-v1 ", " weave-trace-v1",
-        "Weave-Trace-V1", "weave-evidence-envelope-v2", "weave-canonical-net-v2", "weave-place-invariant-v1",
+        "Weave-Trace-V1", "weave-evidence-envelope-v2", "weave-canonical-net-v2", "weave-diagnostic-v2",
+        "weave-diagnostic-v0", "weave-diagnostic", "weave-place-invariant-v1",
         "weave-specification-validation-v1", ""]
 
 

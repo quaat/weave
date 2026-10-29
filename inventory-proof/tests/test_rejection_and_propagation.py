@@ -177,6 +177,11 @@ class RejectionAndPropagation(unittest.TestCase):
         e = self.error("E204", lambda: check_flow(self.net, source))
         self.assertIn("extra", e.message)
         self.assertEqual(e.line, 2)
+        # Primary span: the `?` statement; related spans: where `extra` was bound and the `?` itself.
+        self.assertEqual((e.span.line, e.span.column, e.span.end_line, e.span.end_column), (2, 5, 2, 23))
+        related = {(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related}
+        self.assertEqual(related, {("binding", 1, 40, 45), ("propagation", 2, 22, 23)})
+        self.assertEqual(e.details["outstanding"], [{"name": "extra", "type": "Paid[u, v]"}])
 
     def test_question_in_unit_flow_cannot_erase_unknown(self):
         source = "flow wrong(result: ChargeOutcome[t, o]):\n    let paid = result?\n    await Inventory.sell(paid)\n    return\n"
@@ -184,7 +189,22 @@ class RejectionAndPropagation(unittest.TestCase):
 
     def test_question_moves_its_operand(self):
         source = "flow wrong(result: ChargeOutcome[t, o]) -> ChargeOutcome[t, o]:\n    let paid = result?\n    return result\n"
-        self.error("E203", lambda: check_flow(self.net, source))
+        e = self.error("E203", lambda: check_flow(self.net, source))
+        self.assertEqual((e.span.line, e.span.column, e.span.end_column), (3, 5, 18))
+        related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
+        self.assertEqual(related, [("binding", 1, 12, 18), ("moved", 2, 16, 22)])
+        # Passing one handle twice to a single call: `moved` is its first argument occurrence.
+        source = ("flow f(h: Hold[t, o]):\n    await helper(h, h)\n    return\n"
+                  "flow helper(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
+        e = self.error("E203", lambda: check_flow(self.net, source))
+        related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
+        self.assertEqual(related, [("binding", 1, 8, 9), ("moved", 2, 18, 19)])
+        # A callee spelled like the handle is skipped: `moved` is inside the argument list.
+        source = ("flow f(h: Hold[t, o]):\n    await h(h, h)\n    return\n"
+                  "flow h(a: Hold[t, o], b: Hold[t, o]):\n    return\n")
+        e = self.error("E203", lambda: check_flow(self.net, source))
+        related = [(r.role, r.span.line, r.span.column, r.span.end_column) for r in e.related]
+        self.assertEqual(related, [("binding", 1, 8, 9), ("moved", 2, 13, 14)])
 
     def test_unknown_payload_identity_cannot_be_widened(self):
         source = FLOW.replace("-> CheckoutOutcome[tenant, order]", "-> CheckoutOutcome[order, tenant]")

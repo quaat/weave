@@ -22,7 +22,7 @@ a proof that the rule holds for every input. Tests from ``test_rule_cases`` and
 ``test_documentation`` are in ``tests/``; the others are the prototype's tests
 in ``reference/prototype/tests/``.
 
-**Summary.** 60 rule IDs; 43 with a test or conformance case and
+**Summary.** 65 rule IDs; 48 with a test or conformance case and
 no pending entry; 17 pending implementation, each with a tracking issue.
 
 Rules with tests or cases in one direction only: LEX-REQ-2.
@@ -203,6 +203,31 @@ Summary table
      - C019, C020, C021, C022, C023, C024
      - 1
      - 2
+     - tested
+   * - :ref:`N1-COLOUR-1 <N1-COLOUR-1>`
+     - none
+     - 1
+     - 5
+     - tested
+   * - :ref:`N1-FAMILY-1 <N1-FAMILY-1>`
+     - none
+     - 1
+     - 3
+     - tested
+   * - :ref:`N1-FAMILY-2 <N1-FAMILY-2>`
+     - none
+     - 1
+     - 3
+     - tested
+   * - :ref:`N1-FIRE-1 <N1-FIRE-1>`
+     - none
+     - 1
+     - 2
+     - tested
+   * - :ref:`N1-ORDER-1 <N1-ORDER-1>`
+     - none
+     - 1
+     - 5
      - tested
    * - :ref:`N2-CORRELATION-1 <N2-CORRELATION-1>`
      - none
@@ -567,6 +592,49 @@ Tests by rule
   * positive: ``test_rule_cases.RuleCases.test_reference_nets_are_accepted``
   * negative, E101: ``test_composition.CompositionChecks.test_private_read_cannot_borrow_linear_handle``
   * negative, E101: ``test_composition.CompositionChecks.test_skim_cannot_steal_hold``
+
+* :ref:`N1-COLOUR-1 <N1-COLOUR-1>`
+
+  * positive: ``test_rule_cases.RuleCases.test_reference_nets_are_accepted``
+  * negative, E400: ``test_coloured.ColourChecks.test_arc_cannot_silently_erase_colour``
+  * negative, E400: ``test_coloured.ColourChecks.test_sort_mix_is_rejected``
+  * negative, E400: ``test_rule_cases.RuleCases.test_n1_transition_without_colour_is_rejected``
+  * negative, E400: ``test_rule_cases.RuleCases.test_n1_check_block_without_token_correlation_is_rejected``
+  * negative: ``test_diagnostics.DiagnosticPerCode.test_code_rule_and_span_for_every_code``
+  * Note: Minted by quaat/weave#6 for the existing E400 checks; the erased N0 view's own rules (SYN-04, SYN-05) are covered under their IDs.
+
+* :ref:`N1-FAMILY-1 <N1-FAMILY-1>`
+
+  * positive: ``test_coloured.ColourChecks.test_family_proofs_and_two_order_graph``
+  * negative, E411: ``test_coloured.ColourChecks.test_family_cannot_mix_bare_and_indexed_counts``
+  * negative, E411: ``test_coloured.ColourChecks.test_family_wrong_binder_is_rejected``
+  * negative: ``test_diagnostics.DiagnosticPerCode.test_code_rule_and_span_for_every_code``
+  * Note: Minted by quaat/weave#6 for the existing E411 checks.
+
+* :ref:`N1-FAMILY-2 <N1-FAMILY-2>`
+
+  * positive: ``test_coloured.ColourChecks.test_family_proofs_and_two_order_graph``
+  * negative, E412: ``test_coloured.ColourChecks.test_cross_order_registration_fails_family_and_exploration``
+  * negative, E412: ``test_coloured.ColourChecks.test_removing_identity_consumption_fails_proof_and_uniqueness``
+  * negative: ``test_diagnostics.DiagnosticPerCode.test_code_rule_and_span_for_every_code``
+  * Note: Minted by quaat/weave#6 for the existing E412 check.
+
+* :ref:`N1-FIRE-1 <N1-FIRE-1>`
+
+  * positive: ``test_coloured.ColourChecks.test_each_order_can_sell_only_its_own_registration``
+  * negative, E421: ``test_coloured.ColourChecks.test_second_reserve_same_identity_is_disabled``
+  * negative: ``test_diagnostics.DiagnosticPerCode.test_code_rule_and_span_for_every_code``
+  * Note: Minted by quaat/weave#6 for the existing E421 checks of the finite unfolding's firing interface.
+
+* :ref:`N1-ORDER-1 <N1-ORDER-1>`
+
+  * positive: ``test_coloured.ColourChecks.test_family_proofs_and_two_order_graph``
+  * negative, E420: ``test_coloured.ColourChecks.test_cross_order_read_preserves_counts_but_fails_correlation``
+  * negative, E420: ``test_coloured.ColourChecks.test_initial_paid_without_evidence_is_detected``
+  * negative, E420: ``test_coloured.ColourChecks.test_removing_identity_consumption_fails_proof_and_uniqueness``
+  * negative, E422: ``test_coloured.ColourChecks.test_budget_exhaustion_is_not_success``
+  * negative: ``test_diagnostics.DiagnosticPerCode.test_code_rule_and_span_for_every_code``
+  * Note: Minted by quaat/weave#6 for the existing E420 and E422 results of the coloured exploration.
 
 * :ref:`N2-CORRELATION-1 <N2-CORRELATION-1>`
 

@@ -553,6 +553,136 @@
         }
       ]
     },
+    "N1-COLOUR-1": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_arc_cannot_silently_erase_colour",
+          "polarity": "negative",
+          "code": "E400"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_sort_mix_is_rejected",
+          "polarity": "negative",
+          "code": "E400"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_n1_transition_without_colour_is_rejected",
+          "polarity": "negative",
+          "code": "E400"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_n1_check_block_without_token_correlation_is_rejected",
+          "polarity": "negative",
+          "code": "E400"
+        },
+        {
+          "test": "tests/test_diagnostics.py::DiagnosticPerCode::test_code_rule_and_span_for_every_code",
+          "polarity": "negative"
+        }
+      ],
+      "note": "Minted by quaat/weave#6 for the existing E400 checks; the erased N0 view's own rules (SYN-04, SYN-05) are covered under their IDs."
+    },
+    "N1-FAMILY-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_family_proofs_and_two_order_graph",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_family_cannot_mix_bare_and_indexed_counts",
+          "polarity": "negative",
+          "code": "E411"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_family_wrong_binder_is_rejected",
+          "polarity": "negative",
+          "code": "E411"
+        },
+        {
+          "test": "tests/test_diagnostics.py::DiagnosticPerCode::test_code_rule_and_span_for_every_code",
+          "polarity": "negative"
+        }
+      ],
+      "note": "Minted by quaat/weave#6 for the existing E411 checks."
+    },
+    "N1-FAMILY-2": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_family_proofs_and_two_order_graph",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_cross_order_registration_fails_family_and_exploration",
+          "polarity": "negative",
+          "code": "E412"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_removing_identity_consumption_fails_proof_and_uniqueness",
+          "polarity": "negative",
+          "code": "E412"
+        },
+        {
+          "test": "tests/test_diagnostics.py::DiagnosticPerCode::test_code_rule_and_span_for_every_code",
+          "polarity": "negative"
+        }
+      ],
+      "note": "Minted by quaat/weave#6 for the existing E412 check."
+    },
+    "N1-FIRE-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_each_order_can_sell_only_its_own_registration",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_second_reserve_same_identity_is_disabled",
+          "polarity": "negative",
+          "code": "E421"
+        },
+        {
+          "test": "tests/test_diagnostics.py::DiagnosticPerCode::test_code_rule_and_span_for_every_code",
+          "polarity": "negative"
+        }
+      ],
+      "note": "Minted by quaat/weave#6 for the existing E421 checks of the finite unfolding's firing interface."
+    },
+    "N1-ORDER-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_family_proofs_and_two_order_graph",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_cross_order_read_preserves_counts_but_fails_correlation",
+          "polarity": "negative",
+          "code": "E420"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_initial_paid_without_evidence_is_detected",
+          "polarity": "negative",
+          "code": "E420"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_removing_identity_consumption_fails_proof_and_uniqueness",
+          "polarity": "negative",
+          "code": "E420"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_budget_exhaustion_is_not_success",
+          "polarity": "negative",
+          "code": "E422"
+        },
+        {
+          "test": "tests/test_diagnostics.py::DiagnosticPerCode::test_code_rule_and_span_for_every_code",
+          "polarity": "negative"
+        }
+      ],
+      "note": "Minted by quaat/weave#6 for the existing E420 and E422 results of the coloured exploration."
+    },
     "N2-CORRELATION-1": {
       "tests": [],
       "pending": {

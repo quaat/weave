@@ -16,7 +16,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from pathlib import Path
 
-from checker import CheckError, Net, check_flow, leaf, linear_expression, parse_net, prove, tree
+from checker import CheckError, Net, at_line, check_flow, leaf, linear_expression, located, parse_net, prove, tree
 
 
 @dataclass
@@ -35,12 +35,27 @@ def keys(text):
     return tuple(x.strip() for x in text.split(',')) if text else ()
 
 
+def remap_lines(base: Net, origin: list[int]) -> None:
+    """Replace line numbers of the erased projection by the coloured source lines they came from."""
+    line = lambda n: origin[n - 1] if 1 <= n <= len(origin) else n
+    base.header_line = line(base.header_line)
+    for item in [*base.transitions.values(), *base.resources.values(), *base.apis.values()]:
+        item.line = line(item.line)
+    base.invariants = {k: (text, line(n)) for k, (text, n) in base.invariants.items()}
+    base.runtime_consumers = {k: (consumers, line(n)) for k, (consumers, n) in base.runtime_consumers.items()}
+    if base.order_check:
+        base.order_check.line = line(base.order_check.line)
+
+
+@located(lambda source: source)
 def parse_coloured(source: str) -> ColouredNet:
     roots = tree(source)
     if len(roots) != 1:
-        raise CheckError('E400', 'Expected one coloured net.')
+        raise CheckError('E400', 'Expected one coloured net.', roots[-1].line if roots else 0)
     places, bindings, arcs, families = {}, {}, {}, {}
     projection = [roots[0].text]
+    # origin[i] is the coloured source line of projection line i + 1.
+    origin = [roots[0].line]
     order_count, correlation = None, None
     for node in roots[0].children:
         text = node.text
@@ -51,22 +66,22 @@ def parse_coloured(source: str) -> ColouredNet:
             places[m[1]] = keys(m[2])
             if places[m[1]] and (len(places[m[1]]) != 2 or len(set(places[m[1]])) != 2):
                 raise CheckError('E400', 'Places use two distinct tenant/order indices.', node.line)
-            projection.append('    place ' + m[1] + m[3])
+            projection.append('    place ' + m[1] + m[3]); origin.append(node.line)
         elif m := re.fullmatch(r'transition (\w+)\[([\w, ]+)\]:', text):
             name, primary = m[1], keys(m[2])
             if name in bindings or len(primary) != 2 or len(set(primary)) != 2:
                 raise CheckError('E400', 'Transition needs unique name and tenant/order binding.', node.line)
             bindings[name], arcs[name] = primary, {'take': {}, 'put': {}, 'read': {}}
-            projection.append(f'    transition {name}:')
+            projection.append(f'    transition {name}:'); origin.append(node.line)
             for child in node.children:
                 leaf(child)
                 if a := re.fullmatch(r'(take|put|read) ([1-9]\d*) (\w+)(?:\[([\w, ]+)\])?', child.text):
                     if a[3] in arcs[name][a[1]]:
                         raise CheckError('E400', 'Duplicate arc.', child.line)
                     arcs[name][a[1]][a[3]] = keys(a[4])
-                    projection.append(f'        {a[1]} {a[2]} {a[3]}')
+                    projection.append(f'        {a[1]} {a[2]} {a[3]}'); origin.append(child.line)
                 else:
-                    projection.append('        ' + child.text)
+                    projection.append('        ' + child.text); origin.append(child.line)
         elif m := re.fullmatch(r'invariant (\w+)\[([\w, ]+)\]:', text):
             if len(node.children) != 1 or m[1] in families:
                 raise CheckError('E400', 'Invalid or duplicate invariant family.', node.line)
@@ -76,7 +91,7 @@ def parse_coloured(source: str) -> ColouredNet:
             if order_count is not None:
                 raise CheckError('E400', 'Duplicate exploration declaration.', node.line)
             order_count = int(m[2])
-            projection.append(f'    check {m[1]} for one_order:')
+            projection.append(f'    check {m[1]} for one_order:'); origin.append(node.line)
             for child in node.children:
                 leaf(child)
                 if p := re.fullmatch(r'property (\w+): tokens match firing', child.text):
@@ -84,35 +99,46 @@ def parse_coloured(source: str) -> ColouredNet:
                         raise CheckError('E400', 'Duplicate token correlation property.', child.line)
                     correlation = p[1]
                 else:
-                    projection.append('        ' + child.text)
+                    projection.append('        ' + child.text); origin.append(child.line)
         else:
             for child in node.children:
                 leaf(child)
-            projection.append('    ' + text)
+            projection.append('    ' + text); origin.append(node.line)
             projection.extend('        ' + child.text for child in node.children)
-    base = parse_net('\n'.join(projection) + '\n')
+            origin.extend(child.line for child in node.children)
+    try:
+        base = parse_net('\n'.join(projection) + '\n')
+    except CheckError as error:
+        # Report the coloured source line, not the line of the erased projection.
+        error.line = origin[error.line - 1] if 1 <= error.line <= len(origin) else error.line
+        raise error.locate(source, force=True)
+    remap_lines(base, origin)
+    base.span_source = source
     for node in roots[0].children:
         if m := re.fullmatch(r'transition (\w+)\[([\w, ]+)\]:', node.text):
             base.transitions[m[1]].line = node.line
     if order_count is None or correlation is None or not families:
-        raise CheckError('E400', 'Coloured source needs a bound, token correlation property, and invariant families.')
+        raise CheckError('E400', 'Coloured source needs a bound, token correlation property, and invariant families.', roots[0].line)
     if set(bindings) != set(base.transitions):
-        raise CheckError('E400', 'Every transition requires an explicit firing colour.')
+        uncoloured = sorted(set(base.transitions) - set(bindings))
+        line = base.transitions[uncoloured[0]].line if uncoloured else roots[0].line
+        raise CheckError('E400', 'Every transition requires an explicit firing colour.', line)
     if set(families) & base.invariants.keys():
-        raise CheckError('E400', 'Aggregate and family invariant names must be distinct.')
+        raise CheckError('E400', 'Aggregate and family invariant names must be distinct.', families[sorted(set(families) & base.invariants.keys())[0]][2])
     for name, primary in bindings.items():
         sorts = {symbol: i for i, symbol in enumerate(primary)}
         for kind, inscriptions in arcs[name].items():
             for place, inscription in inscriptions.items():
                 if len(inscription) != len(places[place]):
-                    raise CheckError('E400', f'{name}: missing or wrong colour arity on {kind} {place}.')
+                    raise CheckError('E400', f'{name}: missing or wrong colour arity on {kind} {place}.', base.transitions[name].line)
                 for i, variable in enumerate(inscription):
                     if variable in sorts and sorts[variable] != i:
-                        raise CheckError('E400', f'{name}: colour variable {variable} mixes tenant and order sorts.')
+                        raise CheckError('E400', f'{name}: colour variable {variable} mixes tenant and order sorts.', base.transitions[name].line)
                     sorts[variable] = i
     return ColouredNet(source, base, places, bindings, arcs, families, order_count, correlation)
 
 
+@located(lambda net: net.source)
 def prove_colours(net: ColouredNet) -> dict:
     aggregate = prove(net.base)
     # Erased counts are valid aggregate initial values only when initially
@@ -120,7 +146,8 @@ def prove_colours(net: ColouredNet) -> dict:
     for invariant in aggregate['invariants']:
         for place, weight in zip(aggregate['places'], invariant['weights']):
             if net.places[place] and weight and net.base.places[place].initial != '0':
-                raise CheckError('E411', 'Aggregate initial marking depends on colour cardinality; use an invariant family.')
+                raise CheckError('E411', 'Aggregate initial marking depends on colour cardinality; use an invariant family.',
+                                 net.base.invariants[invariant['name']][1])
     results = []
     for name, (expression, binder, line) in net.families.items():
         if len(binder) != 2 or len(set(binder)) != 2:
@@ -131,12 +158,15 @@ def prove_colours(net: ColouredNet) -> dict:
             return m[1]
         erased = re.sub(r'(\w+)\[([\w, ]+)\]', erase, expression)
         bare = re.sub(r'(\w+)\[([\w, ]+)\]', '0', expression).split('==')[0]
-        if linear_expression(bare)[0]:
-            raise CheckError('E411', 'Unindexed terms cannot occur in a per-colour invariant.', line)
-        parts = erased.split('==')
-        if len(parts) != 2:
-            raise CheckError('E411', 'Family requires an equality.', line)
-        lhs, lc = linear_expression(parts[0]); rhs, rc = linear_expression(parts[1])
+        try:
+            if linear_expression(bare)[0]:
+                raise CheckError('E411', 'Unindexed terms cannot occur in a per-colour invariant.', line)
+            parts = erased.split('==')
+            if len(parts) != 2:
+                raise CheckError('E411', 'Family requires an equality.', line)
+            lhs, lc = linear_expression(parts[0]); rhs, rc = linear_expression(parts[1])
+        except CheckError as error:
+            raise at_line(error, line)
         # Reject bare place terms: their meaning would be a sum, not a colour.
         occurrences = set(re.findall(r'(\w+)\[', expression))
         if rhs or not lhs or set(lhs) - occurrences or set(lhs) - net.places.keys():
@@ -222,9 +252,14 @@ class Unfolding:
     def enabled(self, marking, mode):
         return all(marking[i] >= n for arcs in (mode.take, mode.read) for i, n in arcs.items())
 
+    def fault(self, code, message, transition):
+        """A firing-interface error located at the transition's coloured declaration."""
+        t = self.net.base.transitions.get(transition)
+        return CheckError(code, message, t.line if t else self.net.base.header_line).locate(self.net.source)
+
     def fire(self, marking, mode):
         if not self.enabled(marking, mode):
-            raise CheckError('E421', f'Disabled coloured firing: {mode.label()}')
+            raise self.fault('E421', f'Disabled coloured firing: {mode.label()}', mode.transition)
         result = list(marking)
         for i, n in mode.take.items(): result[i] -= n
         for i, n in mode.put.items(): result[i] += n
@@ -233,7 +268,7 @@ class Unfolding:
     def select(self, name, colour):
         found = [m for m in self.modes if m.transition == name and m.colour == colour]
         if len(found) != 1:
-            raise CheckError('E421', 'Execution requires one unambiguous colour binding.')
+            raise self.fault('E421', 'Execution requires one unambiguous colour binding.', name)
         return found[0]
 
     def snapshot(self, marking):
@@ -247,11 +282,12 @@ class Unfolding:
                               for i in range(len(self.rows))]}
 
 
+@located(lambda net, *_, **__: net.source)
 def explore_colours(net, max_states=100000, colours=None):
-    if max_states < 1:
-        raise CheckError('E422', 'NOT ESTABLISHED: state budget must be positive.')
-    unfolding = Unfolding(net, colours)
     model = net.base.order_check
+    if max_states < 1:
+        raise CheckError('E422', 'NOT ESTABLISHED: state budget must be positive.', model.line)
+    unfolding = Unfolding(net, colours)
     start = (unfolding.initial, (0,) * len(unfolding.colours))
     parents, pending = {start: None}, deque([start])
     triggers = dict.fromkeys(model.properties, 0)
@@ -269,23 +305,23 @@ def explore_colours(net, max_states=100000, colours=None):
 
     for i, (p, c) in enumerate(unfolding.rows):
         if c is not None and unfolding.initial[i] > model.bound:
-            raise CheckError('E422', 'NOT ESTABLISHED: initial token bound exceeded.')
+            raise CheckError('E422', 'NOT ESTABLISHED: initial token bound exceeded.', model.line)
     for colour in unfolding.colours:
         for name, (kind, place, requirement) in model.properties.items():
             if (place, colour) not in unfolding.index:
-                raise CheckError('E400', f'Per-order property must refer to indexed place {place}.')
+                raise CheckError('E400', f'Per-order property must refer to indexed place {place}.', model.line)
             present = unfolding.initial[unfolding.index[place, colour]] > 0
             if kind != 'requires' or not present: continue
             valid = requirement.startswith('marked ') and unfolding.initial[unfolding.index[requirement.removeprefix('marked '), colour]] > 0
             if not valid:
-                raise CheckError('E420', f'VIOLATED {name} for {colour} in the initial marking.')
+                raise CheckError('E420', f'VIOLATED {name} for {colour} in the initial marking.', model.line)
 
     while pending:
         state = pending.popleft(); marking, flags = state
         for ci, colour in enumerate(unfolding.colours):
             for name, (kind, place, requirement) in model.properties.items():
                 if (place, colour) not in unfolding.index:
-                    raise CheckError('E400', f'Per-order property must refer to indexed place {place}.')
+                    raise CheckError('E400', f'Per-order property must refer to indexed place {place}.', model.line)
                 present = marking[unfolding.index[place, colour]] > 0
                 premise = bool(flags[ci] & 4) if kind == 'forbid' else present
                 if kind == 'after_dispatch': premise = bool(flags[ci] & 2) and present
@@ -324,11 +360,11 @@ def explore_colours(net, max_states=100000, colours=None):
                 # are separate resources and can have different capacities.
                 limit = model.bound if c else max(unfolding.stock, unfolding.initial[i])
                 if after[i] > limit:
-                    raise CheckError('E422', f'NOT ESTABLISHED: token bound exceeded at {p}, {c}.')
+                    raise CheckError('E422', f'NOT ESTABLISHED: token bound exceeded at {p}, {c}.', model.line)
             next_state = (after, tuple(updated)); edges += 1; used.add(mode.transition)
             if next_state not in parents:
                 if len(parents) >= max_states:
-                    raise CheckError('E422', 'NOT ESTABLISHED: coloured state budget exhausted.')
+                    raise CheckError('E422', 'NOT ESTABLISHED: coloured state budget exhausted.', model.line)
                 parents[next_state] = (state, mode.label()); pending.append(next_state)
     return {'format': 'weave-colour-exploration-v1', 'source_sha256': hashlib.sha256(net.source.encode()).hexdigest(),
             'orders': len(unfolding.colours), 'colours': unfolding.colours, 'stock': unfolding.stock,

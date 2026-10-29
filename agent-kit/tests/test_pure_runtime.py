@@ -146,7 +146,7 @@ class PrimitiveTests(unittest.TestCase):
                 f'fn f(xs: IntList) -> Int:\n    return {name}(xs)\n'
             with self.assertRaises(RuntimeFault) as ctx:
                 run(src, 'f', [])
-            self.assertEqual((ctx.exception.code, ctx.exception.line, ctx.exception.stage), ('E420', 2, 'runtime'))
+            self.assertEqual((ctx.exception.code, ctx.exception.line, ctx.exception.stage), ('P420', 2, 'runtime'))
 
 
 class LimitTests(unittest.TestCase):
@@ -158,19 +158,19 @@ class LimitTests(unittest.TestCase):
                                    '--args', '[[1]]', '--fuel', '5000'], capture_output=True, text=True, timeout=60)
         self.assertEqual(proc.returncode, 2)
         d = json.loads(proc.stdout)['diagnostic']
-        self.assertEqual((d['code'], d['stage'], d['line']), ('E421', 'runtime', 2))
+        self.assertEqual((d['code'], d['stage'], d['span']['start']['line']), ('P421', 'runtime', 2))
 
     def test_depth_limit_is_structured(self):
         with self.assertRaises(RuntimeFault) as ctx:
             run(SPIN, 'spin', [1], limits=Limits(max_depth=50))
-        self.assertEqual(ctx.exception.code, 'E422')
+        self.assertEqual(ctx.exception.code, 'P422')
 
     def test_fork_bomb_hits_task_limit_and_cleans_up(self):
         for workers in (1, 3):
             m = machine(BOOM, limits=Limits(max_tasks=64, workers=workers))
             with self.assertRaises(RuntimeFault) as ctx:
                 m.run('boom', [IntList.from_iter([1])])
-            self.assertEqual(ctx.exception.code, 'E423')
+            self.assertEqual(ctx.exception.code, 'P423')
             self.assertLessEqual(m.stats['max_live_tasks'], 64)
             self.assertEqual((m.stats['pending_tasks'], m.stats['pending_joins']), (0, 0))
             self.assertIsNone(m.root_value)
@@ -185,17 +185,17 @@ class LimitTests(unittest.TestCase):
         for mode in ('sequential', 'concurrent'):
             with self.assertRaises(RuntimeFault) as ctx:
                 run(MERGE_SORT, 'merge_sort', values, mode=mode, limits=Limits(max_depth=100, max_tasks=4 * n))
-            self.assertEqual(ctx.exception.code, 'E422')
+            self.assertEqual(ctx.exception.code, 'P422')
 
     def test_input_decoding_and_entry_errors(self):
-        for args, code in (([[1, True]], 'E424'), ([[1.5]], 'E424'), ([['a']], 'E424'), ([[[1]]], 'E424'),
-                           ([5], 'E424'), ([], 'E424')):
+        for args, code in (([[1, True]], 'P424'), ([[1.5]], 'P424'), ([['a']], 'P424'), ([[[1]]], 'P424'),
+                           ([5], 'P424'), ([], 'P424')):
             with self.assertRaises(RuntimeFault) as ctx:
                 run_source(MERGE_SORT, 'merge_sort', args)
             self.assertEqual(ctx.exception.code, code, args)
         with self.assertRaises(RuntimeFault) as ctx:
             run_source(MERGE_SORT, 'nope', [[1]])
-        self.assertEqual(ctx.exception.code, 'E425')
+        self.assertEqual(ctx.exception.code, 'P425')
 
 
 class SchedulerTests(unittest.TestCase):
@@ -272,7 +272,7 @@ class SchedulerTests(unittest.TestCase):
         m = machine(CHILD_FAILURE, limits=Limits(quantum=2))
         with self.assertRaises(RuntimeFault) as ctx:
             m.run('top', [IntList.from_iter(range(60)), IntList.from_iter([1])])
-        self.assertEqual((ctx.exception.code, ctx.exception.line), ('E420', 14))
+        self.assertEqual((ctx.exception.code, ctx.exception.line), ('P420', 14))
         kinds = [(e['event'], e['task']) for e in m.events]
         self.assertIn(('failure', 3), kinds)
         self.assertIn(('cancelled', 2), kinds)
@@ -289,7 +289,7 @@ class SchedulerTests(unittest.TestCase):
         m = machine(src)
         with self.assertRaises(RuntimeFault) as ctx:
             m.run('merge_sort', [IntList.from_iter(range(32))])
-        self.assertEqual(ctx.exception.code, 'E420')
+        self.assertEqual(ctx.exception.code, 'P420')
         ended = {e['task'] for e in m.events if e['event'] in ('failure', 'cancelled', 'child_complete')}
         created = {e['task'] for e in m.events if e['event'] == 'activation_created'}
         self.assertEqual(ended, created, 'every activation completed, failed, or was cancelled')
@@ -341,8 +341,8 @@ class RunnerCommandTests(unittest.TestCase):
 
     def test_run_pure_failures(self):
         path = ROOT / 'demos/merge_sort/merge_sort.weave'
-        for args, code, diag in ((['--args', '[[1,true]]'], 2, 'E424'), (['--args', 'nope'], 2, 'E424'),
-                                 (['--args', '[[3,2,1]]', '--max-tasks', '2'], 2, 'E423')):
+        for args, code, diag in ((['--args', '[[1,true]]'], 2, 'P424'), (['--args', 'nope'], 2, 'P424'),
+                                 (['--args', '[[3,2,1]]', '--max-tasks', '2'], 2, 'P423')):
             proc = self.cli('--json', 'run-pure', path, '--entry', 'merge_sort', *args)
             self.assertEqual(proc.returncode, code, proc.stdout)
             self.assertEqual(json.loads(proc.stdout)['diagnostic']['code'], diag)
@@ -354,7 +354,7 @@ class RunnerCommandTests(unittest.TestCase):
             bad.write_text(path.read_text().replace('head(left) <= head(right)', 'head(left) <= right'))
             proc = self.cli('--json', 'run-pure', bad, '--entry', 'merge_sort', '--args', '[[1]]')
         self.assertEqual(proc.returncode, 1)
-        self.assertEqual(json.loads(proc.stdout)['diagnostic']['code'], 'E406')
+        self.assertEqual(json.loads(proc.stdout)['diagnostic']['code'], 'P406')
 
 
 if __name__ == '__main__':

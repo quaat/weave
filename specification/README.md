@@ -41,6 +41,7 @@ python scripts/validate.py
 python scripts/test_reference.py
 python scripts/grammar_audit.py
 python scripts/rule_coverage.py --check
+python scripts/diagnostic_map.py
 make validate
 ```
 
@@ -48,7 +49,9 @@ make validate
 source, grammar, documentation, upstream tests, strict HTML, and external link
 checks. `scripts/rule_coverage.py` regenerates `docs/chapters/rule-coverage.rst`
 from `rules.json`, `examples/manifest.json` and `tests/rule-coverage.json`; its
-`--check` mode runs in `make validate` through `tests/test_rule_coverage.py`. `make validate-offline` omits only the external linkcheck step.
+`--check` mode runs in `make validate` through `tests/test_rule_coverage.py`.
+`tests/test_diagnostics.py` runs the `scripts/diagnostic_map.py` check and one
+diagnostic fixture per code. `make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 
 ### PDF
@@ -95,8 +98,13 @@ synthetic design specimen.
   protocol comparison, rationale, security, and documented design-history gaps.
 - Syntax highlighting, searchable HTML, glossary, general index, and source links.
 - Provenance, implementation discrepancies, open decisions, and validation results.
-- An unchanged reference prototype snapshot (`reference/prototype/`) for
-  reproducible checks; `scripts/validate.py` verifies it against `PROVENANCE.json`.
+- A pinned reference prototype snapshot (`reference/prototype/`) for
+  reproducible checks; `scripts/validate.py` verifies it against `PROVENANCE.json`,
+  which also records its one reviewed refresh (quaat/weave#6, diagnostic spans).
+- `diagnostics.json`, the machine-readable code-to-rule map; the diagnostics
+  chapter's tables are generated from it by `scripts/refresh_reference_pages.py`,
+  and `scripts/diagnostic_map.py` checks that every code the prototype and the
+  agent kit can emit is mapped.
 
 The primary source is `weave-inventory-proof.zip`, version 3. Teaching examples
 originate in the older `weave-agent-kit.zip` and are rechecked against version 3.

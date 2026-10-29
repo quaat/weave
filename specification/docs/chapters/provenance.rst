@@ -34,7 +34,13 @@ scheduler. This document reconciles those boundaries explicitly.
 
 The exact original archive checksums and byte-level hashes of included reference
 files are recorded in ``PROVENANCE.json``. Included reference files retain their
-original bytes. Python caches are excluded from the delivered snapshot.
+original bytes, except the files replaced by the reviewed snapshot refresh for
+quaat/weave#6 (``checker.py``, ``coloured.py``, ``durable.py``, ``README.md`` and
+three test files), which ``PROVENANCE.json`` lists under ``snapshot_refreshes``
+with their hashes before and after. That refresh adds source spans to
+diagnostics; it changes no accepted program, code or generated output, so the
+prototype remains version 3. Python caches are excluded from the delivered
+snapshot.
 
 Traceability
 ------------------

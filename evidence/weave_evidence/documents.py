@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
 # SPDX-License-Identifier: MIT
-"""Read and check documents in the three evidence formats.
+"""Read and check documents in the four evidence formats.
 
 A document is accepted only if its top-level ``format`` names a format this
 reader implements, it validates against that format's schema, and it passes
@@ -21,11 +21,13 @@ from . import schema as schemas
 CANONICAL_NET = "weave-canonical-net-v1"
 TRACE = "weave-trace-v1"
 ENVELOPE = "weave-evidence-envelope-v1"
+DIAGNOSTIC = "weave-diagnostic-v1"
 
 SCHEMA_FILES = {
     CANONICAL_NET: "canonical-net.v1.schema.json",
     TRACE: "trace.v1.schema.json",
     ENVELOPE: "evidence-envelope.v1.schema.json",
+    DIAGNOSTIC: "diagnostic.v1.schema.json",
 }
 
 # The closed set of result labels: specification/docs/chapters/verification.rst,
@@ -241,7 +243,26 @@ def check_envelope(envelope: dict) -> list[str]:
     return errors
 
 
-READER_CHECKS = {CANONICAL_NET: check_canonical_net, TRACE: check_trace, ENVELOPE: check_envelope}
+def _span_errors(span: dict | None, where: str) -> list[str]:
+    if span is None:
+        return []
+    start, end = span["start"], span["end"]
+    if (end["line"], end["column"]) < (start["line"], start["column"]):
+        return [f"{where}: span ends before it starts"]
+    return []
+
+
+def check_diagnostic(diagnostic: dict) -> list[str]:
+    errors = _span_errors(diagnostic["span"], "span")
+    for i, item in enumerate(diagnostic["related"]):
+        errors += _span_errors(item["span"], f"related[{i}]")
+    if diagnostic["rule"] is not None and diagnostic["rule"] in diagnostic["secondary_rules"]:
+        errors.append(f"principal rule {diagnostic['rule']!r} is repeated in secondary_rules")
+    return errors
+
+
+READER_CHECKS = {CANONICAL_NET: check_canonical_net, TRACE: check_trace, ENVELOPE: check_envelope,
+                 DIAGNOSTIC: check_diagnostic}
 
 
 def verify_hashes(envelope: dict, root: Path) -> list[str]:

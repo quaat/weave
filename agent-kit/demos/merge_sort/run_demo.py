@@ -121,7 +121,8 @@ def main(argv=None):
                 print('  ' + describe(event))
     else:
         d = report['diagnostic']
-        loc = f"{d.get('file')}:{d.get('line')}" if d.get('file') else ''
+        span = d.get('span') or {}
+        loc = f"{span['file']}:{span['start']['line']}" if span else (f"{d.get('file')}:{d.get('line')}" if d.get('file') else '')
         print(f"FAILED {d.get('code')} [{d.get('stage')}] {loc}: {d.get('message')}", file=sys.stderr)
     if ok:
         return 0

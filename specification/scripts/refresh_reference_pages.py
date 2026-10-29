@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate conformance and rule-index pages from stable IDs; --check detects drift."""
+"""Regenerate conformance, rule-index and diagnostic-map pages from stable IDs; --check detects drift."""
 from pathlib import Path
 import argparse
 import json
@@ -100,7 +100,57 @@ the conformance table, run ``python scripts/refresh_reference_pages.py``.
     for id,data in sorted(rules.items()):
         index+=f"   * - :ref:`{id} <{id}>`\n     - :doc:`{data['chapter']}`\n"
     return {"docs/chapters/conformance.rst":conf,"docs/chapters/rule-catalogue.rst":index,
-            "rules.json":json.dumps(rules,indent=2)+"\n"}
+            "rules.json":json.dumps(rules,indent=2)+"\n",
+            "docs/chapters/diagnostics.rst":diagnostics_page(rules)}
+
+DIAGNOSTICS="docs/chapters/diagnostics.rst"
+CATEGORIES={"specification","kit-extension","tool"}
+KIT_RULE=re.compile(r"KIT-PURE-[A-Z]+-\d+")
+
+def check_diagnostic_map(codes,rules):
+    """Each code has one principal rule (none for 'tool') and known secondary rules."""
+    for code,entry in codes.items():
+        cat=entry.get("category")
+        if cat not in CATEGORIES:raise ValueError(f"{code}: unknown category {cat!r}")
+        principal,secondary=entry.get("rule"),entry.get("secondary_rules")
+        if not isinstance(secondary,list) or len(set(secondary))!=len(secondary):
+            raise ValueError(f"{code}: secondary_rules must be a list without repeats")
+        if cat=="tool":
+            if principal is not None or secondary:raise ValueError(f"{code}: a tool code has no rule")
+            continue
+        if not isinstance(principal,str):raise ValueError(f"{code}: needs exactly one principal rule")
+        if principal in secondary:raise ValueError(f"{code}: principal rule repeated as secondary")
+        for rule in [principal,*secondary]:
+            known=rule in rules if cat=="specification" else bool(KIT_RULE.fullmatch(rule))
+            if not known:raise ValueError(f"Unknown rule {rule} for diagnostic {code}")
+        if not entry.get("meaning") or not entry.get("correction"):
+            raise ValueError(f"{code}: meaning and correction are required")
+
+def splice(text,name,body):
+    begin,end=f".. BEGIN GENERATED: {name}\n",f".. END GENERATED: {name}\n"
+    if text.count(begin)!=1 or text.count(end)!=1:raise ValueError(f"{DIAGNOSTICS}: markers for {name} missing")
+    head,rest=text.split(begin);_,tail=rest.split(end)
+    return head+begin+"\n"+body+"\n"+end+tail
+
+def diagnostics_page(rules):
+    codes=json.loads((ROOT/"diagnostics.json").read_text())["codes"]
+    check_diagnostic_map(codes,rules)
+    ref=lambda r:f":ref:`{r} <{r}>`" if r in rules else f"``{r}``"
+    spec=[(c,e) for c,e in codes.items() if e["category"]=="specification"]
+    other=[(c,e) for c,e in codes.items() if e["category"]!="specification"]
+    table=lambda widths,head:(".. list-table::\n   :header-rows: 1\n   :widths: "+widths+"\n\n"
+                              +"".join(("   * - " if i==0 else "     - ")+h+"\n" for i,h in enumerate(head)))
+    row=lambda cells:"".join(("   * - " if i==0 else "     - ")+c+"\n" for i,c in enumerate(cells))
+    meaning=table("15 45 40",["Code","Meaning","Typical correction"])
+    meaning+="".join(row([c,e["meaning"],e["correction"]]) for c,e in spec)
+    cross=table("12 28 60",["Code","Principal rule","Secondary rules"])
+    cross+="".join(row([c,ref(e["rule"]),", ".join(map(ref,e["secondary_rules"])) or "none"]) for c,e in spec)
+    outside=table("14 16 26 44",["Code","Category","Rule","Meaning"])
+    outside+="".join(row([f"``{c}``",e["category"],ref(e["rule"]) if e["rule"] else "none (not a rule)",e["meaning"]]) for c,e in other)
+    text=(ROOT/DIAGNOSTICS).read_text()
+    for name,body in (("diagnostic-codes",meaning),("rule-cross-reference",cross),("codes-outside-the-fragment",outside)):
+        text=splice(text,name,body)
+    return text
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument("--check",action="store_true");args=ap.parse_args()

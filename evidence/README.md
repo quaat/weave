@@ -5,9 +5,10 @@ SPDX-License-Identifier: MIT
 
 # Evidence schemas and tooling
 
-This component defines three versioned evidence formats and the tooling that reads them,
+This component defines four versioned evidence formats and the tooling that reads them,
 converts existing step records to traces, wraps the existing evidence files in envelopes and
-exports canonical nets (quaat/weave#7). It is evidence tooling written in Python with the
+exports canonical nets (quaat/weave#7). The fourth format, `weave-diagnostic-v1`, is the
+machine-readable form of one checker diagnostic (quaat/weave#6). It is evidence tooling written in Python with the
 standard library only (written for Python 3.11 or later; tested with 3.13). It is not the production checker or runtime
 (`docs/development/implementation-language.md`), and it defines no Weave semantics: the
 prototype in `inventory-proof/` decides what is accepted, and the specification defines what
@@ -17,7 +18,7 @@ the result labels mean.
 
 | Path | Contents |
 | --- | --- |
-| `schemas/` | The three JSON Schemas (draft 2020-12) |
+| `schemas/` | The four JSON Schemas (draft 2020-12) |
 | `weave_evidence/schema.py` | Strict validator for the JSON Schema subset the schemas use |
 | `weave_evidence/documents.py` | Format registry, refusal of unknown formats, reader checks, hash verification |
 | `weave_evidence/netexport.py` | Canonical-net exporter, reading the prototype's parser output |
@@ -34,6 +35,7 @@ the result labels mean.
 | `weave-canonical-net-v1` | `schemas/canonical-net.v1.schema.json` | Net name, profile, source hash, parameters, colour sorts, places with owner and indices, initial marking, transitions with binder, guards and arcs (kind, place, weight, inscription) |
 | `weave-trace-v1` | `schemas/trace.v1.schema.json` | One ordered list of steps for checker counterexamples, scheduler runs, scenario tests and editor replay (`kind`: `counterexample`, `scheduler-run`, `scenario`, `replay`) |
 | `weave-evidence-envelope-v1` | `schemas/evidence-envelope.v1.schema.json` | One per-run claim with its result label, runtime status, profiles, bounds, assumptions, scope, completeness, the wrapped file, source and dependency hashes, tool versions and an optional trace hash |
+| `weave-diagnostic-v1` | `schemas/diagnostic.v1.schema.json` | One diagnostic: `code`; `category` (`specification`, `kit-extension` or `tool`); the principal `rule` and `secondary_rules` from `specification/diagnostics.json`; `severity`; `stage`; `message`; the primary `span` (`file`, `start` and `end`, each a 1-based `line` and `column`; the end column is one past the last character); `related` spans, each with a `role` and `label`; and a `details` object that v1 readers do not interpret. A `tool` diagnostic has no rule and may have no span; every other diagnostic has both |
 
 Every document names its format in the top-level `format` field. Each schema fixes that field
 with `const`.
@@ -43,7 +45,7 @@ with `const`.
 `documents.assess` accepts a document only if all of these hold:
 
 1. It is one strict JSON document: duplicate keys, `NaN` and `Infinity` are refused.
-2. It is an object whose top-level `format` is one of the three identifiers above. A missing
+2. It is an object whose top-level `format` is one of the four identifiers above. A missing
    or non-string `format`, or any other identifier (including `weave-trace-v2`, a
    different spelling, or one of the existing prototype identifiers such as
    `weave-place-invariant-v1`), is refused with a message that names the value found. It is
@@ -59,10 +61,18 @@ with `const`.
    - trace: step `sequence` numbers increase strictly; token counts in a marking are
      unique per place and colour and sorted; `outcome` is not one of the six result labels;
    - envelope: no duplicate paths in `sources` or `dependencies`, no duplicate tool names,
-     no duplicate profile names.
+     no duplicate profile names;
+   - diagnostic: no span (primary or related) ends before it starts, and the principal rule
+     is not repeated in `secondary_rules`.
+
+The reader does not check a diagnostic's rule against the code-to-rule map; the
+specification and agent-kit tests do (`specification/tests/test_diagnostics.py`,
+`agent-kit/tests/test_diagnostics.py`).
 
 The existing evidence files themselves are not documents in these formats, and the reader
-refuses them.
+refuses them. No committed file is a `weave-diagnostic-v1` document: the prototype's
+`CheckError.diagnostic()`, the agent kit's `--json` output and the specification's
+`weave-check` directive write them when a diagnostic occurs.
 
 ### The envelope
 
@@ -203,7 +213,7 @@ file and refuses on a mismatch. Regeneration of the originals is checked by the
 Tool versions: each envelope lists the producer's Python modules (for `inventory-proof/`
 files, all six modules `demo.py` imports or is; for `report.json`, `validate.py` and the
 three prototype modules it imports), this tooling
-(`evidence/weave_evidence`, version `0.1.0`) and, for `report.json`, the Python version the
+(`evidence/weave_evidence`, version `0.2.0`) and, for `report.json`, the Python version the
 report records. A prototype module gets version `3`, the `version` of
 `weave-inventory-proof.zip` in `specification/PROVENANCE.json`, only if its bytes match that
 manifest's hash for the pinned snapshot copy; otherwise its version is `null`. Supported
@@ -264,20 +274,25 @@ The formats follow the evidence-schema axis of
   and never reports success on it (tests in `tests/test_versions.py`).
 - The existing evidence files keep their bytes and their own identifiers; the envelopes wrap
   them alongside. They remain unversioned or prototype-versioned files, and this reader does
-  not treat them as documents in the three formats.
-- `evidence/weave_evidence` carries its own semantic version (`__version__`, `0.1.0`).
+  not treat them as documents in the four formats.
+- `evidence/weave_evidence` carries its own semantic version (`__version__`). It was `0.1.0`
+  with the three #7 formats; adding the supported schema `weave-diagnostic-v1` (#6) is a
+  compatible addition, so it is `0.2.0`.
 
 Adding these formats changes no existing artefact, rule ID, diagnostic code, profile or
 label, so this change carries no migration note. The specification does not describe the
-formats yet; a later change will.
+trace, canonical-net and envelope formats yet; a later change will. It describes
+`weave-diagnostic-v1` in its diagnostics and stability chapters.
 
 ## Tests
 
 `python3 -m unittest discover -s evidence/tests -t .` runs:
 
-- `test_schemas.py`: the three schema files and identifiers, the supported keyword subset,
-  the label set against `verification.rst`, and, where the optional `jsonschema` package is
-  installed, a meta-schema check and agreement with an independent validator;
+- `test_schemas.py`: the four schema files and identifiers, the supported keyword subset,
+  the label set against `verification.rst`, valid and invalid diagnostics (including the
+  reader checks and a diagnostic written by the working-copy prototype checker), and, where
+  the optional `jsonschema` package is installed, a meta-schema check and agreement with an
+  independent validator;
 - `test_versions.py`: unknown, missing and non-string `format` values are refused by the
   reader, the command line and the wrappers;
 - `test_wrap.py`: every file above is wrapped, every envelope and trace is valid, labels

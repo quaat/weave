@@ -54,7 +54,7 @@ files only when a diagnostic or implementation task requires them.
   execution. Report bounds/budget exhaustion as not established.
 - Preserve net contracts while repairing callers. Report incompatible requirements
   instead of weakening guards, consumer lists, or invariants to obtain a pass.
-- Report diagnostic codes, lines, and messages. Exit 0 means the requested
+- Report diagnostic codes, rules, source locations, and messages. Exit 0 means the requested
   expectations were met; 1 is a rejection or failed test; 2 is usage, I/O,
   certificate-data, or scripted-execution failure. Expected-invalid fixtures make
   `examples` succeed only when their particular diagnostic codes match.
