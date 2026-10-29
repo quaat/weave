@@ -79,9 +79,12 @@ kind. That table is the reference; this section only states the rule.
   `Unknown`, `runtime_status` is `waiting`, `timed out` or `completed`, and `command` is the
   command's own name. `ok` is a Boolean, only at the paths the table lists.
 - Identifier paths hold user-chosen names, file paths, versions or hashes, and are not
-  inspected. Raw paths (the `test` command's unittest `output`, simulation and scheduler
-  `events`, `upstream_output`, an envelope's `claim.detail`) hold another tool's output and
-  are not inspected, and they exist only at their declared paths. Diagnostic paths hold a
+  inspected. Raw paths (the `test` command's unittest `output`, the prototype simulator's
+  `events` under `simulate` runs and Tiny Shop scenarios, `upstream_output`, an envelope's
+  `claim.detail`) hold another tool's output and are not inspected, and they exist only at
+  their declared paths. The pure scheduler's `events` (`run-pure`, the `merge_sort` demo)
+  are written by the kit and fully typed: an event kind from a fixed list, integers and
+  function names. Diagnostic paths hold a
   `weave-diagnostic-v1` document whose message is tool text.
 - Prose paths (such as `scope`, `reason`, `lesson`, `assumptions`) may not be a label or an
   upper-case status word. They may not contain a label word or a status word (`PASSED`,

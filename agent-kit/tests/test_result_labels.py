@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
@@ -27,6 +28,7 @@ VERIFICATION = REPO / 'specification/docs/chapters/verification.rst'
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(SCRIPTS))
 
+import weave_labels  # noqa: E402
 from weave_labels import (DECLARED_PATHS, RESULT_LABELS, RUNTIME_STATUSES, SCHEMA, json_claims,  # noqa: E402
                           labelled, lint_json, lint_text, text_claims)
 
@@ -195,26 +197,13 @@ class LintNegativeTests(unittest.TestCase):
             'status word with a slash': {'run': {'result': 'SCRIPTED / PASSED'}},
             # Codex round 2 F-002: status tokens inside a longer string
             'token beside a real claim': {'accounting': {'claim_label': 'PROVED', 'verdict': 'PASSED everything holds'}},
-            'NOT PROVED inside a string': {'verdict': 'NOT PROVED stock conservation'},
-            'embedded with punctuation': {'note': 'all invariants (PROVED).'},
-            'embedded after a separator': {'stats': 'ok;FAILED=0'},
-            'mixed case then a token': {'summary': 'Not PROVED for orders>=2'},
-            'label words in a sentence': {'scope': 'ordering CHECKED WITHIN BOUNDS here'},
             'mixed-case claim label': {'claim_label': 'Proved'},
-            'token in a list entry': {'notes': ['fine', 'RECHECKED 2 invariants']},
             'envelope quotation pointer outside an envelope': {'assumptions': ['PROVED labels apply only ...']},
             'envelope scope is not a quotation': {'format': 'weave-evidence-envelope-v1', 'scope': 'everything PASSED'},
             'envelope nested assumptions': {'format': 'weave-evidence-envelope-v1', 'x': {'assumptions': ['PASSED']}},
             # Codex round 3: mixed case and words outside any list, by member name and by leading word
             'verdict member, mixed case': {'accounting': {'verdict': 'Proved stock conservation'}},
             'verdict member, other word': {'accounting': {'verdict': 'SUCCESS: stock conservation holds'}},
-            'leading Proved': {'note': 'Proved stock conservation'},
-            'leading SUCCESS:': {'note': 'SUCCESS: stock conservation holds'},
-            'leading success -': {'note': 'success - all invariants'},
-            'leading Verified': {'note': 'Verified for every order'},
-            'leading ok': {'summary': 'ok'},
-            'leading holds': {'summary': 'holds for N0'},
-            'leading not established': {'summary': 'Not established: budget'},
             'result member with a string': {'accounting': {'result': 'stock conservation'}},
             'result member with an object': {'result': {'value': 1}},
             'status-like camelCase member': {'checkResult': 'stock'},
@@ -279,10 +268,6 @@ class LintNegativeTests(unittest.TestCase):
 
     def test_leading_verdict_words_with_punctuation_and_padding(self):
         """Delta review F-2."""
-        for value in ('Proved.', 'Proved, for every order', 'Proved!', ' Proved stock', '"Proved" stock',
-                      "'ok'", 'Holds;', 'success.', '\tVerified'):
-            with self.subTest(value=value):
-                self.assertEqual(len(lint_json({'note': value})), 1, lint_json({'note': value}))
         for line in ('result: Proved.', 'result:  Proved', 'stats: "ok"', 'runtime status: Verified!',
                      'note: Proved.', '== Payment outcome: Passed -> x'):
             with self.subTest(line=line):
@@ -324,6 +309,84 @@ class LintNegativeTests(unittest.TestCase):
         self.assertEqual(len(lint_text(text.replace('CHECKED flow ', 'CHECKED '))), 1)
         self.assertEqual(len(lint_text(text.replace('PROVED ', 'NOT PROVED '))), 1)
         self.assertEqual(len(lint_text(text.replace('CHECKED WITHIN BOUNDS ', 'PASSED '))), 1)
+
+
+# Real prose paths, one per output that has one: (name, document builder taking the value).
+ENVELOPE = 'weave-evidence-envelope-v1'
+PROSE_SITES = {
+    'run-pure /scope': lambda v: {'command': 'run-pure', 'ok': True, 'scope': v},
+    'run-pure /check/reason': lambda v: {'command': 'run-pure', 'check': {'claim_label': N, 'reason': v}},
+    'run-pure /execution/scheduler': lambda v: {'command': 'run-pure', 'execution': {'scheduler': v}},
+    'check-pure /files/*/reason': lambda v: {'command': 'check-pure', 'files': [{'claim_label': N, 'reason': v}]},
+    'verify /accounting/scope': lambda v: {'command': 'verify', 'accounting': {'claim_label': P, 'scope': v}},
+    'examples /results/*/lesson': lambda v: {'command': 'examples', 'results': [{'ok': True, 'lesson': v}]},
+    'analyze /ordering/reason': lambda v: {'command': 'analyze', 'ordering': {'claim_label': N, 'reason': v}},
+    'check /ordering/assumptions/*': lambda v: {'command': 'check', 'ordering': {'claim_label': B,
+                                                                                'assumptions': [v]}},
+    'tiny_shop /scenarios/*/settlement': lambda v: {'demo': 'tiny_shop', 'scenarios': [{'settlement': v}]},
+    'tiny_shop /scenarios/*/explanation': lambda v: {'demo': 'tiny_shop', 'scenarios': [{'explanation': v}]},
+    'merge_sort /scope': lambda v: {'demo': 'merge_sort', 'scope': v},
+    'envelope /scope': lambda v: {'format': ENVELOPE, 'claim_label': P, 'scope': v},
+}
+# Each prose rule, the fragment of its message, and values only that rule catches.
+PROSE_RULES = {
+    'status word': ('presents a claim without one of the six result labels', ('DONE', 'ALL GOOD', 'ALL / DONE')),
+    'leading verdict word': ('begins with a verdict word', (
+        'Proved stock conservation', 'SUCCESS: stock conservation holds', 'success - all invariants',
+        'Verified for every order', 'ok', 'holds for N0', 'Not established: budget', 'Proved.',
+        'Proved, for every order', 'Proved!', ' Proved stock', '"Proved" stock', "'ok'", 'Holds;', 'success.',
+        '\tVerified', 'not proved')),
+    'status token': ('contains the status word', (
+        'all invariants (PROVED).', 'counts;FAILED=0', 'for orders>=2 NOT PROVED',
+        'ordering CHECKED WITHIN BOUNDS here', 'fine; RECHECKED 2 invariants', 'everything PASSED')),
+}
+NEVER = re.compile(r'(?!x)x')
+
+
+class ProseRuleTests(unittest.TestCase):
+    """The prose rules, at real prose paths: each catches its cases, and each is needed."""
+
+    def test_sites_are_declared_prose_and_accept_plain_text(self):
+        for site, build in PROSE_SITES.items():
+            with self.subTest(site):
+                self.assertEqual(lint_json(build('pure fn kit extension outside F0; termination not checked')), [])
+                self.assertEqual(len(lint_json(build(7))), 1)  # declared as text, so a number fails
+
+    def test_each_rule_catches_its_cases_at_every_site(self):
+        for rule, (message, values) in PROSE_RULES.items():
+            for site, build in PROSE_SITES.items():
+                for value in values:
+                    with self.subTest(rule=rule, site=site, value=value):
+                        errors = lint_json(build(value))
+                        self.assertEqual(len(errors), 1, errors)
+                        self.assertIn(message, errors[0])
+
+    def test_labels_at_prose_paths(self):
+        for label in RESULT_LABELS:
+            errors = lint_json(PROSE_SITES['run-pure /scope'](label))
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn('result label', errors[0])
+
+    def test_each_rule_is_needed(self):
+        """With one rule patched out, its cases pass: no other rule covers them."""
+        patches = {
+            'status word': mock.patch.object(weave_labels, '_STATUS_WORD', NEVER),
+            'leading verdict word': mock.patch.object(weave_labels, '_begins_with_verdict', lambda text: False),
+            'status token': mock.patch.object(weave_labels, '_STATUS_TOKEN', NEVER),
+        }
+        for rule, patch in patches.items():
+            with self.subTest(rule=rule), patch:
+                for value in PROSE_RULES[rule][1]:
+                    self.assertEqual(lint_json(PROSE_SITES['run-pure /scope'](value)), [], value)
+
+    def test_text_rules_are_needed(self):
+        cases = {'_begins_with_verdict': ('result: Proved.', lambda text: False),
+                 '_STATUS_TOKEN': ('result: [1] FAILED', NEVER)}
+        for name, (line, replacement) in cases.items():
+            with self.subTest(name):
+                self.assertEqual(len(lint_text(line)), 1)
+                with mock.patch.object(weave_labels, name, replacement):
+                    self.assertEqual(lint_text(line), [])
 
 
 class EnvelopeQuotationTests(unittest.TestCase):
@@ -431,6 +494,8 @@ class RunnerOutputTests(unittest.TestCase):
             'check missing': (['check', tmp / 'missing.weave'], []),
             'check-pure missing': (['check-pure', tmp / 'missing.weave'], []),
             'run-pure rejected': (['run-pure', ROOT / 'examples/invalid/pure_mutual.weave', '--entry', 'ping'], []),
+            'run-pure sequential': (['run-pure', MERGE_SORT, '--entry', 'merge_sort', '--args', '[[3,1,2]]',
+                                     '--mode', 'sequential', '--trace'], [N]),
         }
         cls.outputs = {}
         for name, (args, expected) in commands.items():

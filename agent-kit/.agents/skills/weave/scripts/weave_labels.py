@@ -213,6 +213,16 @@ _EXECUTION = {"/execution": OBJ, "/execution/mode": _enum("concurrent", "sequent
               "/stats": OBJ, **{f"/stats/{k}": INT for k in ("tasks_created", "max_live_tasks", "forks", "joins",
                                                            "slices", "max_frames", "steps", "pending_tasks",
                                                            "pending_joins", "root_task")}}
+# Scheduler events of a pure run, written by weave_pure/runtime.py (Machine.emit): typed,
+# not raw. Only events of a run that returned appear in output (a failed run reports its
+# diagnostic instead), so the failure and cancellation events are not declared.
+_EVENTS = {"/events": ARR, "/events/*": OBJ, "/events/*/seq": INT,
+           "/events/*/event": _enum("activation_created", "run", "fork", "wait", "child_complete", "join",
+                                    "root_complete", "fork_inline", "join_inline"),
+           "/events/*/task": INT, "/events/*/parent": "integer?", "/events/*/fork": "integer?",
+           "/events/*/branch": "identifier?", "/events/*/fn": IDENT, "/events/*/steps": INT,
+           "/events/*/line": INT, "/events/*/left": INT, "/events/*/right": INT,
+           "/events/*/left_fn": IDENT, "/events/*/right_fn": IDENT}
 _RUN = {"/runs": ARR, "/runs/*": OBJ, "/runs/*/claim_label": LABEL, "/runs/*/runtime_status": _RUNTIME,
         "/runs/*/outcome": _OUTCOME, "/runs/*/entry": IDENT, "/runs/*/return_type": "identifier?",
         "/runs/*/return_tag": "identifier?", "/runs/*/marking": MAP, "/runs/*/marking/*": INT,
@@ -247,7 +257,7 @@ SCHEMA = {
     "check-pure": _command("check-pure", {"/scope": PROSE, "/files": ARR, "/files/*/diagnostic": DIAG},
                            _with("/files/*", _PURE_CLAIM)),
     "run-pure": _command("run-pure", {"/scope": PROSE, "/runtime_status": _RUNTIME, "/file": IDENT, "/entry": IDENT,
-                                      "/result": DATA, "/events": RAW}, _with("/check", _PURE_CLAIM), _EXECUTION),
+                                      "/result": DATA}, _with("/check", _PURE_CLAIM), _EXECUTION, _EVENTS),
     "demo:tiny_shop": {"": OBJ, "/demo": _enum("tiny_shop"), "/ok": BOOL, "/source": IDENT, "/entry": IDENT,
                        "/requested_outcome": _enum(*APPLICATION_OUTCOMES, "all"), "/runner_exit": INT,
                        "/diagnostic": DIAG, **_ACCOUNTING, **_ORDERING,
@@ -260,8 +270,8 @@ SCHEMA = {
                        "/scenarios/*/events": RAW},
     "demo:merge_sort": {"": OBJ, "/demo": _enum("merge_sort"), "/ok": BOOL, "/source": IDENT, "/entry": IDENT,
                         "/input": ARR, "/input/*": INT, "/runner_exit": INT, "/output": DATA,
-                        "/runtime_status": _RUNTIME, "/scope": PROSE, "/diagnostic": DIAG, "/events": RAW,
-                        **_with("/check", _PURE_CLAIM), **_EXECUTION},
+                        "/runtime_status": _RUNTIME, "/scope": PROSE, "/diagnostic": DIAG,
+                        **_with("/check", _PURE_CLAIM), **_EXECUTION, **_EVENTS},
     "envelope": {"": OBJ, "/format": _enum(ENVELOPE_FORMAT), "/claim_label": LABEL,
                  "/runtime_status": ("enum", RUNTIME_STATUSES + (None,)),
                  "/claim": OBJ, "/claim/name": IDENT, "/claim/pointer": IDENT, "/claim/statement": "quotation?",
