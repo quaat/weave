@@ -3,8 +3,9 @@
 """Command line: python3 -m evidence.weave_evidence <command> (run from the repository root).
 
 Exit status: 0 when every input is accepted or every step succeeds; 1 when a
-document is refused or invalid, a hash does not recompute, or a conversion is
-refused; 2 for a usage error.
+document or file is refused or invalid, a hash does not recompute, an envelope
+differs from the one re-derived from its original, or a conversion is refused;
+2 for a usage error.
 """
 from __future__ import annotations
 
@@ -13,11 +14,11 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .documents import (ENVELOPE, TRACE, assess, assess_file, canonical_bytes, implemented_formats, parse,
+from .documents import (ENVELOPE, TRACE, assess, assess_file, canonical_bytes, implemented_formats, read_document,
                         sha256_bytes, verify_hashes)
 from .netexport import ExportError, export
 from .traces import ConversionError
-from .wrap import WRAPPERS, Context, wrap
+from .wrap import WRAPPERS, Context, rederive, wrap
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -68,47 +69,62 @@ def cmd_wrap(args) -> int:
             assessment = assess(document)
             if not assessment.accepted:
                 ok = report(result.path, assessment) and ok
-        if out is None:
-            continue
+    if not ok:
+        if out is not None:
+            print(f"nothing written to {out}: at least one generated document is invalid", file=sys.stderr)
+        return 1
+    if out is not None:
+        # Every document was checked above; only then is anything written.
         (out / "envelopes").mkdir(parents=True, exist_ok=True)
         (out / "traces").mkdir(parents=True, exist_ok=True)
-        for env in result.envelopes:
-            (out / "envelopes" / f"{slug(result.path, env['claim']['pointer'])}.json").write_bytes(canonical_bytes(env))
-        for trace in result.traces:
-            data = canonical_bytes(trace)
-            (out / "traces" / f"{sha256_bytes(data)}.json").write_bytes(data)
-    return 0 if ok else 1
+        for result in results:
+            for env in result.envelopes:
+                (out / "envelopes" / f"{slug(result.path, env['claim']['pointer'])}.json").write_bytes(canonical_bytes(env))
+            for trace in result.traces:
+                data = canonical_bytes(trace)
+                (out / "traces" / f"{sha256_bytes(data)}.json").write_bytes(data)
+    return 0
+
+
+def check_trace(path: Path, envelope: dict) -> list[str]:
+    trace_path = path.parent.parent / "traces" / f"{envelope['trace']['sha256']}.json"
+    if not trace_path.is_file():
+        return [f"trace {trace_path} not found"]
+    document, assessment, data = read_document(trace_path)
+    if not assessment.accepted:
+        return [f"trace {trace_path}: {error}" for error in assessment.errors]
+    errors = []
+    if assessment.format != TRACE:
+        errors.append(f"trace {trace_path} is {assessment.format}, not {TRACE}")
+    if sha256_bytes(data) != envelope["trace"]["sha256"]:
+        errors.append(f"trace {trace_path} does not hash to the recorded sha256")
+    return errors
 
 
 def cmd_verify(args) -> int:
+    """Validate each envelope, recompute its hashes and its trace hash, and re-derive it from its original."""
     root = Path(args.root).resolve()
     ok = True
+    cache: dict = {}
     for name in args.files:
         path = Path(name)
-        assessment = assess_file(path)
+        envelope, assessment, _ = read_document(path)
         if assessment.accepted and assessment.format != ENVELOPE:
             assessment.errors.append(f"verify reads {ENVELOPE} documents, not {assessment.format}")
         if not assessment.accepted:
             ok = report(path, assessment) and ok
             continue
-        envelope = parse(path.read_text(encoding="utf-8"))
         errors = verify_hashes(envelope, root)
         if envelope["trace"] is not None:
-            trace_path = path.parent.parent / "traces" / f"{envelope['trace']['sha256']}.json"
-            if not trace_path.is_file():
-                errors.append(f"trace {trace_path} not found")
-            else:
-                data = trace_path.read_bytes()
-                trace = assess(parse(data.decode("utf-8")))
-                if sha256_bytes(data) != envelope["trace"]["sha256"] or trace.format != TRACE or not trace.accepted:
-                    errors.append(f"trace {trace_path} does not hash to the recorded sha256 or is not a valid {TRACE}")
+            errors += check_trace(path, envelope)
+        errors += rederive(envelope, root, cache)
         if errors:
             ok = False
             print(f"mismatch {path}")
             for error in errors:
                 print(f"  {error}")
         else:
-            print(f"hashes recompute {path}")
+            print(f"verified {path}: hashes recompute and the claim re-derives unchanged")
     return 0 if ok else 1
 
 
@@ -145,7 +161,7 @@ def main(argv=None) -> int:
     p.add_argument("files", nargs="*", help=f"repository-relative paths (default: all of {', '.join(WRAPPERS)})")
     p.add_argument("--out", help="write envelopes/ and traces/ under this directory")
     p.set_defaults(func=cmd_wrap)
-    p = sub.add_parser("verify", help="validate envelopes and recompute their hashes")
+    p = sub.add_parser("verify", help="validate envelopes, recompute their hashes and re-derive their claims")
     p.add_argument("files", nargs="+", help="envelope files written by 'wrap --out'")
     p.set_defaults(func=cmd_verify)
     p = sub.add_parser("export-net", help="export a canonical net from a prototype net source")

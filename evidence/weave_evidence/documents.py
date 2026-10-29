@@ -123,8 +123,26 @@ def assess_text(text: str) -> Assessment:
     return assess(document)
 
 
+def read_document(path: Path) -> tuple[object, Assessment, bytes | None]:
+    """Read and check one file. An unreadable, non-UTF-8 or non-JSON file is refused, naming the file."""
+    try:
+        data = Path(path).read_bytes()
+    except OSError as error:
+        return None, Assessment(None, [f"refused: cannot read {path}: {error.strerror or error}"], refused=True), None
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as error:
+        return None, Assessment(None, [f"refused: {path} is not UTF-8: {error.reason} at byte {error.start}"],
+                                refused=True), data
+    try:
+        document = parse(text)
+    except DocumentError as error:
+        return None, Assessment(None, [f"refused: {path} is not one strict JSON document: {error}"], refused=True), data
+    return document, assess(document), data
+
+
 def assess_file(path: Path) -> Assessment:
-    return assess_text(Path(path).read_text(encoding="utf-8"))
+    return read_document(path)[1]
 
 
 # ------------------------------------------------------------------ reader checks
@@ -234,6 +252,12 @@ def verify_hashes(envelope: dict, root: Path) -> list[str]:
         path = Path(root) / entry["path"]
         if not path.is_file():
             errors.append(f"{key}: {entry['path']} is missing")
-        elif sha256_file(path) != entry["sha256"]:
+            continue
+        try:
+            digest = sha256_file(path)
+        except OSError as error:
+            errors.append(f"{key}: cannot read {entry['path']}: {error.strerror or error}")
+            continue
+        if digest != entry["sha256"]:
             errors.append(f"{key}: {entry['path']} does not hash to the recorded sha256")
     return errors

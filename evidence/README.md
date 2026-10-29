@@ -94,7 +94,7 @@ Run from the repository root.
 python3 -m evidence.weave_evidence formats                    # list the implemented identifiers
 python3 -m evidence.weave_evidence validate FILE...           # check documents
 python3 -m evidence.weave_evidence wrap [FILE...] [--out DIR] # wrap existing evidence files
-python3 -m evidence.weave_evidence verify DIR/envelopes/*.json  # validate envelopes and recompute hashes
+python3 -m evidence.weave_evidence verify DIR/envelopes/*.json  # validate, recompute hashes, re-derive claims
 python3 -m evidence.weave_evidence export-net --profile N0 inventory-proof/Inventory.weave [--out FILE]
 python3 -m evidence.weave_evidence export-net --profile N1 inventory-proof/Inventory.coloured.weave [--out FILE]
 python3 -m unittest discover -s evidence/tests -t .           # tests
@@ -103,12 +103,27 @@ python3 -m unittest discover -s evidence/tests -t .           # tests
 `wrap` with no file names wraps every file in the table below. With `--out DIR` it writes
 one envelope per claim to `DIR/envelopes/` (named from the wrapped path, `/` written as
 `__`, followed by the claim pointer, `/` written as `_`) and each trace to
-`DIR/traces/<sha256>.json`; `verify` finds an envelope's trace at `../traces/<sha256>.json`
-relative to the envelope. Written documents use
-the canonical byte form: keys sorted, two-space indentation, UTF-8, a final newline.
+`DIR/traces/<sha256>.json`. It checks every generated document first and writes nothing if
+any is invalid. Written documents use the canonical byte form: keys sorted, two-space
+indentation, UTF-8, a final newline.
 
-Exit status: 0 when every input is valid or every hash recomputes; 1 when an input is
-refused or invalid, a hash does not recompute, a wrapper refuses its input, or the prototype
+`verify` checks each envelope in three ways and fails on any difference:
+
+1. it validates the envelope and recomputes the SHA-256 of the wrapped file, every source
+   and every dependency under the repository root;
+2. it finds the envelope's trace at `../traces/<sha256>.json` relative to the envelope,
+   validates it and recomputes its hash;
+3. it re-derives the envelope from the wrapped file with the same wrapper and compares every
+   field (claim, label, runtime status, profiles, bounds, assumptions, scope, completeness,
+   hashes, tools, trace). An envelope whose label or any other field was edited after
+   wrapping therefore fails, even though its hashes still recompute.
+
+`validate` and `verify` refuse a missing, unreadable, non-UTF-8 or non-JSON file, naming
+it.
+
+Exit status: 0 when every input is valid and, for `verify`, every hash recomputes and every
+claim re-derives unchanged; 1 when an input is refused or invalid, a hash does not recompute,
+an envelope differs from its re-derivation, a wrapper refuses its input, or the prototype
 parser rejects a net source given to `export-net`; 2 for a usage error.
 
 ## Wrapped evidence files
@@ -146,7 +161,7 @@ Sources and dependencies recorded for each file (paths in the first four rows ar
 | `report.json` | the case or scenario source, and the nets it was checked against | `specification/scripts/validate.py`, `specification/examples/manifest.json`, `checker.py`, `coloured.py` and `simulate.py` in `specification/reference/prototype/`; for `VIOLATED`, also the counterexample text |
 
 What the hashes show: each hash identifies the bytes of a file present when the envelope was
-made, and `verify` recomputes them. The wrapper does not re-run the producer, so a hash does
+made, and `verify` recomputes them. Neither the wrapper nor `verify` re-runs the producer, so a hash does
 not by itself show that the wrapped file was produced from those exact files. Where the
 original records its own `source_sha256` (`proof.json`, `ordering.json`,
 `colour-proof.json`, `colour-check.json`), the wrapper checks that value against the source
@@ -159,8 +174,9 @@ report records. A prototype module gets version `3`, the `version` of
 `weave-inventory-proof.zip` in `specification/PROVENANCE.json`, only if its bytes match that
 manifest's hash for the pinned snapshot copy; otherwise its version is `null`. Supported
 profiles follow the "Reference" column of the profile table in
-`specification/docs/chapters/status.rst`: `checker.py` F0 and N0, `coloured.py` N1,
-`durable.py` R0; other modules none.
+`specification/docs/chapters/status.rst`, which names `checker.py` for F0, N0 and N1,
+`coloured.py` for N1 and `durable.py` for R0; other modules support none. A test compares
+the mapping with that table.
 
 The wrapped outputs are generated, not committed. Committed copies would repeat hashes of
 files that change whenever the prototype or the specification evidence is regenerated, and
@@ -233,7 +249,10 @@ formats yet; a later change will.
 - `test_wrap.py`: every file above is wrapped, every envelope and trace is valid, labels
   match the originals' result fields, originals are unchanged (`git diff --exit-code`),
   every hash recomputes, and changed sources, dependencies, wrapped files and traces are
-  detected;
+  detected; `verify` re-derives each claim and fails on any edited field, unreadable inputs
+  are refused with the file named, and `wrap --out` writes nothing when a generated document
+  is invalid; it also compares the tools' supported profiles with the profile table in
+  `status.rst`;
 - `test_traces_and_nets.py`: the scenario and crash-case trace conversions keep every
   recorded value, the counterexample and scheduler-run conversions produce valid traces,
   malformed traces and nets are rejected, and the canonical-net exports agree with the

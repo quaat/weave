@@ -27,11 +27,13 @@ from .traces import ConversionError, from_counterexample, from_durable, from_sim
 
 LABEL_SCRIPTED = "SCRIPTED / passed scenario"
 
-# Profiles each prototype tool supports: the "Reference" column of the profile
-# table in specification/docs/chapters/status.rst. Tools not named there
-# support no profile.
+# Profiles each prototype tool supports: every module named in the "Reference"
+# column of the profile table in specification/docs/chapters/status.rst
+# (F0: checker.py; N0: checker.py; N1: coloured.py and checker.py; R0:
+# durable.py). Tools not named there support no profile. A test compares this
+# mapping with the table.
 SUPPORTED_PROFILES = {
-    "checker.py": ["F0", "N0"],
+    "checker.py": ["F0", "N0", "N1"],
     "coloured.py": ["N1"],
     "durable.py": ["R0"],
 }
@@ -360,6 +362,35 @@ def wrap(root: Path, rel: str) -> Wrapped:
     if rel not in WRAPPERS:
         raise ConversionError(f"{rel}: no wrapper; wrappable files: {', '.join(WRAPPERS)}")
     return WRAPPERS[rel](Context(root), rel)
+
+
+def rederive(envelope: dict, root: Path, cache: dict | None = None) -> list[str]:
+    """Re-derive ``envelope`` from its wrapped file with the same wrapper and compare every field.
+
+    Returns one error per top-level field that differs (claim, claim_label, scope,
+    bounds, completeness, assumptions, profiles, hashes, tools, trace, ...), or the
+    reason the claim cannot be re-derived. An empty list means the envelope is
+    exactly what the wrapper produces from the files under ``root`` now.
+    """
+    rel = envelope["wrapped"]["path"]
+    pointer = envelope["claim"]["pointer"]
+    if rel not in WRAPPERS:
+        return [f"no wrapper for {rel}; the claim cannot be re-derived"]
+    cache = {} if cache is None else cache
+    if rel not in cache:
+        try:
+            cache[rel] = wrap(root, rel)
+        except (ConversionError, OSError, ValueError, KeyError, IndexError, TypeError) as error:
+            cache[rel] = f"{type(error).__name__}: {error}"
+    result = cache[rel]
+    if isinstance(result, str):
+        return [f"re-derivation from {rel} refused: {result}"]
+    derived = [e for e in result.envelopes if e["claim"]["pointer"] == pointer]
+    if len(derived) != 1:
+        return [f"{rel} has no claim at {pointer!r}"]
+    same = lambda a, b: json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+    return [f"{key}: differs from the envelope re-derived from {rel}{pointer}"
+            for key in sorted(set(envelope) | set(derived[0])) if not same(envelope.get(key), derived[0].get(key))]
 
 
 def wrap_all(root: Path) -> list[Wrapped]:

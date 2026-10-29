@@ -6,18 +6,20 @@ import contextlib
 import hashlib
 import io
 import json
+import re
 import shutil
 import subprocess
 import tempfile
 import unittest
 from collections import Counter
 from pathlib import Path
+from unittest import mock
 
 from evidence.weave_evidence import __main__ as cli
 from evidence.weave_evidence import __version__
 from evidence.weave_evidence.documents import RESULT_LABELS, assess, canonical_bytes, verify_hashes
 from evidence.weave_evidence.traces import ConversionError
-from evidence.weave_evidence.wrap import WRAPPERS, wrap, wrap_all
+from evidence.weave_evidence.wrap import SUPPORTED_PROFILES, WRAPPERS, rederive, wrap, wrap_all
 
 from .support import ALL_FILES, ISSUE_FILES, ROOT, repo_copy
 
@@ -149,11 +151,29 @@ class WrapRepositoryTests(unittest.TestCase):
                 for name, tool in tools.items():
                     if name.endswith("prototype/checker.py") or name == "inventory-proof/checker.py":
                         self.assertEqual(tool["version"], "3", "working copy matches the pinned snapshot")
-                        self.assertEqual(tool["supported_profiles"], ["F0", "N0"])
+                        self.assertEqual(tool["supported_profiles"], ["F0", "N0", "N1"])
                 self.assertNotIn("supported_profiles", env["profiles"][0])
         durable = self.results["inventory-proof/durable-scenarios.json"].envelopes[0]
         self.assertEqual([p["name"] for p in durable["profiles"]], ["R0"])
         self.assertIn("R0", {p for t in durable["tools"] for p in t["supported_profiles"]})
+
+
+def status_reference_table() -> dict[str, list[str]]:
+    """Module -> profiles, from the Reference column of the profile table in status.rst."""
+    text = (ROOT / "specification/docs/chapters/status.rst").read_text(encoding="utf-8")
+    table = text.split("   * - Profile\n", 1)[1].split("\n\n", 1)[0]
+    modules: dict[str, list[str]] = {}
+    for profile, _coverage, reference in re.findall(r"   \* - (\w+)\n     - (.+)\n     - (.+)", table):
+        for module in re.findall(r"``(\w+\.py)``", reference):
+            modules.setdefault(module, []).append(profile)
+    return modules
+
+
+class SupportedProfileSourceTests(unittest.TestCase):
+    def test_supported_profiles_match_the_status_reference_column(self):
+        table = status_reference_table()
+        self.assertEqual(table, {"checker.py": ["F0", "N0", "N1"], "coloured.py": ["N1"], "durable.py": ["R0"]})
+        self.assertEqual(SUPPORTED_PROFILES, table)
 
 
 class TamperTests(unittest.TestCase):
@@ -253,6 +273,165 @@ class CommandLineWrapTests(unittest.TestCase):
         code, out = self.run_cli("verify", *map(str, (self.out / "envelopes").glob("*.json")))
         self.assertEqual(code, 1)
         self.assertIn("does not hash to the recorded sha256", out)
+
+
+class VerifyRederivationTests(unittest.TestCase):
+    """Item: verify re-derives each envelope from its original and compares every field."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.out = Path(tempfile.mkdtemp())
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            assert cli.main(["wrap", "--out", str(cls.out), "inventory-proof/ordering.json"]) == 0
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.out)
+
+    def run_cli(self, *argv):
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            return cli.main(list(argv)), buffer.getvalue()
+
+    def tampered(self, change) -> Path:
+        source = sorted((self.out / "envelopes").glob("*.json"))[0]
+        envelope = json.loads(source.read_text())
+        change(envelope)
+        self.assertTrue(assess(envelope).accepted, "the tampered envelope is still schema-valid")
+        target = source.with_name("tampered.json")
+        target.write_bytes(canonical_bytes(envelope))
+        self.addCleanup(target.unlink)
+        return target
+
+    def test_untampered_envelopes_verify(self):
+        envelopes = [p for p in (self.out / "envelopes").glob("*.json") if p.name != "tampered.json"]
+        code, out = self.run_cli("verify", *map(str, envelopes))
+        self.assertEqual(code, 0, out)
+        self.assertEqual(out.count("claim re-derives unchanged"), 9)
+
+    def test_tampered_label_fails_verify(self):
+        path = self.tampered(lambda e: e.update(claim_label="PROVED", bounds=None, completeness=None))
+        code, out = self.run_cli("verify", str(path))
+        self.assertEqual(code, 1)
+        self.assertIn("claim_label: differs from the envelope re-derived from inventory-proof/ordering.json/properties/0", out)
+        self.assertNotIn("verified", out)
+
+    def test_every_tampered_claim_field_fails_verify(self):
+        changes = {
+            "claim_label": lambda e: e.update(claim_label="NOT ESTABLISHED"),
+            "scope": lambda e: e.update(scope="All orders."),
+            "bounds": lambda e: e["bounds"].update(max_states=99999),
+            "completeness": lambda e: e["completeness"].update(states=21),
+            "assumptions": lambda e: e["assumptions"].pop(),
+            "profiles": lambda e: e["profiles"][0].update(name="N1"),
+            "claim": lambda e: e["claim"].update(name="other_property"),
+            "tools": lambda e: e["tools"][0].update(supported_profiles=["F0"]),
+        }
+        for field, change in changes.items():
+            with self.subTest(field=field):
+                code, out = self.run_cli("verify", str(self.tampered(change)))
+                self.assertEqual(code, 1, out)
+                self.assertIn(f"{field}: differs from the envelope re-derived", out)
+                self.doCleanups()
+
+    def test_claim_that_cannot_be_rederived_fails(self):
+        envelope = json.loads(sorted((self.out / "envelopes").glob("*.json"))[0].read_text())
+        self.assertEqual(rederive(envelope, ROOT), [])
+        self.assertEqual(rederive(dict(envelope, claim=dict(envelope["claim"], pointer="/properties/99")), ROOT),
+                         ["inventory-proof/ordering.json has no claim at '/properties/99'"])
+        moved = dict(envelope, wrapped=dict(envelope["wrapped"], path="inventory-proof/other.json"))
+        self.assertEqual(rederive(moved, ROOT), ["no wrapper for inventory-proof/other.json; the claim cannot be re-derived"])
+        root = repo_copy()
+        self.addCleanup(shutil.rmtree, root)
+        (root / "inventory-proof/ordering.json").write_text("[]")
+        errors = rederive(envelope, root)
+        self.assertEqual(len(errors), 1)
+        self.assertTrue(errors[0].startswith("re-derivation from inventory-proof/ordering.json refused:"), errors)
+
+
+class UnreadableInputTests(unittest.TestCase):
+    """Item: unreadable inputs are refused with the file named, exit status 1, no traceback."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir)
+
+    def run_cli(self, *argv):
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            return cli.main(list(argv)), buffer.getvalue()
+
+    def inputs(self) -> dict[str, Path]:
+        missing = self.dir / "missing.json"
+        latin = self.dir / "latin1.json"
+        latin.write_bytes(b'{"format": "weave-trace-v1", "subject": "caf\xe9"}')
+        broken = self.dir / "broken.json"
+        broken.write_text('{"format": ')
+        return {"missing": missing, "not UTF-8": latin, "not JSON": broken, "directory": self.dir}
+
+    def test_validate_and_verify_refuse_unreadable_files(self):
+        for command in ("validate", "verify"):
+            for name, path in self.inputs().items():
+                with self.subTest(command=command, input=name):
+                    code, out = self.run_cli(command, str(path))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(f"refused {path}", out)
+                    self.assertIn(f"refused: ", out)
+                    self.assertIn(str(path), out.split("\n", 1)[1])
+                    self.assertNotIn("Traceback", out)
+
+    @unittest.skipIf(hasattr(__import__("os"), "geteuid") and __import__("os").geteuid() == 0, "root reads any file")
+    def test_unreadable_permissions_are_refused(self):
+        path = self.dir / "locked.json"
+        path.write_text("{}")
+        path.chmod(0)
+        self.addCleanup(path.chmod, 0o600)
+        code, out = self.run_cli("validate", str(path))
+        self.assertEqual(code, 1)
+        self.assertIn(f"refused: cannot read {path}", out)
+
+    def test_verify_refuses_a_trace_that_is_not_json(self):
+        self.assertEqual(self.run_cli("wrap", "--out", str(self.dir), "inventory-proof/scenarios.json")[0], 0)
+        envelope = sorted((self.dir / "envelopes").glob("*.json"))[0]
+        trace = self.dir / "traces" / f"{json.loads(envelope.read_text())['trace']['sha256']}.json"
+        for content in (b"not json", b"\xff\xfe"):
+            with self.subTest(content=content):
+                trace.write_bytes(content)
+                code, out = self.run_cli("verify", str(envelope))
+                self.assertEqual(code, 1, out)
+                self.assertIn(f"trace {trace}: refused: {trace}", out)
+                self.assertNotIn("Traceback", out)
+
+
+class WrapOutputTests(unittest.TestCase):
+    """Item: wrap --out writes nothing when any generated document is invalid."""
+
+    def setUp(self):
+        self.out = Path(tempfile.mkdtemp()) / "out"
+        self.addCleanup(shutil.rmtree, self.out.parent)
+
+    def test_invalid_generated_envelope_writes_nothing(self):
+        real = cli.wrap
+
+        def broken(root, rel):
+            result = real(root, rel)
+            result.envelopes[-1] = dict(result.envelopes[-1], claim_label="SCRIPTED")
+            return result
+
+        buffer = io.StringIO()
+        with mock.patch.object(cli, "wrap", broken), contextlib.redirect_stdout(buffer), \
+                contextlib.redirect_stderr(buffer):
+            code = cli.main(["wrap", "--out", str(self.out), "inventory-proof/proof.json", "inventory-proof/ordering.json"])
+        self.assertEqual(code, 1)
+        self.assertIn("nothing written", buffer.getvalue())
+        self.assertFalse(self.out.exists())
+
+    def test_valid_run_writes_every_document(self):
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            self.assertEqual(cli.main(["wrap", "--out", str(self.out), "inventory-proof/proof.json"]), 0)
+        self.assertEqual(len(list((self.out / "envelopes").glob("*.json"))), 2)
 
 
 if __name__ == "__main__":
