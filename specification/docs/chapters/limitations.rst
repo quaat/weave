@@ -65,7 +65,8 @@ stable language release; it is not a list of newly implemented features.
      - Define adapter contracts and runtime interpretation separately
    * - VER-01
      - Shared parser/certificate machinery; Python code is trusted
-     - Independent validation and formal soundness work remain open
+     - Independent validation and formal soundness work remain open; see the
+       source-to-model trust boundary in :doc:`security`
 
 Editorial portability rules are limited to source encoding/line endings,
 identifier character set, canonical decimal integers, and avoidance of

@@ -217,15 +217,15 @@
   },
   "CONF-REQ-1": {
     "chapter": "status",
-    "line": 63
+    "line": 147
   },
   "CONF-REQ-2": {
     "chapter": "status",
-    "line": 70
+    "line": 154
   },
   "CONF-REQ-3": {
     "chapter": "status",
-    "line": 84
+    "line": 168
   },
   "TYPE-REQ-1": {
     "chapter": "types",

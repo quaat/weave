@@ -1,0 +1,1031 @@
+{
+  "format": "weave-rule-coverage-v1",
+  "description": "Tests that exercise each rule ID in rules.json, and pending entries for rules without an implementation. Conformance cases are read from examples/manifest.json. Test references are relative to specification/. scripts/rule_coverage.py checks this file and generates docs/chapters/rule-coverage.rst.",
+  "rules": {
+    "CONF-CASE-1": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_conformance_accept_cases_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_conformance_reject_cases_report_required_code",
+          "polarity": "negative"
+        }
+      ]
+    },
+    "CONF-REQ-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_unrecognized_syntax_is_not_ignored",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_no_open_union_types",
+          "polarity": "negative",
+          "code": "E002"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_nested_ignored_syntax_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        }
+      ],
+      "note": "The tests cover acceptance of supported constructs and rejection of unsupported ones. The obligation that a conformance claim names its revision, profiles, deviations, bounds and assumptions applies to documents and is not tested."
+    },
+    "CONF-REQ-2": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_tenant_identity_must_match",
+          "polarity": "negative",
+          "code": "E209"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_handle_cannot_be_reused",
+          "polarity": "negative",
+          "code": "E203"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_missing_unknown_branch_is_rejected",
+          "polarity": "negative",
+          "code": "E214"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_normal_drop_is_not_a_cancel",
+          "polarity": "negative",
+          "code": "E204"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_cli_checks_net_ordering_before_a_valid_flow",
+          "polarity": "negative",
+          "code": "E320"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_state_budget_is_not_a_success",
+          "polarity": "negative",
+          "code": "E321"
+        }
+      ]
+    },
+    "CONF-REQ-3": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#7",
+        "reason": "SHOULD-level obligation on programs and evidence to record the net, source and tool revision and analysis settings; no test checks it. The evidence envelope of quaat/weave#7 is to record source and dependency hashes, tool versions and bounds."
+      }
+    },
+    "D0-ADMIT-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-AWAIT-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-AWAIT-2": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-CANCEL-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-COLOR-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-COLOR-2": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-DEADLOCK-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "D0-SCHEDULE-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#57",
+        "reason": "D0 is a normative target without an implementation or conformance suite (decision D-02 in the status chapter); its implementation is milestone M3."
+      }
+    },
+    "F0-BIND-1": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_shadowing_is_rejected",
+          "polarity": "negative",
+          "code": "E211"
+        }
+      ]
+    },
+    "F0-CALL-1": {
+      "tests": [
+        {
+          "test": "tests/test_documentation.py::DocumentationChecks::test_lease_does_not_use_inventory_environment",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_documentation.py::DocumentationChecks::test_lease_does_not_use_inventory_environment",
+          "polarity": "negative",
+          "code": "E206"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_private_dispatch_cannot_be_called",
+          "polarity": "negative",
+          "code": "E206"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_sealed_constructor",
+          "polarity": "negative",
+          "code": "E205"
+        }
+      ]
+    },
+    "F0-CALL-2": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_composed_checkout_moves_handles_and_outcomes",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_tenant_identity_must_match",
+          "polarity": "negative",
+          "code": "E209"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_helper_wrong_identity_is_rejected",
+          "polarity": "negative",
+          "code": "E209"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_two_parameter_alias_is_rejected",
+          "polarity": "negative",
+          "code": "E203"
+        }
+      ]
+    },
+    "F0-CALL-3": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_composed_checkout_moves_handles_and_outcomes",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_handle_cannot_be_reused",
+          "polarity": "negative",
+          "code": "E203"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_caller_cannot_reuse_transferred_hold",
+          "polarity": "negative",
+          "code": "E203"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_two_parameter_alias_is_rejected",
+          "polarity": "negative",
+          "code": "E203"
+        }
+      ]
+    },
+    "F0-MATCH-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_missing_unknown_branch_is_rejected",
+          "polarity": "negative",
+          "code": "E214"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_nonexhaustive_helper_match_is_rejected",
+          "polarity": "negative",
+          "code": "E214"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_match_cannot_discard_linear_payload",
+          "polarity": "negative",
+          "code": "E202"
+        }
+      ]
+    },
+    "F0-RETURN-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_composed_checkout_moves_handles_and_outcomes",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_return_does_not_hide_a_second_live_handle",
+          "polarity": "negative",
+          "code": "E204"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_helper_cannot_return_wrong_protocol_state",
+          "polarity": "negative",
+          "code": "E217"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_moved_handle_cannot_be_returned",
+          "polarity": "negative",
+          "code": "E203"
+        }
+      ]
+    },
+    "F0-SIGNATURE-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_composed_checkout_moves_handles_and_outcomes",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_unbound_result_index_is_rejected",
+          "polarity": "negative",
+          "code": "E216"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_unused_helper_is_checked",
+          "polarity": "negative",
+          "code": "E208"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_mutual_recursion_is_rejected",
+          "polarity": "negative",
+          "code": "E218"
+        }
+      ]
+    },
+    "F0-TAGRETURN-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_lowering_and_source_both_check",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_unknown_cannot_wrap_paid",
+          "polarity": "negative",
+          "code": "E217"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_unknown_payload_identity_cannot_be_widened",
+          "polarity": "negative",
+          "code": "E217"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_unknown_cannot_be_constructed_without_payload",
+          "polarity": "negative",
+          "code": "E217"
+        }
+      ]
+    },
+    "F0-TRY-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_lowering_and_source_both_check",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_fresh_lowering_names_avoid_user_bindings",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_moves_its_operand",
+          "polarity": "negative",
+          "code": "E203"
+        }
+      ]
+    },
+    "F0-TRY-2": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_lowering_and_source_both_check",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_inside_helper_cannot_hide_recursion",
+          "polarity": "negative",
+          "code": "E218"
+        }
+      ]
+    },
+    "F0-TRY-3": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_in_unit_flow_cannot_erase_unknown",
+          "polarity": "negative",
+          "code": "E219"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_residual_types_must_match",
+          "polarity": "negative",
+          "code": "E217"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_cannot_abandon_other_handle_on_early_return",
+          "polarity": "negative",
+          "code": "E204"
+        }
+      ]
+    },
+    "F0-UNITCALL-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_outcome_cannot_be_discarded",
+          "polarity": "negative",
+          "code": "E202"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_returned_enum_cannot_be_discarded",
+          "polarity": "negative",
+          "code": "E202"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_dropped_helper_result_is_rejected",
+          "polarity": "negative",
+          "code": "E202"
+        }
+      ]
+    },
+    "LEX-REQ-1": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_four_space_indentation_is_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_tabs_are_rejected",
+          "polarity": "negative",
+          "code": "E001"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_indentation_other_than_four_spaces_is_rejected",
+          "polarity": "negative",
+          "code": "E001"
+        },
+        {
+          "test": "tests/test_documentation.py::DocumentationChecks::test_layout_rejects_tab_in_comment",
+          "polarity": "negative"
+        }
+      ]
+    },
+    "LEX-REQ-2": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_contextual_words_are_identifiers",
+          "polarity": "positive"
+        }
+      ],
+      "note": "A MAY rule; it has no rejection case."
+    },
+    "N0-DECL-1": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_escrow_cannot_have_another_issuer",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_issuing_escrow_requires_registration",
+          "polarity": "negative",
+          "code": "E100"
+        }
+      ]
+    },
+    "N0-DECL-2": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_cancel_cannot_wait_on_external_evidence",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_cancellation_cannot_read",
+          "polarity": "negative",
+          "code": "E100"
+        }
+      ]
+    },
+    "N0-DECL-3": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_omitting_consumer_list_does_not_reopen_place",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_consumer_list_rejects_unknown_transition",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_consumer_list_rejects_nonconsumer",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_consumer_list_rejects_duplicate",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_runtime_registration_itself_is_sealed",
+          "polarity": "negative",
+          "code": "E101"
+        }
+      ]
+    },
+    "N0-DECL-4": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_api_cannot_omit_consumed_resource",
+          "polarity": "negative",
+          "code": "E100"
+        }
+      ]
+    },
+    "N0-DECL-5": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_dispatch_requires_recovery_read",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_key_source_must_match_escrow_identity",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_foreign_outcomes_are_exhaustive",
+          "polarity": "negative",
+          "code": "E100"
+        }
+      ]
+    },
+    "N0-ORDER-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_single_order_exhausts_graph_and_reaches_every_transition",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_quick_recover_preserves_counts_but_violates_ordering",
+          "polarity": "negative",
+          "code": "E320"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_state_budget_is_not_a_success",
+          "polarity": "negative",
+          "code": "E321"
+        }
+      ]
+    },
+    "N0-SEAL-1": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_private_read_cannot_borrow_linear_handle",
+          "polarity": "negative",
+          "code": "E101"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_skim_cannot_steal_hold",
+          "polarity": "negative",
+          "code": "E101"
+        }
+      ]
+    },
+    "N2-CORRELATION-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#56",
+        "reason": "N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2."
+      }
+    },
+    "N2-EVIDENCE-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#56",
+        "reason": "N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2."
+      }
+    },
+    "N2-EVIDENCE-2": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#56",
+        "reason": "N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2."
+      }
+    },
+    "N2-MIGRATE-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#56",
+        "reason": "N2 is a normative target without an implementation or conformance suite (decision D-01 in the status chapter); its implementation is milestone M2."
+      }
+    },
+    "NET-FIRE-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_read_arcs_participate_in_enabling",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_each_order_can_sell_only_its_own_registration",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_second_reserve_same_identity_is_disabled",
+          "polarity": "negative",
+          "code": "E421"
+        }
+      ]
+    },
+    "NET-REQ-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_single_order_exhausts_graph_and_reaches_every_transition",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_bounded_search_never_silently_prunes",
+          "polarity": "negative",
+          "code": "E321"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_state_budget_is_not_a_success",
+          "polarity": "negative",
+          "code": "E321"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_budget_exhaustion_is_not_success",
+          "polarity": "negative",
+          "code": "E422"
+        }
+      ]
+    },
+    "PROTO-IDENTITY-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#75",
+        "reason": "Reporting obligation (name the net and execution model; do not report equal API checks as net equivalence); no test checks report contents. Related: the evidence envelope of quaat/weave#7 is to record the profile and source hashes."
+      }
+    },
+    "SEC-CAP-1": {
+      "tests": [],
+      "pending": {
+        "issue": "quaat/weave#75",
+        "reason": "Deployment requirement; the repository has no deployment or adapter that claims capability enforcement, and no test. Related: the adapter ABI of milestone M2 (quaat/weave#56)."
+      }
+    },
+    "SEC-EVIDENCE-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_two_orders_and_swapped_receipt",
+          "polarity": "negative"
+        },
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_contradictory_final_evidence_is_quarantined_as_error",
+          "polarity": "negative"
+        }
+      ],
+      "pending": {
+        "issue": "quaat/weave#75",
+        "reason": "The listed R0 tests cover scripted receipt correlation only. Authentication and account scoping of provider evidence are not implemented (security chapter). Related: the adapter ABI of milestone M2 (quaat/weave#56)."
+      }
+    },
+    "SEC-FENCE-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_all_six_process_crash_scenarios",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_late_receipt_updates_ledger_but_does_not_unfence_worker",
+          "polarity": "negative"
+        }
+      ],
+      "note": "R0 process-crash model only."
+    },
+    "SEC-MODEL-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_escalation_budget_is_explicitly_unestablished",
+          "polarity": "positive"
+        }
+      ],
+      "pending": {
+        "issue": "quaat/weave#7",
+        "reason": "Reports MUST identify trusted components' versions and assumptions. The listed test checks that the N0 proof text names some unestablished assumptions; no test checks versions. The evidence envelope of quaat/weave#7 is to record assumptions and tool versions."
+      }
+    },
+    "SEC-REPLAY-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_lost_reply_resend_uses_same_provider_key",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_conflicting_payload_is_rejected",
+          "polarity": "negative"
+        },
+        {
+          "test": "reference/prototype/tests/test_durable.py::DurableChecks::test_not_found_never_releases_stock",
+          "polarity": "negative"
+        }
+      ],
+      "note": "R0 process-crash model only; there is no adapter contract with provider retention horizons."
+    },
+    "SYN-01": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_net_file_with_two_nets_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_flow_in_net_file_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        }
+      ]
+    },
+    "SYN-02": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_n0_net_without_check_block_is_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_ordering_without_check_block_is_not_established",
+          "polarity": "negative",
+          "code": "E300"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_two_n0_check_blocks_are_rejected",
+          "polarity": "negative",
+          "code": "E300"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_n1_needs_exactly_one_check_block",
+          "polarity": "negative",
+          "code": "E400"
+        }
+      ]
+    },
+    "SYN-03": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_duplicate_check_clause_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_guard_classification_is_explicit",
+          "polarity": "negative",
+          "code": "E300"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_check_block_without_properties_is_rejected",
+          "polarity": "negative",
+          "code": "E300"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_n1_check_block_without_token_correlation_is_rejected",
+          "polarity": "negative",
+          "code": "E400"
+        }
+      ]
+    },
+    "SYN-04": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_duplicate_net_names_are_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_net_without_invariants_is_rejected",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_n1_transition_without_colour_is_rejected",
+          "polarity": "negative",
+          "code": "E400"
+        }
+      ]
+    },
+    "SYN-05": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_nonpositive_arc_count_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_duplicate_arc_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_negative_initial_count_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_arc_cannot_silently_erase_colour",
+          "polarity": "negative",
+          "code": "E400"
+        },
+        {
+          "test": "reference/prototype/tests/test_coloured.py::ColourChecks::test_sort_mix_is_rejected",
+          "polarity": "negative",
+          "code": "E400"
+        }
+      ]
+    },
+    "SYN-06": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_indexed_or_unit_scalar_parameter_is_rejected",
+          "polarity": "negative",
+          "code": "E216"
+        }
+      ]
+    },
+    "SYN-07": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_composed_checkout_moves_handles_and_outcomes",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_unbound_result_index_is_rejected",
+          "polarity": "negative",
+          "code": "E216"
+        }
+      ]
+    },
+    "SYN-08": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_activation_place_without_resource_is_rejected",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_omitting_consumer_list_does_not_reopen_place",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_api_cannot_omit_consumed_resource",
+          "polarity": "negative",
+          "code": "E100"
+        }
+      ]
+    },
+    "SYN-09": {
+      "tests": [
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_reference_nets_are_accepted",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_foreign_outcomes_are_exhaustive",
+          "polarity": "negative",
+          "code": "E100"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_duplicate_foreign_clause_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "tests/test_documentation.py::DocumentationChecks::test_changed_inline_enum_cannot_silently_pass",
+          "polarity": "negative",
+          "code": "E100"
+        }
+      ]
+    },
+    "SYN-10": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_question_lowering_and_source_both_check",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_return_identifier_is_a_binding_not_a_constructor",
+          "polarity": "negative",
+          "code": "E207"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_unknown_cannot_be_constructed_without_payload",
+          "polarity": "negative",
+          "code": "E217"
+        },
+        {
+          "test": "reference/prototype/tests/test_rejection_and_propagation.py::RejectionAndPropagation::test_unknown_cannot_wrap_paid",
+          "polarity": "negative",
+          "code": "E217"
+        }
+      ]
+    },
+    "SYN-11": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_missing_unknown_branch_is_rejected",
+          "polarity": "negative",
+          "code": "E214"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_duplicate_enum_case_is_rejected",
+          "polarity": "negative",
+          "code": "E003"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_duplicate_match_tag_is_rejected",
+          "polarity": "negative"
+        }
+      ]
+    },
+    "SYN-12": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_statement_after_return_is_rejected",
+          "polarity": "negative",
+          "code": "E210"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_statement_after_terminal_match_is_rejected",
+          "polarity": "negative",
+          "code": "E213"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_path_without_termination_is_rejected",
+          "polarity": "negative",
+          "code": "E215"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_shadowing_is_rejected",
+          "polarity": "negative",
+          "code": "E211"
+        },
+        {
+          "test": "reference/prototype/tests/test_composition.py::CompositionChecks::test_mutual_recursion_is_rejected",
+          "polarity": "negative",
+          "code": "E218"
+        }
+      ]
+    },
+    "SYN-13": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_symbolic_conservation_and_registration",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_nonlinear_invariant_is_rejected",
+          "polarity": "negative",
+          "code": "E110"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_invariant_with_undeclared_name_is_rejected",
+          "polarity": "negative",
+          "code": "E110"
+        }
+      ]
+    },
+    "SYN-14": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_rule_cases.py::RuleCases::test_operation_without_await_is_rejected",
+          "polarity": "negative",
+          "code": "E212"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_sealed_constructor",
+          "polarity": "negative",
+          "code": "E205"
+        }
+      ]
+    },
+    "TYPE-REQ-1": {
+      "tests": [
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_valid_checkout",
+          "polarity": "positive"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_sealed_constructor",
+          "polarity": "negative",
+          "code": "E205"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_handle_cannot_be_reused",
+          "polarity": "negative",
+          "code": "E203"
+        },
+        {
+          "test": "reference/prototype/tests/test_checker.py::InventoryChecks::test_normal_drop_is_not_a_cancel",
+          "polarity": "negative",
+          "code": "E204"
+        }
+      ]
+    }
+  }
+}

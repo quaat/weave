@@ -13,6 +13,11 @@ outside the implemented profiles.
 Build the HTML reference (below) and open `_build/html/index.html`. The editable
 source is in `docs/`; the consolidated grammar is `grammar/weave.ebnf`.
 Start with **Status and conformance**, then **Language overview**.
+The status chapter's profile matrix names, for each profile (F0, N0, N1, R0 and
+the targets D0 and N2), where it is specified, implemented and tested, and the
+command that produces its evidence. **Claims, baseline and pinned identifiers**
+(`docs/chapters/baseline.rst`) lists the public claims with their profile and
+command, and the procedure that reproduces the baseline from a fresh clone.
 
 ## Build (Python 3.11+)
 
@@ -35,12 +40,15 @@ python -m sphinx -M latexpdf docs _build -n -W --keep-going   # PDF
 python scripts/validate.py
 python scripts/test_reference.py
 python scripts/grammar_audit.py
+python scripts/rule_coverage.py --check
 make validate
 ```
 
 `make html`, `make singlehtml`, and `make latexpdf` build the reference. `make validate` runs
 source, grammar, documentation, upstream tests, strict HTML, and external link
-checks. `make validate-offline` omits only the external linkcheck step.
+checks. `scripts/rule_coverage.py` regenerates `docs/chapters/rule-coverage.rst`
+from `rules.json`, `examples/manifest.json` and `tests/rule-coverage.json`; its
+`--check` mode runs in `make validate` through `tests/test_rule_coverage.py`. `make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 
 ### PDF
@@ -79,6 +87,10 @@ synthetic design specimen.
   foreign outcomes, and verification contracts.
 - Normative conformance cases, rule IDs, inference rules, generated grammar audit,
   and build-time `weave-check` tests of inline and included examples.
+- A profile matrix, the public claims with their profile and supporting command,
+  a generated rule-coverage page (a test or a pending-implementation entry for
+  each rule ID), the source-to-model trust boundary, and a reproducible baseline
+  with pinned identifiers and a proposed baseline tag.
 - Three static diagrams, a lease tutorial, counterexample walkthroughs,
   protocol comparison, rationale, security, and documented design-history gaps.
 - Syntax highlighting, searchable HTML, glossary, general index, and source links.

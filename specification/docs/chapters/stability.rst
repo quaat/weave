@@ -146,9 +146,10 @@ Evidence schemas
 ~~~~~~~~~~~~~~~~~~~~~~
 
 An evidence document MUST name its schema in a top-level ``format`` field of
-the form ``weave-<artefact>-v<N>``. Seven existing format strings already use
-this form, but many existing evidence files have no ``format`` field; both
-groups are listed under `Existing evidence files`_. Bump rule: any change to
+the form ``weave-<artefact>-v<N>``. Eight format strings use this form (seven
+existed when this policy was written; quaat/weave#4 added
+``weave-rule-coverage-v1``), but many existing evidence files have no ``format``
+field; both groups are listed under `Existing evidence files`_. Bump rule: any change to
 the fields, their meaning or the checks a reader performs needs the next ``N``.
 A format string never changes meaning, and a retired format string is never
 reused. The machine-readable diagnostics schema (quaat/weave#6) and the trace,
@@ -182,7 +183,8 @@ production decision.
 Current identifiers
 -------------------------
 
-These are the identifiers in the repository at the time this policy was written.
+These are the identifiers in the repository at the time this policy was written,
+plus the rule-coverage map row, which quaat/weave#4 added later.
 "None yet" means the repository has no identifier for that item.
 
 .. list-table::
@@ -258,6 +260,10 @@ These are the identifiers in the repository at the time this policy was written.
      - ``weave-teaching-examples-v1``
      - ``format`` in ``agent-kit/examples/manifest.json``
    * - Evidence schemas
+     - Rule-coverage map, added by quaat/weave#4
+     - ``weave-rule-coverage-v1``
+     - ``format`` in ``specification/tests/rule-coverage.json``
+   * - Evidence schemas
      - Scenario results, agent-kit demo traces and artefacts, specification
        audit reports
      - None yet
@@ -300,6 +306,16 @@ Files with a ``format`` field (seven distinct format strings):
 * ``weave-conformance-v1``: ``specification/examples/manifest.json``
 * ``weave-specification-validation-v1``: ``specification/validation/report.json``
 * ``weave-teaching-examples-v1``: ``agent-kit/examples/manifest.json``
+
+The command lists the repository at ``0d3185f``, so its output does not include
+``specification/tests/rule-coverage.json``, which quaat/weave#4 added later with
+the format string ``weave-rule-coverage-v1``. That file is a rule-coverage map:
+it records, for each rule ID, the tests that exercise it or a
+pending-implementation entry, and ``scripts/rule_coverage.py`` checks it and
+generates :doc:`rule-coverage` from it. It is not the output of an analysis or
+scenario run. It belongs with the files that have a ``format`` field, beside the
+conformance corpus manifest (``weave-conformance-v1``), as a conformance artefact
+versioned under this axis.
 
 The byte-identical prototype copies in
 ``agent-kit/.agents/skills/weave/assets/prototype/`` and
