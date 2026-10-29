@@ -60,7 +60,7 @@ Compared final marking, `(return_type, return_tag)`, and ordered NET transition 
 
 ### Observed scenario results (`artifacts/scenarios.json`)
 
-| Outcome | Result | NET transitions | available | sold | recovery_queue | registrations | charge_requests |
+| Outcome | Settlement | NET transitions | available | sold | recovery_queue | registrations | charge_requests |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | Ok | Purchase completed | reserve, arm, dispatch, charge_ok, sell | 0 | 1 | 0 | 0 | 1 |
 | Err | Payment rejected; item released | reserve, arm, dispatch, charge_err, release | 1 | 0 | 0 | 0 | 1 |

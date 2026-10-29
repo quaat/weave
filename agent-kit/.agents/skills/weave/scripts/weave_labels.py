@@ -10,12 +10,10 @@ a label:
 * JSON: a claim is an object with a ``claim_label`` member. Tool status is the
   boolean ``ok`` (and the exit code); the status of a runtime run is
   ``runtime_status`` (``waiting``, ``timed out`` or ``completed``). No member is
-  named ``status``, no member other than ``claim_label`` holds a label, and no
-  string value is or contains another upper-case status word (``PASSED``,
-  ``CHECKED``, ...) as a whole token;
-  the only upper-case word values that are not claims are listed in
-  ``NON_CLAIM_WORDS``, and user-chosen names under ``IDENTIFIER_MEMBERS`` are
-  not checked.
+  named ``status``; a member whose name contains a verdict word appears only at
+  the paths, in the outputs and with the values ``ALLOWED_VERDICT_NAMES`` lists;
+  and no string value is a label, contains an upper-case status word or begins
+  with a verdict word (see ``lint_json``).
 * Text: a claim is an unindented line that begins with its exact label,
   followed by the statement (``LABEL statement``, the established console form;
   the six labels are distinct as prefixes). Every other unindented line has one
@@ -27,7 +25,8 @@ a label:
   ``lint_json``), or a non-empty prefix ending with a separator that a caller
   declares for its own output (the demos declare theirs). No such line carries a
   label or another upper-case status word, except the tool status word right
-  after ``tool status:`` (``TOOL_STATUS_WORDS``). Indented lines belong to the line above,
+  after ``tool status:`` (``TOOL_STATUS_WORDS``), and the text after its prefix
+  does not begin with a verdict word, except a declared application outcome. Indented lines belong to the line above,
   and raw output of another tool is printed indented under a ``raw output`` line.
 
 ``lint_json`` and ``lint_text`` check these rules and return one message per
@@ -70,7 +69,7 @@ NON_CLAIM_WORDS = frozenset({"ACCEPT"})
 # check does not apply to them.
 IDENTIFIER_MEMBERS = frozenset({
     "invariants", "properties", "property", "trace", "marking", "flows", "functions", "entry",
-    "return_type", "return_tag", "outcome", "net_transitions", "name",
+    "return_type", "return_tag", "net_transitions", "name",
     "file", "net", "source", "certificate", "lowered_from", "prototype", "missing",
 })
 
@@ -116,43 +115,82 @@ def is_diagnostic_header(line: str) -> bool:
 # A declared prefix: a non-empty heading that ends with a separator.
 _DECLARED_PREFIX = re.compile(r"\S.*?(?::|: | - )")
 # Words that begin a claim, in any case: the six labels' words and the usual verdict
-# words. A text line, or a JSON string outside the exemptions, that begins with one of
-# them (followed by whitespace, ':', '-' or the end) states a result; only a claim line
-# may, and it must begin with an exact label.
+# words. A text line, the text after any non-claim prefix, or a JSON string outside the
+# exemptions that begins with one of them (after leading whitespace and quotes, and not
+# followed by a letter or digit) states a result; only a claim line may, and it must
+# begin with an exact label.
 CLAIM_LEXICON = ("proved", "proven", "unproved", "checked", "scripted", "violated", "not established",
                  "established", "verified", "passed", "pass", "success", "succeeded", "ok", "fail", "failed",
                  "failure", "holds", "rechecked", "recheck", "executed", "bounded")
-_CLAIM_WORD = re.compile(r"(?i)^(?:not[\s_-]*)?(?:" + "|".join(sorted(
-    (re.escape(w).replace("\\ ", r"[\s_-]+") for w in CLAIM_LEXICON), key=len, reverse=True)) + r")(?=[\s:_-]|$)")
-
-# Member names that read as a verdict (split on '_', case-insensitive). The only
-# claim-bearing member is claim_label; runtime_status is the run's status and ok the
-# tool status. A claim-like name is allowed only where real output uses it, and only
-# for the value shape it has there (CLAIM_LIKE_MEMBERS); any other is an error.
-_CLAIM_NAME_WORDS = frozenset({"verdict", "verdicts", "result", "results", "label", "labels", "status",
-                               "statuses", "outcome", "outcomes", "conclusion", "conclusions", "claim", "claims",
-                               "check", "checks", "finding", "findings", "assessment", "evaluation", "judgement",
-                               "judgment", "decision", "passed", "success", "proof", "proved", "verified"})
-CLAIM_LIKE_MEMBERS = {
-    # simulate runs, examples scenarios, tiny_shop: the scripted application outcome (Ok, Err, Unknown, all)
-    "outcome": lambda v: isinstance(v, str) and re.fullmatch(r"\w+", v) is not None,
-    "requested_outcome": lambda v: isinstance(v, str) and re.fullmatch(r"\w+", v) is not None,
-    # run-pure: the computed value (Int, Bool or a list), never a string
-    "result": lambda v: not isinstance(v, (str, dict)),
-    # examples: the list of expectation records and their count
-    "results": lambda v: isinstance(v, list) and all(isinstance(r, dict) and "ok" in r for r in v),
-    "checks": lambda v: isinstance(v, int) and not isinstance(v, bool),
-    "passed": lambda v: isinstance(v, int) and not isinstance(v, bool),
-    # run-pure and the merge_sort demo: the pure-program claim object
-    "check": lambda v: isinstance(v, dict) and "claim_label" in v,
-    # evidence envelope: the claim object (its label is the sibling claim_label)
-    "claim": lambda v: isinstance(v, dict) and "claim_label" not in v,
-}
+_CLAIM_WORD = re.compile(r"(?i)(?:not[\s_-]*)?(?:" + "|".join(sorted(
+    (re.escape(w).replace(r"\ ", r"[\s_-]+") for w in CLAIM_LEXICON), key=len, reverse=True)) + r")(?![A-Za-z0-9])")
+_LEADING_NOISE = " \t\"'`"
 
 
-def _claim_like_name(key: str) -> bool:
-    """A member name with a verdict word among its parts (``check_result``, ``Verdict``, ``passedTests``)."""
-    return bool({part.lower() for part in re.split(r"_|-|(?<=[a-z])(?=[A-Z])", key)} & _CLAIM_NAME_WORDS)
+def _begins_with_verdict(text: str) -> bool:
+    return _CLAIM_WORD.match(text.lstrip(_LEADING_NOISE)) is not None
+
+
+# Member names that read as a verdict: a name whose parts (split on '_', '-' and camelCase,
+# case-insensitive) include one of these words. In kit JSON the only verdict position is
+# claim_label; runtime_status is a run's status and ok the tool status. Every other
+# verdict-like name is an error unless ALLOWED_VERDICT_NAMES lists its exact path, the
+# output it occurs in and its value domain.
+VERDICT_NAME_WORDS = frozenset({
+    "proved", "proven", "proof", "proofs", "verified", "verify", "established", "holds", "passed", "pass",
+    "success", "successful", "succeeded", "result", "results", "verdict", "verdicts", "outcome", "outcomes",
+    "claim", "claims", "label", "labels", "status", "statuses", "check", "checks", "checked", "conclusion",
+    "conclusions", "finding", "findings", "assessment", "evaluation", "judgement", "judgment", "decision",
+    "violated", "violation", "scripted", "fail", "failed", "failure", "rechecked", "executed",
+})
+APPLICATION_OUTCOMES = ("Ok", "Err", "Unknown")
+
+
+def _command(*names):
+    return lambda root: isinstance(root, dict) and root.get("command") in names
+
+
+def _demo(name):
+    return lambda root: isinstance(root, dict) and root.get("demo") == name
+
+
+def _envelope(root):
+    return isinstance(root, dict) and root.get("format") == ENVELOPE_FORMAT
+
+
+def _count(value):
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+# (path with '*' for any array index, which output it occurs in, allowed value), each the
+# only place the name may appear. The JSON detail line of a failed `examples` expectation
+# is linted as /results/<n> of an `examples` result.
+ALLOWED_VERDICT_NAMES = (
+    ("/runs/*/outcome", _command("simulate"), lambda v: v in APPLICATION_OUTCOMES),
+    ("/results", _command("examples"), lambda v: isinstance(v, list) and all(isinstance(r, dict) and "ok" in r for r in v)),
+    ("/results/*/outcome", _command("examples"), lambda v: v in APPLICATION_OUTCOMES),
+    ("/checks", _command("examples"), _count),
+    ("/passed", _command("examples"), _count),
+    ("/result", _command("run-pure"), lambda v: not isinstance(v, (str, dict))),
+    ("/check", _command("run-pure"), lambda v: isinstance(v, dict) and "claim_label" in v),
+    ("/check", _demo("merge_sort"), lambda v: isinstance(v, dict) and "claim_label" in v),
+    ("/requested_outcome", _demo("tiny_shop"), lambda v: v in APPLICATION_OUTCOMES + ("all",)),
+    ("/scenarios/*/outcome", _demo("tiny_shop"), lambda v: v in APPLICATION_OUTCOMES),
+    ("/claim", _envelope, lambda v: isinstance(v, dict) and "claim_label" not in v),
+)
+# Members whose keys are user-chosen place names (markings), not member names.
+NAME_KEYED_MEMBERS = frozenset({"marking", "final_marking", "expected", "actual"})
+
+
+def _verdict_name(key: str) -> bool:
+    """A member name with a verdict word among its parts (``check_result``, ``isProven``, ``holds``)."""
+    return bool({part.lower() for part in re.split(r"_|-|(?<=[a-z])(?=[A-Z])", key)} & VERDICT_NAME_WORDS)
+
+
+def _allowed_name(path: str, root, value) -> bool:
+    shape = re.sub(r"/\d+(?=/|$)", "/*", path)
+    return any(shape == pattern and context(root) and allowed(value)
+               for pattern, context, allowed in ALLOWED_VERDICT_NAMES)
 
 
 _CLAIM_LINE = re.compile("^(" + "|".join(re.escape(label) for label in RESULT_LABELS) + r")(?=[ :]|$)")
@@ -202,22 +240,31 @@ ENVELOPE_FORMAT = "weave-evidence-envelope-v1"
 ENVELOPE_QUOTATIONS = (re.compile(r"/assumptions/\d+"), re.compile(r"/claim/statement"))
 
 
-def lint_json(document, pointer: str = "") -> list[str]:
+def lint_json(document, pointer: str = "", root=None) -> list[str]:
     """Violations of the JSON claim rules in ``document``; an empty list when there are none.
 
-    Every string value outside ``claim_label`` is checked: it may not be a result label
-    or an upper-case status word, and it may not contain one as a whole upper-case token
-    (``PASSED everything holds``, ``NOT PROVED stock``). Exempt are raw members
-    (``RAW_MEMBERS``), user-chosen names (``IDENTIFIER_MEMBERS``), the teaching manifest's
-    ``ACCEPT`` (``NON_CLAIM_WORDS``) and, in an evidence envelope only, its quotations
-    (``ENVELOPE_QUOTATIONS``). The runner's JSON has no tool status string (``ok`` is a
-    boolean).
+    The only verdict position is ``claim_label``, exactly one of the six labels.
+
+    1. Member names: no ``status``; ``runtime_status`` only with a runtime status; any other
+       member whose name contains a verdict word (``VERDICT_NAME_WORDS``) is an error unless
+       ``ALLOWED_VERDICT_NAMES`` lists its path, output and value domain.
+    2. String values: none is a label or an upper-case status word, contains a status word
+       as a whole upper-case token, or begins (after whitespace and quotes, in any case) with
+       a verdict word (``CLAIM_LEXICON``).
+
+    Exempt from rule 2: raw members (``RAW_MEMBERS``), user-chosen names
+    (``IDENTIFIER_MEMBERS``; marking keys under ``NAME_KEYED_MEMBERS``), the teaching
+    manifest's ``ACCEPT`` and, in an evidence envelope, its quotations
+    (``ENVELOPE_QUOTATIONS``), which may contain a token but are never a bare label.
+    ``root`` is the whole output, when ``document`` is part of one (``pointer`` is then
+    its path); it decides which allowed paths apply. The runner's JSON has no tool status
+    string: ``ok`` is a boolean.
     """
-    quotations = isinstance(document, dict) and document.get("format") == ENVELOPE_FORMAT and pointer == ""
-    return _lint(document, pointer, quotations)
+    root = document if root is None else root
+    return _lint(document, pointer, root, _envelope(root))
 
 
-def _lint(document, pointer: str, quotations: bool) -> list[str]:
+def _lint(document, pointer: str, root, quotations: bool, name_keyed: bool = False) -> list[str]:
     errors = []
     if isinstance(document, dict):
         items = [(f"{pointer}/{key}", key, value) for key, value in document.items()]
@@ -240,36 +287,39 @@ def _lint(document, pointer: str, quotations: bool) -> list[str]:
             errors.append(f"{where}: a member named 'status' ({value!r}) does not say whether it is a claim; "
                           "use claim_label for a claim, ok for tool status, runtime_status for a run")
             continue
-        if key is not None and _claim_like_name(key):
-            allowed = CLAIM_LIKE_MEMBERS.get(key)
-            if allowed is None or not allowed(value):
-                errors.append(f"{where}: member name {key!r} reads as a verdict; claims use claim_label only")
+        if key is not None and not name_keyed and _verdict_name(key):
+            if not _allowed_name(where, root, value):
+                errors.append(f"{where}: member name {key!r} reads as a verdict here; claims use claim_label only")
                 continue
+            if isinstance(value, str):
+                continue  # an allow-listed application outcome; its value domain is already checked
         if key in IDENTIFIER_MEMBERS and _identifiers(value):
             continue
         if isinstance(value, str):
             quoted = quotations and any(q.fullmatch(where) for q in ENVELOPE_QUOTATIONS)
             errors += _value_errors(value, where, quoted)
         else:
-            errors += _lint(value, where, quotations)
+            errors += _lint(value, where, root, quotations, name_keyed=key in NAME_KEYED_MEMBERS)
     return errors
 
 
 def _value_errors(value: str, where: str, quoted: bool = False) -> list[str]:
-    """A string outside claim_label: never a label, never a status word, and no status token inside it.
+    """A string outside claim_label: never a label or status word, no status token, no leading verdict word.
 
-    A ``quoted`` string (an envelope quotation) may contain a status token in its wording,
-    but is still never a bare label or status word.
+    A ``quoted`` string (an envelope quotation) may contain a status token or begin with
+    one in its wording, but is still never a bare label or status word.
     """
     if value in RESULT_LABELS:
         return [f"{where}: result label {value!r} outside a claim_label member"]
     if value in NON_CLAIM_WORDS:
         return []
-    if _STATUS_WORD.fullmatch(value):
+    if _STATUS_WORD.fullmatch(value.strip(_LEADING_NOISE)):
         return [f"{where}: status word {value!r} presents a claim without one of the six result labels"]
-    if not quoted and _CLAIM_WORD.match(value):
+    if quoted:
+        return []
+    if _begins_with_verdict(value):
         return [f"{where}: {value!r} begins with a verdict word outside a claim_label member"]
-    token = None if quoted else _STATUS_TOKEN.search(value)
+    token = _STATUS_TOKEN.search(value)
     if token:
         return [f"{where}: {value!r} contains the status word {token.group()!r} outside a claim_label member"]
     return []
@@ -285,25 +335,35 @@ def text_claims(text: str) -> list[tuple[int, str]]:
     return claims
 
 
-def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
+def _declared(entry) -> tuple[str, tuple[str, ...]]:
+    """A declared prefix: a heading, or (heading, the application outcomes allowed as its first word)."""
+    prefix, words = (entry, ()) if isinstance(entry, str) else entry
+    if not isinstance(prefix, str) or not _DECLARED_PREFIX.fullmatch(prefix):
+        raise ValueError(f"declared prefix {prefix!r} must be a non-empty heading ending with ':', ': ' or ' - '")
+    if _begins_with_verdict(prefix):
+        raise ValueError(f"declared prefix {prefix!r} begins with a claim word")
+    if not set(words) <= set(APPLICATION_OUTCOMES):
+        raise ValueError(f"declared prefix {prefix!r} may allow only application outcomes, not {words!r}")
+    return prefix, tuple(words)
+
+
+def lint_text(text: str, extra_prefixes=()) -> list[str]:
     """Violations of the text rules: every unindented line is a claim with an exact label or a declared form.
 
-    ``extra_prefixes`` are non-claim line prefixes a caller declares for its own output
-    (a demo's headings); they may not begin with a claim word.
+    ``extra_prefixes`` are non-claim line prefixes a caller declares for its own output (a
+    demo's headings): a heading, or ``(heading, outcomes)`` when the heading is followed by
+    an application outcome name (``Ok``, ``Err``, ``Unknown``).
     """
-    for prefix in extra_prefixes:
-        if not isinstance(prefix, str) or not _DECLARED_PREFIX.fullmatch(prefix):
-            raise ValueError(f"declared prefix {prefix!r} must be a non-empty heading ending with ':', ': ' or ' - '")
-        if _CLAIM_WORD.match(prefix):
-            raise ValueError(f"declared prefix {prefix!r} begins with a claim word")
+    declared = [_declared(entry) for entry in extra_prefixes]
     errors = []
     for number, line in enumerate(text.splitlines(), 1):
         if not line or line[0].isspace() or _CLAIM_LINE.match(line):
             continue
-        if _CLAIM_WORD.match(line):
+        if _begins_with_verdict(line):
             errors.append(f"line {number}: {line!r} presents a claim without an exact result label")
-        elif line.startswith("{"):
-            # Only a JSON object (a failed example's detail), linted as JSON.
+            continue
+        if line.startswith("{"):
+            # Only a JSON object: the detail of a failed `examples` expectation, linted as JSON.
             try:
                 document = json.loads(line)
             except ValueError:
@@ -311,22 +371,28 @@ def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
             if not isinstance(document, dict):
                 errors.append(f"line {number}: {line!r} starts with '{{' but is not a JSON object")
             else:
-                errors += [f"line {number}: {e}" for e in lint_json(document)]
-        elif line.startswith(NON_CLAIM_PREFIXES + tuple(extra_prefixes)) or is_diagnostic_header(line):
-            body = line
-            prefix = next((p for p in NON_CLAIM_PREFIXES if line.startswith(p)), None)
-            if prefix == "tool status: ":
-                rest = line[len(prefix):]
-                word = next((w for w in sorted(TOOL_STATUS_WORDS, key=len, reverse=True)
-                             if rest == w or rest.startswith(w + " ")), None)
-                body = rest[len(word):].lstrip() if word else rest
-            elif prefix is not None:
-                body = line[len(prefix):]
-            token = _STATUS_TOKEN.search(body)
-            if token:
-                errors.append(f"line {number}: {line!r} is not a claim but carries the status word {token.group()!r}")
-            elif prefix is not None and _CLAIM_WORD.match(body):
-                errors.append(f"line {number}: {line!r} is not a claim but its text begins with a verdict word")
-        else:
+                errors += [f"line {number}: {e}" for e in
+                           lint_json(document, "/results/0", {"command": "examples", "results": [document]})]
+            continue
+        runner = next((p for p in NON_CLAIM_PREFIXES if line.startswith(p)), None)
+        own = next(((p, w) for p, w in declared if line.startswith(p)), None)
+        if runner is None and own is None and not is_diagnostic_header(line):
             errors.append(f"line {number}: {line!r} is not a claim, a declared non-claim line or a diagnostic")
+            continue
+        body, outcomes = line, ()
+        if runner == "tool status: ":
+            rest = line[len(runner):]
+            word = next((w for w in sorted(TOOL_STATUS_WORDS, key=len, reverse=True)
+                         if rest == w or rest.startswith(w + " ")), None)
+            body = rest[len(word):].lstrip() if word else rest
+        elif runner is not None:
+            body = line[len(runner):]
+        elif own is not None:
+            body, outcomes = line[len(own[0]):], own[1]
+        first = body.lstrip(_LEADING_NOISE).split(" ", 1)[0]
+        token = _STATUS_TOKEN.search(body)
+        if token:
+            errors.append(f"line {number}: {line!r} is not a claim but carries the status word {token.group()!r}")
+        elif (runner is not None or own is not None) and first not in outcomes and _begins_with_verdict(body):
+            errors.append(f"line {number}: {line!r} is not a claim but its text begins with a verdict word")
     return errors

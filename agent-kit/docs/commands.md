@@ -67,29 +67,42 @@ else the runner reports is a claim, and it is never written with a label.
 | Diagnostics | `diagnostic` | `file:line:column: CODE (RULE) [stage]` and indented lines |
 | Raw output of another tool | `output`, `upstream_output` | indented under `raw output (…; not a claim):` |
 
-The JSON rules `tests/test_result_labels.py` enforces (`lint_json` in `weave_labels.py`):
+The JSON rules `tests/test_result_labels.py` enforces (`lint_json` in `weave_labels.py`).
+The only verdict position is `claim_label`, which holds exactly one of the six labels;
+`runtime_status` holds `waiting`, `timed out`, `completed` or `null`; `ok` is the tool status.
 
-1. **Member names.** The only claim-bearing member is `claim_label`, which holds exactly
-   one of the six labels; `runtime_status` holds `waiting`, `timed out`, `completed` or
-   `null`; `ok` is the tool status. No member is named `status`. A member whose name has a
-   verdict word among its parts (case-insensitive, split on `_`, `-` and camelCase: verdict,
-   result, label, status, outcome, conclusion, claim, check, finding, assessment,
-   evaluation, judgement, decision, passed, success, proof, proved, verified and their
-   plurals) is an error, except these, each only with the value shape real output gives it:
-   `outcome` and `requested_outcome` (an application outcome name such as `Ok` or `all`),
-   `result` (the `run-pure` value: a number, Boolean or list, never a string or object),
-   `results` (the `examples` expectation records, each with `ok`), `checks` and `passed`
-   (`examples` counts), `check` (the `run-pure` claim object, with `claim_label`) and
-   `claim` (an evidence envelope's claim object).
+1. **Member names.** No member is named `status`. A member whose name has a verdict word
+   among its parts (case-insensitive, split on `_`, `-` and camelCase; `VERDICT_NAME_WORDS`:
+   proved, proven, proof, verified, established, holds, passed, success, result, verdict,
+   outcome, claim, label, status, check, conclusion, finding, assessment, evaluation,
+   judgement, decision, violated, scripted, fail, failed, failure, rechecked, executed and
+   plurals) is an error, whatever its value, except at these paths (`*` is any array index):
+
+   | Path | Only in | Value |
+   | --- | --- | --- |
+   | `/runs/*/outcome` | `simulate` | `Ok`, `Err` or `Unknown` |
+   | `/results` | `examples` | the expectation records, each with `ok` |
+   | `/results/*/outcome` | `examples` | `Ok`, `Err` or `Unknown` |
+   | `/checks`, `/passed` | `examples` | an integer count |
+   | `/result` | `run-pure` | the computed value: a number, Boolean or list |
+   | `/check` | `run-pure`, the `merge_sort` demo | the claim object, with `claim_label` |
+   | `/requested_outcome` | the `tiny_shop` demo | `Ok`, `Err`, `Unknown` or `all` |
+   | `/scenarios/*/outcome` | the `tiny_shop` demo | `Ok`, `Err` or `Unknown` |
+   | `/claim` | an evidence envelope | its claim object (the label is the sibling `claim_label`) |
+
+   Keys of a marking (`marking`, `final_marking`, and `expected`/`actual` in `examples`)
+   are place names, not member names.
 2. **String values.** No string value is a label or an upper-case status word, contains a
    label word or a status word (`PASSED`, `PASS`, `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`,
-   `CHECKED`, `EXECUTED`, …) as a whole upper-case token, or begins, in any case, with a
-   verdict word followed by whitespace, `:`, `-` or the end (`CLAIM_LEXICON`: proved, proven,
-   unproved, checked, scripted, violated, not established, established, verified, passed,
-   pass, success, succeeded, ok, fail, failed, failure, holds, rechecked, executed,
-   bounded). Prose such as `scope` may use these words in lower case after its first word.
+   `CHECKED`, `EXECUTED`, …) as a whole upper-case token, or begins, after any whitespace
+   and quotes and in any case, with a verdict word not followed by a letter or digit
+   (`CLAIM_LEXICON`: proved, proven, unproved, checked, scripted, violated, not established,
+   established, verified, passed, pass, success, succeeded, ok, fail, failed, failure, holds,
+   rechecked, executed, bounded), so `Proved.`, `"ok"` and `SUCCESS: …` all fail. Prose
+   such as `scope` may use these words in lower case after its first word.
 
-The exceptions to rule 2, listed in `weave_labels.py`, are: raw-output members (`diagnostic`, `output`,
+The exceptions to rule 2, listed in `weave_labels.py`, are: the allow-listed values of rule 1
+above; raw-output members (`diagnostic`, `output`,
 `upstream_output`, `events`, `detail`, `context`); members holding user-chosen names or
 paths (`IDENTIFIER_MEMBERS`, so an upper-case property name is not a status word); the
 teaching manifest's `ACCEPT` expectation; and, in an evidence envelope only, its cited
@@ -108,13 +121,16 @@ itself linted as JSON), or begins with one of these prefixes: `tool status: `,
 `runtime status: `, `result: `, `stats: `, `prototype: `, `missing: `, `certificate: `,
 `raw output (`, `error: ` (`NON_CLAIM_PREFIXES` in `weave_labels.py`). Indented lines
 belong to the line above. The demos declare their own headings (`TEXT_PREFIXES` in each
-`run_demo.py`), each non-empty and ending with `:`, `: ` or ` - `. None of these
+`run_demo.py`), each non-empty and ending with `:`, `: ` or ` - `; a heading may declare
+that an application outcome (`Ok`, `Err`, `Unknown`) follows it, as Tiny Shop's
+`== Payment outcome: ` does. None of these
 non-claim lines may contain a label or another upper-case status word (`PASSED`, `PASS`,
 `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`, `CHECKED`, `EXECUTED`, …) as a whole token;
 the one exception is the tool status word right after `tool status: ` (`PASS`, `FAIL`,
-`READY`, `NOT READY`). The text after a runner prefix (and after that tool status word) may
-not begin with a verdict word from `CLAIM_LEXICON`, in any case, and an unindented line that
-begins with one is a finding unless it begins with an exact label.
+`READY`, `NOT READY`). The text after any non-claim prefix (runner or declared, and after
+the tool status word) may not begin with a verdict word from `CLAIM_LEXICON`, in any case
+and after any whitespace and quotes, except a declared application outcome; an unindented
+line that begins with one is a finding unless it begins with an exact label.
 `tests/test_result_labels.py` fails on any other unindented line.
 
 | Command | Claims (JSON position: label) |

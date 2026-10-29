@@ -21,7 +21,8 @@ OUTCOMES = ('Ok', 'Err', 'Unknown', 'all')
 
 # Unindented text lines that are not claims, besides the runner's (weave_labels.NON_CLAIM_PREFIXES).
 # Claims are 'LABEL statement' lines; tests/test_result_labels.py lints the output with these.
-TEXT_PREFIXES = ('Tiny Shop - ', '== Payment outcome: ', 'note: ')
+# The payment-outcome heading is followed by the scripted application outcome (Ok, Err, Unknown).
+TEXT_PREFIXES = ('Tiny Shop - ', ('== Payment outcome: ', ('Ok', 'Err', 'Unknown')), 'note: ')
 
 STOCK_PLACES = ('available', 'sold', 'recovery_queue', 'registrations')
 TRANSIENT_PLACES = ('held', 'escrow', 'inflight', 'paid', 'unpaid', 'uncertain', 'manual')

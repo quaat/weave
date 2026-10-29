@@ -214,19 +214,69 @@ class LintNegativeTests(unittest.TestCase):
                 self.assertEqual(len(lint_json(document)), 1, lint_json(document))
 
     def test_json_non_claims_pass(self):
-        document = {'command': 'check', 'ok': False, 'accounting': {'claim_label': P, 'invariants': ['a']},
-                    'runs': [{'claim_label': S, 'runtime_status': 'completed', 'outcome': 'Unknown'}],
+        simulate = {'command': 'simulate', 'ok': True, 'accounting': {'claim_label': P, 'invariants': ['a']},
+                    'runs': [{'claim_label': S, 'runtime_status': 'completed', 'outcome': 'Unknown',
+                              'marking': {'checked': 0, 'proved': 1}, 'events': [{'status': 'PASSED'}]}],
                     'diagnostic': {'code': 'E112', 'message': 'NOT PROVED: residual', 'details': {'status': 'X'}},
-                    'output': 'PASSED\nOK', 'upstream_output': 'CHECKED 2 linear resources',
-                    'scope': 'nothing is established outside the tool', 'runtime_status': None,
+                    'upstream_output': 'CHECKED 2 linear resources'}
+        examples = {'command': 'examples', 'ok': False, 'checks': 2, 'passed': 1,
                     'results': [{'expected': 'ACCEPT', 'actual': 'ACCEPT', 'ok': True},
-                                {'expected': 'E203', 'actual': 'P421', 'ok': False}],
-                    'checks': 2, 'passed': 1, 'check': {'claim_label': N}, 'result': [1, 2],
-                    'profiles': ['F0', 'N0', 'N1', 'R0'], 'outcome': 'Unknown', 'mode': 'concurrent',
-                    'reason': 'pure fn kit extension outside F0; missing model; not established here'}
-        self.assertEqual(lint_json(document), [])
-        self.assertEqual(json_claims(document), [('/accounting/claim_label', P), ('/runs/0/claim_label', S),
-                                                 ('/check/claim_label', N)])
+                                {'outcome': 'Err', 'expected': {'sold': 0}, 'actual': {'sold': 1}, 'ok': False}]}
+        run_pure = {'command': 'run-pure', 'ok': True, 'check': {'claim_label': N, 'functions': ['f'],
+                    'reason': 'pure fn kit extension outside F0; missing model; not established here'},
+                    'runtime_status': 'completed', 'result': [1, 2], 'output': 'PASSED\nOK',
+                    'scope': 'nothing is established outside the tool; the kit checked types'}
+        tiny_shop = {'demo': 'tiny_shop', 'requested_outcome': 'all', 'ok': True,
+                     'scenarios': [{'claim_label': S, 'runtime_status': 'completed', 'outcome': 'Ok',
+                                    'settlement': 'Purchase completed', 'final_marking': {'sold': 1}}]}
+        for document in (simulate, examples, run_pure, tiny_shop):
+            with self.subTest(document.get('command') or document.get('demo')):
+                self.assertEqual(lint_json(document), [])
+        self.assertEqual(json_claims(simulate), [('/accounting/claim_label', P), ('/runs/0/claim_label', S)])
+        self.assertEqual(json_claims(run_pure), [('/check/claim_label', N)])
+
+    def test_verdict_positions_are_tied_to_their_paths(self):
+        """Delta review F-1/F-3: allow-listed names only at their path, in their output, with their values."""
+        cases = {
+            'outcome Proved': {'accounting': {'outcome': 'Proved'}},
+            'outcome Verified in a run': {'command': 'simulate', 'runs': [{'outcome': 'Verified'}]},
+            'outcome Success in a run': {'command': 'simulate', 'runs': [{'outcome': 'Success'}]},
+            'outcome Passed in a scenario': {'demo': 'tiny_shop', 'scenarios': [{'outcome': 'Passed'}]},
+            'requested_outcome prose': {'demo': 'tiny_shop', 'requested_outcome': 'Proved'},
+            'run outcome in another command': {'command': 'check', 'runs': [{'outcome': 'Ok'}]},
+            'nested result true': {'accounting': {'result': True}},
+            'nested passed count': {'accounting': {'passed': 1}},
+            'claim object outside an envelope': {'accounting': {'claim': {'statement': 'x', 'holds': True}}},
+            'root result outside run-pure': {'command': 'check', 'result': True},
+            'root passed outside examples': {'command': 'check', 'passed': 3},
+            'check outside run-pure': {'command': 'check', 'check': {'claim_label': N}},
+            'proven boolean': {'accounting': {'proven': True}},
+            'established boolean': {'established': False},
+            'holds boolean': {'invariant': {'holds': True}},
+            'isProven boolean': {'isProven': True},
+            'passed_tests count': {'command': 'examples', 'passed_tests': 3},
+            'verified list': {'verified': ['a']},
+        }
+        for name, document in cases.items():
+            with self.subTest(name):
+                self.assertEqual(len(lint_json(document)), 1, lint_json(document))
+
+    def test_leading_verdict_words_with_punctuation_and_padding(self):
+        """Delta review F-2."""
+        for value in ('Proved.', 'Proved, for every order', 'Proved!', ' Proved stock', '"Proved" stock',
+                      "'ok'", 'Holds;', 'success.', '\tVerified'):
+            with self.subTest(value=value):
+                self.assertEqual(len(lint_json({'note': value})), 1, lint_json({'note': value}))
+        for line in ('result: Proved.', 'result:  Proved', 'stats: "ok"', 'runtime status: Verified!',
+                     'note: Proved.', '== Payment outcome: Passed -> x'):
+            with self.subTest(line=line):
+                prefixes = ('note: ', ('== Payment outcome: ', ('Ok', 'Err', 'Unknown')))
+                self.assertEqual(len(lint_text(line, prefixes)), 1, lint_text(line, prefixes))
+        self.assertEqual(lint_text('== Payment outcome: Ok -> Purchase completed',
+                                   (('== Payment outcome: ', ('Ok', 'Err', 'Unknown')),)), [])
+        for bad in ((('Outcome: ', ('Proved',)),), ('Proved: ',)):
+            with self.assertRaises(ValueError):
+                lint_text('x', bad)
 
     def test_upper_case_identifiers_are_not_status_words(self):
         """User-chosen names may be upper case (the grammar accepts \\w+); they are not claims."""
