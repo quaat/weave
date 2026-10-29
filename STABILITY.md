@@ -37,5 +37,7 @@ reproducible list of which existing evidence files carry a `format` field and wh
   or R0.
 - **Unrecognised versions are never success.** A tool must reject evidence or a store whose
   format it does not implement, naming the identifier, or report the claim as not
-  established. The v3 prototype meets this only partly; the chapter states the gaps and
+  established. This binds versioned schemas; the existing unversioned files are not
+  treated as conformant versioned evidence until migrated, nor rejected retroactively.
+  The v3 prototype meets this only partly; the chapter states the gaps and
   what tracks them.

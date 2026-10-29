@@ -143,11 +143,12 @@ Evidence schemas
 An evidence document MUST name its schema in a top-level ``format`` field of
 the form ``weave-<artefact>-v<N>``. Seven existing format strings already use
 this form, but many existing evidence files have no ``format`` field; both
-groups are listed under `Existing evidence files`_. Bump rule: any change to the fields, their meaning or the checks a
-reader performs needs the next ``N``. A format string never changes meaning, and
-a retired format string is never reused. The machine-readable diagnostics schema
-(quaat/weave#6) and the trace, canonical-net and evidence-envelope schemas
-(quaat/weave#7) are versioned under this axis.
+groups are listed under `Existing evidence files`_. Bump rule: any change to
+the fields, their meaning or the checks a reader performs needs the next ``N``.
+A format string never changes meaning, and a retired format string is never
+reused. The machine-readable diagnostics schema (quaat/weave#6) and the trace,
+canonical-net and evidence-envelope schemas (quaat/weave#7) are versioned under
+this axis.
 
 Persisted store format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -432,6 +433,12 @@ with a message naming the unrecognised identifier, or report that the claim is
 not established. An input that lacks a version identifier where its schema
 requires one is treated the same way. The same holds for a conformance claim
 naming a language revision or profile the tool does not implement.
+The format-field requirement under `Evidence schemas`_ and these rules bind
+tools that read or write versioned schemas; they do not reinterpret the
+unversioned files listed under `Existing evidence files`_: until those files are
+migrated (by quaat/weave#7 for the files it names; otherwise not yet tracked), a
+tool does not treat them as conformant versioned evidence, and this policy does
+not require rejecting them retroactively.
 
 The existing prototype predates this rule. It has two partial safeguards, and
 neither meets the rule in full:
