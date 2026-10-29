@@ -49,8 +49,10 @@ and require no services or credentials.
 - Do not weaken invariants, consumer lists, identity checks, or evidence guards
   just to make a caller pass. Report a contract disagreement; change the contract
   only when that is part of the requested work.
-- Distinguish `PROVED` accounting, `CHECKED WITHIN BOUNDS` ordering, and `SCRIPTED`
-  execution. Do not call bounded exploration a multi-order proof.
+- Distinguish `PROVED` accounting, `CHECKED WITHIN BOUNDS` ordering, `CHECKED flow`
+  checks, and `SCRIPTED / passed scenario` execution. Do not call bounded exploration a
+  multi-order proof. Report claims only with the six result labels, one per claim;
+  tool status and runtime status are not evidence (see `docs/commands.md`).
 
 Keep the vendored prototype unchanged for ordinary flow work. For an explicitly
 requested implementation change, update its tests and the documented boundary.

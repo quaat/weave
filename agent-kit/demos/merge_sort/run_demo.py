@@ -97,7 +97,8 @@ def main(argv=None):
     report = {'demo': 'merge_sort', 'ok': ok, 'source': str(args.source), 'entry': ENTRY,
               'input': values, 'runner_exit': code}
     if ok:
-        report.update(output=data['result'], status=data['status'], check=data['check'],
+        # The runner's NOT ESTABLISHED claim for the pure program and the run's runtime status.
+        report.update(output=data['result'], check=data['check'], runtime_status=data['runtime_status'],
                       execution=data['execution'], stats=data['stats'], scope=data['scope'])
         if args.trace:
             report['events'] = data['events']
@@ -114,7 +115,9 @@ def main(argv=None):
         print(f"Work:   {stats['steps']} instructions, {stats['tasks_created']} activations, "
               f"{stats['forks']} forks, {stats['joins']} joins, max live {stats['max_live_tasks']}, "
               f"max frames {stats['max_frames']}")
-        print('Checked by the Weave pure checker (termination not checked); executed by the Weave runner.')
+        print(f"{report['check']['claim_label']} for this pure fn program: no specified guarantee (kit extension "
+              "outside F0); accepted by the kit's pure checker, termination not checked")
+        print(f"runtime status: {report['runtime_status']} (executed by the Weave runner)")
         if args.trace:
             print('Trace:')
             for event in report['events']:
@@ -123,7 +126,7 @@ def main(argv=None):
         d = report['diagnostic']
         span = d.get('span') or {}
         loc = f"{span['file']}:{span['start']['line']}" if span else (f"{d.get('file')}:{d.get('line')}" if d.get('file') else '')
-        print(f"FAILED {d.get('code')} [{d.get('stage')}] {loc}: {d.get('message')}", file=sys.stderr)
+        print(f"error: {d.get('code')} [{d.get('stage')}] {loc}: {d.get('message')}", file=sys.stderr)
     if ok:
         return 0
     return code if code not in (0, None) else 1

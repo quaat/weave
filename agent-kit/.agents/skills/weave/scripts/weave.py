@@ -23,6 +23,7 @@ from simulate import simulate
 from verify_certificate import verify
 import weave_pure.cli as pure_cli
 from weave_diagnostics import from_check_error, from_pure_error, location, tool_error
+from weave_labels import BOUNDED, FLOW, NOT_ESTABLISHED, PROVED, SCRIPTED, VIOLATED, claim_line, labelled
 from weave_pure import PureError, check_source as check_pure_source
 
 
@@ -55,23 +56,47 @@ def appended_diagnostic(error: CheckError, net_path: Path, net_source: str, file
     return document
 
 
+class NetFailure(Exception):
+    """A checker error in a net, with the claims established before it (accounting, a failed ordering check)."""
+
+    def __init__(self, error: CheckError, claims: dict):
+        super().__init__(str(error))
+        self.error, self.claims = error, claims
+
+
+# Ordering-check diagnostics that decide the ordering claim (specification, diagnostics
+# chapter): E320 is a modeled counterexample, so the claim is VIOLATED; E321 is an exhausted
+# bound or state budget, reported as NOT ESTABLISHED, never as a successful check.
+ORDERING_FAILURES = {"E320": (VIOLATED, "counterexample in the diagnostic"),
+                     "E321": (NOT_ESTABLISHED, "token bound or state budget exhausted")}
+
+
+def accounting_claim(certificate: dict) -> dict:
+    return labelled(PROVED, invariants=[r["name"] for r in certificate["invariants"]])
+
+
+def ordering_claim(ordering: dict) -> dict:
+    return labelled(BOUNDED, states=ordering["states"], edges=ordering["edges"], orders=ordering["orders"],
+                    stock=ordering["stock"], admission_limit=ordering["admission_limit"],
+                    place_bound=ordering["place_bound"], max_states=ordering["max_states"],
+                    properties=[r["name"] for r in ordering["properties"]],
+                    assumptions=ordering["assumptions"])
+
+
 def checked_net(path: Path, max_states: int = 10000):
+    """Parse, prove and explore a net. Returns ``(net, claims)``; raises NetFailure on a checker error."""
     net = parse_net(read(path))
     certificate = prove(net)
-    ordering = explore_order(net, max_states)
-    return net, certificate, ordering
-
-
-def summary(certificate: dict, ordering: dict) -> dict:
-    return {
-        "accounting": {"status": "PROVED", "invariants": [r["name"] for r in certificate["invariants"]]},
-        "ordering": {"status": "CHECKED WITHIN BOUNDS", "states": ordering["states"],
-                     "edges": ordering["edges"], "orders": ordering["orders"],
-                     "stock": ordering["stock"], "admission_limit": ordering["admission_limit"],
-                     "place_bound": ordering["place_bound"], "max_states": ordering["max_states"],
-                     "properties": [r["name"] for r in ordering["properties"]],
-                     "assumptions": ordering["assumptions"]},
-    }
+    claims = {"accounting": accounting_claim(certificate)}
+    try:
+        ordering = explore_order(net, max_states)
+    except CheckError as error:
+        if error.code in ORDERING_FAILURES:
+            label, reason = ORDERING_FAILURES[error.code]
+            claims["ordering"] = labelled(label, diagnostic_code=error.code, reason=reason, max_states=max_states)
+        raise NetFailure(error, claims) from error
+    claims["ordering"] = ordering_claim(ordering)
+    return net, certificate, claims
 
 
 def write_output(path: Path, text: str, inputs: list[Path]) -> None:
@@ -93,7 +118,7 @@ def run_examples(path: Path) -> tuple[dict, int]:
     base = path.parent
     net_path = base / manifest["net"]
     source = read(net_path)
-    net, certificate, ordering = checked_net(net_path)
+    net, _, claims = checked_net(net_path)
     results = []
     for item in manifest["cases"]:
         file = base / item["file"]
@@ -109,7 +134,10 @@ def run_examples(path: Path) -> tuple[dict, int]:
                 prove(mutated)
                 explore_order(mutated)
             elif item["kind"] == "net":
-                checked_net(file)
+                try:
+                    checked_net(file)
+                except NetFailure as failure:
+                    raise failure.error from None
             elif item["kind"] == "pure":
                 check_pure_source(text)
             else:
@@ -133,9 +161,10 @@ def run_examples(path: Path) -> tuple[dict, int]:
                         "expected": item["marking"], "actual": actual,
                         "ok": actual == item["marking"], "lesson": "Scripted final marking"})
     ok = all(r["ok"] for r in results)
+    # Each result is an expectation of the teaching corpus (step status ``ok``), not a claim;
+    # the claims are those about the manifest's net.
     return {"command": "examples", "ok": ok, "checks": len(results),
-            "passed": sum(r["ok"] for r in results), "results": results,
-            **summary(certificate, ordering)}, 0 if ok else 1
+            "passed": sum(r["ok"] for r in results), "results": results, **claims}, 0 if ok else 1
 
 
 def positive_int(text: str) -> int:
@@ -179,6 +208,11 @@ def parser() -> argparse.ArgumentParser:
     return p
 
 
+def flow_claim(file: Path, names: list[str], **extra) -> dict:
+    """One CHECKED flow claim: the F0 checks passed for every flow declared in ``file``."""
+    return {"file": str(file), "ok": True, **labelled(FLOW, flows=names, **extra)}
+
+
 def execute(args) -> tuple[dict, int]:
     label = getattr(args, "net", PROTOTYPE)
     stage = "net"
@@ -210,11 +244,19 @@ def execute(args) -> tuple[dict, int]:
             stage = "certificate"
             source = read(args.net)
             label = args.certificate
-            count = verify(source, json.loads(read(args.certificate)))
-            return {"command": "verify", "ok": True, "status": "RECHECKED",
-                    "invariants": count, "scope": "Accounting only; shared parser, not an independent formal proof"}, 0
-        net, certificate, ordering = checked_net(args.net, getattr(args, "max_states", 10000))
-        result = {"command": args.command, "ok": True, "net": str(args.net), **summary(certificate, ordering)}
+            certificate = json.loads(read(args.certificate))
+            count = verify(source, certificate)
+            names = [r["name"] for r in certificate["invariants"]]
+            if len(names) != count:
+                raise ValueError("Certificate invariant count disagrees with the recheck")
+            # Rechecking the certificate's arithmetic against the source discharges the same
+            # invariant obligations again, so the claim is PROVED, within the stated scope.
+            return {"command": "verify", "ok": True, "certificate": str(args.certificate),
+                    "accounting": labelled(PROVED, invariants=names, method="certificate recheck",
+                                           scope="Accounting only; verify_certificate.py shares the parser, "
+                                                 "not an independent formal proof; ordering not rechecked")}, 0
+        net, certificate, claims = checked_net(args.net, getattr(args, "max_states", 10000))
+        result = {"command": args.command, "ok": True, "net": str(args.net), **claims}
         if args.command == "analyze":
             if args.certificate:
                 write_output(args.certificate, json.dumps(certificate, indent=2) + "\n", [args.net])
@@ -226,7 +268,7 @@ def execute(args) -> tuple[dict, int]:
                 text = read(file)
                 try:
                     names = check_flow(net, text)
-                    result["files"].append({"file": str(file), "ok": True, "flows": names})
+                    result["files"].append(flow_claim(file, names))
                 except CheckError as error:
                     result["ok"] = False
                     result["files"].append({"file": str(file), "ok": False,
@@ -239,21 +281,29 @@ def execute(args) -> tuple[dict, int]:
             if check_flow(net, lowered) != names:
                 raise ValueError("Lowered declarations differ from source")
             write_output(args.output, lowered, [args.net, args.file])
-            result.update({"output": str(args.output), "flows": names, "status": "CHECKED LOWERING"})
+            result.update({"output": str(args.output), "flows": names,
+                           "files": [flow_claim(args.file, names),
+                                     flow_claim(args.output, names, lowered_from=str(args.file))]})
         elif args.command == "simulate":
             stage, label = "flow", args.file
             source = read(args.file)
             check_flow(net, source)
             stage = "execution"
             outcomes = ["Ok", "Err", "Unknown"] if args.outcome == "all" else [args.outcome]
-            result["status"] = "SCRIPTED"
             result["runs"] = []
             for outcome in outcomes:
                 run = simulate(net, source, args.entry, outcome)
                 if not args.trace:
                     run.pop("events")
-                result["runs"].append(run)
+                # simulate() raises on a disabled transition or failed assertion, so a returned run
+                # is one passed scenario. Its scripted outcome (Ok, Err, Unknown) is an application
+                # outcome, and runtime_status is the status of the run; neither is a label.
+                result["runs"].append({"claim_label": SCRIPTED, "runtime_status": "completed", **run})
         return result, 0 if result["ok"] else 1
+    except NetFailure as failure:
+        # Claims established before the failure stay attached; E320 and E321 add the ordering claim.
+        return {"command": args.command, "ok": False, **failure.claims,
+                "diagnostic": diagnostic(failure.error, label, stage)}, 1
     except CheckError as error:
         return {"command": args.command, "ok": False, "diagnostic": diagnostic(error, label, stage)}, 1
     except (OSError, ValueError, KeyError, TypeError, AssertionError, subprocess.TimeoutExpired) as error:
@@ -268,47 +318,65 @@ def print_diagnostic(d: dict) -> None:
         print(f"  {item['span']['file']}:{start['line']}:{start['column']}: {item['role']}: {item['label']}")
 
 
+def net_claim_lines(result: dict) -> None:
+    if "accounting" in result:
+        acc = result["accounting"]
+        if acc.get("method") == "certificate recheck":
+            print(claim_line(acc["claim_label"], f"{len(acc['invariants'])} accounting invariants rechecked from "
+                                                 f"{result['certificate']} ({acc['scope']})"))
+        else:
+            print(claim_line(acc["claim_label"], f"{len(acc['invariants'])} accounting invariants"))
+    if "ordering" in result:
+        order = result["ordering"]
+        if "diagnostic_code" in order:
+            print(claim_line(order["claim_label"], f"ordering: {order['reason']} ({order['diagnostic_code']} below)"))
+        else:
+            print(claim_line(order["claim_label"],
+                             f"{order['states']} states/{order['edges']} edges "
+                             f"(orders=1, stock=1, admission<=1, tokens/place<={order['place_bound']})"))
+
+
 def render(result: dict) -> None:
-    if "diagnostic" in result:
-        print_diagnostic(result["diagnostic"])
-        return
+    """Text output: claims as ``LABEL statement`` lines, everything else under a lower-case name."""
     command = result["command"]
     if command in ("check-pure", "run-pure"):
         pure_cli.render(result, print_diagnostic)
-    elif command == "doctor":
-        print(f"{'READY' if result['ok'] else 'NOT READY'} Python {result['python']}; no third-party dependencies")
-        print(f"Prototype: {result['prototype']}")
+        return
+    net_claim_lines(result)
+    if "diagnostic" in result:
+        print_diagnostic(result["diagnostic"])
+        return
+    if command == "doctor":
+        print(f"tool status: {'READY' if result['ok'] else 'NOT READY'} Python {result['python']}; "
+              "no third-party dependencies")
+        print(f"prototype: {result['prototype']}")
         if result["missing"]:
-            print("Missing: " + ", ".join(result["missing"]))
+            print("missing: " + ", ".join(result["missing"]))
     elif command == "test":
-        print(result["output"])
-        if not result["ok"]:
-            print("FAILED: tests failed or no tests were selected")
+        print("raw output (bundled prototype unittest; not a claim):")
+        for line in result["output"].splitlines():
+            print("  " + line if line else "")
+        print(f"tool status: {'PASS bundled prototype regression tests' if result['ok'] else 'FAIL tests failed or no tests were selected'}")
+    elif command == "verify":
+        pass
     elif command == "examples":
-        print(f"{'PASS' if result['ok'] else 'FAIL'} {result['passed']}/{result['checks']} example expectations")
+        print(f"tool status: {'PASS' if result['ok'] else 'FAIL'} {result['passed']}/{result['checks']} example expectations")
         for item in result["results"]:
             if not item["ok"]:
                 print(json.dumps(item, ensure_ascii=False))
-    elif command == "verify":
-        print(f"RECHECKED {result['invariants']} accounting invariants; ordering not rechecked")
     else:
-        if "ordering" in result:
-            order = result["ordering"]
-            print(f"PROVED {len(result['accounting']['invariants'])} accounting invariants; "
-                  f"CHECKED WITHIN BOUNDS {order['states']} states/{order['edges']} edges "
-                  f"(orders=1, stock=1, admission<=1, tokens/place<={order['place_bound']})")
         for item in result.get("files", []):
             if item["ok"]:
-                print(f"CHECKED {item['file']}: {', '.join(item['flows'])}")
+                lowered = f" (lowered from {item['lowered_from']})" if "lowered_from" in item else ""
+                print(claim_line(item["claim_label"], f"{item['file']}{lowered}: {', '.join(item['flows'])}"))
             else:
                 print_diagnostic(item["diagnostic"])
-        if "output" in result:
-            print(f"CHECKED LOWERING -> {result['output']}")
         if "certificate" in result:
-            print(f"CERTIFICATE -> {result['certificate']}")
+            print(f"certificate: written to {result['certificate']}")
         for run in result.get("runs", []):
             occupied = ", ".join(f"{k}={v}" for k, v in run["marking"].items() if v)
-            print(f"SCRIPTED {run['outcome']} via {run['entry']}: {occupied}")
+            print(claim_line(run["claim_label"], f"{run['outcome']} via {run['entry']}: {occupied}"))
+            print(f"  runtime status: {run['runtime_status']}")
             for event in run.get("events", []):
                 print("  " + json.dumps(event, ensure_ascii=False))
 

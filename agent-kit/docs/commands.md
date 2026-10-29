@@ -49,7 +49,45 @@ Simulation returns `runs` with final `marking`; `--trace` adds complete `events`
 
 Text successes are compact; diagnostics retain full explanations and print
 `file:line:column: CODE (RULE) [stage]`, followed by any related locations. There is no
-persistent result cache. Only explicit `--certificate` and `--output` write files.
+persistent result cache.
+
+## Claims, tool status and runtime status
+
+Every claim the runner makes carries exactly one of the six result labels of the
+specification (`verification.rst`, Result vocabulary), verbatim: `PROVED`,
+`CHECKED WITHIN BOUNDS`, `CHECKED flow`, `SCRIPTED / passed scenario`, `VIOLATED`,
+`NOT ESTABLISHED`. A label belongs to one claim, never to a whole command. Nothing
+else the runner reports is a claim, and it is never written with a label.
+
+| What | JSON | Text |
+| --- | --- | --- |
+| A claim | an object with a `claim_label` member | an unindented line that begins with the label: `LABEL statement` |
+| Tool or step status | `ok` (and the exit code); `examples` results carry `ok` per expectation | `tool status: PASS …`, `tool status: READY …` |
+| Runtime status of a run | `runtime_status`: `waiting`, `timed out` or `completed` | `runtime status: completed` |
+| Diagnostics | `diagnostic` | `file:line:column: CODE (RULE) [stage]` and indented lines |
+| Raw output of another tool | `output`, `upstream_output` | indented under `raw output (…; not a claim):` |
+
+No JSON member is named `status`. Other text lines start with a lower-case name
+(`prototype:`, `certificate:`, `result:`, `stats:`) or a diagnostic location;
+indented lines belong to the line above.
+
+| Command | Claims (JSON position: label) |
+| --- | --- |
+| `check`, `analyze`, `lower`, `simulate`, `examples` | `accounting`: `PROVED` (the net's invariants); `ordering`: `CHECKED WITHIN BOUNDS` (one bounded exploration) |
+| same, when the ordering check fails | `ordering`: `VIOLATED` with `E320` (a counterexample), `NOT ESTABLISHED` with `E321` (bound or state budget exhausted); `ok` is false and `diagnostic` holds the code |
+| `check` | each accepted `files` element: `CHECKED flow` (every flow in that file) |
+| `lower` | `files`: `CHECKED flow` for the source and for the lowered output (`lowered_from`) |
+| `simulate` | each `runs` element: `SCRIPTED / passed scenario`, with `runtime_status: completed`; `outcome` (`Ok`, `Err`, `Unknown`) is the scripted application outcome |
+| `verify` | `accounting`: `PROVED` with `method: certificate recheck` and its scope (shared parser; ordering not rechecked) |
+| `check-pure` | each accepted `files` element: `NOT ESTABLISHED` (see below) |
+| `run-pure` | `check`: `NOT ESTABLISHED`; the run itself is `runtime_status: completed` |
+| `doctor`, `test` | none; `ok` is the tool status and `test` output is raw unittest output |
+
+`examples` compares each teaching case with its expected outcome; those results are
+step statuses (`ok`), not claims. An `Unknown` outcome is an application outcome:
+a run that returns `Unknown` is still a `SCRIPTED / passed scenario` claim, and
+`Unknown` is never `NOT ESTABLISHED`. Diagnostic messages repeat the prototype's
+own wording (for example `NOT PROVED` in `E112`); a diagnostic is not a claim. Only explicit `--certificate` and `--output` write files.
 Output directories must exist; existing outputs are replaced, but input paths
 cannot be output paths. The runner suppresses bytecode writes.
 
@@ -67,7 +105,14 @@ anything beyond the operation's documented scope.
 
 These commands belong to the kit's pure-function extension (`weave_pure`), not the
 vendored prototype. They never parse, prove, or explore a net, and they report no
-accounting or ordering status. `--net` and `--max-states` are not accepted.
+accounting or ordering claim. `--net` and `--max-states` are not accepted.
+
+Pure `fn` programs are outside F0 and every specified profile, so no specified
+guarantee is established for them. Each accepted file is one `NOT ESTABLISHED`
+claim (`reason`: missing model) whose statement names what the kit's own checker
+accepted; `scope` describes those checks. The kit does not report the extension
+check under a separate passing field: a successful check is a statement about the
+program, and the six labels are the only vocabulary for such statements.
 
 ```bash
 python3 scripts/weave.py check-pure demos/merge_sort/merge_sort.weave
@@ -88,10 +133,11 @@ python3 scripts/weave.py run-pure demos/merge_sort/merge_sort.weave --entry merg
 | `--max-tasks N` | 4096 | Live activations (`P423`) |
 | `--trace` | off | Include scheduler events |
 
-`run-pure` JSON contains `status: EXECUTED`, `check: CHECKED`, `result`,
-`execution` (mode, scheduler, limits), and `stats` (steps, activations, forks,
-joins, peak live tasks, peak frames, pending tasks/joins). With `--trace` it also
-contains `events`. Check rejections exit 1. Input errors, runtime faults, and
+`run-pure` JSON contains `check` (the `NOT ESTABLISHED` claim, with `functions`),
+`runtime_status: completed`, `result`, `execution` (mode, scheduler, limits), and
+`stats` (steps, activations, forks, joins, peak live tasks, peak frames, pending
+tasks/joins). With `--trace` it also contains `events`. Text output prints the
+claim line, then `runtime status:`, `result:` and `stats:` lines. Check rejections exit 1. Input errors, runtime faults, and
 exhausted limits exit 2 with a `runtime` or `input` stage. `examples` also
 accepts manifest cases of kind `pure`.
 

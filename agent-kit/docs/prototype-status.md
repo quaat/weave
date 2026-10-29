@@ -53,6 +53,21 @@ or `?` listed as unimplemented refer to an older snapshot.
 - The accepted and rejected programs, the codes and the generated outputs of
   `demo.py` are unchanged; the 143 tests now also assert spans.
 
+### The prototype's own console lines are raw tool output
+
+The vendored prototype prints its own status words: `checker.py` prints bare
+`CHECKED …` lines (linear resources, runtime-owned places, foreign dispatch, a flow)
+and `NOT PROVED` inside `E112`; `coloured.py` prints `NOT PROVED` inside `E412`;
+`durable.py` prints `PASSED` and records `status: PASSED`; `verify_certificate.py`
+prints `RECHECKED`; `demo.py` prints `CHECKED <flow>:`, `PASSED`, `RECHECKED` and
+`EXPECTED … FAILURE`. These bytes are pinned and stay unchanged (quaat/weave#8).
+They are raw tool output, not claims. The kit runner states claims itself, with
+the six result labels only (`docs/commands.md`, "Claims, tool status and runtime
+status"): for example `verify` reports `PROVED` where `verify_certificate.py`
+prints `RECHECKED`. Raw output reaches the runner's output only as `test` output,
+`upstream_output` or diagnostic messages, none of which is a claim. The evidence
+envelopes in `evidence/` likewise wrap the prototype's files under the six labels.
+
 ## Kit extension: pure functions with fork/join
 
 The kit adds a separate module, `.agents/skills/weave/scripts/weave_pure/`, that
@@ -72,6 +87,7 @@ kit rule IDs listed in the guide. Flows still reject recursion (`E218`) and `fn`
 | Scheduler properties | Pairing, single join consumption, cleanup, failure propagation, and mode agreement are tested, not proved |
 | Scope | Pure data only; no effects, linear handles, net interaction, mutual recursion, higher-order functions, loops, or arithmetic beyond `<=` |
 | Accounting | No net or certificate covers this task system |
+| Result labels | Outside every specified profile: the runner's only claim about a pure program is `NOT ESTABLISHED`; a run's `runtime_status` is not evidence |
 
 ## Boundaries
 

@@ -101,3 +101,23 @@ teaching manifest's four pure expectations and fixture comments were updated, an
 
 Accepted and rejected programs are unchanged; only the pure-extension code prefix and the
 diagnostic format changed. Demo artifacts and test reports were not regenerated.
+
+## Addendum: result labels in runner output (2026-10-29, quaat/weave#8)
+
+Environment: Python 3.13.5 on Linux. The vendored prototype is unchanged. The runner and
+both demo runners now emit each claim with one of the six result labels and report tool
+and runtime status separately (kit `0.3.0`); `tests/test_result_labels.py` lints the text
+and `--json` output of every runner command, both demos and every wrapped evidence
+envelope. The demo artifacts were regenerated with the commands in the demo READMEs.
+
+| Check | Result |
+| --- | --- |
+| Original prototype regression suite (`weave.py test`) | 143 tests passed |
+| Kit tests (`tests/`) | 89 passed, including `test_result_labels.py` and the provenance hash check |
+| Teaching manifest (`weave.py examples`) | 34 expectations matched |
+| Merge-sort demo tests | 13 passed |
+| Tiny Shop demo tests | 17 passed |
+| `weave.py doctor` | `tool status: READY` |
+
+Accepted and rejected programs, diagnostic codes and exit codes are unchanged; only the
+output shape changed (see `CHANGELOG.md`).

@@ -27,7 +27,8 @@ python3 scripts/weave.py run-pure /absolute/path/program.weave --entry merge_sor
 
 `check-pure` and `run-pure` belong to the kit's pure-function extension
 (`scripts/weave_pure/`): `fn`, `if`/`else`, `<=`, list primitives, direct
-recursion, and `fork:`. They read no net and report no accounting status.
+recursion, and `fork:`. They read no net and report no accounting claim; their
+only claim is `NOT ESTABLISHED`, because pure programs are outside every specified profile.
 Termination is not checked; concurrency is cooperative on one thread.
 
 Replace paths and entry names with the task's actual files and declaration.
@@ -50,8 +51,14 @@ files only when a diagnostic or implementation task requires them.
 - Treat `Unknown` as a recovery obligation. Propagation inserts no cleanup.
 - Use implemented syntax; do not invent loops, retry, parallel, or unrestricted FFI.
   Pure `fn` syntax is valid only in pure files under `check-pure`/`run-pure`, never in flows.
-- Separate `PROVED` accounting, `CHECKED WITHIN BOUNDS` ordering, and `SCRIPTED`
+- Separate `PROVED` accounting, `CHECKED WITHIN BOUNDS` ordering, `CHECKED flow`
+  checks, and `SCRIPTED / passed scenario`
   execution. Report bounds/budget exhaustion as not established.
+  Its label is `NOT ESTABLISHED`; a counterexample is `VIOLATED`. Use only these six
+  labels for claims, one per claim: a claim is a JSON `claim_label` or an
+  unindented text line that begins with its label.
+  `ok`/`tool status` and `runtime_status` are not evidence; `Unknown` is an
+  application outcome, never `NOT ESTABLISHED`.
 - Preserve net contracts while repairing callers. Report incompatible requirements
   instead of weakening guards, consumer lists, or invariants to obtain a pass.
 - Report diagnostic codes, rules, source locations, and messages. Exit 0 means the requested

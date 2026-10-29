@@ -31,6 +31,13 @@ python3 scripts/weave.py simulate examples/valid/checkout_propagating.weave --en
 The simulator uses symbolic scalar parameters and one scripted foreign reply.
 It does not contact a payment provider or start a durable/asynchronous runtime.
 
+Every claim the runner prints carries one of the specification's six result labels
+(`PROVED`, `CHECKED WITHIN BOUNDS`, `CHECKED flow`, `SCRIPTED / passed scenario`,
+`VIOLATED`, `NOT ESTABLISHED`), as a `LABEL statement` line or a JSON `claim_label`.
+Tool status and the runtime status of a run are reported separately and are not
+evidence; see `docs/commands.md`. `tests/test_result_labels.py` lints the output of
+every command for this.
+
 ## Use with an agent
 
 Open the extracted folder as the working project in Codex or Claude Code.
@@ -66,7 +73,7 @@ contains hidden `.agents` and `.claude` directories; include them when copying.
 | `scripts/weave.py` | Short repository command |
 | `.agents/skills/weave/` | Canonical portable skill, runner, guide, and prototype |
 | `.claude/skills/weave/` | Repository-local adapter to the canonical skill |
-| `tests/` | Packaging/CLI regressions and pure-extension tests |
+| `tests/` | Packaging/CLI regressions, the result-label lint, and pure-extension tests |
 | `demos/` | Applications: `tiny_shop` (flows) and `merge_sort` (pure extension) |
 | `docs/validation.md` | Validation performed for this release |
 | `PROVENANCE.json` | Exact input identity and prototype file integrity records |

@@ -6,6 +6,11 @@ preserve. All commands below were run from the kit root unless noted. Default
 bundled `Inventory.weave` net (byte-identical to `examples/nets/Inventory.weave`);
 no `--net` override was used, and the vendored prototype was not modified.
 
+Note (kit 0.3.0, quaat/weave#8): the outputs quoted below are those of the kit at the
+time of this report. The runner and demos now print each claim as a `LABEL statement`
+line with one of the six result labels and report tool and runtime status separately
+(`docs/commands.md`); the files in `artifacts/` were regenerated with the current output.
+
 ## Baseline (before any changes)
 
 | Command | Exit | Result |

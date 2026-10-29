@@ -332,12 +332,18 @@ class RunnerCommandTests(unittest.TestCase):
         proc = self.cli('--json', 'run-pure', path, '--entry', 'merge_sort', '--args', '[[2,1]]', '--trace')
         self.assertEqual(proc.returncode, 0, proc.stdout)
         data = json.loads(proc.stdout)
-        self.assertEqual((data['status'], data['result']), ('EXECUTED', [1, 2]))
+        self.assertEqual((data['runtime_status'], data['result']), ('completed', [1, 2]))
+        # The pure extension is outside F0: its only claim is NOT ESTABLISHED, never a passing label.
+        self.assertEqual(data['check']['claim_label'], 'NOT ESTABLISHED')
+        self.assertEqual(data['check']['functions'], ['merge_sort', 'merge'])
+        self.assertNotIn('status', data)
         self.assertNotIn('accounting', data)
         self.assertIn('fork', [e['event'] for e in data['events']])
         proc = self.cli('run-pure', path, '--entry', 'merge_sort', '--args', '[[2,1]]', '--mode', 'sequential')
         self.assertEqual(proc.returncode, 0)
-        self.assertIn('RESULT [1, 2]', proc.stdout)
+        self.assertIn('result: [1, 2]', proc.stdout)
+        self.assertIn('runtime status: completed', proc.stdout)
+        self.assertTrue(proc.stdout.startswith('NOT ESTABLISHED '), proc.stdout)
 
     def test_run_pure_failures(self):
         path = ROOT / 'demos/merge_sort/merge_sort.weave'

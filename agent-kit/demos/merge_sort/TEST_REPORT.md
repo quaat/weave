@@ -5,6 +5,11 @@ dependencies). The kit is not a Git repository, so there was no Git status to
 preserve; the existing Tiny Shop demo was left untouched and its tests were rerun.
 All commands were run from the kit root unless noted.
 
+Note (kit 0.3.0, quaat/weave#8): the outputs quoted below are those of the kit at the
+time of this report. The runner and demos now print each claim as a `LABEL statement`
+line with one of the six result labels and report tool and runtime status separately
+(`docs/commands.md`); the files in `artifacts/` were regenerated with the current output.
+
 ## Starting point
 
 The original fragment had no `fn` declarations: the flow checker rejects them with

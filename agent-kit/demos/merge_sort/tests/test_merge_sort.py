@@ -127,7 +127,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         data = json.loads(proc.stdout)
         self.assertEqual(data['output'], [-2, -2, 0, 5, 5])
-        self.assertEqual((data['status'], data['check']), ('EXECUTED', 'CHECKED'))
+        self.assertEqual((data['runtime_status'], data['check']['claim_label']), ('completed', 'NOT ESTABLISHED'))
+        self.assertNotIn('status', data)
         self.assertEqual(data['stats']['forks'], 4)
         self.assertEqual(data['stats']['pending_tasks'], 0)
 

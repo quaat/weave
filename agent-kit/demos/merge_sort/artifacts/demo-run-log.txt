@@ -3,7 +3,8 @@ Input:  [8, 3, 5, 1, 9, 2, 7, 4, 6]
 Sorted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 Mode:   sequential (sequential, single activation; schedule=fifo, workers=4, quantum=16)
 Work:   693 instructions, 1 activations, 0 forks, 0 joins, max live 1, max frames 10
-Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+NOT ESTABLISHED for this pure fn program: no specified guarantee (kit extension outside F0); accepted by the kit's pure checker, termination not checked
+runtime status: completed (executed by the Weave runner)
 [exit 0]
 
 $ python3 demos/merge_sort/run_demo.py --values [8,3,5,1,9,2,7,4,6] --mode concurrent --trace
@@ -11,7 +12,8 @@ Input:  [8, 3, 5, 1, 9, 2, 7, 4, 6]
 Sorted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
 Work:   677 instructions, 17 activations, 8 forks, 8 joins, max live 15, max frames 10
-Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+NOT ESTABLISHED for this pure fn program: no specified guarantee (kit extension outside F0); accepted by the kit's pure checker, termination not checked
+runtime status: completed (executed by the Weave runner)
 Trace:
       1 activation_created task=1 fn=merge_sort
       2 fork               task=1 fork=1 line=13
@@ -129,11 +131,12 @@ Input:  []
 Sorted: []
 Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
 Work:   7 instructions, 1 activations, 0 forks, 0 joins, max live 1, max frames 1
-Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+NOT ESTABLISHED for this pure fn program: no specified guarantee (kit extension outside F0); accepted by the kit's pure checker, termination not checked
+runtime status: completed (executed by the Weave runner)
 [exit 0]
 
 $ python3 demos/merge_sort/run_demo.py --values [5,-2,5,0,-2] --mode concurrent --json
-{"demo": "merge_sort", "ok": true, "source": "/home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/merge_sort.weave", "entry": "merge_sort", "input": [5, -2, 5, 0, -2], "runner_exit": 0, "output": [-2, -2, 0, 5, 5], "status": "EXECUTED", "check": "CHECKED", "execution": {"mode": "concurrent", "scheduler": "cooperative, single OS thread", "schedule": "fifo", "seed": 0, "limits": {"workers": 4, "quantum": 16, "fuel": 10000000, "max_tasks": 4096, "max_depth": 100000}}, "stats": {"tasks_created": 9, "max_live_tasks": 7, "forks": 4, "joins": 4, "slices": 16, "max_frames": 6, "steps": 292, "pending_tasks": 0, "pending_joins": 0, "root_task": 1}, "scope": "CHECKED covers types, terminal branches, effect exclusion, fork scope, and recursion shape; termination is not checked. EXECUTED is one run under the stated resource limits."}
+{"demo": "merge_sort", "ok": true, "source": "/home/thomas/project/danio/weave/.worktrees/agent-8-codify-the-six-result-labels-and-separat/agent-kit/demos/merge_sort/merge_sort.weave", "entry": "merge_sort", "input": [5, -2, 5, 0, -2], "runner_exit": 0, "output": [-2, -2, 0, 5, 5], "check": {"file": "/home/thomas/project/danio/weave/.worktrees/agent-8-codify-the-six-result-labels-and-separat/agent-kit/demos/merge_sort/merge_sort.weave", "ok": true, "claim_label": "NOT ESTABLISHED", "functions": ["merge_sort", "merge"], "reason": "pure fn kit extension outside F0; missing model"}, "runtime_status": "completed", "execution": {"mode": "concurrent", "scheduler": "cooperative, single OS thread", "schedule": "fifo", "seed": 0, "limits": {"workers": 4, "quantum": 16, "fuel": 10000000, "max_tasks": 4096, "max_depth": 100000}}, "stats": {"tasks_created": 9, "max_live_tasks": 7, "forks": 4, "joins": 4, "slices": 16, "max_frames": 6, "steps": 292, "pending_tasks": 0, "pending_joins": 0, "root_task": 1}, "scope": "Pure fn kit extension, outside F0 and every specified profile: no specified guarantee is established. The kit checker covers types, terminal branches, effect exclusion, fork scope, and recursion shape; termination is not checked. A run-pure run is one execution under the stated resource limits; its runtime_status is not evidence."}
 [exit 0]
 
 $ python3 demos/merge_sort/run_demo.py --help
@@ -180,18 +183,19 @@ error: --values[0] must be an integer, got 1.5
 
 $ python3 demos/merge_sort/run_demo.py --values [5,4,3,2,1] --fuel 20
 [stderr]
-FAILED E421 [runtime] /home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/merge_sort.weave:12: Fuel budget of 20 instructions exhausted in `merge_sort` (resource limit; termination is not checked).
+error: P421 [runtime] /home/thomas/project/danio/weave/.worktrees/agent-8-codify-the-six-result-labels-and-separat/agent-kit/demos/merge_sort/merge_sort.weave:12: Fuel budget of 20 instructions exhausted in `merge_sort` (resource limit; termination is not checked).
 [exit 2]
 
 $ python3 demos/merge_sort/run_demo.py --values [5,4,3,2,1] --max-tasks 2
 [stderr]
-FAILED E423 [runtime] /home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/merge_sort.weave:13: Live activation limit 2 would be exceeded by a fork.
+error: P423 [runtime] /home/thomas/project/danio/weave/.worktrees/agent-8-codify-the-six-result-labels-and-separat/agent-kit/demos/merge_sort/merge_sort.weave:13: Live activation limit 2 would be exceeded by a fork.
 [exit 2]
 
-$ (cd /tmp) python3 /home/thomas/project/danio/test-proj/weave-agent-kit/demos/merge_sort/run_demo.py --values '[3,2,1]'
+$ (cd /tmp) python3 /home/thomas/project/danio/weave/.worktrees/agent-8-codify-the-six-result-labels-and-separat/agent-kit/demos/merge_sort/run_demo.py --values '[3,2,1]'
 Input:  [3, 2, 1]
 Sorted: [1, 2, 3]
 Mode:   concurrent (cooperative, single OS thread; schedule=fifo, workers=4, quantum=16)
 Work:   131 instructions, 5 activations, 2 forks, 2 joins, max live 4, max frames 4
-Checked by the Weave pure checker (termination not checked); executed by the Weave runner.
+NOT ESTABLISHED for this pure fn program: no specified guarantee (kit extension outside F0); accepted by the kit's pure checker, termination not checked
+runtime status: completed (executed by the Weave runner)
 [exit 0]

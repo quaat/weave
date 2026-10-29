@@ -1,20 +1,19 @@
 {
   "demo": "tiny_shop",
-  "source": "/home/thomas/project/danio/test-proj/weave-agent-kit/demos/tiny_shop/shop.weave",
+  "source": "/home/thomas/project/danio/weave/.worktrees/agent-8-codify-the-six-result-labels-and-separat/agent-kit/demos/tiny_shop/shop.weave",
   "entry": "checkout",
   "requested_outcome": "all",
   "runner_exit": 0,
   "ok": true,
-  "status": "SCRIPTED",
   "accounting": {
-    "status": "PROVED",
+    "claim_label": "PROVED",
     "invariants": [
       "stock_conservation",
       "registration_balance"
     ]
   },
   "ordering": {
-    "status": "CHECKED WITHIN BOUNDS",
+    "claim_label": "CHECKED WITHIN BOUNDS",
     "states": 20,
     "edges": 43,
     "orders": 1,
@@ -42,6 +41,8 @@
   },
   "scenarios": [
     {
+      "claim_label": "SCRIPTED / passed scenario",
+      "runtime_status": "completed",
       "outcome": "Ok",
       "result": "Purchase completed",
       "explanation": "Payment succeeded; Paid evidence was consumed by Inventory.sell.",
@@ -70,6 +71,8 @@
       }
     },
     {
+      "claim_label": "SCRIPTED / passed scenario",
+      "runtime_status": "completed",
       "outcome": "Err",
       "result": "Payment rejected; item released",
       "explanation": "Final rejection; Unpaid was consumed by Inventory.release and the item is available again.",
@@ -98,6 +101,8 @@
       }
     },
     {
+      "claim_label": "SCRIPTED / passed scenario",
+      "runtime_status": "completed",
       "outcome": "Unknown",
       "result": "Payment unresolved; item held for recovery",
       "explanation": "Outcome unknown; Uncertain was handed off to the recovery queue with its registration intact. Recovery itself is not run by this demo.",

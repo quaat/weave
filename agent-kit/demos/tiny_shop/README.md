@@ -107,10 +107,15 @@ executed (`sell`/`release`/`handoff`); Python does not re-implement the workflow
 - **CHECKED WITHIN BOUNDS** – the net's one-order safety model: 20 states / 43
   edges with orders=1, stock=1, admission ≤ 1, tokens/place ≤ 1, abstract and
   assumed-truthful payment/rejection evidence, no late replies, no liveness.
-- **CHECKED** – `shop.weave` (and its lowered form) satisfies the supported type,
+- **CHECKED flow** – `shop.weave` (and its lowered form) satisfies the supported type,
   identity-index, exhaustive-match, and linear-ownership rules.
-- **SCRIPTED** – each scenario is one synchronous run with a chosen payment
-  outcome. It is not a multi-order or multi-interleaving proof.
+- **SCRIPTED / passed scenario** – each scenario is one synchronous run with a chosen
+  payment outcome. It is not a multi-order or multi-interleaving proof. Its
+  `runtime status: completed` says the run finished; it is not evidence, and the
+  `Unknown` payment outcome is an application outcome, not `NOT ESTABLISHED`.
+
+The demo prints each claim as a `LABEL statement` line with the runner's label, and
+`--json` relays the runner's `claim_label` and `runtime_status` fields unchanged.
 
 `verify` rechecks the certificate's source-bound accounting only; it does not
 recheck ordering and is not a proof of this application.
