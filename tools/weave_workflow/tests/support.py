@@ -196,4 +196,3 @@ def real_repo_refs() -> tuple[list[str], list[str]]:
     branches = git("branch", "--list", "agent/*", "--format=%(refname)")
     worktrees = [l for l in git("worktree", "list", "--porcelain") if l.startswith(("worktree ", "branch "))]
     return branches, worktrees
-
