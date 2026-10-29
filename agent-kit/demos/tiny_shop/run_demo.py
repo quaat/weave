@@ -76,7 +76,7 @@ def summarize_run(run, with_trace):
         'claim_label': run['claim_label'],
         'runtime_status': run['runtime_status'],
         'outcome': run['outcome'],
-        'result': label,
+        'settlement': label,
         'explanation': explanation,
         'return_type': run.get('return_type'),
         'return_tag': run.get('return_tag'),
@@ -122,7 +122,7 @@ def render_text(report):
     for s in report['scenarios']:
         m = s['final_marking']
         print()
-        print(f"== Payment outcome: {s['outcome']} -> {s['result']}")
+        print(f"== Payment outcome: {s['outcome']} -> {s['settlement']}")
         print(f"{s['claim_label']} flow execution with chosen payment outcome {s['outcome']} "
               "(no real payment I/O)")
         print(f"   runtime status: {s['runtime_status']}")

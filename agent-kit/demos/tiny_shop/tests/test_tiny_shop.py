@@ -156,7 +156,7 @@ class TinyShopTests(unittest.TestCase):
         for outcome in EXPECTED_NET:
             s = by_outcome[outcome]
             self.assertEqual(s['net_transitions'], EXPECTED_NET[outcome])
-            self.assertEqual(s['result'], EXPECTED_RESULT[outcome])
+            self.assertEqual(s['settlement'], EXPECTED_RESULT[outcome])
             self.assertEqual(s['final_marking'], self.source_runs[outcome]['marking'])
             self.assertNotIn('events', s)
 

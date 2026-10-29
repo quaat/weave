@@ -38,7 +38,8 @@ No changes since 0.3.0.
 | `run-pure` | `status: EXECUTED`, `check: CHECKED`; text `CHECKED …; EXECUTED …`, `RESULT`, `STATS` | `check` (the `NOT ESTABLISHED` claim), `runtime_status: completed`; text claim line, `runtime status:`, `result:`, `stats:` |
 | `doctor`, `examples`, `test` (text) | `READY …`, `PASS n/m …`, `FAILED: …`, raw unittest output | `tool status: READY …`, `tool status: PASS n/m …`, `tool status: FAIL …`; raw output indented under `raw output (…; not a claim):` |
 | Net claims (text) | `PROVED 2 accounting invariants; CHECKED WITHIN BOUNDS …` on one line | one `LABEL statement` line per claim |
-| Demo runners | `status` relayed; `Net accounting: PROVED`; `FAILED CODE …` on stderr | `claim_label` and `runtime_status` relayed; `LABEL …` lines; `error: CODE …` on stderr |
+| Demo runners | `status` relayed; `Net accounting: PROVED`; `FAILED CODE …` on stderr; Tiny Shop scenario `result` | `claim_label` and `runtime_status` relayed; `LABEL …` lines; `error: CODE …` on stderr; the scenario's `result` is renamed `settlement` (a member named `result` holds only a computed value) |
+| `examples` scenario lesson | `Scripted final marking` | `Final marking of a scripted run` |
 
 Pure programs report `NOT ESTABLISHED` because they are outside F0 and every specified
 profile; a separate passing field for the kit's own check would state a verification result

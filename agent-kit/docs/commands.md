@@ -67,11 +67,29 @@ else the runner reports is a claim, and it is never written with a label.
 | Diagnostics | `diagnostic` | `file:line:column: CODE (RULE) [stage]` and indented lines |
 | Raw output of another tool | `output`, `upstream_output` | indented under `raw output (…; not a claim):` |
 
-No JSON member is named `status`. Outside `claim_label`, which holds exactly one of the
-six labels, no JSON string is or contains a label or another upper-case status word
-(`PASSED`, `PASS`, `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`, `CHECKED`, `EXECUTED`, …) as a
-whole token; prose such as `scope` uses lower case ("not established"). The exceptions,
-listed in `weave_labels.py`, are: raw-output members (`diagnostic`, `output`,
+The JSON rules `tests/test_result_labels.py` enforces (`lint_json` in `weave_labels.py`):
+
+1. **Member names.** The only claim-bearing member is `claim_label`, which holds exactly
+   one of the six labels; `runtime_status` holds `waiting`, `timed out`, `completed` or
+   `null`; `ok` is the tool status. No member is named `status`. A member whose name has a
+   verdict word among its parts (case-insensitive, split on `_`, `-` and camelCase: verdict,
+   result, label, status, outcome, conclusion, claim, check, finding, assessment,
+   evaluation, judgement, decision, passed, success, proof, proved, verified and their
+   plurals) is an error, except these, each only with the value shape real output gives it:
+   `outcome` and `requested_outcome` (an application outcome name such as `Ok` or `all`),
+   `result` (the `run-pure` value: a number, Boolean or list, never a string or object),
+   `results` (the `examples` expectation records, each with `ok`), `checks` and `passed`
+   (`examples` counts), `check` (the `run-pure` claim object, with `claim_label`) and
+   `claim` (an evidence envelope's claim object).
+2. **String values.** No string value is a label or an upper-case status word, contains a
+   label word or a status word (`PASSED`, `PASS`, `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`,
+   `CHECKED`, `EXECUTED`, …) as a whole upper-case token, or begins, in any case, with a
+   verdict word followed by whitespace, `:`, `-` or the end (`CLAIM_LEXICON`: proved, proven,
+   unproved, checked, scripted, violated, not established, established, verified, passed,
+   pass, success, succeeded, ok, fail, failed, failure, holds, rechecked, executed,
+   bounded). Prose such as `scope` may use these words in lower case after its first word.
+
+The exceptions to rule 2, listed in `weave_labels.py`, are: raw-output members (`diagnostic`, `output`,
 `upstream_output`, `events`, `detail`, `context`); members holding user-chosen names or
 paths (`IDENTIFIER_MEMBERS`, so an upper-case property name is not a status word); the
 teaching manifest's `ACCEPT` expectation; and, in an evidence envelope only, its cited
@@ -94,7 +112,9 @@ belong to the line above. The demos declare their own headings (`TEXT_PREFIXES` 
 non-claim lines may contain a label or another upper-case status word (`PASSED`, `PASS`,
 `FAIL`, `FAILED`, `RECHECKED`, `NOT PROVED`, `CHECKED`, `EXECUTED`, …) as a whole token;
 the one exception is the tool status word right after `tool status: ` (`PASS`, `FAIL`,
-`READY`, `NOT READY`).
+`READY`, `NOT READY`). The text after a runner prefix (and after that tool status word) may
+not begin with a verdict word from `CLAIM_LEXICON`, in any case, and an unindented line that
+begins with one is a finding unless it begins with an exact label.
 `tests/test_result_labels.py` fails on any other unindented line.
 
 | Command | Claims (JSON position: label) |

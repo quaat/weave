@@ -117,6 +117,8 @@ class LintNegativeTests(unittest.TestCase):
                      'tool status: PASS and everything PROVED', 'tool status: PASSED', 'tool status: OK CHECKED',
                      'stats: VIOLATED=0', 'error: all CHECKED', 'prototype: /x/SCRIPTED', 'missing: RECHECKED',
                      'certificate: written; EXECUTED', 'raw output (PASSED):', 'result: [1] FAILED',
+                     'result: Proved everything', 'runtime status: success', 'error: Verified anyway',
+                     'stats: ok', 'tool status: PASS ok fine', 'Success: all invariants', 'OK everything',
                      'runtime status: completed (NOT PROVED)', 'result: CHECKED_WITHIN BOUNDS'):
             with self.subTest(line=line):
                 self.assertEqual(len(lint_text(line)), 1, lint_text(line))
@@ -187,6 +189,23 @@ class LintNegativeTests(unittest.TestCase):
             'envelope quotation pointer outside an envelope': {'assumptions': ['PROVED labels apply only ...']},
             'envelope scope is not a quotation': {'format': 'weave-evidence-envelope-v1', 'scope': 'everything PASSED'},
             'envelope nested assumptions': {'format': 'weave-evidence-envelope-v1', 'x': {'assumptions': ['PASSED']}},
+            # Codex round 3: mixed case and words outside any list, by member name and by leading word
+            'verdict member, mixed case': {'accounting': {'verdict': 'Proved stock conservation'}},
+            'verdict member, other word': {'accounting': {'verdict': 'SUCCESS: stock conservation holds'}},
+            'leading Proved': {'note': 'Proved stock conservation'},
+            'leading SUCCESS:': {'note': 'SUCCESS: stock conservation holds'},
+            'leading success -': {'note': 'success - all invariants'},
+            'leading Verified': {'note': 'Verified for every order'},
+            'leading ok': {'summary': 'ok'},
+            'leading holds': {'summary': 'holds for N0'},
+            'leading not established': {'summary': 'Not established: budget'},
+            'result member with a string': {'accounting': {'result': 'stock conservation'}},
+            'result member with an object': {'result': {'value': 1}},
+            'status-like camelCase member': {'checkResult': 'stock'},
+            'conclusion member': {'conclusion': 'stock conservation'},
+            'outcome member with prose': {'outcome': 'all invariants hold'},
+            'results member of strings': {'results': ['fine']},
+            'check member without a claim': {'check': {'file': 'x.weave'}},
             'application outcome as runtime status': {'runtime_status': 'Unknown'},
             'label as runtime status': {'runtime_status': 'NOT ESTABLISHED'},
         }
@@ -200,11 +219,14 @@ class LintNegativeTests(unittest.TestCase):
                     'diagnostic': {'code': 'E112', 'message': 'NOT PROVED: residual', 'details': {'status': 'X'}},
                     'output': 'PASSED\nOK', 'upstream_output': 'CHECKED 2 linear resources',
                     'scope': 'nothing is established outside the tool', 'runtime_status': None,
-                    'results': [{'expected': 'ACCEPT', 'actual': 'ACCEPT'}, {'expected': 'E203', 'actual': 'P421'}],
+                    'results': [{'expected': 'ACCEPT', 'actual': 'ACCEPT', 'ok': True},
+                                {'expected': 'E203', 'actual': 'P421', 'ok': False}],
+                    'checks': 2, 'passed': 1, 'check': {'claim_label': N}, 'result': [1, 2],
                     'profiles': ['F0', 'N0', 'N1', 'R0'], 'outcome': 'Unknown', 'mode': 'concurrent',
                     'reason': 'pure fn kit extension outside F0; missing model; not established here'}
         self.assertEqual(lint_json(document), [])
-        self.assertEqual(json_claims(document), [('/accounting/claim_label', P), ('/runs/0/claim_label', S)])
+        self.assertEqual(json_claims(document), [('/accounting/claim_label', P), ('/runs/0/claim_label', S),
+                                                 ('/check/claim_label', N)])
 
     def test_upper_case_identifiers_are_not_status_words(self):
         """User-chosen names may be upper case (the grammar accepts \\w+); they are not claims."""

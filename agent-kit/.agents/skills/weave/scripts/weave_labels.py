@@ -115,11 +115,46 @@ def is_diagnostic_header(line: str) -> bool:
     return spanned and found["rule"] is not None and found["rule"] == _CODES[found["code"]]["rule"]
 # A declared prefix: a non-empty heading that ends with a separator.
 _DECLARED_PREFIX = re.compile(r"\S.*?(?::|: | - )")
-# Words that begin a claim, in any case or spelling: the label words and the
-# prototype's and earlier kit's non-canonical ones. A line starting with one of
-# them must start with an exact label.
-_CLAIM_WORD = re.compile(r"(?i)^(?:not[\s_-]*)?(?:proved|checked|scripted|violated|established|passed|pass|"
-                         r"failed|recheck(?:ed)?|executed|verified|bounded)\b")
+# Words that begin a claim, in any case: the six labels' words and the usual verdict
+# words. A text line, or a JSON string outside the exemptions, that begins with one of
+# them (followed by whitespace, ':', '-' or the end) states a result; only a claim line
+# may, and it must begin with an exact label.
+CLAIM_LEXICON = ("proved", "proven", "unproved", "checked", "scripted", "violated", "not established",
+                 "established", "verified", "passed", "pass", "success", "succeeded", "ok", "fail", "failed",
+                 "failure", "holds", "rechecked", "recheck", "executed", "bounded")
+_CLAIM_WORD = re.compile(r"(?i)^(?:not[\s_-]*)?(?:" + "|".join(sorted(
+    (re.escape(w).replace("\\ ", r"[\s_-]+") for w in CLAIM_LEXICON), key=len, reverse=True)) + r")(?=[\s:_-]|$)")
+
+# Member names that read as a verdict (split on '_', case-insensitive). The only
+# claim-bearing member is claim_label; runtime_status is the run's status and ok the
+# tool status. A claim-like name is allowed only where real output uses it, and only
+# for the value shape it has there (CLAIM_LIKE_MEMBERS); any other is an error.
+_CLAIM_NAME_WORDS = frozenset({"verdict", "verdicts", "result", "results", "label", "labels", "status",
+                               "statuses", "outcome", "outcomes", "conclusion", "conclusions", "claim", "claims",
+                               "check", "checks", "finding", "findings", "assessment", "evaluation", "judgement",
+                               "judgment", "decision", "passed", "success", "proof", "proved", "verified"})
+CLAIM_LIKE_MEMBERS = {
+    # simulate runs, examples scenarios, tiny_shop: the scripted application outcome (Ok, Err, Unknown, all)
+    "outcome": lambda v: isinstance(v, str) and re.fullmatch(r"\w+", v) is not None,
+    "requested_outcome": lambda v: isinstance(v, str) and re.fullmatch(r"\w+", v) is not None,
+    # run-pure: the computed value (Int, Bool or a list), never a string
+    "result": lambda v: not isinstance(v, (str, dict)),
+    # examples: the list of expectation records and their count
+    "results": lambda v: isinstance(v, list) and all(isinstance(r, dict) and "ok" in r for r in v),
+    "checks": lambda v: isinstance(v, int) and not isinstance(v, bool),
+    "passed": lambda v: isinstance(v, int) and not isinstance(v, bool),
+    # run-pure and the merge_sort demo: the pure-program claim object
+    "check": lambda v: isinstance(v, dict) and "claim_label" in v,
+    # evidence envelope: the claim object (its label is the sibling claim_label)
+    "claim": lambda v: isinstance(v, dict) and "claim_label" not in v,
+}
+
+
+def _claim_like_name(key: str) -> bool:
+    """A member name with a verdict word among its parts (``check_result``, ``Verdict``, ``passedTests``)."""
+    return bool({part.lower() for part in re.split(r"_|-|(?<=[a-z])(?=[A-Z])", key)} & _CLAIM_NAME_WORDS)
+
+
 _CLAIM_LINE = re.compile("^(" + "|".join(re.escape(label) for label in RESULT_LABELS) + r")(?=[ :]|$)")
 
 
@@ -196,15 +231,23 @@ def _lint(document, pointer: str, quotations: bool) -> list[str]:
         if key == "claim_label":
             if value not in RESULT_LABELS:
                 errors.append(f"{where}: claim label {value!r} is not one of the six result labels")
-        elif key == "status":
-            errors.append(f"{where}: a member named 'status' ({value!r}) does not say whether it is a claim; "
-                          "use claim_label for a claim, ok for tool status, runtime_status for a run")
-        elif key == "runtime_status":
+            continue
+        if key == "runtime_status":
             if value is not None and value not in RUNTIME_STATUSES:
                 errors.append(f"{where}: runtime status {value!r} is not one of {', '.join(RUNTIME_STATUSES)}")
-        elif key in IDENTIFIER_MEMBERS and _identifiers(value):
             continue
-        elif isinstance(value, str):
+        if key == "status":
+            errors.append(f"{where}: a member named 'status' ({value!r}) does not say whether it is a claim; "
+                          "use claim_label for a claim, ok for tool status, runtime_status for a run")
+            continue
+        if key is not None and _claim_like_name(key):
+            allowed = CLAIM_LIKE_MEMBERS.get(key)
+            if allowed is None or not allowed(value):
+                errors.append(f"{where}: member name {key!r} reads as a verdict; claims use claim_label only")
+                continue
+        if key in IDENTIFIER_MEMBERS and _identifiers(value):
+            continue
+        if isinstance(value, str):
             quoted = quotations and any(q.fullmatch(where) for q in ENVELOPE_QUOTATIONS)
             errors += _value_errors(value, where, quoted)
         else:
@@ -224,6 +267,8 @@ def _value_errors(value: str, where: str, quoted: bool = False) -> list[str]:
         return []
     if _STATUS_WORD.fullmatch(value):
         return [f"{where}: status word {value!r} presents a claim without one of the six result labels"]
+    if not quoted and _CLAIM_WORD.match(value):
+        return [f"{where}: {value!r} begins with a verdict word outside a claim_label member"]
     token = None if quoted else _STATUS_TOKEN.search(value)
     if token:
         return [f"{where}: {value!r} contains the status word {token.group()!r} outside a claim_label member"]
@@ -269,14 +314,19 @@ def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
                 errors += [f"line {number}: {e}" for e in lint_json(document)]
         elif line.startswith(NON_CLAIM_PREFIXES + tuple(extra_prefixes)) or is_diagnostic_header(line):
             body = line
-            if line.startswith("tool status: "):
-                rest = line[len("tool status: "):]
+            prefix = next((p for p in NON_CLAIM_PREFIXES if line.startswith(p)), None)
+            if prefix == "tool status: ":
+                rest = line[len(prefix):]
                 word = next((w for w in sorted(TOOL_STATUS_WORDS, key=len, reverse=True)
                              if rest == w or rest.startswith(w + " ")), None)
-                body = rest[len(word):] if word else rest
+                body = rest[len(word):].lstrip() if word else rest
+            elif prefix is not None:
+                body = line[len(prefix):]
             token = _STATUS_TOKEN.search(body)
             if token:
                 errors.append(f"line {number}: {line!r} is not a claim but carries the status word {token.group()!r}")
+            elif prefix is not None and _CLAIM_WORD.match(body):
+                errors.append(f"line {number}: {line!r} is not a claim but its text begins with a verdict word")
         else:
             errors.append(f"line {number}: {line!r} is not a claim, a declared non-claim line or a diagnostic")
     return errors

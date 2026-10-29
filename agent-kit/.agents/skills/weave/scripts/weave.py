@@ -193,7 +193,7 @@ def run_examples(path: Path) -> tuple[dict, int]:
         actual = {p: run["marking"].get(p) for p in item["marking"]}
         results.append({"file": item["file"], "outcome": item["outcome"],
                         "expected": item["marking"], "actual": actual,
-                        "ok": actual == item["marking"], "lesson": "Scripted final marking"})
+                        "ok": actual == item["marking"], "lesson": "Final marking of a scripted run"})
     ok = all(r["ok"] for r in results)
     # Each result is an expectation of the teaching corpus (step status ``ok``), not a claim;
     # the claims are those about the manifest's net.
