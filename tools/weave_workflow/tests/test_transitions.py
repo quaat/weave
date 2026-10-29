@@ -126,8 +126,11 @@ class DoneGateTests(unittest.TestCase):
         self.h.publish("FINDING_DISPOSITION", N, finding_id="F-1", disposition="accepted_by_maintainer", evidence="said so")
         self.assertTrue(any("without a recorded maintainer decision" in r for r in self.gate().reasons))
 
+    def budget(self) -> int:
+        return self.h.policy["review"]["max_rounds_per_attempt"]
+
     def test_exhausted_review_budget(self):
-        for rnd in (2, 3, 4):
+        for rnd in range(2, self.budget() + 2):  # one round past the budget (setUp made round 1)
             self.req = self.h.request_review(N, rnd=rnd)
         self.h.review_result(N, self.req, "PASS")
         self.assertTrue(any("budget exhausted" in r for r in self.gate().reasons))
@@ -141,14 +144,20 @@ class DoneGateTests(unittest.TestCase):
             self.req = self.h.request_review(N, rnd=rnd)
         return self.h.review_result(N, self.req, "PASS")
 
+    def test_review_budget_is_three_standard_plus_two_extra_rounds(self):
+        self.assertEqual(policy()["review"]["max_rounds_per_attempt"], 5)  # maintainer decision, #72
+        self.second_attempt(5)
+        self.assertTrue(self.gate().passed, self.gate().reasons)
+
     def test_review_budget_counts_the_current_attempt_only(self):
-        self.second_attempt(3)  # 1 + 3 rounds overall, 3 in the current attempt
+        self.second_attempt(self.budget())  # 1 + budget rounds overall, budget in the current attempt
         g = self.gate()
         self.assertTrue(g.passed, g.reasons)
 
     def test_review_budget_exhausted_within_the_current_attempt(self):
-        self.second_attempt(4)
-        self.assertIn("review budget exhausted (4 > 3 rounds); maintainer decision required", self.gate().reasons)
+        b = self.budget()
+        self.second_attempt(b + 1)
+        self.assertIn(f"review budget exhausted ({b + 1} > {b} rounds); maintainer decision required", self.gate().reasons)
 
     def test_approved_but_unmerged_stays_in_review(self):
         self.h.review_result(N, self.req, "PASS")

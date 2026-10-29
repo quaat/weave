@@ -125,7 +125,7 @@ relayed this way: only the command that produces their evidence publishes them.
 | Status write half-done | The operation ledger records intent; `reconcile --apply` completes it if the board shows the target, or abandons it and re-evaluates the gate |
 | Codex timeout, crash, silence, prose or invalid JSON | Not a verdict; BLOCKED (review outage); the task stays In Review without approval |
 | Stale review (head, base or requirements moved) | Result rejected; a fresh review of the current candidate is required |
-| Review budget exhausted (3 rounds in the current attempt) | Work preserved, returned to In Progress, `agent:needs-human`, disagreement summarised |
+| Review budget exhausted (3 standard rounds in the current attempt, plus up to 2 extra rounds only for narrow remaining findings, recorded on the issue) | Work preserved, returned to In Progress, `agent:needs-human`, disagreement summarised for the maintainer |
 | Card moved to Done by project automation after the merged PR from the claim's branch closed the issue | `reconcile` reports a note, not a conflict; `transition N Done --worktree PATH --apply` evaluates the In Review → Done gate and, on PASS, publishes STATE_CHANGED and COMPLETED without writing the Status |
 | Any other manual card move, or an edited comment | Reported as a discrepancy by `reconcile`; never overwritten blindly |
 | Restart | Reconcile board, events, claims, worktrees, PR heads, outbox and audit state; resume before claiming |

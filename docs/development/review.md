@@ -82,7 +82,11 @@ maintainer where policy permits. Findings are never dismissed unilaterally to ob
 
 After fixes, affected checks and the documentation audit are rerun and a fresh review of the
 current candidate is requested, reusing finding IDs and stating whether the review is full or
-a justified delta. An old approval is never relabelled with a new SHA. The default budget is
-three review-and-fix rounds per attempt (`review.max_rounds_per_attempt`), with a per-review
-timeout (`review.timeout_seconds`). On exhaustion the work is preserved, genuine rework
-returns to In Progress, `agent:needs-human` is added, and the disagreement is summarised.
+a justified delta. An old approval is never relabelled with a new SHA. The budget is three
+standard review-and-fix rounds per attempt plus up to two extra rounds (five in total,
+`review.max_rounds_per_attempt`), with a per-review timeout (`review.timeout_seconds`). The
+extra rounds, authorised by the maintainer (#72), are used only when the remaining findings
+are narrow (wording, documentation, small fixes), and the coordinator records on the issue
+why each one is used. For larger findings after the standard rounds, or when findings remain
+after the fifth round, the work is preserved, genuine rework returns to In Progress,
+`agent:needs-human` is added, and the disagreement is summarised for the maintainer.

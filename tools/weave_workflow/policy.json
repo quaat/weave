@@ -216,7 +216,8 @@
     "claim_ttl_hours": 8
   },
   "review": {
-    "max_rounds_per_attempt": 3,
+    "max_rounds_per_attempt": 5,
+    "note": "Rounds 1-3 are the standard budget. Rounds 4-5 are extra rounds the maintainer authorised (2026-10-29, #72) only for narrow remaining findings (wording, documentation, small fixes); the coordinator records on the issue why each extra round is used. Larger findings, or findings still failing after round 5, go back to the maintainer.",
     "timeout_seconds": 1800,
     "codex": {
       "sandbox": "read-only",
