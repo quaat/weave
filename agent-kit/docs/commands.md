@@ -69,9 +69,17 @@ else the runner reports is a claim, and it is never written with a label.
 
 No JSON member is named `status`, and no JSON value is another upper-case status word
 such as `PASSED` (the teaching manifest's `ACCEPT` expectation is the one exception;
-user-chosen names such as an upper-case property, invariant or flow name are not status words). Other text lines start with a lower-case name
-(`prototype:`, `certificate:`, `result:`, `stats:`) or a diagnostic location;
-indented lines belong to the line above.
+user-chosen names such as an upper-case property, invariant or flow name are not status words).
+
+Text output is a closed set of line forms. An unindented line is a claim only if it
+begins with one of the six labels exactly as written (not `proved`, `Checked flow` or
+`CHECKED FLOW`). Every other unindented line is blank, a diagnostic header
+`location: CODE (RULE) [stage]`, the JSON detail of a failed `examples` expectation
+(`{…}`), or begins with one of these prefixes: `tool status: `, `runtime status: `,
+`result: `, `stats: `, `prototype: `, `missing: `, `certificate: `, `raw output (`,
+`error: ` (`NON_CLAIM_PREFIXES` in `weave_labels.py`). Indented lines belong to the line
+above. The demos declare their own headings (`TEXT_PREFIXES` in each `run_demo.py`).
+`tests/test_result_labels.py` fails on any other unindented line.
 
 | Command | Claims (JSON position: label) |
 | --- | --- |

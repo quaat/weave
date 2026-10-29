@@ -113,7 +113,7 @@ envelope. The demo artifacts were regenerated with the commands in the demo READ
 | Check | Result |
 | --- | --- |
 | Original prototype regression suite (`weave.py test`) | 143 tests passed |
-| Kit tests (`tests/`) | 91 passed, including `test_result_labels.py` and the provenance hash check |
+| Kit tests (`tests/`) | 92 passed, including `test_result_labels.py` and the provenance hash check |
 | Teaching manifest (`weave.py examples`) | 34 expectations matched |
 | Merge-sort demo tests | 13 passed |
 | Tiny Shop demo tests | 17 passed |

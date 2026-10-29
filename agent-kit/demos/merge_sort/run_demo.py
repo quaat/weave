@@ -17,6 +17,9 @@ RUNNER = KIT_ROOT / 'scripts' / 'weave.py'
 SOURCE = DEMO_DIR / 'merge_sort.weave'
 ENTRY = 'merge_sort'
 MAX_VALUES = 1000
+# Unindented text lines that are not claims, besides the runner's (weave_labels.NON_CLAIM_PREFIXES).
+# Claims are 'LABEL statement' lines; tests/test_result_labels.py lints the output with these.
+TEXT_PREFIXES = ('Input: ', 'Sorted: ', 'Mode: ', 'Work: ', 'Trace:')
 
 
 def positive_int(text):

@@ -56,7 +56,8 @@ files only when a diagnostic or implementation task requires them.
   execution. Report bounds/budget exhaustion as not established.
   Its label is `NOT ESTABLISHED`; a counterexample is `VIOLATED`. Use only these six
   labels for claims, one per claim: a claim is a JSON `claim_label` or an
-  unindented text line that begins with its label.
+  unindented text line that begins with its exact label; every other unindented
+  text line is blank, a diagnostic or a named non-claim line (`scripts/weave_labels.py`).
   `ok`/`tool status` and `runtime_status` are not evidence; `Unknown` is an
   application outcome, never `NOT ESTABLISHED`.
 - Preserve net contracts while repairing callers. Report incompatible requirements

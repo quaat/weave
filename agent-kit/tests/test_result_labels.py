@@ -11,6 +11,7 @@ Negative tests show the lint failing on non-canonical labels such as ``PASSED`` 
 ``NOT PROVED`` presented as claims, including the runner's own 0.2.0 output forms.
 """
 from pathlib import Path
+import ast
 import json
 import re
 import subprocess
@@ -82,11 +83,25 @@ class LintNegativeTests(unittest.TestCase):
                      'CHECKED 2 linear resources', 'CHECKED checkout_propagating:', 'SCRIPTED Ok via checkout: sold=1',
                      'SCRIPTED / passed', 'EXECUTED merge_sort', 'FAILED: tests failed',
                      'PASS 34/34 example expectations', 'RESULT [1, 2]', 'PROVEDX 2 invariants',
-                     'CHECKED WITHIN 20 states', 'NOT_ESTABLISHED ordering', 'EXPECTED E320 FAILURE'):
+                     'CHECKED WITHIN 20 states', 'NOT_ESTABLISHED ordering', 'EXPECTED E320 FAILURE',
+                     # lower- and mixed-case labels and near misses (Codex F-001)
+                     'proved 2 accounting invariants', 'Proved 2 accounting invariants', 'Checked flow x.weave: f',
+                     'checked flow x.weave: f', 'CHECKED FLOW x.weave: f', 'Checked within bounds 20 states',
+                     'NOT-ESTABLISHED ordering', 'not established ordering', 'Not Established', 'scripted Ok via f',
+                     'Scripted / passed scenario Ok', 'violated p', 'passed 6 scenarios', 'Rechecked 2 invariants',
+                     'verified', 'executed merge_sort',
+                     # unindented lines of an undeclared form
+                     'everything is fine', 'Prototype: /x', 'Status: ok', 'Input: [1]', '== Payment outcome: Ok'):
             with self.subTest(line=line):
                 errors = lint_text(f'tool status: PASS\n{line}\n')
                 self.assertEqual(len(errors), 1, errors)
                 self.assertIn('line 2', errors[0])
+
+    def test_declared_prefixes_cannot_hide_claims(self):
+        self.assertEqual(lint_text('Input: [1]\n', ('Input: ',)), [])
+        for prefix in ('Passed: ', 'checked ', 'NOT PROVED'):
+            with self.assertRaises(ValueError, msg=prefix):
+                lint_text('x\n', (prefix,))
 
     def test_text_non_claims_pass(self):
         text = '\n'.join([
@@ -101,7 +116,8 @@ class LintNegativeTests(unittest.TestCase):
             '  NOT ESTABLISHED: state budget 1 exhausted.',
             'raw output (bundled prototype unittest; not a claim):',
             '  OK',
-            'E204 has no span here',
+            'does-not-exist.weave: TOOL_ERROR [flow]',
+            '',
             '{"file": "x.weave", "ok": false}',
         ])
         self.assertEqual(lint_text(text), [])
@@ -290,10 +306,18 @@ class RunnerOutputTests(unittest.TestCase):
 class DemoOutputTests(unittest.TestCase):
     """The demo runners relay runner claims with the same labels."""
 
+    def prefixes(self, script):
+        """The demo's declared TEXT_PREFIXES, read from its source without running it."""
+        for node in ast.walk(ast.parse(script.read_text(encoding='utf-8'))):
+            if isinstance(node, ast.Assign) and [t.id for t in node.targets if isinstance(t, ast.Name)] == ['TEXT_PREFIXES']:
+                return ast.literal_eval(node.value)
+        self.fail(f'{script} declares no TEXT_PREFIXES')
+
     def check(self, script, args, expected):
         code, out, err = run(script, *args)
         self.assertEqual(code, 0, err)
-        self.assertEqual(lint_text(out + err), [])
+        self.assertEqual(lint_text(out + err, self.prefixes(script)), [])
+        self.assertNotEqual(lint_text(out), [], 'the demo headings are not runner lines; they must be declared')
         self.assertEqual([label for _, label in text_claims(out)], expected)
         code, out, err = run(script, *args, '--json')
         self.assertEqual(code, 0, err)
@@ -316,7 +340,7 @@ class DemoOutputTests(unittest.TestCase):
             with self.subTest(script.parent.name):
                 code, out, err = run(script, *args)
                 self.assertNotEqual(code, 0)
-                self.assertEqual(lint_text(out + err), [])
+                self.assertEqual(lint_text(out + err, self.prefixes(script)), [])
                 self.assertEqual(text_claims(out + err), [])
 
 

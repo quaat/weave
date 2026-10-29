@@ -15,12 +15,15 @@ a label:
   the only upper-case word values that are not claims are listed in
   ``NON_CLAIM_WORDS``, and user-chosen names under ``IDENTIFIER_MEMBERS`` are
   not checked.
-* Text: a claim is an unindented line that begins with its label, followed by
-  the statement (``LABEL statement``, the established console form; the six
-  labels are distinct as prefixes). Non-claim lines begin with a lower-case name
-  (``tool status:``, ``runtime status:``, ``result:``, ...) or a diagnostic
-  location; indented lines belong to the line above, and raw output of another
-  tool is printed indented under a ``raw output`` line.
+* Text: a claim is an unindented line that begins with its exact label,
+  followed by the statement (``LABEL statement``, the established console form;
+  the six labels are distinct as prefixes). Every other unindented line has one
+  of a closed set of forms: a blank line, a line that begins with one of
+  ``NON_CLAIM_PREFIXES`` (``tool status:``, ``runtime status:``, ``result:``,
+  ``raw output (``, ``error:``, ...), a diagnostic header
+  (``location: CODE (RULE) [stage]``), or a prefix a caller declares for its own
+  output (the demos declare theirs). Indented lines belong to the line above,
+  and raw output of another tool is printed indented under a ``raw output`` line.
 
 ``lint_json`` and ``lint_text`` check these rules and return one message per
 violation; an empty list means the output names claims only with the six labels.
@@ -68,11 +71,20 @@ IDENTIFIER_MEMBERS = frozenset({
 def _identifiers(value) -> bool:
     return isinstance(value, str) or (isinstance(value, list) and all(isinstance(v, str) for v in value))
 
-# An unindented text line whose first word is upper case (two or more capitals)
-# presents a claim, as the prototype's console lines (PROVED, CHECKED, PASSED,
-# RECHECKED, NOT PROVED) do. A path such as ``Inventory.weave:3:1`` or a code
-# such as ``E204`` does not match.
-_PRESENTED = re.compile(r"^[A-Z][A-Z_]+(?=[\s:]|$)")
+# The unindented non-claim lines the runner prints, a closed set: tool status
+# (doctor, examples, test), runtime status, result and stats (run-pure), the
+# prototype directory and missing files (doctor), a written certificate (analyze),
+# the header of raw output (test), an error line, and the JSON detail of a failed
+# teaching expectation (examples).
+NON_CLAIM_PREFIXES = ("tool status: ", "runtime status: ", "result: ", "stats: ", "prototype: ", "missing: ",
+                      "certificate: ", "raw output (", "error: ", "{")
+# A diagnostic header: location, code, optional rule, stage (weave.py print_diagnostic).
+_DIAGNOSTIC = re.compile(r"^.*: (?:[EP]\d{3}|TOOL_ERROR)(?: \([A-Z0-9-]+\))? \[[a-z-]+\]$")
+# Words that begin a claim, in any case or spelling: the label words and the
+# prototype's and earlier kit's non-canonical ones. A line starting with one of
+# them must start with an exact label.
+_CLAIM_WORD = re.compile(r"(?i)^(?:not[\s_-]*)?(?:proved|checked|scripted|violated|established|passed|pass|"
+                         r"failed|recheck(?:ed)?|executed|verified|bounded)\b")
 _CLAIM_LINE = re.compile("^(" + "|".join(re.escape(label) for label in RESULT_LABELS) + r")(?=[ :]|$)")
 
 
@@ -159,10 +171,21 @@ def text_claims(text: str) -> list[tuple[int, str]]:
     return claims
 
 
-def lint_text(text: str) -> list[str]:
-    """Violations of the text claim rules: an unindented upper-case first word that does not begin a label."""
+def lint_text(text: str, extra_prefixes: tuple[str, ...] = ()) -> list[str]:
+    """Violations of the text rules: every unindented line is a claim with an exact label or a declared form.
+
+    ``extra_prefixes`` are non-claim line prefixes a caller declares for its own output
+    (a demo's headings); they may not begin with a claim word.
+    """
+    for prefix in extra_prefixes:
+        if _CLAIM_WORD.match(prefix):
+            raise ValueError(f"declared prefix {prefix!r} begins with a claim word")
     errors = []
     for number, line in enumerate(text.splitlines(), 1):
-        if _PRESENTED.match(line) and not _CLAIM_LINE.match(line):
-            errors.append(f"line {number}: {line!r} presents a claim without one of the six result labels")
+        if not line or line[0].isspace() or _CLAIM_LINE.match(line):
+            continue
+        if _CLAIM_WORD.match(line):
+            errors.append(f"line {number}: {line!r} presents a claim without an exact result label")
+        elif not (line.startswith(NON_CLAIM_PREFIXES + tuple(extra_prefixes)) or _DIAGNOSTIC.match(line)):
+            errors.append(f"line {number}: {line!r} is not a claim, a declared non-claim line or a diagnostic")
     return errors
