@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:weave:schema:weave-trace-v1",
+  "title": "Weave trace, format weave-trace-v1",
+  "description": "One ordered sequence of steps, shared by checker counterexamples, scheduler runs, scenario tests and editor replay. 'outcome' is an application outcome (for example Ok, Err or Unknown), never an evidence result label. Readers also perform the checks listed in evidence/README.md.",
+  "type": "object",
+  "required": ["format", "kind", "subject", "model", "steps", "final_marking", "outcome", "context"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {"const": "weave-trace-v1"},
+    "kind": {"enum": ["counterexample", "scheduler-run", "scenario", "replay"]},
+    "subject": {"type": "string", "minLength": 1},
+    "model": {
+      "description": "Net identity recorded by the producer; null when the producer recorded none.",
+      "type": ["object", "null"],
+      "required": ["net", "source_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "net": {"type": ["string", "null"]},
+        "source_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "steps": {"type": "array", "items": {"$ref": "#/$defs/step"}},
+    "final_marking": {
+      "type": ["array", "null"],
+      "items": {"$ref": "#/$defs/token_count"}
+    },
+    "outcome": {"type": ["string", "null"]},
+    "context": {
+      "description": "Producer-specific data copied from the original; v1 readers do not interpret it.",
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "token_count": {
+      "type": "object",
+      "required": ["place", "colour", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "place": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+        "colour": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["sequence", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "kind": {"type": "string", "pattern": "^[a-z][a-z_]*$"},
+        "transition": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+        "colour": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "flow": {"type": "string", "minLength": 1},
+        "tag": {"type": ["string", "null"]},
+        "task": {"type": "integer", "minimum": 0},
+        "marking": {"type": "array", "items": {"$ref": "#/$defs/token_count"}},
+        "detail": {"type": "object"}
+      },
+      "if": {"properties": {"kind": {"const": "fire"}}, "required": ["kind"]},
+      "then": {"required": ["transition"]}
+    }
+  }
+}

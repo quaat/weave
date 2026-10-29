@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:weave:schema:weave-evidence-envelope-v1",
+  "title": "Weave evidence envelope, format weave-evidence-envelope-v1",
+  "description": "Wraps one per-run claim recorded in an evidence file. 'claim_label' is one of the six result labels of the specification (verification.rst, Result vocabulary). 'runtime_status' is a separate field and is never a result label. 'profiles' names the profiles the claim was made under; each tool's supported profiles are recorded separately under 'tools'. Readers also perform the checks listed in evidence/README.md.",
+  "type": "object",
+  "required": ["format", "claim", "claim_label", "runtime_status", "profiles", "bounds", "assumptions", "scope", "completeness", "wrapped", "sources", "dependencies", "tools", "trace"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {"const": "weave-evidence-envelope-v1"},
+    "claim": {
+      "type": "object",
+      "required": ["name", "pointer", "statement", "detail"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "pointer": {
+          "description": "JSON Pointer (RFC 6901) to the claim inside the wrapped file.",
+          "type": "string",
+          "pattern": "^(/[^/]*)*$"
+        },
+        "statement": {"type": ["string", "null"]},
+        "detail": {"type": "object"}
+      }
+    },
+    "claim_label": {
+      "enum": ["PROVED", "CHECKED WITHIN BOUNDS", "CHECKED flow", "SCRIPTED / passed scenario", "VIOLATED", "NOT ESTABLISHED"]
+    },
+    "runtime_status": {
+      "description": "Status of a runtime run, if the producer recorded one; null otherwise.",
+      "enum": ["waiting", "timed out", "completed", null]
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/profile"}
+    },
+    "bounds": {"type": ["object", "null"]},
+    "assumptions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "scope": {"type": ["string", "null"]},
+    "completeness": {
+      "type": ["object", "null"],
+      "required": ["complete"],
+      "additionalProperties": false,
+      "properties": {
+        "complete": {"type": "boolean"},
+        "states": {"type": "integer", "minimum": 0},
+        "edges": {"type": "integer", "minimum": 0},
+        "unreached_transitions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "wrapped": {
+      "type": "object",
+      "required": ["path", "sha256", "format"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "format": {"type": ["string", "null"]}
+      }
+    },
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/file"}},
+    "dependencies": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/file"}},
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "supported_profiles"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "version": {"type": ["string", "null"]},
+          "supported_profiles": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*$"}
+          }
+        }
+      }
+    },
+    "trace": {
+      "type": ["object", "null"],
+      "required": ["format", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "format": {"const": "weave-trace-v1"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"claim_label": {"const": "CHECKED WITHIN BOUNDS"}}, "required": ["claim_label"]},
+      "then": {
+        "properties": {
+          "bounds": {"type": "object"},
+          "completeness": {
+            "type": "object",
+            "properties": {"complete": {"const": true}}
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"claim_label": {"const": "VIOLATED"}}, "required": ["claim_label"]},
+      "then": {"properties": {"trace": {"type": "object"}}}
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "path": {
+      "description": "Repository-relative POSIX path.",
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(^|/)\\.\\.(/|$))[^\\\\]+$"
+    },
+    "file": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["name", "revision"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*$"},
+        "revision": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
