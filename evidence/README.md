@@ -80,11 +80,17 @@ refuses them. No committed file is a `weave-diagnostic-v1` document: the prototy
   table in `specification/docs/chapters/verification.rst`: `PROVED`,
   `CHECKED WITHIN BOUNDS`, `CHECKED flow`, `SCRIPTED / passed scenario`, `VIOLATED`,
   `NOT ESTABLISHED`. The schema enumerates them as a closed set; a test compares the set
-  with the specification table. Linting tool output for these labels is quaat/weave#8, not
-  this component.
+  with the specification table. The reader refuses any other value, including the
+  prototype's console words (`PASSED`, `RECHECKED`, `NOT PROVED`, a bare `CHECKED`) and
+  abbreviations such as `SCRIPTED`. The label lint for tool output (quaat/weave#8) is
+  `agent-kit/tests/test_result_labels.py`, which also lints every wrapped envelope, and
+  `specification/tests/test_result_labels.py`.
 - `runtime_status` is separate from the label: `waiting`, `timed out`, `completed`, or
-  `null` when the producer recorded no runtime status. An application outcome such as
-  `Unknown` is neither a runtime status nor a label; in a trace it is the `outcome`.
+  `null` when the producer recorded no runtime status. It records how a run ended, not
+  what was established, and the reader refuses a label or an application outcome in it.
+  An application outcome such as `Unknown` is neither a runtime status nor a label; in a
+  trace it is the `outcome`. A run whose outcome is `Unknown` can be a
+  `SCRIPTED / passed scenario` claim; `Unknown` is never `NOT ESTABLISHED`.
 - The schema adds two consistency rules: `CHECKED WITHIN BOUNDS` requires a `bounds` object
   and `completeness.complete` equal to `true`; `VIOLATED` requires a `trace`.
 - `profiles` names the profiles the claim was made under, each with the specification
@@ -136,6 +142,29 @@ Exit status: 0 when every input is valid and, for `verify`, every hash recompute
 claim re-derives unchanged; 1 when an input is refused or invalid, a hash does not recompute,
 an envelope differs from its re-derivation, a wrapper refuses its input, or the prototype
 parser rejects a net source given to `export-net`; 2 for a usage error.
+
+## Prototype output and the labels
+
+The prototype's console output and result fields predate the label policy and stay
+byte-for-byte unchanged (`inventory-proof/` and both pinned snapshots). They are raw tool
+output, not claims: a claim is made only where a label is attached to it, here in an
+envelope and in the agent-kit runner's output. The wrappers map the prototype's records to
+labels as follows; console lines are never read.
+
+| Prototype output | Where | As wrapped |
+| --- | --- | --- |
+| `status: PROVED` per invariant | `proof.json`, `colour-proof.json` | `PROVED` (the only status the wrapper reads) |
+| `status: CHECKED WITHIN BOUNDS` per property | `ordering.json` | `CHECKED WITHIN BOUNDS` |
+| properties without a status, `complete` | `colour-check.json` | `CHECKED WITHIN BOUNDS` if complete, else `NOT ESTABLISHED` |
+| scripted runs without a status | `scenarios.json` | `SCRIPTED / passed scenario` |
+| `status: PASSED` per crash case; `PASSED` console lines | `durable-scenarios.json`; `durable.py`, `demo.py` | `SCRIPTED / passed scenario`; the console line is not read |
+| `RECHECKED` | `verify_certificate.py`, `demo.py` console | not wrapped (no claim of its own; the agent kit's `verify` reports `PROVED` for the recheck) |
+| bare `CHECKED <flow>:`, `CHECKED N linear resources …` and similar | `checker.py`, `demo.py` console | not wrapped; accepted cases of `report.json` are `CHECKED flow` |
+| `NOT PROVED` | message text of `E112` and `E412` | a diagnostic, not a claim |
+| `EXPECTED … FAILURE` | `demo.py` console | not wrapped; expected-rejection cases are listed as not wrapped |
+
+Any other `status` value is refused (`tests/test_wrap.py`), so no prototype word becomes a
+claim label. Changing the prototype's own output would need a reviewed snapshot refresh.
 
 ## Wrapped evidence files
 
@@ -289,7 +318,8 @@ trace, canonical-net and envelope formats yet; a later change will. It describes
 `python3 -m unittest discover -s evidence/tests -t .` runs:
 
 - `test_schemas.py`: the four schema files and identifiers, the supported keyword subset,
-  the label set against `verification.rst`, valid and invalid diagnostics (including the
+  the label set against `verification.rst`, refusal of every other claim label and of
+  labels and application outcomes as runtime status, valid and invalid diagnostics (including the
   reader checks and a diagnostic written by the working-copy prototype checker), and, where
   the optional `jsonschema` package is installed, a meta-schema check and agreement with an
   independent validator;
@@ -298,7 +328,8 @@ trace, canonical-net and envelope formats yet; a later change will. It describes
 - `test_wrap.py`: every file above is wrapped, every envelope and trace is valid, labels
   match the originals' result fields, originals are unchanged (`git diff --exit-code`),
   every hash recomputes, and changed sources, dependencies, wrapped files and traces are
-  detected; `verify` re-derives each claim and fails on any edited field, unreadable inputs
+  detected; `verify` re-derives each claim and fails on any edited field or on a label or
+  runtime status outside the schema, unreadable inputs
   are refused with the file named, and `wrap --out` writes nothing when a generated document
   is invalid; it also compares the tools' supported profiles with the profile table in
   `status.rst`;

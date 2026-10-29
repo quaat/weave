@@ -80,6 +80,37 @@ class ExampleTests(unittest.TestCase):
         for status in list(RUNTIME_STATUSES) + [None]:
             self.assertTrue(assess(minimal_envelope(runtime_status=status)).accepted, status)
 
+    def test_each_label_is_accepted(self):
+        for label in RESULT_LABELS:
+            envelope = minimal_envelope(claim_label=label)
+            if label == "CHECKED WITHIN BOUNDS":
+                envelope.update(bounds={"max_states": 1}, completeness={"complete": True})
+            if label == "VIOLATED":
+                envelope.update(trace={"format": "weave-trace-v1", "sha256": "d" * 64})
+            self.assertTrue(assess(envelope).accepted, (label, assess(envelope).errors))
+
+    def test_reader_refuses_any_other_claim_label(self):
+        # quaat/weave#8: prototype console words, abbreviations and other spellings are not labels.
+        for label in ("PASSED", "NOT PROVED", "RECHECKED", "CHECKED", "CHECKED LOWERING", "EXECUTED", "SCRIPTED",
+                      "passed scenario", "proved", "Proved", "CHECKED  flow", "NOT_ESTABLISHED", "Unknown",
+                      "completed", "", None):
+            result = assess(minimal_envelope(claim_label=label))
+            self.assertFalse(result.accepted, label)
+            self.assertTrue(any("claim_label" in e for e in result.errors), (label, result.errors))
+
+    def test_reader_refuses_labels_and_outcomes_as_runtime_status(self):
+        # Runtime status is separate from evidence: no label, and no application outcome such as Unknown.
+        for status in list(RESULT_LABELS) + ["Unknown", "Ok", "Err", "EXECUTED", "PASSED", "Completed", ""]:
+            result = assess(minimal_envelope(runtime_status=status))
+            self.assertFalse(result.accepted, status)
+            self.assertTrue(any("runtime_status" in e for e in result.errors), (status, result.errors))
+
+    def test_label_and_runtime_status_are_both_required(self):
+        for key in ("claim_label", "runtime_status"):
+            envelope = minimal_envelope()
+            del envelope[key]
+            self.assertFalse(assess(envelope).accepted, key)
+
 
 TOOL_ERROR = {"category": "tool", "code": "TOOL_ERROR", "rule": None, "secondary_rules": [], "stage": "net",
               "span": None, "related": []}
