@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:weave:schema:weave-canonical-net-v1",
+  "title": "Weave canonical net, format weave-canonical-net-v1",
+  "description": "Net structure in a canonical order: names, places, arcs, weights, initial marking and transition binders. Places and transitions are sorted by name; arcs by kind (take, read, put) and place. For an indexed place the initial count applies to every colour. Readers also perform the checks listed in evidence/README.md.",
+  "type": "object",
+  "required": ["format", "net", "profile", "source_sha256", "parameters", "colour_sorts", "places", "initial_marking", "transitions"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {"const": "weave-canonical-net-v1"},
+    "net": {"$ref": "#/$defs/name"},
+    "profile": {"$ref": "#/$defs/profile"},
+    "source_sha256": {"$ref": "#/$defs/sha256"},
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "sort"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"$ref": "#/$defs/name"},
+          "sort": {"const": "Nat"}
+        }
+      }
+    },
+    "colour_sorts": {
+      "description": "Positional colour sorts of indexed places; empty for an uncoloured net.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/name"}
+    },
+    "places": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "owner", "indices"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"$ref": "#/$defs/name"},
+          "owner": {"enum": ["domain", "activation", "runtime", "adapter"]},
+          "indices": {"type": "array", "items": {"$ref": "#/$defs/name"}}
+        }
+      }
+    },
+    "initial_marking": {
+      "description": "One entry per place: count = constant + sum of coefficient * parameter.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["place", "constant", "parameters"],
+        "additionalProperties": false,
+        "properties": {
+          "place": {"$ref": "#/$defs/name"},
+          "constant": {"type": "integer", "minimum": 0},
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 1}
+          }
+        }
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "binder", "guards", "arcs"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"$ref": "#/$defs/name"},
+          "binder": {
+            "description": "Variables bound by a firing, in positional colour-sort order; empty for an uncoloured net.",
+            "type": "array",
+            "items": {"$ref": "#/$defs/name"}
+          },
+          "guards": {"type": "array", "items": {"$ref": "#/$defs/name"}},
+          "arcs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["kind", "place", "weight", "inscription"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {"enum": ["take", "read", "put"]},
+                "place": {"$ref": "#/$defs/name"},
+                "weight": {"type": "integer", "minimum": 1},
+                "inscription": {"type": "array", "items": {"$ref": "#/$defs/name"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "profile": {
+      "type": "object",
+      "required": ["name", "revision"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*$"},
+        "revision": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
