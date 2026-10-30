@@ -60,6 +60,33 @@ ending: return | match
 return: /return(?![A-Za-z0-9_])/ ( IDENT ( "(" ( IDENT )? ")" )? )? NL
 match: /match(?![A-Za-z0-9_])/ IDENT ":" NL INDENT branch ( branch )* DEDENT
 branch: IDENT "(" ( IDENT )? ")" ":" NL INDENT body DEDENT
+pure_file: pure_item ( pure_item )*
+pure_item: record_decl | fn_decl
+record_decl: /record(?![A-Za-z0-9_])/ IDENT ":" NL INDENT field_decl ( field_decl )* DEDENT
+field_decl: IDENT ":" pure_type NL
+fn_decl: /fn(?![A-Za-z0-9_])/ IDENT "(" ( fn_params )? ")" "->" pure_type pure_block
+fn_params: fn_param ( "," fn_param )*
+fn_param: IDENT ":" pure_type
+pure_type: IDENT ( "[" pure_type ( "," pure_type )* "]" )?
+pure_block: ":" NL INDENT statement ( statement )* DEDENT
+statement: let_stmt | return_stmt | if_stmt | fork_stmt
+let_stmt: /let(?![A-Za-z0-9_])/ IDENT "=" expr NL
+return_stmt: /return(?![A-Za-z0-9_])/ expr NL
+if_stmt: /if(?![A-Za-z0-9_])/ expr pure_block ( /else(?![A-Za-z0-9_])/ pure_block )?
+fork_stmt: /fork(?![A-Za-z0-9_])/ pure_block
+expr: conjunction ( /or(?![A-Za-z0-9_])/ conjunction )*
+conjunction: comparison ( /and(?![A-Za-z0-9_])/ comparison )*
+comparison: sum ( compare_op sum )?
+compare_op: "<" | "<=" | ">" | ">=" | "==" | "!="
+sum: product ( ( "+" | "-" ) product )*
+product: unary ( "*" unary )*
+unary: "-" unary | primary
+primary: UINT | "(" expr ")" | list_literal | name_expr
+list_literal: "[" ( expr ( "," expr )* )? "]"
+name_expr: IDENT ( prefixed )? ( "." IDENT )* ( "(" ( call_args )? ")" )?
+prefixed: IDENT "." IDENT
+call_args: call_arg ( "," call_arg )*
+call_arg: expr ( ":" expr )?
 IDENT: /[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_])/
 UINT: /(0|[1-9][0-9]*)(?![A-Za-z0-9_])/
 POSINT: /[1-9][0-9]*(?![A-Za-z0-9_])/

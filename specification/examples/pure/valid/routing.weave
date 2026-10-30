@@ -1,0 +1,30 @@
+# Record-based route validation and selection: unrelated to sorting.
+
+record Route:
+    dest: Int
+    cost: Int
+    hops: Int
+
+record Decision:
+    accepted: Bool
+    dest: Int
+    cost: Int
+
+fn valid(r: Route, limit: Int) -> Bool:
+    return r.cost >= 0 and r.hops > 0 and r.hops <= 16 and r.cost <= limit
+
+fn better(r: Route, d: Decision) -> Bool:
+    return not(d.accepted) or r.cost < d.cost or r.cost == d.cost and r.dest < d.dest
+
+fn select(routes: List[Route], limit: Int, best: Decision) -> Decision:
+    if is_empty(routes):
+        return best
+    else:
+        let r = head(routes)
+        if valid(r, limit) and better(r, best):
+            return select(tail(routes), limit, Decision(accepted: true, dest: r.dest, cost: r.cost))
+        else:
+            return select(tail(routes), limit, best)
+
+fn route(routes: List[Route], limit: Int) -> Decision:
+    return select(routes, limit, Decision(accepted: false, dest: 0, cost: 0))

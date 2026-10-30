@@ -1,0 +1,595 @@
+{
+  "scope": "Rust weave versus the Python P0 reference evaluator: static codes, outcome kinds, values, fault and exhaustion kinds, diagnostic codes and budget usage. Regression evidence on these inputs, not a proof of equivalence.",
+  "corpus": {
+    "cases": 78,
+    "rows": [
+      {
+        "id": "C101",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C102",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C103",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C104",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C105",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C106",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C107",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C108",
+        "kind": "check",
+        "expected": "ACCEPT",
+        "python": "ACCEPT",
+        "rust": "ACCEPT"
+      },
+      {
+        "id": "C109",
+        "kind": "check",
+        "expected": "E500",
+        "python": "E500",
+        "rust": "E500"
+      },
+      {
+        "id": "C110",
+        "kind": "check",
+        "expected": "E500",
+        "python": "E500",
+        "rust": "E500"
+      },
+      {
+        "id": "C111",
+        "kind": "check",
+        "expected": "E501",
+        "python": "E501",
+        "rust": "E501"
+      },
+      {
+        "id": "C112",
+        "kind": "check",
+        "expected": "E502",
+        "python": "E502",
+        "rust": "E502"
+      },
+      {
+        "id": "C113",
+        "kind": "check",
+        "expected": "E503",
+        "python": "E503",
+        "rust": "E503"
+      },
+      {
+        "id": "C114",
+        "kind": "check",
+        "expected": "E504",
+        "python": "E504",
+        "rust": "E504"
+      },
+      {
+        "id": "C115",
+        "kind": "check",
+        "expected": "E505",
+        "python": "E505",
+        "rust": "E505"
+      },
+      {
+        "id": "C116",
+        "kind": "check",
+        "expected": "E506",
+        "python": "E506",
+        "rust": "E506"
+      },
+      {
+        "id": "C117",
+        "kind": "check",
+        "expected": "E507",
+        "python": "E507",
+        "rust": "E507"
+      },
+      {
+        "id": "C118",
+        "kind": "check",
+        "expected": "E508",
+        "python": "E508",
+        "rust": "E508"
+      },
+      {
+        "id": "C119",
+        "kind": "check",
+        "expected": "E509",
+        "python": "E509",
+        "rust": "E509"
+      },
+      {
+        "id": "C120",
+        "kind": "check",
+        "expected": "E510",
+        "python": "E510",
+        "rust": "E510"
+      },
+      {
+        "id": "C121",
+        "kind": "check",
+        "expected": "E511",
+        "python": "E511",
+        "rust": "E511"
+      },
+      {
+        "id": "C122",
+        "kind": "check",
+        "expected": "E512",
+        "python": "E512",
+        "rust": "E512"
+      },
+      {
+        "id": "C123",
+        "kind": "check",
+        "expected": "E513",
+        "python": "E513",
+        "rust": "E513"
+      },
+      {
+        "id": "C124",
+        "kind": "check",
+        "expected": "E514",
+        "python": "E514",
+        "rust": "E514"
+      },
+      {
+        "id": "C125",
+        "kind": "check",
+        "expected": "E515",
+        "python": "E515",
+        "rust": "E515"
+      },
+      {
+        "id": "C126",
+        "kind": "check",
+        "expected": "E516",
+        "python": "E516",
+        "rust": "E516"
+      },
+      {
+        "id": "C127",
+        "kind": "check",
+        "expected": "E510",
+        "python": "E510",
+        "rust": "E510"
+      },
+      {
+        "id": "C128",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C129",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C130",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C131",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C132",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C133",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C134",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C135",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C136",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C137",
+        "kind": "run",
+        "expected": "E520",
+        "python": "E520",
+        "rust": "E520"
+      },
+      {
+        "id": "C138",
+        "kind": "run",
+        "expected": "E520",
+        "python": "E520",
+        "rust": "E520"
+      },
+      {
+        "id": "C139",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C140",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C141",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C142",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C143",
+        "kind": "run",
+        "expected": "E532",
+        "python": "E532",
+        "rust": "E532"
+      },
+      {
+        "id": "C144",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C145",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C146",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C147",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C148",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C149",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C150",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C151",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C152",
+        "kind": "run",
+        "expected": "E521",
+        "python": "E521",
+        "rust": "E521"
+      },
+      {
+        "id": "C153",
+        "kind": "run",
+        "expected": "E521",
+        "python": "E521",
+        "rust": "E521"
+      },
+      {
+        "id": "C154",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C155",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C156",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C157",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C158",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C159",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C160",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C161",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C162",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C163",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C164",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C165",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C166",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C167",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C168",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C169",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C170",
+        "kind": "run",
+        "expected": "E530",
+        "python": "E530",
+        "rust": "E530"
+      },
+      {
+        "id": "C171",
+        "kind": "run",
+        "expected": "E531",
+        "python": "E531",
+        "rust": "E531"
+      },
+      {
+        "id": "C172",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C173",
+        "kind": "run",
+        "expected": "E532",
+        "python": "E532",
+        "rust": "E532"
+      },
+      {
+        "id": "C174",
+        "kind": "run",
+        "expected": "VALUE",
+        "python": "VALUE",
+        "rust": "VALUE"
+      },
+      {
+        "id": "C175",
+        "kind": "run",
+        "expected": "E532",
+        "python": "E532",
+        "rust": "E532"
+      },
+      {
+        "id": "C176",
+        "kind": "run",
+        "expected": "E540",
+        "python": "E540",
+        "rust": "E540"
+      },
+      {
+        "id": "C177",
+        "kind": "run",
+        "expected": "E540",
+        "python": "E540",
+        "rust": "E540"
+      },
+      {
+        "id": "C178",
+        "kind": "run",
+        "expected": "E540",
+        "python": "E540",
+        "rust": "E540"
+      }
+    ]
+  },
+  "merge_sort": {
+    "inputs": 404,
+    "oracle": "Python sorted()"
+  },
+  "generated": {
+    "seed": 20261030,
+    "programs": 40,
+    "runs": 160,
+    "mutants": 40,
+    "outcome_codes": {
+      "E520": 17,
+      "E521": 8,
+      "E530": 5,
+      "E531": 6,
+      "E532": 24,
+      "VALUE": 100
+    },
+    "mutant_codes": {
+      "E500": 2,
+      "E501": 3,
+      "E504": 3,
+      "E505": 3,
+      "E506": 3,
+      "E507": 3,
+      "E508": 3,
+      "E509": 3,
+      "E510": 3,
+      "E511": 3,
+      "E512": 3,
+      "E513": 2,
+      "E514": 2,
+      "E515": 2,
+      "E516": 2
+    },
+    "compared_runs": 160
+  },
+  "rust_differential": {
+    "status": "compared",
+    "binary": "cargo build --offline --locked",
+    "compared": 722
+  }
+}

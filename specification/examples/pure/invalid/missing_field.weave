@@ -1,0 +1,6 @@
+record Route:
+    dest: Int
+    cost: Int
+
+fn mk(d: Int) -> Route:
+    return Route(dest: d)

@@ -1,0 +1,26 @@
+# Recursion bounded by run budgets. Fuel and depth limit a run; they are not a
+# termination proof.
+
+fn spin(n: Int) -> Int:
+    return spin(n + 1)
+
+fn depth(n: Int) -> Int:
+    if n == 0:
+        return 0
+    else:
+        return 1 + depth(n - 1)
+
+fn doubling(n: Int, acc: Int) -> Int:
+    if n == 0:
+        return acc
+    else:
+        return doubling(n - 1, acc * 2)
+
+fn factorial(n: Int) -> Int:
+    if n <= 1:
+        return 1
+    else:
+        return n * factorial(n - 1)
+
+fn identity(n: Int) -> Int:
+    return n

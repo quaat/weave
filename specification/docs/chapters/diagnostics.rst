@@ -133,6 +133,75 @@ as E003 (duplicate declaration), not E214.
    * - E422
      - Coloured bound/budget exhausted
      - Report NOT ESTABLISHED, not successful verification
+   * - E500
+     - Invalid P0 pure-file syntax: a lexical fault, input the pure-file grammar does not derive, a word other than await before a qualified name, or nesting beyond the parser's limit
+     - Use only P0 syntax (fn and record declarations)
+   * - E501
+     - Duplicate top-level name, or a function or record named like a built-in name
+     - Give each function and record a distinct, non-built-in name
+   * - E502
+     - Duplicate field name in a record declaration
+     - Name each field once
+   * - E503
+     - Recursive record type: a record reaches itself through its field types
+     - Remove the cycle; P0 has no recursive records
+   * - E504
+     - Type outside P0: a handle or other indexed nominal type, an unknown type name, or a malformed List type
+     - Use Int, Bool, List[T] or a record declared in the file
+   * - E505
+     - Unknown name, or a function, record or primitive name used as a value
+     - Refer to a parameter, an earlier let binding, true or false
+   * - E506
+     - Shadowing: a parameter or let binding reuses a name already in scope, a top-level name or a built-in name
+     - Choose a fresh name
+   * - E507
+     - Unknown call target, wrong argument count, or wrong argument form (named and positional arguments)
+     - Call a declared function, primitive or record with its arguments
+   * - E508
+     - Record construction does not name every field exactly once
+     - Name every declared field once, and no other
+   * - E509
+     - Field access on a value that is not a record, or of a field the record does not declare
+     - Access a declared field of a record-typed binding
+   * - E510
+     - Type mismatch in an operand, argument, condition, list element or returned value
+     - Make the expression's type match the expected type
+   * - E511
+     - Empty list literal without an expected list type
+     - Use [] where a List type is expected, such as a return or an argument
+   * - E512
+     - Qualified call in pure code: a net, foreign or flow operation
+     - Perform effects in a flow; pure code calls only functions, primitives and records
+   * - E513
+     - await in pure code
+     - Pure code does not wait; move the operation to a flow
+   * - E514
+     - fork block in pure code
+     - P0 is sequential; call the functions one after the other
+   * - E515
+     - A block does not end in return or a terminal if/else, an if has no else, or a statement follows a return or if
+     - End every block with return or with if/else whose blocks both end
+   * - E516
+     - Mutual recursion: a call cycle through two or more functions
+     - Only direct self-recursion is allowed
+   * - E520
+     - Division or remainder by zero at run time (pure fault)
+     - Test the divisor before calling div or mod
+   * - E521
+     - head or tail of an empty list at run time (pure fault)
+     - Test is_empty before head or tail
+   * - E530
+     - Fuel budget exhausted: too many user-function calls
+     - Raise the fuel budget, or check termination; fuel is not a termination proof
+   * - E531
+     - Depth budget exhausted: too many active function calls
+     - Raise the depth budget or reduce recursion depth
+   * - E532
+     - Integer size budget exhausted: an integer needs more bits than the budget
+     - Raise the integer size budget or keep values smaller
+   * - E540
+     - Invalid run request: unknown entry function, or arguments that do not match its parameters
+     - Name a declared function and pass one JSON value of the right type per parameter
 
 .. END GENERATED: diagnostic-codes
 
@@ -314,6 +383,75 @@ its own.
    * - E422
      - :ref:`N1-ORDER-1 <N1-ORDER-1>`
      - :ref:`NET-REQ-1 <NET-REQ-1>`
+   * - E500
+     - :ref:`P0-FILE-1 <P0-FILE-1>`
+     - :ref:`SYN-01 <SYN-01>`
+   * - E501
+     - :ref:`P0-DECL-1 <P0-DECL-1>`
+     - none
+   * - E502
+     - :ref:`P0-DECL-2 <P0-DECL-2>`
+     - none
+   * - E503
+     - :ref:`P0-DECL-3 <P0-DECL-3>`
+     - none
+   * - E504
+     - :ref:`P0-TYPE-1 <P0-TYPE-1>`
+     - :ref:`TYPE-REQ-1 <TYPE-REQ-1>`
+   * - E505
+     - :ref:`P0-NAME-1 <P0-NAME-1>`
+     - none
+   * - E506
+     - :ref:`P0-NAME-2 <P0-NAME-2>`
+     - none
+   * - E507
+     - :ref:`P0-CALL-1 <P0-CALL-1>`
+     - none
+   * - E508
+     - :ref:`P0-RECORD-1 <P0-RECORD-1>`
+     - none
+   * - E509
+     - :ref:`P0-RECORD-2 <P0-RECORD-2>`
+     - none
+   * - E510
+     - :ref:`P0-TYPE-2 <P0-TYPE-2>`
+     - none
+   * - E511
+     - :ref:`P0-TYPE-3 <P0-TYPE-3>`
+     - none
+   * - E512
+     - :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
+     - none
+   * - E513
+     - :ref:`P0-EFFECT-2 <P0-EFFECT-2>`
+     - none
+   * - E514
+     - :ref:`P0-FORK-1 <P0-FORK-1>`
+     - none
+   * - E515
+     - :ref:`P0-PATH-1 <P0-PATH-1>`
+     - none
+   * - E516
+     - :ref:`P0-REC-1 <P0-REC-1>`
+     - none
+   * - E520
+     - :ref:`P0-ARITH-2 <P0-ARITH-2>`
+     - :ref:`P0-FAULT-1 <P0-FAULT-1>`
+   * - E521
+     - :ref:`P0-LIST-1 <P0-LIST-1>`
+     - :ref:`P0-FAULT-1 <P0-FAULT-1>`
+   * - E530
+     - :ref:`P0-BUDGET-2 <P0-BUDGET-2>`
+     - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
+   * - E531
+     - :ref:`P0-BUDGET-3 <P0-BUDGET-3>`
+     - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
+   * - E532
+     - :ref:`P0-BUDGET-4 <P0-BUDGET-4>`
+     - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
+   * - E540
+     - :ref:`P0-RUN-1 <P0-RUN-1>`
+     - none
 
 .. END GENERATED: rule-cross-reference
 

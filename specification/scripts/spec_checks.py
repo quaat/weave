@@ -57,8 +57,17 @@ def _shift(diagnostic,displayed,lines,columns):
 def check_example_diagnostic(source,profile="F0/N0",context="file",net_path=None,label="example.weave"):
     """Return (result, diagnostic): ACCEPT or the code, and a weave-diagnostic-v1 document for a rejection.
 
-    Spans refer to ``label``. For a net fragment they refer to the completed net
+    Spans refer to ``label``. Profile ``P0`` checks a pure file with the P0
+    reference evaluator; ``context`` and ``net_path`` do not apply to it. For a net fragment they refer to the completed net
     (the template with the fragment substituted), named by its path."""
+    if profile=="P0":
+        # P0 pure files are checked by the P0 reference evaluator (docs/chapters/pure.rst).
+        import p0_reference
+        try:
+            p0_reference.check(source)
+            return "ACCEPT",None
+        except p0_reference.Diagnostic as e:
+            return e.code,e.document(label)
     path=Path(net_path) if net_path else ROOT/"examples/nets"/("Inventory.coloured.weave" if "N1" in profile else "Inventory.weave")
     template=path.read_text(encoding="utf-8")
     displayed,shift=source,None

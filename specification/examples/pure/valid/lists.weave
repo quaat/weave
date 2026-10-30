@@ -1,0 +1,45 @@
+# List[T] for any P0 type: literals, [] where a list type is expected, primitives.
+
+record Tagged:
+    tag: Int
+    flag: Bool
+
+fn empty_ints() -> List[Int]:
+    return []
+
+fn literal() -> List[Int]:
+    return [1, 2 + 3, -4]
+
+fn nested() -> List[List[Int]]:
+    return [[], [1], cons(2, [3])]
+
+fn prepend(x: Int, xs: List[Int]) -> List[Int]:
+    return cons(x, xs)
+
+fn first(xs: List[Int]) -> Int:
+    return head(xs)
+
+fn rest(xs: List[Int]) -> List[Int]:
+    return tail(xs)
+
+fn size(xs: List[Tagged]) -> Int:
+    return length(xs)
+
+fn flags(xs: List[Tagged]) -> List[Bool]:
+    if is_empty(xs):
+        return []
+    else:
+        let t = head(xs)
+        return cons(t.flag, flags(tail(xs)))
+
+fn reverse(xs: List[Int], acc: List[Int]) -> List[Int]:
+    if is_empty(xs):
+        return acc
+    else:
+        return reverse(tail(xs), cons(head(xs), acc))
+
+fn sum(xs: List[Int]) -> Int:
+    if is_empty(xs):
+        return 0
+    else:
+        return head(xs) + sum(tail(xs))

@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: MIT
 """Diagnostic codes, their rules and source spans (quaat/weave#6).
 
-* Every code the pinned prototype or the agent kit can emit is in
-  ``diagnostics.json``; the codes are derived from the sources, and a test
-  shows that an unmapped code fails.
+* Every code the pinned prototype, the P0 implementations (quaat/weave#10) or
+  the agent kit can emit is in ``diagnostics.json``; the codes are derived from
+  the sources, and a test shows that an unmapped code fails.
 * One fixture per specification code checks the code, its principal rule and
-  its primary span; E203 and E204 also check their related spans. Each
+  its primary span (P0 codes through the P0 reference evaluator); E203 and E204 also check their related spans. Each
   diagnostic is validated against the ``weave-diagnostic-v1`` schema with the
   repository's evidence reader (standard library only).
 * The ``weave-check`` directive's helper returns the same documents.
@@ -25,7 +25,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(REPO))
 from checker import CheckError, check_flow, explore_order, parse_net, prove  # noqa: E402
 from coloured import Unfolding, explore_colours, parse_coloured, prove_colours  # noqa: E402
-from diagnostic_map import PROTOTYPE, emitted_codes, kit_sources, load_map, unmapped  # noqa: E402
+from diagnostic_map import P0_REFERENCE, PROTOTYPE, emitted_codes, kit_sources, load_map, rust_codes, unmapped  # noqa: E402
+import p0_reference  # noqa: E402
 from refresh_reference_pages import check_diagnostic_map  # noqa: E402
 from spec_checks import as_diagnostic, check_example_diagnostic  # noqa: E402
 from evidence.weave_evidence.documents import assess  # noqa: E402
@@ -158,6 +159,53 @@ FIXTURES = {
 }
 
 
+# P0 code: (source, run request or None, principal rule, (line, exact text of the primary span)).
+# A run request is (entry, args, budgets).
+P0_BUDGETS = (EXAMPLES / "pure/valid/budgets.weave").read_text(encoding="utf-8")
+P0_FIXTURES = {
+    "E500": ("fn f(x: Int) -> Bool:\n    return 0 < x < 3\n", None, "P0-FILE-1", (2, "<")),
+    "E501": ("fn f() -> Int:\n    return 1\n\nfn f() -> Int:\n    return 2\n", None, "P0-DECL-1", (4, "f")),
+    "E502": ("record R:\n    a: Int\n    a: Bool\n", None, "P0-DECL-2", (3, "a")),
+    "E503": ("record T:\n    kids: List[T]\n", None, "P0-DECL-3", (1, "T")),
+    "E504": ("fn peek(hold: Hold[t, o]) -> Int:\n    return 0\n", None, "P0-TYPE-1", (1, "Hold[t, o]")),
+    "E505": ("fn f(x: Int) -> Int:\n    return y + x\n", None, "P0-NAME-1", (2, "y")),
+    "E506": ("fn f(x: Int) -> Int:\n    let x = 1\n    return x\n", None, "P0-NAME-2", (2, "x")),
+    "E507": ("fn f(x: Int) -> Int:\n    return f(x, x)\n", None, "P0-CALL-1", (2, "f(x, x)")),
+    "E508": ("record R:\n    a: Int\n    b: Int\n\nfn f(x: Int) -> R:\n    return R(a: x)\n", None, "P0-RECORD-1",
+             (6, "R(a: x)")),
+    "E509": ("record R:\n    a: Int\n\nfn f(r: R) -> Int:\n    return r.b\n", None, "P0-RECORD-2", (5, "b")),
+    "E510": ("fn f(flag: Bool) -> Int:\n    return flag + 1\n", None, "P0-TYPE-2", (2, "flag")),
+    "E511": ("fn f() -> Int:\n    return length([])\n", None, "P0-TYPE-3", (2, "[]")),
+    "E512": ("fn pay(amount: Int) -> Int:\n    return Payments.charge(amount)\n", None, "P0-EFFECT-1",
+             (2, "Payments.charge(amount)")),
+    "E513": ("fn f(n: Int) -> Int:\n    let h = await Inventory.reserve(n)\n    return n\n", None, "P0-EFFECT-2",
+             (2, "await Inventory.reserve(n)")),
+    "E514": ("fn f(n: Int) -> Int:\n    fork:\n        let a = n\n    return n\n", None, "P0-FORK-1", (2, "fork")),
+    "E515": ("fn f(x: Int) -> Int:\n    if x < 0:\n        return 0\n    return x\n", None, "P0-PATH-1", (2, "if")),
+    "E516": ("fn a(n: Int) -> Int:\n    return b(n)\n\nfn b(n: Int) -> Int:\n    return a(n)\n", None, "P0-REC-1",
+             (2, "b(n)")),
+    "E520": ("fn q(a: Int, d: Int) -> Int:\n    return 1 + div(a, d)\n", ("q", [1, 0], None), "P0-ARITH-2",
+             (2, "div(a, d)")),
+    "E521": ("fn h(xs: List[Int]) -> Int:\n    return head(xs)\n", ("h", [[]], None), "P0-LIST-1", (2, "head(xs)")),
+    "E530": (P0_BUDGETS, ("spin", [0], {"fuel": 10}), "P0-BUDGET-2", (5, "spin(n + 1)")),
+    "E531": (P0_BUDGETS, ("depth", [100], {"depth": 5}), "P0-BUDGET-3", (11, "depth(n - 1)")),
+    "E532": (P0_BUDGETS, ("doubling", [100, 1], {"int_bits": 8}), "P0-BUDGET-4", (17, "acc * 2")),
+    "E540": (P0_BUDGETS, ("identity", ["1"], None), "P0-RUN-1", (25, "identity")),
+}
+
+
+def p0_diagnostic(code):
+    source, request, *_ = P0_FIXTURES[code]
+    try:
+        program = p0_reference.check(source)
+        entry, args, budgets = request
+        report = p0_reference.run(program, entry, args, budgets)
+        diagnostic = report["diagnostics"][0]
+    except p0_reference.Diagnostic as d:
+        diagnostic = d
+    return source, diagnostic.document(f"{code}.weave")
+
+
 def span_text(source, span):
     """The text a single-line span covers."""
     assert span["start"]["line"] == span["end"]["line"], span
@@ -168,10 +216,23 @@ class DiagnosticMap(unittest.TestCase):
     def test_every_emitted_code_is_mapped(self):
         self.assertEqual(unmapped(PROTOTYPE + kit_sources(), MAP), [])
 
-    def test_mapped_specification_codes_are_the_prototype_codes(self):
+    def test_mapped_specification_codes_are_the_prototype_and_p0_codes(self):
         prototype = {c for c in emitted_codes(PROTOTYPE)}
+        p0 = emitted_codes(P0_REFERENCE) | rust_codes()
         spec = {c for c, e in MAP.items() if e["category"] == "specification"}
-        self.assertEqual(spec, prototype)
+        self.assertEqual(spec, prototype | p0)
+        # The two P0 implementations emit the same codes, all in the E5xx range.
+        self.assertEqual(emitted_codes(P0_REFERENCE) - {"E001"}, rust_codes() - {"E001", "E003", "E200"})
+        self.assertTrue(all(c.startswith("E5") for c in p0 - {"E001", "E003", "E200"}))
+
+    def test_p0_sources_are_mapped(self):
+        self.assertEqual(unmapped(P0_REFERENCE, MAP), [])
+        self.assertEqual(sorted(rust_codes() - set(MAP)), [])
+        with tempfile.TemporaryDirectory() as tmp:
+            crate = Path(tmp) / "weave-x/src"
+            crate.mkdir(parents=True)
+            (crate / "lib.rs").write_text('const C: &str = "E599";\n', encoding="utf-8")
+            self.assertEqual(rust_codes(Path(tmp)) - set(MAP), {"E599"})
 
     def test_unmapped_code_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -221,7 +282,21 @@ class DiagnosticPerCode(unittest.TestCase):
         return source, document
 
     def test_every_specification_code_has_a_fixture(self):
-        self.assertEqual(set(FIXTURES), {c for c, e in MAP.items() if e["category"] == "specification"})
+        self.assertEqual(set(FIXTURES) | set(P0_FIXTURES),
+                         {c for c, e in MAP.items() if e["category"] == "specification"})
+        self.assertFalse(set(FIXTURES) & set(P0_FIXTURES))
+
+    def test_p0_code_rule_and_span_for_every_code(self):
+        for code, (_, _, rule, primary) in P0_FIXTURES.items():
+            with self.subTest(code=code):
+                source, document = p0_diagnostic(code)
+                result = assess(document)
+                self.assertTrue(result.accepted, result.errors)
+                self.assertEqual((document["code"], document["rule"]), (code, rule))
+                self.assertEqual(document["secondary_rules"], MAP[code]["secondary_rules"])
+                self.assertEqual(document["category"], "specification")
+                self.assertEqual(document["span"]["start"]["line"], primary[0])
+                self.assertEqual(span_text(source, document["span"]), primary[1])
 
     def test_code_rule_and_span_for_every_code(self):
         for code, (_, rule, primary, related) in FIXTURES.items():

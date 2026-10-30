@@ -1,5 +1,5 @@
 {
-  "productions": 68,
+  "productions": 95,
   "cases": [
     {
       "file": "valid/return_hold.weave",
@@ -193,7 +193,8 @@
   ],
   "agreement": 27,
   "scope": "Independent generated syntax front end plus shared reference semantic checks; not independent semantic equivalence.",
-  "corpus_files_parsed": 32,
+  "corpus_files_parsed": 59,
+  "pure_files_parsed": 27,
   "probes": [
     {
       "id": "SD-01",
@@ -370,13 +371,29 @@
       "reference": "ACCEPT",
       "ebnf": "ACCEPT",
       "discrepancy": false
+    },
+    {
+      "id": "SA-11",
+      "start": "flow-file",
+      "probe": "P0 comparison operator in a flow",
+      "reference": "REJECT",
+      "ebnf": "REJECT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-12",
+      "start": "flow-file",
+      "probe": "P0 function declaration in a flow file",
+      "reference": "REJECT",
+      "ebnf": "REJECT",
+      "discrepancy": false
     }
   ],
   "rust_differential": {
     "status": "compared",
     "binary": "cargo build --offline --locked",
-    "compared": 54,
-    "agreements": 54,
+    "compared": 83,
+    "agreements": 83,
     "rows": [
       {
         "input": "valid/return_hold.weave",
@@ -596,6 +613,195 @@
         "round_trip": true
       },
       {
+        "input": "pure/invalid/await_in_fn.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/builtin_name.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/chained_comparison.weave",
+        "start": "pure-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E500"
+      },
+      {
+        "input": "pure/invalid/duplicate_field.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/effect_call.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/flow_in_pure_file.weave",
+        "start": "pure-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E500"
+      },
+      {
+        "input": "pure/invalid/fork.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/handle_parameter.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/missing_field.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/mutual_recursion.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/non_terminal_if.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/recursive_record.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/shadowing.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/type_mismatch.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/unknown_name.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/untyped_empty_list.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/unused_body_checked.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/wrong_arity.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/invalid/wrong_field.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/arithmetic.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/budgets.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/contextual_words.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/lists.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/merge_sort.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/records.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/routing.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "pure/valid/short_circuit.weave",
+        "start": "pure-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
         "input": "valid/lease_roundtrip.weave",
         "start": "flow-file",
         "generated": "ACCEPT",
@@ -755,6 +961,20 @@
         "generated": "ACCEPT",
         "rust": "ACCEPT",
         "round_trip": true
+      },
+      {
+        "input": "SA-11",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SA-12",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
       }
     ]
   }

@@ -1,0 +1,2 @@
+fn f(flag: Bool) -> Int:
+    return flag + 1

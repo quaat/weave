@@ -10,9 +10,13 @@ tree, never by running the sources. This over-approximates what can be emitted
 (a literal compared against an error's code also counts), so a code the
 checker can raise is never missed.
 
-``python scripts/diagnostic_map.py`` checks the pinned prototype and, when it is
-present in the repository, the agent kit; it exits 1 and names any unmapped
-code.
+The P0 implementations are scanned too: the Python reference evaluator
+(``scripts/p0_reference.py``) as above, and the Rust crates by their string
+literals of the same form (``rust_codes``).
+
+``python scripts/diagnostic_map.py`` checks the pinned prototype, the P0
+implementations and, when it is present in the repository, the agent kit; it
+exits 1 and names any unmapped code.
 """
 from __future__ import annotations
 
@@ -28,6 +32,9 @@ CODE = re.compile(r"[EP]\d{3}")
 PROTOTYPE = [ROOT / "reference/prototype" / name for name in
              ("checker.py", "coloured.py", "durable.py", "simulate.py", "verify_certificate.py")]
 KIT_SCRIPTS = ROOT.parent / "agent-kit/.agents/skills/weave/scripts"
+P0_REFERENCE = [ROOT / "scripts/p0_reference.py"]
+RUST_CRATES = ROOT.parent / "crates"
+RUST_LITERAL = re.compile(r'"([EP]\d{3})"')
 
 
 def emitted_codes(paths) -> set[str]:
@@ -46,6 +53,18 @@ def emitted_codes(paths) -> set[str]:
     return codes
 
 
+def rust_codes(root: Path = RUST_CRATES) -> set[str]:
+    """Codes written as string literals in the Rust sources (``src/``) of the crates.
+
+    Unit-test modules (from ``#[cfg(test)]`` on) are skipped: they name codes that
+    must not exist, such as E999."""
+    codes: set[str] = set()
+    for path in sorted(root.glob("*/src/**/*.rs")) if root.is_dir() else []:
+        code = path.read_text(encoding="utf-8").split("#[cfg(test)]", 1)[0]
+        codes.update(RUST_LITERAL.findall(code))
+    return codes
+
+
 def load_map(path: Path = MAP) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))["codes"]
 
@@ -61,7 +80,7 @@ def kit_sources() -> list[Path]:
 
 def main() -> int:
     codes = load_map()
-    missing = unmapped(PROTOTYPE + kit_sources(), codes)
+    missing = sorted(set(unmapped(PROTOTYPE + P0_REFERENCE + kit_sources(), codes)) | (rust_codes() - set(codes)))
     if missing:
         print("Unmapped diagnostic codes: " + ", ".join(missing), file=sys.stderr)
         return 1

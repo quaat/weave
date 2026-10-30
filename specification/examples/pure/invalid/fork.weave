@@ -1,0 +1,8 @@
+fn both(a: Int, b: Int) -> Int:
+    fork:
+        let x = double(a)
+        let y = double(b)
+    return x + y
+
+fn double(n: Int) -> Int:
+    return n * 2

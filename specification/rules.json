@@ -73,59 +73,59 @@
   },
   "SYN-01": {
     "chapter": "grammar",
-    "line": 195
+    "line": 202
   },
   "SYN-02": {
     "chapter": "grammar",
-    "line": 200
+    "line": 209
   },
   "SYN-03": {
     "chapter": "grammar",
-    "line": 206
+    "line": 215
   },
   "SYN-04": {
     "chapter": "grammar",
-    "line": 213
+    "line": 222
   },
   "SYN-05": {
     "chapter": "grammar",
-    "line": 219
+    "line": 228
   },
   "SYN-06": {
     "chapter": "grammar",
-    "line": 225
+    "line": 234
   },
   "SYN-07": {
     "chapter": "grammar",
-    "line": 231
+    "line": 240
   },
   "SYN-08": {
     "chapter": "grammar",
-    "line": 237
+    "line": 246
   },
   "SYN-09": {
     "chapter": "grammar",
-    "line": 243
+    "line": 252
   },
   "SYN-10": {
     "chapter": "grammar",
-    "line": 249
+    "line": 258
   },
   "SYN-11": {
     "chapter": "grammar",
-    "line": 256
+    "line": 265
   },
   "SYN-12": {
     "chapter": "grammar",
-    "line": 261
+    "line": 270
   },
   "SYN-13": {
     "chapter": "grammar",
-    "line": 266
+    "line": 275
   },
   "SYN-14": {
     "chapter": "grammar",
-    "line": 272
+    "line": 281
   },
   "LEX-REQ-1": {
     "chapter": "lexical",
@@ -133,7 +133,7 @@
   },
   "LEX-REQ-2": {
     "chapter": "lexical",
-    "line": 112
+    "line": 114
   },
   "NET-FIRE-1": {
     "chapter": "net-semantics",
@@ -154,6 +154,134 @@
   "PROTO-IDENTITY-1": {
     "chapter": "protocol-diff",
     "line": 83
+  },
+  "P0-FILE-1": {
+    "chapter": "pure",
+    "line": 37
+  },
+  "P0-DECL-1": {
+    "chapter": "pure",
+    "line": 122
+  },
+  "P0-DECL-2": {
+    "chapter": "pure",
+    "line": 127
+  },
+  "P0-DECL-3": {
+    "chapter": "pure",
+    "line": 132
+  },
+  "P0-DECL-4": {
+    "chapter": "pure",
+    "line": 138
+  },
+  "P0-TYPE-1": {
+    "chapter": "pure",
+    "line": 144
+  },
+  "P0-NAME-1": {
+    "chapter": "pure",
+    "line": 155
+  },
+  "P0-NAME-2": {
+    "chapter": "pure",
+    "line": 161
+  },
+  "P0-TYPE-2": {
+    "chapter": "pure",
+    "line": 238
+  },
+  "P0-TYPE-3": {
+    "chapter": "pure",
+    "line": 244
+  },
+  "P0-CALL-1": {
+    "chapter": "pure",
+    "line": 251
+  },
+  "P0-RECORD-1": {
+    "chapter": "pure",
+    "line": 261
+  },
+  "P0-RECORD-2": {
+    "chapter": "pure",
+    "line": 267
+  },
+  "P0-EFFECT-1": {
+    "chapter": "pure",
+    "line": 279
+  },
+  "P0-EFFECT-2": {
+    "chapter": "pure",
+    "line": 286
+  },
+  "P0-FORK-1": {
+    "chapter": "pure",
+    "line": 291
+  },
+  "P0-PATH-1": {
+    "chapter": "pure",
+    "line": 307
+  },
+  "P0-REC-1": {
+    "chapter": "pure",
+    "line": 316
+  },
+  "P0-VALUE-1": {
+    "chapter": "pure",
+    "line": 369
+  },
+  "P0-EVAL-1": {
+    "chapter": "pure",
+    "line": 381
+  },
+  "P0-EVAL-2": {
+    "chapter": "pure",
+    "line": 393
+  },
+  "P0-EVAL-3": {
+    "chapter": "pure",
+    "line": 402
+  },
+  "P0-ARITH-1": {
+    "chapter": "pure",
+    "line": 415
+  },
+  "P0-ARITH-2": {
+    "chapter": "pure",
+    "line": 424
+  },
+  "P0-LIST-1": {
+    "chapter": "pure",
+    "line": 458
+  },
+  "P0-FAULT-1": {
+    "chapter": "pure",
+    "line": 468
+  },
+  "P0-BUDGET-1": {
+    "chapter": "pure",
+    "line": 493
+  },
+  "P0-BUDGET-2": {
+    "chapter": "pure",
+    "line": 506
+  },
+  "P0-BUDGET-3": {
+    "chapter": "pure",
+    "line": 516
+  },
+  "P0-BUDGET-4": {
+    "chapter": "pure",
+    "line": 522
+  },
+  "P0-RUN-1": {
+    "chapter": "pure",
+    "line": 548
+  },
+  "P0-RUN-2": {
+    "chapter": "pure",
+    "line": 559
   },
   "SEC-CAP-1": {
     "chapter": "security",
@@ -225,15 +353,15 @@
   },
   "CONF-REQ-1": {
     "chapter": "status",
-    "line": 156
+    "line": 181
   },
   "CONF-REQ-2": {
     "chapter": "status",
-    "line": 163
+    "line": 188
   },
   "CONF-REQ-3": {
     "chapter": "status",
-    "line": 181
+    "line": 206
   },
   "TYPE-REQ-1": {
     "chapter": "types",
@@ -241,19 +369,19 @@
   },
   "N1-FAMILY-1": {
     "chapter": "verification",
-    "line": 118
+    "line": 125
   },
   "N1-FAMILY-2": {
     "chapter": "verification",
-    "line": 134
+    "line": 141
   },
   "N0-ORDER-1": {
     "chapter": "verification",
-    "line": 184
+    "line": 191
   },
   "N1-ORDER-1": {
     "chapter": "verification",
-    "line": 205
+    "line": 212
   },
   "CONF-CASE-1": {
     "chapter": "conformance",

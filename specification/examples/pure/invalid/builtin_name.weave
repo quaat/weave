@@ -1,0 +1,2 @@
+fn head(xs: List[Int]) -> Int:
+    return 0

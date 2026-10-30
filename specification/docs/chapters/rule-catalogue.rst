@@ -105,6 +105,70 @@ the conformance table, run ``python scripts/refresh_reference_pages.py``.
      - :doc:`net-semantics`
    * - :ref:`NET-REQ-1 <NET-REQ-1>`
      - :doc:`net-semantics`
+   * - :ref:`P0-ARITH-1 <P0-ARITH-1>`
+     - :doc:`pure`
+   * - :ref:`P0-ARITH-2 <P0-ARITH-2>`
+     - :doc:`pure`
+   * - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
+     - :doc:`pure`
+   * - :ref:`P0-BUDGET-2 <P0-BUDGET-2>`
+     - :doc:`pure`
+   * - :ref:`P0-BUDGET-3 <P0-BUDGET-3>`
+     - :doc:`pure`
+   * - :ref:`P0-BUDGET-4 <P0-BUDGET-4>`
+     - :doc:`pure`
+   * - :ref:`P0-CALL-1 <P0-CALL-1>`
+     - :doc:`pure`
+   * - :ref:`P0-DECL-1 <P0-DECL-1>`
+     - :doc:`pure`
+   * - :ref:`P0-DECL-2 <P0-DECL-2>`
+     - :doc:`pure`
+   * - :ref:`P0-DECL-3 <P0-DECL-3>`
+     - :doc:`pure`
+   * - :ref:`P0-DECL-4 <P0-DECL-4>`
+     - :doc:`pure`
+   * - :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
+     - :doc:`pure`
+   * - :ref:`P0-EFFECT-2 <P0-EFFECT-2>`
+     - :doc:`pure`
+   * - :ref:`P0-EVAL-1 <P0-EVAL-1>`
+     - :doc:`pure`
+   * - :ref:`P0-EVAL-2 <P0-EVAL-2>`
+     - :doc:`pure`
+   * - :ref:`P0-EVAL-3 <P0-EVAL-3>`
+     - :doc:`pure`
+   * - :ref:`P0-FAULT-1 <P0-FAULT-1>`
+     - :doc:`pure`
+   * - :ref:`P0-FILE-1 <P0-FILE-1>`
+     - :doc:`pure`
+   * - :ref:`P0-FORK-1 <P0-FORK-1>`
+     - :doc:`pure`
+   * - :ref:`P0-LIST-1 <P0-LIST-1>`
+     - :doc:`pure`
+   * - :ref:`P0-NAME-1 <P0-NAME-1>`
+     - :doc:`pure`
+   * - :ref:`P0-NAME-2 <P0-NAME-2>`
+     - :doc:`pure`
+   * - :ref:`P0-PATH-1 <P0-PATH-1>`
+     - :doc:`pure`
+   * - :ref:`P0-REC-1 <P0-REC-1>`
+     - :doc:`pure`
+   * - :ref:`P0-RECORD-1 <P0-RECORD-1>`
+     - :doc:`pure`
+   * - :ref:`P0-RECORD-2 <P0-RECORD-2>`
+     - :doc:`pure`
+   * - :ref:`P0-RUN-1 <P0-RUN-1>`
+     - :doc:`pure`
+   * - :ref:`P0-RUN-2 <P0-RUN-2>`
+     - :doc:`pure`
+   * - :ref:`P0-TYPE-1 <P0-TYPE-1>`
+     - :doc:`pure`
+   * - :ref:`P0-TYPE-2 <P0-TYPE-2>`
+     - :doc:`pure`
+   * - :ref:`P0-TYPE-3 <P0-TYPE-3>`
+     - :doc:`pure`
+   * - :ref:`P0-VALUE-1 <P0-VALUE-1>`
+     - :doc:`pure`
    * - :ref:`PROTO-IDENTITY-1 <PROTO-IDENTITY-1>`
      - :doc:`protocol-diff`
    * - :ref:`SEC-CAP-1 <SEC-CAP-1>`

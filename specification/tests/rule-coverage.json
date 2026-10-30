@@ -751,6 +751,412 @@
         }
       ]
     },
+    "P0-ARITH-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_exact_values",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_integer_size",
+          "polarity": "negative",
+          "code": "E532"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-ARITH-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_euclidean_division",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_euclidean_division",
+          "polarity": "negative",
+          "code": "E520"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-BUDGET-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_corpus_run_cases",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_fuel_and_depth",
+          "polarity": "negative",
+          "code": "E530"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-BUDGET-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_fuel_and_depth",
+          "polarity": "negative",
+          "code": "E530"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-BUDGET-3": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_fuel_and_depth",
+          "polarity": "negative",
+          "code": "E531"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-BUDGET-4": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_integer_size",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_integer_size",
+          "polarity": "negative",
+          "code": "E532"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-CALL-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_calls",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_calls",
+          "polarity": "negative",
+          "code": "E507"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-DECL-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_top_level_names",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_top_level_names",
+          "polarity": "negative",
+          "code": "E501"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-DECL-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_records",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_records",
+          "polarity": "negative",
+          "code": "E502"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-DECL-3": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_records",
+          "polarity": "negative",
+          "code": "E503"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-DECL-4": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_signatures_first_and_unused_bodies",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_signatures_first_and_unused_bodies",
+          "polarity": "negative",
+          "code": "E510"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-EFFECT-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_purity",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_purity",
+          "polarity": "negative",
+          "code": "E512"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-EFFECT-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_purity",
+          "polarity": "negative",
+          "code": "E513"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-EVAL-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_corpus_run_cases",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_left_to_right",
+          "polarity": "negative",
+          "code": "E521"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-EVAL-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_short_circuit",
+          "polarity": "positive"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-EVAL-3": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_fuel_and_depth",
+          "polarity": "negative",
+          "code": "E531"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-FAULT-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_list_primitives_and_faults",
+          "polarity": "negative",
+          "code": "E521"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_euclidean_division",
+          "polarity": "negative",
+          "code": "E520"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-FILE-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_file_syntax",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_file_syntax",
+          "polarity": "negative",
+          "code": "E500"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-FORK-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_purity",
+          "polarity": "negative",
+          "code": "E514"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-LIST-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_list_primitives_and_faults",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_list_primitives_and_faults",
+          "polarity": "negative",
+          "code": "E521"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-NAME-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_names_in_values",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_names_in_values",
+          "polarity": "negative",
+          "code": "E505"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-NAME-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_no_shadowing",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_no_shadowing",
+          "polarity": "negative",
+          "code": "E506"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-PATH-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_terminal_blocks",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_terminal_blocks",
+          "polarity": "negative",
+          "code": "E515"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-REC-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_direct_recursion_only",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_direct_recursion_only",
+          "polarity": "negative",
+          "code": "E516"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-RECORD-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_record_construction_and_access",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_record_construction_and_access",
+          "polarity": "negative",
+          "code": "E508"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-RECORD-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_record_construction_and_access",
+          "polarity": "negative",
+          "code": "E509"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-RUN-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_corpus_run_cases",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Dynamic::test_run_requests",
+          "polarity": "negative",
+          "code": "E540"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-RUN-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_exact_values",
+          "polarity": "positive"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-TYPE-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_types_and_handles",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_types_and_handles",
+          "polarity": "negative",
+          "code": "E504"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-TYPE-2": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_type_mismatch",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_type_mismatch",
+          "polarity": "negative",
+          "code": "E510"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-TYPE-3": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Static::test_empty_list_needs_an_expected_type",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_empty_list_needs_an_expected_type",
+          "polarity": "negative",
+          "code": "E511"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
+    "P0-VALUE-1": {
+      "tests": [
+        {
+          "test": "tests/test_p0.py::Dynamic::test_exact_values",
+          "polarity": "positive"
+        }
+      ],
+      "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
+    },
     "PROTO-IDENTITY-1": {
       "tests": [],
       "pending": {

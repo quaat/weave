@@ -1,0 +1,34 @@
+# Exact integer arithmetic, precedence, comparisons and Euclidean div/mod.
+
+fn polynomial(x: Int) -> Int:
+    return 3 * x * x - 2 * x + -7
+
+fn precedence(a: Int, b: Int, c: Int) -> Int:
+    return a + b * c - -(a - b) * 2
+
+fn quotient(a: Int, d: Int) -> Int:
+    return div(a, d)
+
+fn remainder(a: Int, d: Int) -> Int:
+    return mod(a, d)
+
+fn reconstructs(a: Int, d: Int) -> Bool:
+    return d * div(a, d) + mod(a, d) == a and mod(a, d) >= 0
+
+fn compare(a: Int, b: Int) -> Int:
+    if a < b:
+        return -1
+    else:
+        if a > b:
+            return 1
+        else:
+            return 0
+
+fn ordered(a: Int, b: Int) -> Bool:
+    return a <= b and b >= a and a != b + 1 and not(a == b + 2)
+
+fn power(base: Int, exponent: Int) -> Int:
+    if exponent == 0:
+        return 1
+    else:
+        return base * power(base, exponent - 1)

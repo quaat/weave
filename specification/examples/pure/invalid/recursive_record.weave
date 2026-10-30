@@ -1,0 +1,3 @@
+record Tree:
+    value: Int
+    children: List[Tree]

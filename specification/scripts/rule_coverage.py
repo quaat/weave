@@ -4,8 +4,8 @@
 """Check rule coverage and generate docs/chapters/rule-coverage.rst.
 
 Every rule ID in ``rules.json`` needs a conformance case in
-``examples/manifest.json``, a test listed in ``tests/rule-coverage.json``, or a
-pending-implementation entry there. Listed tests must exist, and a listed
+``examples/manifest.json`` or ``examples/pure/manifest.json`` (P0), a test listed in
+``tests/rule-coverage.json``, or a pending-implementation entry there. Listed tests must exist, and a listed
 diagnostic code must appear as a string literal in the test method.
 ``--check`` fails on a gap, a broken reference or a stale generated page.
 """
@@ -22,6 +22,8 @@ PAGE = "docs/chapters/rule-coverage.rst"
 FORMAT = "weave-rule-coverage-v1"
 ISSUE = re.compile(r"quaat/weave#[1-9]\d*")
 CODE = re.compile(r"E\d{3}")
+P0_FORMAT = "weave-p0-conformance-v1"
+POSITIVE_RESULTS = {"ACCEPT", "VALUE"}
 
 
 class CoverageError(ValueError):
@@ -29,8 +31,13 @@ class CoverageError(ValueError):
 
 
 def load(root: Path = ROOT) -> tuple[dict, dict, dict]:
+    """rules.json, the conformance cases of both manifests (as one ``cases`` list), the map."""
     read = lambda rel: json.loads((root / rel).read_text(encoding="utf-8"))
-    return read("rules.json"), read("examples/manifest.json"), read("tests/rule-coverage.json")
+    manifest, pure = read("examples/manifest.json"), read("examples/pure/manifest.json")
+    if pure.get("format") != P0_FORMAT:
+        raise CoverageError(f"Unsupported P0 manifest format: {pure.get('format')!r}; expected {P0_FORMAT}")
+    manifest = dict(manifest, cases=manifest["cases"] + pure["cases"])
+    return read("rules.json"), manifest, read("tests/rule-coverage.json")
 
 
 def _method(root: Path, ref: str, cache: dict) -> ast.FunctionDef:
@@ -119,7 +126,7 @@ def render(rows: list[dict]) -> str:
     untracked = [r for r in pending if r["pending"]["issue"] is None]
     one_sided = [r["rule"] for r in covered
                  if not ({t["polarity"] for t in r["tests"]}
-                         | {"positive" if c["expect"] == "ACCEPT" else "negative" for c in r["cases"]})
+                         | {"positive" if c["expect"] in POSITIVE_RESULTS else "negative" for c in r["cases"]})
                  >= {"positive", "negative"}]
     out = [
         ".. SPDX-FileCopyrightText: 2026 Thomas F. Hagelien",
@@ -131,7 +138,8 @@ def render(rows: list[dict]) -> str:
         "===================",
         "",
         "This generated page records, for each rule ID in ``rules.json``, the",
-        "conformance cases (from ``examples/manifest.json``) and tests that exercise it,",
+        "conformance cases (from ``examples/manifest.json`` and, for P0,",
+        "``examples/pure/manifest.json``) and tests that exercise it,",
         "or a pending-implementation entry. The map is ``tests/rule-coverage.json``.",
         "``python scripts/rule_coverage.py`` regenerates this page and ``--check`` fails",
         "if a rule has no case, test or pending entry, if a listed test does not exist,",
@@ -141,10 +149,12 @@ def render(rows: list[dict]) -> str:
         "A *positive* test or case expects acceptance or the conforming behaviour; a",
         "*negative* one expects rejection, with the diagnostic code shown where the test",
         "asserts one. A listed test exercises the rule through the reference prototype in",
-        "``reference/prototype/``: it is regression evidence for that implementation, not",
-        "a proof that the rule holds for every input. Tests from ``test_rule_cases`` and",
-        "``test_documentation`` are in ``tests/``; the others are the prototype's tests",
-        "in ``reference/prototype/tests/``.",
+        "``reference/prototype/``, or, for the ``P0-*`` rules, through the P0 reference",
+        "evaluator ``scripts/p0_reference.py`` (``test_p0``; the Rust crates have their own",
+        "tests, and ``scripts/p0_differential.py`` compares the two): it is regression",
+        "evidence for that implementation, not a proof that the rule holds for every input.",
+        "Tests from ``test_rule_cases``, ``test_documentation`` and ``test_p0`` are in",
+        "``tests/``; the others are the prototype's tests in ``reference/prototype/tests/``.",
         "",
         f"**Summary.** {len(rows)} rule IDs; {len(covered)} with a test or conformance case and",
         f"no pending entry; {len(pending)} pending implementation"

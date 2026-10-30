@@ -1,0 +1,2 @@
+fn between(a: Int, b: Int, c: Int) -> Bool:
+    return a < b < c
