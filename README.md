@@ -108,18 +108,19 @@ CHECKED token identity on every enabled firing; unique admission per tenant/orde
 
 ## Reading a result
 
-Weave's tooling uses six words, and the specification forbids using one when another is meant.
+Weave's tooling uses seven words, and the specification forbids using one when another is meant.
 
 | Label | What it establishes |
 |---|---|
 | **PROVED** | An exact integer invariant holds for every finite firing sequence and every nonnegative initial stock. Says nothing about ordering. |
 | **CHECKED WITHIN BOUNDS** | A finite model was exhaustively explored at explicit colours, stock, token bounds and guard abstraction. |
 | **CHECKED flow** | Static type, identity, move, return and exhaustiveness checks passed. |
+| **CHECKED pure** | P0 type, effect, path and recursion-shape checks passed for a pure file. Says nothing about termination or budgets. |
 | **SCRIPTED / passed scenario** | One concrete execution or injected crash case satisfied its assertions. |
 | **VIOLATED** | A counterexample was found; the trace is printed. |
 | **NOT ESTABLISHED** | Missing model, exhausted budget, or a guarantee outside the tool. Never reported as a pass. |
 
-Each label belongs to one claim. Tool status (a command or test passed) and the runtime status of a run (`waiting`, `timed out`, `completed`) are reported separately and are not evidence; `Unknown` is an application outcome and never means NOT ESTABLISHED. The prototype's own console lines, such as the `demo.py` output above, `PASSED` and `RECHECKED`, are raw tool output: the agent kit's runner and the evidence envelopes (`evidence/`) state the claims with exactly these six labels, and tests in the agent kit and the specification fail on any other label. See "Result labels in tool output" in the [verification chapter](specification/docs/chapters/verification.rst).
+Each label belongs to one claim. Tool status (a command or test passed) and the runtime status of a run (`waiting`, `timed out`, `completed`) are reported separately and are not evidence; `Unknown` is an application outcome and never means NOT ESTABLISHED. The prototype's own console lines, such as the `demo.py` output above, `PASSED` and `RECHECKED`, are raw tool output: the agent kit's runner and the evidence envelopes (`evidence/`) state the claims with the six labels that predate CHECKED pure, the `weave` command states CHECKED pure, and tests in the agent kit and the specification fail on any other label. See "Result labels in tool output" in the [verification chapter](specification/docs/chapters/verification.rst).
 
 ## Repository map
 
@@ -127,16 +128,16 @@ Each directory is self-contained with its own README, tests and requirements. Ru
 
 | Directory | What it is | Start with |
 |---|---|---|
-| [`specification/`](specification) | The language specification, draft 0.2: lexical rules, EBNF, inference rules, net and flow semantics, the dynamic execution contract (D0), declared evidence (N2), verification semantics, conformance appendix, rationale and design history. Every displayed example is re-checked at build time. | [`specification/README.md`](specification/README.md) · [site](https://quaat.github.io/weave/) |
+| [`specification/`](specification) | The language specification, draft 0.2: lexical rules, EBNF, inference rules, net and flow semantics, pure computation (P0), the dynamic execution contract (D0), declared evidence (N2), verification semantics, conformance appendix, rationale and design history. Every displayed example is re-checked at build time. | [`specification/README.md`](specification/README.md) · [site](https://quaat.github.io/weave/) |
 | [`inventory-proof/`](inventory-proof) | The prototype (v3): net parser, ownership validator, P-invariant prover with certificates, bounded order explorer, linear flow checker with `?` lowering, scripted executor, coloured nets, and a SQLite-backed process-crash model. Standard library only. | [`inventory-proof/REPORT.md`](inventory-proof/REPORT.md) |
 | [`agent-kit/`](agent-kit) | A starter kit for working on Weave with Codex or Claude Code: `AGENTS.md`, a portable `weave` skill with a vendored prototype and CLI, teaching examples with expected diagnostics, and demos (`tiny_shop`, `merge_sort`). Includes an explicitly separate pure-`fn` extension with integer lists, recursion and a cooperative fork/join scheduler. | [`agent-kit/README.md`](agent-kit/README.md) |
-| [`crates/`](crates) | The Rust implementation, started by issue #9: a Cargo workspace (root `Cargo.toml`, `Cargo.lock`, toolchain pinned to Rust 1.89.0 in `rust-toolchain.toml`) whose first crate, `crates/weave-syntax`, is the syntax layer only. It embeds `specification/grammar/weave.ebnf`, interprets it as an ordered-choice grammar guarded by a normalisation check, and builds a concrete syntax tree with spans and comments that prints back to the exact source. Syntax diagnostics use the specification's codes. No checker, runtime or interpreter yet. Standard library only. | [`docs/decisions/0009-rust-implementation.md`](docs/decisions/0009-rust-implementation.md) · [grammar chapter](specification/docs/chapters/grammar.rst) |
+| [`crates/`](crates) | The Rust implementation, started by issue #9: a Cargo workspace (root `Cargo.toml`, `Cargo.lock`, toolchain pinned to Rust 1.89.0 in `rust-toolchain.toml`). `crates/weave-syntax` is the syntax layer: it embeds `specification/grammar/weave.ebnf`, interprets it as an ordered-choice grammar guarded by a normalisation check, and builds a concrete syntax tree with spans and comments that prints back to the exact source. For the P0 pure profile (issue #10), `crates/weave-check` checks pure files (types, purity, block termination, recursion shape), `crates/weave-eval` evaluates them with exact integers, explicit call frames and fuel, depth and integer-size budgets, and `crates/weave-cli` is the `weave` command (`weave check`, `weave run`). No checker or runtime for flows or nets yet. Standard library only. | [`docs/decisions/0009-rust-implementation.md`](docs/decisions/0009-rust-implementation.md) · [grammar chapter](specification/docs/chapters/grammar.rst) · [P0 chapter](specification/docs/chapters/pure.rst) |
 | [`tools/weave_workflow/`](tools/weave_workflow) · [`docs/development/`](docs/development) | The development workflow: a deterministic GitHub adapter, scheduler, protocol events, transition gates, independent Codex review and a documentation drift audit, driven by Claude Code skills (`.claude/skills/`) and subagents (`.claude/agents/`). Standard library only. | [`docs/development/agent-workflow.md`](docs/development/agent-workflow.md) |
 | [`docs/decisions/`](docs/decisions) | Decision records and proposals awaiting or recording maintainer decisions, such as the licence-terms proposal for issue #2 and the Rust implementation record for issue #9. | [`docs/decisions/0002-licence-terms.md`](docs/decisions/0002-licence-terms.md) |
 
 ## Quick start
 
-Python 3.11 or newer. Only the specification build needs third-party packages. The Rust syntax crate needs the toolchain pinned in `rust-toolchain.toml` (Rust 1.89.0, installed by `rustup`) and no crates from the network.
+Python 3.11 or newer. Only the specification build needs third-party packages. The Rust crates need the toolchain pinned in `rust-toolchain.toml` (Rust 1.89.0, installed by `rustup`) and no crates from the network.
 
 ```bash
 # Prototype (F0, N0, N1, R0): prove, explore, check, simulate, crash-test
@@ -161,13 +162,22 @@ make html                 # _build/html/index.html
 make validate-offline     # examples, grammar audit, tests, strict build, link audit
 make latexpdf             # needs XeLaTeX + latexmk
 
-# Rust syntax layer, from the repository root
+# Rust crates, from the repository root
 cargo fmt --all --check && cargo clippy --all-targets -- -D warnings
-cargo test --all          # corpus round trip and spans, diagnostics, adversarial input
+cargo test --all          # syntax corpus and spans, P0 rules, evaluation, budgets, adversarial input
 cargo run -q -p weave-syntax -- parse --start flow-file specification/examples/valid/checkout.weave
+
+# P0 pure files with the weave command (build once with: cargo build -p weave-cli)
+cargo run -q -p weave-cli -- check specification/examples/pure/valid/merge_sort.weave
+cargo run -q -p weave-cli -- run specification/examples/pure/valid/merge_sort.weave \
+    --entry merge_sort --args '[[5, -2, 5, 0, -2]]'
+cargo run -q -p weave-cli -- run specification/examples/pure/valid/budgets.weave \
+    --entry spin --args '[0]' --fuel 1000        # stops at its fuel budget: exit 4
 ```
 
-With `cargo` on `PATH`, `make validate-offline` also compares the Rust parser with the generated grammar audit on the whole corpus; without it, that comparison is reported as not established.
+`weave check FILE` prints one `CHECKED pure` claim for the file or the first diagnostic (code, rule, span). `weave run FILE --entry NAME --args JSON` also prints the outcome, a value, a pure fault (`division-by-zero`, `empty-list`) or an exhausted budget (`fuel`, `depth`, `int-size`), and every budget with what the run used; `--fuel`, `--max-depth` and `--int-bits` set the budgets and `--json` prints one JSON object. Exit status: 0 checked or a value, 1 a rejected file or invalid request, 2 usage, 3 a fault, 4 an exhausted budget.
+
+With `cargo` on `PATH`, `make validate-offline` also compares the Rust parser with the generated grammar audit on the whole corpus, and the `weave` command with the Python P0 reference evaluator; without it, both comparisons are reported as not established.
 
 ## How the pieces fit
 
@@ -193,7 +203,7 @@ The net is the single source of truth: the type checker, the prover, the explore
 
 The specification keeps a register of these; the short list:
 
-- **No general computation in flows.** Values are opaque scalars. Pure functions, arithmetic, lists, `if`/`else`, loops and recursion exist only in the agent kit's separate `fn` extension and are not part of the specified fragment ([M1](https://github.com/quaat/weave/issues/55)).
+- **No general computation in flows.** Values in flows are opaque scalars. Pure functions with arithmetic, lists, records, `if`/`else` and direct recursion are the P0 profile (#10): separate pure files that flows cannot call yet, with no loops, fork/join, higher-order functions, modules or termination checking ([M1](https://github.com/quaat/weave/issues/55)). The agent kit's separate `fn` extension is unchanged and is not P0.
 - **No general runtime.** The simulator fails on a disabled transition instead of waiting; the crash model executes the Inventory protocol, not arbitrary flows. The dynamic contract D0 is specified, not implemented ([M3](https://github.com/quaat/weave/issues/57)).
 - **Payment vocabulary in the check grammar.** `paid_evidence` and `rejected_evidence` are keywords today. Declared evidence classes (N2) are specified, not implemented ([M2](https://github.com/quaat/weave/issues/56)).
 - **Bounded, not general.** Ordering is checked at two orders (N1; N0 checks one order); conservation is proved for any stock (N0, N1). No liveness, deadlock-freedom, fairness, or arbitrary-order theorem.
@@ -218,7 +228,7 @@ Tracked as milestones and epics; the plan is [#61](https://github.com/quaat/weav
 
 | Workflow | Runs on | What it does |
 |---|---|---|
-| [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, `demo.py` reproduces committed outputs, `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, demo tests (3.11–3.13). `rust`: the pinned toolchain from `rust-toolchain.toml`, a current `Cargo.lock`, `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test --all`. `specification`: builds the `weave-syntax` binary for the grammar audit's Rust comparison, then `make validate-offline`, single-page and text builds, HTML link audit. Workflow: offline workflow tests, whole-repository documentation drift audit, documentation map currency |
+| [`ci.yml`](.github/workflows/ci.yml) | Pushes to `main`, pull requests | `inventory-proof`: unit tests, `demo.py` reproduces committed outputs, `durable.py` (Python 3.11–3.13). `agent-kit`: `doctor`, kit tests, example expectations, bundled prototype suite, demo tests (3.11–3.13). `rust`: the pinned toolchain from `rust-toolchain.toml`, a current `Cargo.lock`, `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test --all`. `specification`: builds the `weave-syntax` binary for the grammar audit's Rust comparison, then `make validate-offline` (whose P0 differential builds the `weave` binary with `cargo`), single-page and text builds, HTML link audit. Workflow: offline workflow tests, whole-repository documentation drift audit, documentation map currency |
 | [`docs.yml`](.github/workflows/docs.yml) | Pushes to `main`; PRs touching `specification/` | Builds the multi-page and single-page editions, audits links, form targets and assets; only `main` deploys to GitHub Pages |
 | [`pdf.yml`](.github/workflows/pdf.yml) | Manual runs; `spec-v*` tags | Builds the XeLaTeX PDF; tag pushes attach it to the release |
 

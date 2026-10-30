@@ -89,7 +89,7 @@ merely to make every file accepted.
 listed test is missing, or if the page is stale. ``tests/test_rule_coverage.py``
 runs that check in ``make validate`` and ``make validate-offline``.
 
-Rust syntax crate
+Rust crates
 -----------------------
 
 The grammar-driven parser is the Rust crate ``crates/weave-syntax`` in the
@@ -128,6 +128,42 @@ user-facing Weave command.
 (:ref:`chapters/grammar:Generated-parser agreement`). Without either, the
 specification's offline validation still passes and the report records the Rust
 comparison as not established.
+
+P0 crates
+~~~~~~~~~~~~~~~
+
+The P0 profile (:doc:`pure`) adds three crates to the workspace, also standard
+library only: ``crates/weave-check`` (static rules, a typed AST with spans),
+``crates/weave-eval`` (values, an in-house arbitrary-precision integer,
+Euclidean division, an explicit call-frame stack, fuel, depth and
+integer-size budgets) and ``crates/weave-cli``, the user-facing ``weave``
+command:
+
+.. code-block:: bash
+
+   cargo run -q -p weave-cli -- check specification/examples/pure/valid/routing.weave
+   cargo run -q -p weave-cli -- run specification/examples/pure/valid/merge_sort.weave \
+       --entry merge_sort --args '[[5, -2, 5, 0, -2]]'
+   cargo run -q -p weave-cli -- run specification/examples/pure/valid/budgets.weave \
+       --entry spin --args '[0]' --fuel 1000 --json
+
+``check`` prints one ``CHECKED pure`` claim or the first diagnostic; ``run``
+also prints the outcome (a value, a fault or an exhausted budget) and every
+budget with its usage. Exit status 0 is a checked file or a value, 1 a
+rejected file or invalid run request, 2 a usage error, 3 a fault and 4 an
+exhausted budget. The tests check every static rule with its code, rule and
+span, every P0 corpus case, Euclidean division for every sign, the budgets
+(including recursion 300,000 calls deep on a 256 KiB thread stack, integers of
+66,000 bits and a list of a million elements), renaming and source edits that
+must change behaviour, and the command's output.
+
+``scripts/p0_reference.py`` is the Python P0 reference evaluator and
+``scripts/p0_differential.py`` compares it with the ``weave`` binary, built with
+``cargo build --offline --locked`` or named by ``WEAVE_BIN``, on the P0 corpus,
+on merge sort against Python ``sorted`` and on seeded generated programs.
+Without either, ``validation/p0-differential.json`` records the comparison as
+not established. ``tests/test_p0.py`` tests the P0 rules through the reference
+and the differential's not-established path.
 
 For direct reference commands:
 
@@ -215,10 +251,10 @@ comparison is skipped as not established without ``cargo``, requires a named
 binary to exist, and fails on a disagreeing verdict.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 86 tests (nine documentation tests, the rule cases, the rule
+specification's 117 tests (nine documentation tests, the rule cases, the rule
 coverage check, the diagnostic map tests, the result-label lint of
-:ref:`chapters/verification:Result labels in tool output` and the grammar-audit
-tests), 143 upstream tests, strict HTML with weave-check, the local
+:ref:`chapters/verification:Result labels in tool output`, the grammar-audit
+tests and the P0 tests), the P0 differential, 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.
 No unreachable URL is silently ignored.
