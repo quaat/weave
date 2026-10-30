@@ -9,7 +9,7 @@ change to the kit's runner, skills, examples or policy.
 - **Axis and identifier:** tools: agent kit (version unchanged until the next release).
 - **Kind:** compatible addition.
 - **Change:** the specification added the P0 profile (quaat/weave#10) with diagnostic codes
-  E500 to E540 and the result label CHECKED pure. The skill's byte-identical copy of
+  diagnostic codes in the new E5xx range and the result label CHECKED pure. The skill's byte-identical copy of
   `specification/diagnostics.json` (`assets/diagnostics.json`) is synced by
   `scripts/sync_skill_reference.py`, and the label lint (`weave_labels.RESULT_LABELS`)
   accepts the seventh label. The kit emits no P0 diagnostic and no CHECKED pure claim, and
@@ -17,7 +17,7 @@ change to the kit's runner, skills, examples or policy.
   follow-up. The evidence envelope (`weave-evidence-envelope-v1`) keeps its six labels.
 - **Semantic change:** no. Every program is accepted or rejected as before with the same
   codes, exit codes and result labels.
-- **Codes and rule IDs:** none in the kit; the copied map gains E500 to E540.
+- **Codes and rule IDs:** none in the kit; the copied map gains the P0 codes (the E5xx range).
 
 ## 2026-10-29: 0.3.0
 
