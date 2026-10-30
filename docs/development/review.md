@@ -31,7 +31,7 @@ Derived from current CI and the affected components, run in each component's dir
 | `specification/` | `make validate-offline`; `make singlehtml text`; HTML audits |
 | Workflow | `python3 -m unittest discover -s tools/weave_workflow/tests -t .` |
 | Every change | `python3 -m tools.weave_workflow docs-audit` (and `--base` for the change) |
-| Rust workspace (when it exists) | `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test --all`, conformance and differential tests |
+| Rust workspace (`Cargo.toml`, `crates/`; from the repository root) | `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test --all` (corpus round trip and spans, diagnostics, adversarial input). The differential test against the generated grammar audit runs in the specification's `make validate-offline` when `cargo` is on `PATH`; without it the comparison is reported as not established, so a verifier that reports it must have `cargo` available |
 
 ## Independent review
 
