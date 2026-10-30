@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
+# SPDX-License-Identifier: MIT
+[package]
+name = "weave-cli"
+version = "0.1.0"
+description = "The weave command: check and run P0 pure files"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "weave"
+path = "src/main.rs"
+
+[dependencies]
+weave-check = { path = "../weave-check" }
+weave-eval = { path = "../weave-eval" }
+weave-syntax = { path = "../weave-syntax" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

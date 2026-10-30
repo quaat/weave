@@ -10,5 +10,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "weave-cli"
+version = "0.1.0"
+dependencies = [
+ "weave-check",
+ "weave-eval",
+ "weave-syntax",
+]
+
+[[package]]
+name = "weave-eval"
+version = "0.1.0"
+dependencies = [
+ "weave-check",
+ "weave-syntax",
+]
+
+[[package]]
 name = "weave-syntax"
 version = "0.1.0"
