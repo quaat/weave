@@ -142,5 +142,7 @@ relayed this way: only the command that produces their evidence publishes them.
 - Exclusivity is single-host (an advisory file lock); there is no multi-host fencing.
 - `main` has no branch protection at bootstrap, so GitHub does not enforce required checks
   or human reviews; the Done gate checks them itself, and protection is a maintainer action.
+  The gate requires every CI job listed in `policy.json` → `integration.required_checks`,
+  including the Rust job `rust (weave-syntax)` (format, Clippy and tests for all crates).
 - The installed `autonomous-development` plugin is not present; the review gate uses the
   built-in `codex exec` adapter (see [capabilities.md](capabilities.md)).
