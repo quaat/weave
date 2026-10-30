@@ -12,7 +12,11 @@ does not expose them yet; see `docs/prototype-status.md`. This kit adds packagin
 plus one explicitly separate extension: pure `fn` programs with integer lists,
 direct recursion, and a cooperative fork/join scheduler (`check-pure`/`run-pure`,
 implemented outside the vendored prototype, which it does not modify). See
-`docs/prototype-status.md` for limitations.
+`docs/prototype-status.md` for limitations. That extension and its `merge_sort` demo
+are not the specified language and do not complete the concurrent fork/join merge-sort
+brief (`claude-code-weave-merge-sort.md`), which is quaat/weave#42 (M6). Specified
+sequential merge sort is a P0 conformance application, run with the repository's
+`weave` command rather than this kit (quaat/weave#11).
 
 ## Start
 

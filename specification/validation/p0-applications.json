@@ -1,0 +1,125 @@
+{
+  "scope": "Two P0 programs run with the ordinary weave run command and the Python P0 reference evaluator, compared with Python oracles: values, and for invalid run requests the code, stage, exit status and budget use. Regression evidence on these inputs, not a proof of correctness or stability for all inputs. The concurrent fork/join merge sort is not covered (quaat/weave#42, M6).",
+  "seed": 20261111,
+  "applications": {
+    "merge_sort": {
+      "file": "examples/pure/valid/merge_sort.weave",
+      "entry": "merge_sort",
+      "oracle": "Python sorted()",
+      "exhaustive": {
+        "max_length": 6,
+        "values": [
+          0,
+          1,
+          2
+        ],
+        "inputs": 1093
+      },
+      "seeded": {
+        "inputs": 64,
+        "longest": 256,
+        "widest_bits": 200
+      },
+      "inputs": 1157,
+      "reference": "equal to the oracle on every input",
+      "rust": {
+        "status": "compared",
+        "compared": 1157
+      }
+    },
+    "sort_items": {
+      "file": "examples/pure/valid/merge_sort.weave",
+      "entry": "sort_items",
+      "oracle": "Python sorted(key=key), which is stable",
+      "stability": "observable: every item has a distinct id, and the whole output, ids included, must equal the stable oracle's; equal keys keep their input order",
+      "exhaustive": {
+        "max_length": 6,
+        "keys": [
+          0,
+          1,
+          2
+        ],
+        "ids": "positions",
+        "inputs": 1093
+      },
+      "seeded": {
+        "inputs": 60,
+        "longest": 256,
+        "ids": "distinct, shuffled"
+      },
+      "inputs": 1153,
+      "inputs_with_equal_keys": 1135,
+      "reference": "equal to the oracle on every input",
+      "rust": {
+        "status": "compared",
+        "compared": 1153
+      }
+    },
+    "route": {
+      "file": "examples/pure/valid/routing.weave",
+      "entry": "route",
+      "oracle": "route_oracle in scripts/p0_applications.py, written from the routing rule; it does not call the reference",
+      "named": 21,
+      "single_route_grid": 75,
+      "seeded": 300,
+      "inputs": 396,
+      "accepted_decisions": 259,
+      "rejections": 137,
+      "valid_records": 1191,
+      "invalid_records": 3360,
+      "invalid_by_reason": {
+        "cost over limit": 1726,
+        "hops below 1": 999,
+        "hops over 16": 1022,
+        "negative cost": 746
+      },
+      "inputs_with_cost_ties": 50,
+      "reference": "equal to the oracle on every input",
+      "rust": {
+        "status": "compared",
+        "compared": 396
+      }
+    }
+  },
+  "invalid_run_requests": {
+    "requests": 23,
+    "code": "E540",
+    "rule": "P0-RUN-1",
+    "cases": [
+      "route: missing hops",
+      "route: extra field",
+      "route: duplicate field",
+      "route: cost as a string",
+      "route: hops as a Bool",
+      "route: dest with a fraction",
+      "route: cost with an exponent",
+      "route: null cost",
+      "route: limit as a string",
+      "route: routes not a list",
+      "route: a list where a record goes",
+      "route: one bad record among valid ones",
+      "route: missing limit",
+      "route: an extra argument",
+      "route: arguments not an array",
+      "unknown function",
+      "valid is not the entry's shape",
+      "merge_sort: a Bool element",
+      "merge_sort: a fraction",
+      "merge_sort: two arguments",
+      "sort_items: missing id",
+      "sort_items: extra field",
+      "sort_items: Int where an Item goes"
+    ],
+    "reference": "E540 at stage run for every request",
+    "rust": {
+      "status": "compared",
+      "compared": 23
+    }
+  },
+  "reference_runs": 2729,
+  "rust_comparison": {
+    "status": "compared",
+    "binary": "cargo build --offline --locked",
+    "compared": 2729
+  }
+}

@@ -7,6 +7,17 @@ change to the kit's runner, skills, examples or policy.
 ## Unreleased
 
 - **Axis and identifier:** tools: agent kit (version unchanged until the next release).
+- **Kind:** editorial (documentation only; no version increment).
+- **Change:** `README.md`, `docs/prototype-status.md` and the `merge_sort` demo README state
+  that the kit's pure extension and its concurrent `merge_sort` demo are not P0 and do not
+  complete the concurrent fork/join merge-sort brief, which is quaat/weave#42 (M6); the
+  specification's sequential merge sort and routing function are P0 conformance applications
+  run with the `weave` command (quaat/weave#11). No runner, skill, example or demo code
+  changed.
+- **Semantic change:** no.
+- **Codes and rule IDs:** none.
+
+- **Axis and identifier:** tools: agent kit (version unchanged until the next release).
 - **Kind:** compatible addition.
 - **Change:** the specification added the P0 profile (quaat/weave#10) with diagnostic codes
   in the new E5xx range and the result label CHECKED pure. The skill's byte-identical copy of

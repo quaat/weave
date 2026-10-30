@@ -83,6 +83,14 @@ that the reference parser's literal spaces reject. Each difference is a probe in
 ``scripts/grammar_audit.py``. These probes record instances of LEX-01 to LEX-04;
 they do not decide those items.
 
+The Rust comparisons in ``make validate-offline`` need ``cargo`` or a named
+binary. They are the grammar audit's, the P0 differential's and the P0
+conformance applications' (``scripts/p0_applications.py``, quaat/weave#11).
+Without a binary, each is recorded as not established, never as agreement. The
+applications compare merge sort, a stable record sort and a routing function
+with independent oracles on finite input sets. That is evidence for those
+inputs, not a proof.
+
 Unsupported source features
 ---------------------------------
 

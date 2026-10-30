@@ -353,15 +353,15 @@
   },
   "CONF-REQ-1": {
     "chapter": "status",
-    "line": 181
+    "line": 186
   },
   "CONF-REQ-2": {
     "chapter": "status",
-    "line": 188
+    "line": 193
   },
   "CONF-REQ-3": {
     "chapter": "status",
-    "line": 206
+    "line": 211
   },
   "TYPE-REQ-1": {
     "chapter": "types",
