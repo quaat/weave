@@ -112,6 +112,7 @@
   "diagnostic_code_sources": [
     "inventory-proof/*.py",
     "agent-kit/.agents/skills/weave/scripts/**/*.py",
+    "specification/scripts/p0_reference.py",
     "specification/rules.json"
   ],
   "commands": {
@@ -398,6 +399,7 @@
       "PROVED",
       "CHECKED WITHIN BOUNDS",
       "CHECKED flow",
+      "CHECKED pure",
       "SCRIPTED",
       "VIOLATED",
       "NOT ESTABLISHED"

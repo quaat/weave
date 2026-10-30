@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
 # SPDX-License-Identifier: MIT
-"""The six result labels, the claim structure of runner output, and a lint for it (quaat/weave#8).
+"""The seven result labels, the claim structure of runner output, and a lint for it (quaat/weave#8).
 
 The labels are the first column of the "Result vocabulary" table in the
 specification (``verification.rst``), verbatim. A claim carries exactly one of
@@ -15,7 +15,7 @@ a label:
   run is ``runtime_status`` (``waiting``, ``timed out`` or ``completed``).
 * Text: a claim is an unindented line that begins with its exact label,
   followed by the statement (``LABEL statement``, the established console form;
-  the six labels are distinct as prefixes). Every other unindented line has one
+  the seven labels are distinct as prefixes). Every other unindented line has one
   of a closed set of forms: a blank line, a line that begins with one of
   ``NON_CLAIM_PREFIXES`` (``tool status:``, ``runtime status:``, ``result:``,
   ``raw output (``, ``error:``, ...), a diagnostic header
@@ -29,7 +29,9 @@ a label:
   and raw output of another tool is printed indented under a ``raw output`` line.
 
 ``lint_json`` and ``lint_text`` check these rules and return one message per
-violation; an empty list means the output names claims only with the six labels.
+violation; an empty list means the output names claims only with the seven labels.
+The kit emits six of them; CHECKED pure (quaat/weave#10) is stated by the P0
+``weave`` command, and the lint accepts it like any other label.
 Diagnostics and raw tool output (the prototype's own console text, unittest
 output) are not claims and are not linted.
 """
@@ -43,11 +45,12 @@ RESULT_LABELS = (
     "PROVED",
     "CHECKED WITHIN BOUNDS",
     "CHECKED flow",
+    "CHECKED pure",
     "SCRIPTED / passed scenario",
     "VIOLATED",
     "NOT ESTABLISHED",
 )
-PROVED, BOUNDED, FLOW, SCRIPTED, VIOLATED, NOT_ESTABLISHED = RESULT_LABELS
+PROVED, BOUNDED, FLOW, PURE, SCRIPTED, VIOLATED, NOT_ESTABLISHED = RESULT_LABELS
 RUNTIME_STATUSES = ("waiting", "timed out", "completed")
 
 # Members whose values are raw output of another tool, diagnostics, or data the
@@ -101,7 +104,7 @@ def is_diagnostic_header(line: str) -> bool:
     return spanned and found["rule"] is not None and found["rule"] == _CODES[found["code"]]["rule"]
 # A declared prefix: a non-empty heading that ends with a separator.
 _DECLARED_PREFIX = re.compile(r"\S.*?(?::|: | - )")
-# Words that begin a claim, in any case: the six labels' words and the usual verdict
+# Words that begin a claim, in any case: the seven labels' words and the usual verdict
 # words. A text line, the text after any non-claim prefix, or a JSON string outside the
 # exemptions that begins with one of them (after leading whitespace and quotes, and not
 # followed by a letter or digit) states a result; only a claim line may, and it must
@@ -124,13 +127,13 @@ _CLAIM_LINE = re.compile("^(" + "|".join(re.escape(label) for label in RESULT_LA
 def labelled(label: str, **fields) -> dict:
     """A claim object; refuses any label outside the six."""
     if label not in RESULT_LABELS:
-        raise ValueError(f"{label!r} is not one of the six result labels")
+        raise ValueError(f"{label!r} is not one of the seven result labels")
     return {"claim_label": label, **fields}
 
 
 def claim_line(label: str, statement: str) -> str:
     if label not in RESULT_LABELS:
-        raise ValueError(f"{label!r} is not one of the six result labels")
+        raise ValueError(f"{label!r} is not one of the seven result labels")
     return f"{label} {statement}"
 
 
@@ -166,7 +169,7 @@ APPLICATION_OUTCOMES = ("Ok", "Err", "Unknown")
 # agent-kit/tests/test_result_labels.py: every real path must be declared, and every
 # declared path must occur in some real output the tests produce.
 #
-# Kinds: ``label`` (exactly one of the six labels); ``("enum", values)``; ``identifier``
+# Kinds: ``label`` (exactly one of the seven labels); ``("enum", values)``; ``identifier``
 # (a user-chosen name, file path, version or hash; not inspected); ``prose`` (free text,
 # checked by the verdict rules of ``_prose_errors``); ``quotation`` (an envelope's cited
 # wording: may contain a status word, but is never a bare label or status word);
@@ -359,7 +362,7 @@ def _walk(value, where: str, pattern: str, schema: dict, output: str, used) -> l
 
 def _leaf_errors(kind: str, value, where: str) -> list[str]:
     if kind == LABEL:
-        return [] if value in RESULT_LABELS else [f"{where}: claim label {value!r} is not one of the six result labels"]
+        return [] if value in RESULT_LABELS else [f"{where}: claim label {value!r} is not one of the seven result labels"]
     if kind == INT:
         return [] if isinstance(value, int) and not isinstance(value, bool) else [f"{where}: expected an integer"]
     if kind == BOOL:
@@ -416,7 +419,7 @@ _ERROR_CODE = re.compile(r"(?P<code>[A-Z][A-Z0-9_]*) \[[a-z-]+\]")
 
 
 def text_claims(text: str) -> list[tuple[int, str]]:
-    """``(line number, label)`` for each unindented line that presents a claim with one of the six labels."""
+    """``(line number, label)`` for each unindented line that presents a claim with one of the seven labels."""
     claims = []
     for number, line in enumerate(text.splitlines(), 1):
         match = _CLAIM_LINE.match(line)

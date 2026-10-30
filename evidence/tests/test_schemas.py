@@ -59,7 +59,9 @@ class SchemaFileTests(unittest.TestCase):
     def test_label_set_is_exactly_the_six_specification_labels(self):
         envelope = schema.load(EXPECTED["weave-evidence-envelope-v1"])
         self.assertEqual(tuple(envelope["properties"]["claim_label"]["enum"]), RESULT_LABELS)
-        self.assertEqual(list(RESULT_LABELS), spec_labels())
+        # The v1 envelope predates CHECKED pure (quaat/weave#10), the seventh label of the table.
+        self.assertEqual(list(RESULT_LABELS), [label for label in spec_labels() if label != "CHECKED pure"])
+        self.assertIn("CHECKED pure", spec_labels())
         self.assertEqual(len(set(RESULT_LABELS)), 6)
 
     def test_runtime_status_is_a_separate_field_disjoint_from_labels(self):

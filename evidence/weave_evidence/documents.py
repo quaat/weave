@@ -30,8 +30,9 @@ SCHEMA_FILES = {
     DIAGNOSTIC: "diagnostic.v1.schema.json",
 }
 
-# The closed set of result labels: specification/docs/chapters/verification.rst,
-# "Result vocabulary". The envelope schema enumerates the same six strings.
+# The closed set of result labels of weave-evidence-envelope-v1: the six labels of
+# specification/docs/chapters/verification.rst, "Result vocabulary", that predate
+# CHECKED pure (quaat/weave#10). The envelope schema enumerates the same six strings.
 RESULT_LABELS = (
     "PROVED",
     "CHECKED WITHIN BOUNDS",

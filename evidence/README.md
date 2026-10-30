@@ -76,8 +76,9 @@ refuses them. No committed file is a `weave-diagnostic-v1` document: the prototy
 
 ### The envelope
 
-- `claim_label` is one of exactly six strings, the first column of the result vocabulary
-  table in `specification/docs/chapters/verification.rst`: `PROVED`,
+- `claim_label` is one of exactly six strings, the labels of the result vocabulary
+  table in `specification/docs/chapters/verification.rst` that predate `CHECKED pure`
+  (quaat/weave#10; carrying P0 claims needs the next envelope version): `PROVED`,
   `CHECKED WITHIN BOUNDS`, `CHECKED flow`, `SCRIPTED / passed scenario`, `VIOLATED`,
   `NOT ESTABLISHED`. The schema enumerates them as a closed set; a test compares the set
   with the specification table. The reader refuses any other value, including the

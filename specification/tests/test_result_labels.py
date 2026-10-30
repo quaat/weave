@@ -70,7 +70,10 @@ class LabelPolicyTests(unittest.TestCase):
         from evidence.weave_evidence import documents, schema
         self.assertEqual(RESULT_LABELS, table_labels())
         envelope = schema.load(documents.SCHEMA_FILES[documents.ENVELOPE])
-        self.assertEqual(tuple(envelope["properties"]["claim_label"]["enum"]), table_labels())
+        # weave-evidence-envelope-v1 predates CHECKED pure (quaat/weave#10); wrapping a P0 claim
+        # in an envelope needs the next envelope version.
+        self.assertEqual(tuple(envelope["properties"]["claim_label"]["enum"]),
+                         tuple(label for label in table_labels() if label != "CHECKED pure"))
         self.assertEqual(tuple(envelope["properties"]["runtime_status"]["enum"]), RUNTIME_STATUSES + (None,))
 
 

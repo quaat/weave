@@ -35,7 +35,7 @@ from weave_labels import (DECLARED_PATHS, RESULT_LABELS, RUNTIME_STATUSES, SCHEM
 HAVE_EVIDENCE = (REPO / 'evidence/weave_evidence/wrap.py').is_file()
 GOOD = ROOT / 'examples/valid/checkout_propagating.weave'
 MERGE_SORT = ROOT / 'demos/merge_sort/merge_sort.weave'
-P, B, F, S, V, N = RESULT_LABELS
+P, B, F, _PURE, S, V, N = RESULT_LABELS
 
 
 def in_output(document):
@@ -59,8 +59,8 @@ def run(script, *args, cwd=ROOT):
 
 
 class LabelSetTests(unittest.TestCase):
-    def test_six_labels_verbatim(self):
-        self.assertEqual(RESULT_LABELS, ('PROVED', 'CHECKED WITHIN BOUNDS', 'CHECKED flow',
+    def test_seven_labels_verbatim(self):
+        self.assertEqual(RESULT_LABELS, ('PROVED', 'CHECKED WITHIN BOUNDS', 'CHECKED flow', 'CHECKED pure',
                                          'SCRIPTED / passed scenario', 'VIOLATED', 'NOT ESTABLISHED'))
         self.assertFalse(set(RUNTIME_STATUSES) & set(RESULT_LABELS))
 
@@ -73,7 +73,10 @@ class LabelSetTests(unittest.TestCase):
         sys.path.insert(0, str(REPO))
         from evidence.weave_evidence import documents, schema
         envelope = schema.load(documents.SCHEMA_FILES[documents.ENVELOPE])
-        self.assertEqual(tuple(envelope['properties']['claim_label']['enum']), RESULT_LABELS)
+        # weave-evidence-envelope-v1 predates CHECKED pure (quaat/weave#10); wrapping a P0
+        # claim in an envelope needs the next envelope version.
+        self.assertEqual(tuple(envelope['properties']['claim_label']['enum']),
+                         tuple(label for label in RESULT_LABELS if label != 'CHECKED pure'))
         self.assertEqual(documents.RUNTIME_STATUSES, RUNTIME_STATUSES)
 
     def test_claim_constructor_refuses_other_labels(self):
@@ -304,7 +307,7 @@ class LintNegativeTests(unittest.TestCase):
         _, out, _ = run(CLI, '--json', 'check', GOOD)
         data = json.loads(out)
         data['files'][0]['claim_label'] = 'PASSED'
-        self.assertEqual(lint_json(data), ["/files/0/claim_label: claim label 'PASSED' is not one of the six result labels"])
+        self.assertEqual(lint_json(data), ["/files/0/claim_label: claim label 'PASSED' is not one of the seven result labels"])
         _, text, _ = run(CLI, 'check', GOOD)
         self.assertEqual(len(lint_text(text.replace('CHECKED flow ', 'CHECKED '))), 1)
         self.assertEqual(len(lint_text(text.replace('PROVED ', 'NOT PROVED '))), 1)
