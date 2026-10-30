@@ -86,7 +86,10 @@ request, and, where a usage is listed, exactly that fuel used, largest depth
 and largest integer size. CONF-CASE-1 applies to these cases for P0.
 ``scripts/p0_differential.py`` checks them with the P0 reference evaluator
 and compares the Rust ``weave`` command with it; ``tests/test_p0.py`` and the
-Rust tests check them too.
+Rust tests check them too. The conformance applications, sequential merge sort
+and the routing function (:ref:`chapters/tooling:Conformance applications`),
+are informative regression evidence beside these cases, not corpus cases; they
+do not cover the concurrent fork/join merge sort (quaat/weave#42, M6).
 
 .. list-table::
    :header-rows: 1

@@ -80,6 +80,12 @@ not modify the vendored prototype. Its diagnostics use the `P4xx` codes and the
 kit rule IDs listed in the guide. Flows still reject recursion (`E218`) and `fn`
 (`E200`). See the [language guide](weave.md#pure-function-extension-kit-addition).
 
+The extension is not P0 and does not complete the concurrent fork/join merge-sort
+brief (`claude-code-weave-merge-sort.md`): fork/join in Weave itself is quaat/weave#42
+(M6) and is not implemented. The specification's P0 profile has sequential merge sort
+and a routing function as conformance applications, run with the repository's `weave`
+command and checked against oracles (quaat/weave#11); P0 has no fork/join.
+
 | Area | Boundary |
 | --- | --- |
 | Termination | Not checked statically; fuel/depth/task limits are resource limits |

@@ -7,6 +7,16 @@ interpreter added in `.agents/skills/weave/scripts/weave_pure/` and exposed by
 the existing runner as `check-pure` and `run-pure`. The vendored flow prototype
 is unchanged. Recursive effectful flows are still rejected with `E218`.
 
+**Not the brief's completion.** This demo runs on a kit-only extension, outside
+every specified profile. The concurrent fork/join merge-sort brief
+([`claude-code-weave-merge-sort.md`](../../claude-code-weave-merge-sort.md)) asks for
+fork/join in Weave itself; that work is
+[quaat/weave#42](https://github.com/quaat/weave/issues/42) (milestone M6) and is **not
+complete**. The specified language has sequential merge sort only: in the P0 profile
+(`specification/examples/pure/valid/merge_sort.weave`), run with the `weave` command and
+checked against an oracle as a conformance application (quaat/weave#11; the
+specification's tooling chapter, "Conformance applications"). P0 has no fork/join.
+
 `run_demo.py` only validates the input, calls `scripts/weave.py --json run-pure`,
 and renders the runner's JSON. It does not sort. Python's `sorted()` appears only
 in the tests, as an oracle.

@@ -173,11 +173,15 @@ cargo run -q -p weave-cli -- run specification/examples/pure/valid/merge_sort.we
     --entry merge_sort --args '[[5, -2, 5, 0, -2]]'
 cargo run -q -p weave-cli -- run specification/examples/pure/valid/budgets.weave \
     --entry spin --args '[0]' --fuel 1000        # stops at its fuel budget: exit 4
+cargo run -q -p weave-cli -- run specification/examples/pure/valid/routing.weave \
+    --entry route --args '[[{"dest": 1, "cost": 5, "hops": 2}, {"dest": 3, "cost": 3, "hops": 17}], 10]'
 ```
 
 `weave check FILE` prints one `CHECKED pure` claim for the file or the first diagnostic (code, rule, span). `weave run FILE --entry NAME --args JSON` also prints the outcome, a value, a pure fault (`division-by-zero`, `empty-list`) or an exhausted budget (`fuel`, `depth`, `int-size`), and every budget with what the run used; `--fuel`, `--max-depth` and `--int-bits` set the budgets and `--json` prints one JSON object. Exit status: 0 checked or a value, 1 a rejected file or invalid request, 2 usage, 3 a fault, 4 an exhausted budget, 70 an internal error. Expressions are limited to depth 256 (such as 256 operands in one operator chain), types to depth 64 (such as a chain of 63 records) and files to syntax depth 300; deeper input is rejected with a syntax-limit diagnostic, never a crash (the P0 chapter, "Nesting limits").
 
 With `cargo` on `PATH`, `make validate-offline` also compares the Rust parser with the generated grammar audit on the whole corpus, and the `weave` command with the Python P0 reference evaluator; without it, both comparisons are reported as not established.
+
+Sequential merge sort and a record-based routing function are P0's conformance applications (#11): ordinary P0 programs in `specification/examples/pure/valid/`, run with the `weave` command alone. `specification/scripts/p0_applications.py`, part of `make validate-offline`, runs them through `weave run` and the reference evaluator against Python oracles: merge sort on every list of length 0 to 6 over {0, 1, 2} and on seeded lists of up to 256 wide integers, stability on records with distinct ids, routing on valid and invalid records and malformed run requests, which must be invalid run requests (rule P0-RUN-1), with the seed and counts in `specification/validation/p0-applications.json`. They are sequential: the concurrent fork/join merge-sort brief (`agent-kit/claude-code-weave-merge-sort.md`) is [#42](https://github.com/quaat/weave/issues/42) in M6 and is not complete.
 
 ## How the pieces fit
 

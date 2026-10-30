@@ -60,6 +60,14 @@ Those decisions do not make this proposal accepted syntax.
 Scoped fork/join
 ----------------------
 
+.. note::
+
+   **Not adopted, not implemented.** P0 has no fork/join. The sequential merge
+   sort ``examples/pure/valid/merge_sort.weave`` is a P0 conformance
+   application (:ref:`chapters/tooling:Conformance applications`), not this
+   proposal: the concurrent merge-sort brief, with scoped child activations and
+   correlated joins, is quaat/weave#42 in milestone M6 and is not complete.
+
 The brief requests two independent pure calls whose results join before the
 parent continues. Children require distinct activation identities and a shared
 parent/fork correlation identity. Joining must consume the matching result pair

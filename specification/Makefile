@@ -13,6 +13,7 @@ validate-offline:
 	$(PYTHON) scripts/validate.py
 	$(PYTHON) scripts/grammar_audit.py
 	$(PYTHON) scripts/p0_differential.py
+	$(PYTHON) scripts/p0_applications.py
 	$(PYTHON) scripts/refresh_reference_pages.py --check
 	$(PYTHON) -B -m unittest discover -s tests -q
 	$(PYTHON) scripts/test_reference.py

@@ -171,6 +171,86 @@ Without either, ``validation/p0-differential.json`` records the comparison as
 not established. ``tests/test_p0.py`` tests the P0 rules through the reference
 and the differential's not-established path.
 
+Conformance applications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two ordinary P0 programs serve as conformance applications (quaat/weave#11):
+sequential merge sort, ``examples/pure/valid/merge_sort.weave`` (``merge_sort``
+on ``List[Int]`` and ``sort_items`` on records with a ``key`` and an ``id``),
+and a record-based routing function, ``examples/pure/valid/routing.weave``
+(``route``). They use only P0 as specified in :doc:`pure`, and they run with the
+ordinary ``weave`` command, without any agent-kit command. From the repository
+root:
+
+.. code-block:: bash
+
+   cargo run -q -p weave-cli -- run specification/examples/pure/valid/merge_sort.weave \
+       --entry merge_sort --args '[[5, -2, 5, 0, -2]]'
+   cargo run -q -p weave-cli -- run specification/examples/pure/valid/merge_sort.weave \
+       --entry sort_items --args '[[{"key": 2, "id": 1}, {"key": 1, "id": 2}, {"key": 2, "id": 3}]]'
+   cargo run -q -p weave-cli -- run specification/examples/pure/valid/routing.weave \
+       --entry route --args '[[{"dest": 1, "cost": 5, "hops": 2}, {"dest": 3, "cost": 3, "hops": 17}], 10]'
+   cargo run -q -p weave-cli -- run specification/examples/pure/valid/routing.weave \
+       --entry route --args '[[{"dest": 1, "cost": 2}], 10]'
+
+The first three print ``result: [-2,-2,0,5,5]``, ``result:
+[{"key":1,"id":2},{"key":2,"id":1},{"key":2,"id":3}]`` and ``result:
+{"accepted":true,"dest":1,"cost":5}``, each with exit status 0; the last
+request lacks the ``hops`` field and is an invalid run request
+(:ref:`P0-RUN-1 <P0-RUN-1>`, with the code :doc:`pure` gives it) at stage
+``run``, with exit status 1 and no budget used.
+
+The routing rule, which the oracle below is written from: a route is valid when
+``0 <= cost <= limit`` and ``1 <= hops <= 16``; ``route`` accepts the valid
+route of least cost, ties going to the lower destination, and returns
+``Decision(accepted: false, dest: 0, cost: 0)`` when no route is valid.
+
+``scripts/p0_applications.py`` (in ``make validate-offline``) runs both programs
+through ``weave run FILE --entry NAME --args JSON --json`` and through the Python
+P0 reference evaluator, and requires both to equal an oracle on every input:
+
+* ``merge_sort`` against Python ``sorted`` on every list of length 0 to 6 over
+  {0, 1, 2} (1,093 lists) and on seeded random lists of up to 256 integers,
+  including negative integers and integers of up to 200 bits;
+* ``sort_items`` against Python's stable ``sorted`` by key, on every key
+  sequence of length 0 to 6 over {0, 1, 2} with ids equal to positions and on
+  seeded lists of up to 256 items with distinct, shuffled ids. Every id is
+  distinct, so the whole output, ids included, shows whether equal keys keep
+  their input order: stability is checked observably on these inputs, not
+  proved;
+* ``route`` against an oracle written from the routing rule above, which does
+  not call the reference: named valid and invalid records (negative cost, hops 0
+  and negative, hops 16 and 17, cost equal to and one over the limit, a negative
+  limit, ties on cost in both orders, an empty list, all routes invalid,
+  integers wider than 64 bits), every single route of a boundary grid and
+  seeded route lists;
+* malformed run requests for all three entry functions (a missing, extra,
+  repeated or wrongly typed field, a wrong argument count, an unknown function),
+  each of which must be an invalid run request with the code of
+  :ref:`P0-RUN-1 <P0-RUN-1>` at stage ``run`` on both sides, with exit status 1
+  and no budget used.
+
+Results compared with the Rust side must also agree with the reference on the
+outcome and the budget usage. The seed, the input counts, the invalid records
+by reason and the Rust status are written to ``validation/p0-applications.json``.
+As in the differential, the binary is built with ``cargo build --offline
+--locked`` or named by ``WEAVE_BIN``; without either, the reference is still
+compared with the oracles and the Rust comparison is recorded as not
+established, never as agreement. Any disagreement fails the step. This is
+regression evidence on these inputs, not a proof of correctness or stability
+for every input. ``tests/test_p0_applications.py`` checks that the harness
+fails on a descending sort, on an unstable merge, on four changed routing rules
+and on a disagreeing binary. The Rust tests
+``crates/weave-eval/tests/applications.rs`` and
+``crates/weave-cli/tests/applications.rs`` repeat the exhaustive sets in
+process against Rust's stable sort and run the commands above as written.
+
+These applications are sequential. The concurrent fork/join merge sort of the
+brief ``agent-kit/claude-code-weave-merge-sort.md`` is not implemented by P0
+and is not complete: it is quaat/weave#42, in milestone M6, and fork/join
+remains a proposal (:doc:`proposals`). The agent kit's ``merge_sort`` demo runs
+on the kit's separate pure extension, not on P0.
+
 For direct reference commands:
 
 .. code-block:: bash
@@ -257,10 +337,11 @@ comparison is skipped as not established without ``cargo``, requires a named
 binary to exist, and fails on a disagreeing verdict.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 119 tests (nine documentation tests, the rule cases, the rule
+specification's 133 tests (nine documentation tests, the rule cases, the rule
 coverage check, the diagnostic map tests, the result-label lint of
 :ref:`chapters/verification:Result labels in tool output`, the grammar-audit
-tests and the P0 tests), the P0 differential, 143 upstream tests, strict HTML with weave-check, the local
+tests, the P0 tests and 14 tests of the conformance applications), the P0
+differential, the P0 conformance applications, 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.
 No unreachable URL is silently ignored.

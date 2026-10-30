@@ -110,14 +110,19 @@ have no implementation, so no command establishes them.
      - Conformance cases C101--C178 (``examples/pure/manifest.json``);
        ``tests/test_p0.py``; ``cargo test --all`` (``crates/weave-check``,
        ``crates/weave-eval``, ``crates/weave-cli``);
-       ``scripts/p0_differential.py``
+       ``scripts/p0_differential.py``; the conformance applications
+       ``scripts/p0_applications.py`` (merge sort and routing,
+       :ref:`chapters/tooling:Conformance applications`)
      - From the repository root, ``cargo run -q -p weave-cli -- check
        specification/examples/pure/valid/merge_sort.weave``: exit 0, one line
        ``CHECKED pure ...: split, merge, merge_sort, split_items, merge_items,
        sort_items``. ``python3 scripts/p0_differential.py`` (needs Lark) with
        ``cargo`` on ``PATH``: exit 0, ``PASS: P0 reference meets 78 corpus
        expectations; ...`` and ``PASS: Rust weave agrees with the P0
-       reference on 743 inputs``
+       reference on 743 inputs``. ``python3 scripts/p0_applications.py``
+       (needs Lark) with ``cargo`` on ``PATH``: exit 0, ``PASS: P0 reference
+       equals the oracles: ...`` and ``PASS: weave run equals the oracles and
+       the P0 reference on 2729 runs``
    * - D0 (target)
      - :doc:`execution-contract`; rules ``D0-*``
      - No

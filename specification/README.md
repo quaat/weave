@@ -48,6 +48,7 @@ python scripts/diagnostic_map.py
 python scripts/p0_reference.py check examples/pure/valid/merge_sort.weave
 python scripts/p0_reference.py run examples/pure/valid/merge_sort.weave --entry merge_sort --args '[[3, 1, 2]]'
 python scripts/p0_differential.py
+python scripts/p0_applications.py
 make validate
 ```
 
@@ -77,6 +78,16 @@ on the corpus, on merge sort against Python `sorted` and on seeded
 generated programs; with `cargo` on `PATH`, or `WEAVE_BIN` naming the binary, it builds and
 runs the binary, otherwise `validation/p0-differential.json` records the comparison as not
 established. `tests/test_p0.py` tests the P0 rules through the reference.
+`scripts/p0_applications.py` (also in `make validate-offline`, quaat/weave#11) runs the
+conformance applications, sequential merge sort and the routing function of
+`examples/pure/valid/`, through `weave run` and the reference against Python oracles: merge
+sort on every list of length 0 to 6 over {0, 1, 2} and on seeded lists of up to 256 wide
+integers, `sort_items` stability on records with distinct ids, `route` on valid and invalid
+records against an oracle written from the routing rule, and malformed run requests, which
+must be invalid run requests (P0-RUN-1). It writes the seed and counts to `validation/p0-applications.json`, records a
+missing binary as not established, and is tested by `tests/test_p0_applications.py`
+(docs/chapters/tooling.rst, "Conformance applications"). The applications are sequential;
+the concurrent fork/join merge-sort brief is quaat/weave#42 (M6) and is not complete.
 `make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 

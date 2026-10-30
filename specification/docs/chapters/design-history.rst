@@ -60,7 +60,9 @@ current exclusions and new rationale.
        recursive resource-bearing flows
      - Checker and merge-sort brief
    * - Pure functions / fork-join
-     - Proposed extension, unimplemented
+     - Pure functions adopted as P0 (quaat/weave#10), with sequential merge sort
+       and routing as conformance applications (quaat/weave#11); fork/join is a
+       proposed extension, unimplemented (quaat/weave#42, M6)
      - Immutable computation separated from effects; scoped joins with explicit
        identity and bounded resources
      - Merge-sort brief, not a completed implementation
@@ -153,6 +155,15 @@ Known evolution
   existing rule, code, profile or label changed meaning. The proposal in
   :doc:`proposals` is marked adopted; the agent kit's ``fn`` extension is
   unchanged.
+* Conformance applications for P0, added during 0.2-draft (quaat/weave#11):
+  ``scripts/p0_applications.py`` runs sequential merge sort and the routing
+  function of ``examples/pure/valid/`` through the ``weave`` command and the
+  reference evaluator against Python oracles, on exhaustive short lists, seeded
+  larger inputs, valid and invalid route records and malformed run requests
+  (:ref:`chapters/tooling:Conformance applications`). Stability of
+  ``sort_items`` is checked on output ids. The concurrent fork/join merge-sort
+  brief remains incomplete (quaat/weave#42, M6). No rule, diagnostic code,
+  profile, label or corpus case changed.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.
