@@ -190,8 +190,9 @@ the given JSON arguments and budgets (others at the tool defaults); it requires
 VALUE with the given value, or the code of the fault, exhaustion or invalid
 request, and, where a usage is listed, exactly that fuel used, largest depth
 and largest integer size. CONF-CASE-1 applies to these cases for P0.
-``scripts/validate.py`` checks them with the P0 reference evaluator and
-``scripts/p0_differential.py`` compares the Rust ``weave`` command with it.
+``scripts/p0_differential.py`` checks them with the P0 reference evaluator
+and compares the Rust ``weave`` command with it; ``tests/test_p0.py`` and the
+Rust tests check them too.
 
 .. list-table::
    :header-rows: 1

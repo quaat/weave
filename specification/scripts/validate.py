@@ -13,8 +13,6 @@ sys.path.insert(0, str(ROOT / "reference" / "prototype"))
 from checker import CheckError, check_flow, explore_order, lower_flow_source, parse_net, prove
 from coloured import Unfolding, explore_colours, parse_coloured, prove_colours
 from simulate import simulate
-sys.path.insert(0, str(ROOT / "scripts"))
-import p0_reference
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -86,11 +84,6 @@ def main() -> int:
     if (len(unfolding.rows), len(unfolding.modes)) != (32, 48):
         raise AssertionError("Pinned finite unfolding changed")
 
-    # The P0 corpus is checked here but not recorded in report.json, whose format
-    # (weave-specification-validation-v1) has no P0 field; validation/p0-differential.json
-    # records the P0 results.
-    pure = p0_corpus(examples)
-
     output = ROOT / "validation"
     output.mkdir(exist_ok=True)
     (output / "lowered-checkout.weave").write_text(
@@ -149,46 +142,7 @@ def main() -> int:
     print(f"PASS: {len(accepted)} valid flows and their lowerings checked with N0 and N1 APIs")
     print("PASS: N0 20 states / 43 edges; N1 841 states / 3712 edges")
     print("PASS: unchanged reference snapshot; 32 coloured cells / 48 firing modes")
-    print(f"PASS: {pure['check_cases']} P0 check cases and {pure['run_cases']} P0 run cases "
-          "meet examples/pure/manifest.json with the P0 reference evaluator")
     return 0
-
-
-def p0_corpus(examples: Path) -> dict:
-    """The P0 corpus (weave-p0-conformance-v1) with the P0 reference evaluator."""
-    manifest = json.loads(read(examples / "pure" / "manifest.json"))
-    if manifest.get("format") != "weave-p0-conformance-v1":
-        raise ValueError(f"Unsupported P0 manifest format: {manifest.get('format')!r}")
-    checks = runs = 0
-    for case in manifest["cases"]:
-        source = read(examples / case["file"])
-        try:
-            program = p0_reference.check(source)
-            actual = "ACCEPT"
-        except p0_reference.Diagnostic as exc:
-            program, actual = None, exc.code
-        if case["kind"] == "check":
-            checks += 1
-        else:
-            runs += 1
-            if program is None:
-                raise AssertionError(f"{case['id']}: {case['file']} is rejected ({actual})")
-            try:
-                report = p0_reference.run(program, case["entry"], case["args"], case.get("budgets"))
-                actual = report["diagnostics"][0].code if report["diagnostics"] else "VALUE"
-            except p0_reference.Diagnostic as exc:
-                report, actual = None, exc.code
-            if actual == "VALUE" and report["value"] != case["value"]:
-                raise AssertionError(f"{case['id']}: value {report['value']!r}, expected {case['value']!r}")
-            if report is not None and "usage" in case:
-                b = report["budgets"]
-                usage = {"fuel": b["fuel"]["used"], "depth": b["depth"]["max"], "int_bits": b["int_bits"]["max"]}
-                if usage != case["usage"]:
-                    raise AssertionError(f"{case['id']}: usage {usage}, expected {case['usage']}")
-        if actual != case["expect"]:
-            raise AssertionError(f"{case['id']} {case['file']}: expected {case['expect']}, got {actual}")
-    return {"manifest": "examples/pure/manifest.json", "check_cases": checks, "run_cases": runs,
-            "implementation": "scripts/p0_reference.py"}
 
 if __name__ == "__main__":
     try:

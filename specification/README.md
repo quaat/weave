@@ -69,11 +69,11 @@ verdicts and an exact round trip; otherwise `validation/grammar-report.json` rec
 comparison as not established. The Rust crate's own tests run with `cargo test --all` from the
 repository root.
 P0 (quaat/weave#10): `examples/pure/manifest.json` (`weave-p0-conformance-v1`) is the P0
-corpus, kept apart from `examples/manifest.json`. `scripts/validate.py` checks it with the
-Python reference evaluator `scripts/p0_reference.py`, which parses with the generated Lark
-grammar and checks and evaluates from `docs/chapters/pure.rst`.
-`scripts/p0_differential.py` (in `make validate-offline`) compares the Rust `weave` binary
-with the reference on the corpus, on merge sort against Python `sorted` and on seeded
+corpus, kept apart from `examples/manifest.json`. The Python reference evaluator
+`scripts/p0_reference.py` parses with the generated Lark grammar and checks and evaluates from
+`docs/chapters/pure.rst`. `scripts/p0_differential.py` (in `make validate-offline`) checks
+the reference against every corpus expectation and compares the Rust `weave` binary with it
+on the corpus, on merge sort against Python `sorted` and on seeded
 generated programs; with `cargo` on `PATH`, or `WEAVE_BIN` naming the binary, it builds and
 runs the binary, otherwise `validation/p0-differential.json` records the comparison as not
 established. `tests/test_p0.py` tests the P0 rules through the reference.

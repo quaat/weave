@@ -114,10 +114,10 @@ have no implementation, so no command establishes them.
      - From the repository root, ``cargo run -q -p weave-cli -- check
        specification/examples/pure/valid/merge_sort.weave``: exit 0, one line
        ``CHECKED pure ...: split, merge, merge_sort, split_items, merge_items,
-       sort_items``. ``python3 scripts/validate.py`` (needs Lark): exit 0,
-       ``PASS: 27 P0 check cases and 51 P0 run cases ...``.
-       ``python3 scripts/p0_differential.py`` with ``cargo`` on ``PATH``: exit
-       0, ``PASS: Rust weave agrees with the P0 reference on ... inputs``
+       sort_items``. ``python3 scripts/p0_differential.py`` (needs Lark) with
+       ``cargo`` on ``PATH``: exit 0, ``PASS: P0 reference meets 78 corpus
+       expectations; ...`` and ``PASS: Rust weave agrees with the P0
+       reference on 722 inputs``
    * - D0 (target)
      - :doc:`execution-contract`; rules ``D0-*``
      - No
