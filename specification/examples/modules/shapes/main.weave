@@ -1,0 +1,12 @@
+# Selective imports from geo.shapes, resolved from this directory (the root).
+from geo.shapes import area, Rect as R
+from geo.units import scale
+
+fn total(rects: List[R]) -> Int:
+    if is_empty(rects):
+        return 0
+    else:
+        return area(head(rects)) + total(tail(rects))
+
+fn double_area(w: Int, h: Int) -> Int:
+    return scale(area(R(width: w, height: h)), 2)

@@ -51,3 +51,19 @@ Append mutations are net fragments, not standalone flow files. Their diagnostics
 cases with entry functions, JSON arguments, budgets and required outcomes. The conformance
 appendix lists every case. Check a file with `python3 scripts/p0_reference.py check FILE` from
 `specification/`, or with `cargo run -q -p weave-cli -- check FILE` from the repository root.
+
+## P0 modules (modules-1)
+
+`modules/` holds the modules-1 corpus (`docs/chapters/names.rst`, "P0 modules (modules-1)"
+and "Net selection"), with `modules/manifest.json` (format `weave-modules-conformance-v1`).
+Each directory is a small project whose root is the entry file's directory unless the case
+gives a root: `shapes/` (selective imports, an alias, a module imported twice and loaded
+once), `identity/` (same-named records from two modules, aliases of one record), `private/`
+(an imported function's private helper), `rooted/` (`--root`), `faults/` and `unused_body/`
+(P0 errors inside an imported module), and one directory per rejected form (`syntax/`,
+`missing/`, `resolution/`, `cycle/`, `self_import/`, `recursion/`, `record_cycle/`, `names/`,
+`export/`, `entry/`). Files under `flows/` are flow files with a `use net` header, resolved
+from `examples/` as the root. Check and run the P0 cases with
+`cargo run -q -p weave-cli -- check FILE [--root DIR]` from the repository root; check a flow
+with the agent kit's runner, `python3 scripts/weave.py check FILE --root DIR`.
+`scripts/modules_conformance.py` runs every case. Expected rejections are intentional.

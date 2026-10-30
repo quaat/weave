@@ -6,7 +6,9 @@
   the agent kit can emit is in ``diagnostics.json``; the codes are derived from
   the sources, and a test shows that an unmapped code fails.
 * One fixture per specification code checks the code, its principal rule and
-  its primary span (P0 codes through the P0 reference evaluator); E203 and E204 also check their related spans. Each
+  its primary span (P0 codes through the P0 reference evaluator; modules-1 codes
+  through the modules corpus, ``tests/test_modules.py`` and
+  ``scripts/modules_conformance.py``); E203 and E204 also check their related spans. Each
   diagnostic is validated against the ``weave-diagnostic-v1`` schema with the
   repository's evidence reader (standard library only).
 * The ``weave-check`` directive's helper returns the same documents.
@@ -25,7 +27,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(REPO))
 from checker import CheckError, check_flow, explore_order, parse_net, prove  # noqa: E402
 from coloured import Unfolding, explore_colours, parse_coloured, prove_colours  # noqa: E402
-from diagnostic_map import P0_REFERENCE, PROTOTYPE, emitted_codes, kit_sources, load_map, rust_codes, unmapped  # noqa: E402
+from diagnostic_map import (MODULES_RUNNER, P0_REFERENCE, PROTOTYPE, emitted_codes, kit_sources,  # noqa: E402
+                            load_map, rust_codes, unmapped)
 import p0_reference  # noqa: E402
 from refresh_reference_pages import check_diagnostic_map  # noqa: E402
 from spec_checks import as_diagnostic, check_example_diagnostic  # noqa: E402
@@ -194,6 +197,21 @@ P0_FIXTURES = {
 }
 
 
+# modules-1 code: the modules corpus case that requires it, whose code, file and
+# line scripts/modules_conformance.py checks (and the whole weave-diagnostic-v1
+# document through the Rust binary); E603 needs a symbolic link out of the root,
+# which tests/test_modules.py::Resolution creates.
+MODULES = json.loads((EXAMPLES / "modules/manifest.json").read_text(encoding="utf-8"))
+MODULE_FIXTURES = {c["expect"]: c["id"] for c in MODULES["cases"] if c["expect"].startswith("E6")}
+MODULE_FIXTURES["E603"] = "tests/test_modules.py::Resolution::test_links_may_not_leave_the_root"
+
+
+def module_codes() -> set[str]:
+    """modules-1 codes emitted by the Rust crates, the kit runner and the corpus runner."""
+    found = emitted_codes(MODULES_RUNNER + kit_sources()) | rust_codes()
+    return {c for c in found if c.startswith("E6")}
+
+
 def p0_diagnostic(code):
     source, request, *_ = P0_FIXTURES[code]
     try:
@@ -216,14 +234,21 @@ class DiagnosticMap(unittest.TestCase):
     def test_every_emitted_code_is_mapped(self):
         self.assertEqual(unmapped(PROTOTYPE + kit_sources(), MAP), [])
 
-    def test_mapped_specification_codes_are_the_prototype_and_p0_codes(self):
+    def test_mapped_specification_codes_are_the_prototype_p0_and_module_codes(self):
         prototype = {c for c in emitted_codes(PROTOTYPE)}
-        p0 = emitted_codes(P0_REFERENCE) | rust_codes()
+        modules = module_codes()
+        p0 = (emitted_codes(P0_REFERENCE) | rust_codes()) - modules
         spec = {c for c, e in MAP.items() if e["category"] == "specification"}
-        self.assertEqual(spec, prototype | p0)
-        # The two P0 implementations emit the same codes, all in the E5xx range.
-        self.assertEqual(emitted_codes(P0_REFERENCE) - {"E001"}, rust_codes() - {"E001", "E003", "E200"})
+        self.assertEqual(spec, prototype | p0 | modules)
+        # The two P0 implementations emit the same P0 codes, all in the E5xx range.
+        self.assertEqual(emitted_codes(P0_REFERENCE) - {"E001"}, rust_codes() - modules - {"E001", "E003", "E200"})
         self.assertTrue(all(c.startswith("E5") for c in p0 - {"E001", "E003", "E200"}))
+        # modules-1 codes are E600 to E619, each with a MOD-* principal rule.
+        self.assertTrue(modules)
+        self.assertTrue(all(600 <= int(c[1:]) <= 619 for c in modules))
+        self.assertTrue(all(MAP[c]["rule"].startswith("MOD-") for c in modules))
+        # The P0 reference implements P0 only: it emits no modules-1 code.
+        self.assertFalse(emitted_codes(P0_REFERENCE) & modules)
 
     def test_p0_sources_are_mapped(self):
         self.assertEqual(unmapped(P0_REFERENCE, MAP), [])
@@ -282,9 +307,21 @@ class DiagnosticPerCode(unittest.TestCase):
         return source, document
 
     def test_every_specification_code_has_a_fixture(self):
-        self.assertEqual(set(FIXTURES) | set(P0_FIXTURES),
+        self.assertEqual(set(FIXTURES) | set(P0_FIXTURES) | set(MODULE_FIXTURES),
                          {c for c, e in MAP.items() if e["category"] == "specification"})
         self.assertFalse(set(FIXTURES) & set(P0_FIXTURES))
+        self.assertFalse((set(FIXTURES) | set(P0_FIXTURES)) & set(MODULE_FIXTURES))
+
+    def test_module_fixtures_are_located_cases(self):
+        cases = {c["id"]: c for c in MODULES["cases"]}
+        for code, case_id in MODULE_FIXTURES.items():
+            with self.subTest(code=code):
+                if case_id.startswith("tests/"):
+                    continue
+                case = cases[case_id]
+                self.assertEqual(case["expect"], code)
+                self.assertIn("line", case)
+                self.assertIn(MAP[code]["rule"], case["rules"], case_id)
 
     def test_p0_code_rule_and_span_for_every_code(self):
         for code, (_, _, rule, primary) in P0_FIXTURES.items():
@@ -329,7 +366,10 @@ class DiagnosticPerCode(unittest.TestCase):
                          ({"line": 1, "column": 1}, {"line": 2, "column": 23}))
 
     def test_ownership_codes_have_related_spans(self):
-        self.assertEqual({c for c, e in MAP.items() if e.get("related_roles")}, {"E203", "E204"})
+        self.assertEqual({c for c, e in MAP.items() if e.get("related_roles")}, {"E203", "E204", "E604"})
+        # An import cycle (modules-1) always lists its imports.
+        self.assertEqual(MAP["E604"]["related_roles"], {"import": "always"})
+        self.assertTrue(all(c.get("related") for c in MODULES["cases"] if c["expect"] == "E604"))
         self.assertEqual(MAP["E203"]["related_roles"], {"binding": "always", "moved": "always"})
         self.assertEqual(MAP["E204"]["related_roles"]["binding"], "always")
         self.assertNotEqual(MAP["E204"]["related_roles"]["propagation"], "always")

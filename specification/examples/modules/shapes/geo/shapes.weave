@@ -1,0 +1,12 @@
+# geo.shapes: an exported record and function, and a private helper.
+from geo.units import scale
+
+export record Rect:
+    width: Int
+    height: Int
+
+export fn area(r: Rect) -> Int:
+    return product(r.width, r.height)
+
+fn product(a: Int, b: Int) -> Int:
+    return scale(a, b)

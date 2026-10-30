@@ -21,8 +21,15 @@ pub const WEAVE_EBNF: &str = include_str!("../../../specification/grammar/weave.
 /// tests read it as EBNF and resolve its references against the base grammar.
 pub const N2_DELTA_EBNF: &str = include_str!("../../../specification/grammar/weave-n2-delta.ebnf");
 
-/// Start symbols of the portable grammar (SYN-01).
-pub const START_SYMBOLS: [&str; 4] = ["flow-file", "n0-file", "n1-file", "pure-file"];
+/// Start symbols of the portable grammar (SYN-01). `module-file` is the
+/// modules-1 file kind (`chapters/names.rst`).
+pub const START_SYMBOLS: [&str; 5] = [
+    "flow-file",
+    "n0-file",
+    "n1-file",
+    "pure-file",
+    "module-file",
+];
 
 /// Special-sequence productions and the lexer tokens that implement them.
 pub const LEXICAL: [(&str, Symbol); 5] = [

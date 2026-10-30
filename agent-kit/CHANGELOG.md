@@ -7,6 +7,34 @@ change to the kit's runner, skills, examples or policy.
 ## Unreleased
 
 - **Axis and identifier:** tools: agent kit (version unchanged until the next release).
+- **Kind:** compatible addition.
+- **Change:** `check`, `lower` and `simulate` read the modules-1 `use net a.b` header of a flow
+  file (quaat/weave#12; specification, names chapter, "Net selection"). The header selects
+  `<root>/a/b.weave` as the flow's net, exactly as `--net` does; the root is the new `--root`
+  option, or else the flow file's directory (a link's own directory), never the working
+  directory. A flow file outside a root given with `--root` (its canonical path, by whole path
+  components) is E605 before any net is selected, with or without a header; a `--root` that is
+  not a directory is a usage error (`TOOL_ERROR`, exit 2). The runner hands the
+  unchanged pinned prototype the flow with the header line replaced by a blank line, so every
+  diagnostic keeps its line and column. A `--net` naming another net is E610; a header that does
+  not resolve is E601 (missing), E602 (case mismatch) or E603 (leaves the root through a
+  symbolic link); a malformed header is E600. Files of one command must select one net.
+  `lower` copies the header into its output only when, resolved from the output's root
+  (`--root`, or else the output's directory), it selects the same net file; otherwise a blank
+  line takes its place, so the output never selects another net, or none, by accident. Either
+  way the result reports the net the flow was checked against (JSON `net`; in text, an indented
+  `net:` line under the lowered file's claim saying whether the header was kept, blanked or
+  absent) for checking the output with `--net`. `--net` without a header works as before. The
+  skill's copy of `specification/diagnostics.json` was synced with
+  `scripts/sync_skill_reference.py` for the new codes E600 to E610. The pinned prototype and
+  `PROVENANCE.json` are unchanged; the header does not mean Rust flow checking, composition of
+  nets, or calling P0 from flows.
+- **Semantic change:** no. Every flow without a header is checked as before, with the same
+  codes, exit codes and result labels.
+- **Codes and rule IDs:** E600, E601, E602, E603, E605 and E610 (rules `MOD-FILE-1`,
+  `MOD-RESOLVE-1` to `MOD-RESOLVE-3`, `MOD-ROOT-1`, `MOD-NET-1`).
+
+- **Axis and identifier:** tools: agent kit (version unchanged until the next release).
 - **Kind:** editorial (documentation only; no version increment).
 - **Change:** `README.md`, `docs/prototype-status.md` and the `merge_sort` demo README state
   that the kit's pure extension and its concurrent `merge_sort` demo are not P0 and do not

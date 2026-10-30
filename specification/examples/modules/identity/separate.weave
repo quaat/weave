@@ -1,0 +1,10 @@
+# Same-named records from two modules, used side by side.
+from a import Point as APoint
+from b import Point as BPoint
+
+fn convert(p: APoint) -> BPoint:
+    return BPoint(x: p.x, y: p.y)
+
+fn sum(n: Int) -> Int:
+    let b = convert(APoint(x: n, y: 2))
+    return b.x + b.y

@@ -519,6 +519,211 @@ do not cover the concurrent fork/join merge sort (quaat/weave#42, M6).
      - :ref:`P0-RUN-1 <P0-RUN-1>`
 
 
+modules-1 corpus
+---------------------
+
+The modules-1 cases are in ``examples/modules/manifest.json`` (format
+``weave-modules-conformance-v1``), apart from the F0/N0 and P0 manifests, whose
+formats are unchanged (:ref:`chapters/names:P0 modules (modules-1)`). A *check*
+case checks the program whose entry file is given, with the project root given
+(else the entry's directory); it requires ACCEPT or the code of the first
+diagnostic, whose primary span is in the given file at the given line and, for an
+import cycle, whose related spans are the listed imports. A *run* case also calls
+the entry function with the given arguments under the default budgets and requires
+VALUE with the value, or the code of the fault or invalid request at the given
+file and line. A *flow* case checks an F0 flow whose ``use net`` header is resolved
+from the given root (``.`` is ``examples/``), with ``--net`` where a net is given;
+it requires ACCEPT or the code at the given line and column, and, where a net form
+is given, the same result and location as the flow with a comment in place of its
+header checked against that net. CONF-CASE-1 applies to these cases for modules-1.
+``scripts/modules_conformance.py`` runs the check and run cases through the Rust
+``weave`` command (recording them as not established when no binary is available,
+never as agreement) and the flow cases through its own header resolution and the
+reference checker; ``crates/weave-cli/tests/modules.rs`` runs the check and run
+cases too, and ``agent-kit/tests/test_use_net.py`` covers the kit runner's header.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 8 40 18 34
+
+   * - ID
+     - Case
+     - Required result
+     - Rules
+   * - M101
+     - ``modules/shapes/main.weave`` (check)
+     - ACCEPT
+     - :ref:`MOD-FILE-1 <MOD-FILE-1>`, :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`, :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`, :ref:`MOD-RESOLVE-4 <MOD-RESOLVE-4>`, :ref:`MOD-CHECK-1 <MOD-CHECK-1>`
+   * - M102
+     - ``modules/identity/separate.weave`` (check)
+     - ACCEPT
+     - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`
+   * - M103
+     - ``modules/identity/distinct.weave`` (check)
+     - E510 in ``modules/identity/distinct.weave`` line 6
+     - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`, :ref:`P0-TYPE-2 <P0-TYPE-2>`
+   * - M104
+     - ``modules/identity/aliases.weave`` (check)
+     - ACCEPT
+     - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`, :ref:`MOD-NAME-1 <MOD-NAME-1>`
+   * - M105
+     - ``modules/private/main.weave`` (check)
+     - ACCEPT
+     - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`, :ref:`MOD-NAME-1 <MOD-NAME-1>`
+   * - M106
+     - ``modules/rooted/app/main.weave`` (check with root ``modules/rooted``)
+     - ACCEPT
+     - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`
+   * - M107
+     - ``modules/rooted/app/main.weave`` (check)
+     - E601 in ``modules/rooted/app/main.weave`` line 2
+     - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`, :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+   * - M108
+     - ``modules/unused_body/main.weave`` (check)
+     - E510 in ``modules/unused_body/lib.weave`` line 6
+     - :ref:`MOD-CHECK-1 <MOD-CHECK-1>`, :ref:`P0-DECL-4 <P0-DECL-4>`, :ref:`P0-TYPE-2 <P0-TYPE-2>`
+   * - M109
+     - ``modules/syntax/late_import.weave`` (check)
+     - E600 in ``modules/syntax/late_import.weave`` line 4
+     - :ref:`MOD-FILE-1 <MOD-FILE-1>`
+   * - M110
+     - ``modules/syntax/dotdot.weave`` (check)
+     - E600 in ``modules/syntax/dotdot.weave`` line 1
+     - :ref:`MOD-FILE-1 <MOD-FILE-1>`, :ref:`MOD-RESOLVE-3 <MOD-RESOLVE-3>`
+   * - M111
+     - ``modules/syntax/absolute.weave`` (check)
+     - E600 in ``modules/syntax/absolute.weave`` line 1
+     - :ref:`MOD-FILE-1 <MOD-FILE-1>`, :ref:`MOD-RESOLVE-3 <MOD-RESOLVE-3>`
+   * - M112
+     - ``modules/syntax/wildcard.weave`` (check)
+     - E600 in ``modules/syntax/wildcard.weave`` line 1
+     - :ref:`MOD-FILE-1 <MOD-FILE-1>`, :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`
+   * - M113
+     - ``modules/missing/main.weave`` (check)
+     - E601 in ``modules/missing/main.weave`` line 1
+     - :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+   * - M114
+     - ``modules/resolution/case.weave`` (check)
+     - E602 in ``modules/resolution/case.weave`` line 2
+     - :ref:`MOD-RESOLVE-2 <MOD-RESOLVE-2>`
+   * - M115
+     - ``modules/cycle/a.weave`` (check)
+     - E604 in ``modules/cycle/c.weave`` line 2; 3 related import(s)
+     - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`
+   * - M116
+     - ``modules/self_import/loop.weave`` (check)
+     - E604 in ``modules/self_import/loop.weave`` line 1; 1 related import(s)
+     - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`
+   * - M117
+     - ``modules/recursion/even.weave`` (check)
+     - E604 in ``modules/recursion/odd.weave`` line 1; 2 related import(s)
+     - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`, :ref:`P0-REC-1 <P0-REC-1>`
+   * - M118
+     - ``modules/record_cycle/tree.weave`` (check)
+     - E604 in ``modules/record_cycle/forest.weave`` line 1; 2 related import(s)
+     - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`, :ref:`P0-DECL-3 <P0-DECL-3>`
+   * - M119
+     - ``modules/names/not_declared.weave`` (check)
+     - E606 in ``modules/names/not_declared.weave`` line 1
+     - :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`
+   * - M120
+     - ``modules/names/not_exported.weave`` (check)
+     - E607 in ``modules/names/not_exported.weave`` line 1
+     - :ref:`MOD-IMPORT-2 <MOD-IMPORT-2>`
+   * - M121
+     - ``modules/names/import_collision.weave`` (check)
+     - E608 in ``modules/names/import_collision.weave`` line 2
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+   * - M122
+     - ``modules/names/local_collision.weave`` (check)
+     - E608 in ``modules/names/local_collision.weave`` line 1
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+   * - M123
+     - ``modules/names/builtin_alias.weave`` (check)
+     - E608 in ``modules/names/builtin_alias.weave`` line 1
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+   * - M124
+     - ``modules/names/let_shadows_import.weave`` (check)
+     - E506 in ``modules/names/let_shadows_import.weave`` line 4
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`, :ref:`P0-NAME-2 <P0-NAME-2>`
+   * - M125
+     - ``modules/names/qualified_call.weave`` (check)
+     - E512 in ``modules/names/qualified_call.weave`` line 5
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`, :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
+   * - M126
+     - ``modules/names/renamed.weave`` (check)
+     - ACCEPT
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+   * - M127
+     - ``modules/export/signature.weave`` (check)
+     - E609 in ``modules/export/signature.weave`` line 4
+     - :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+   * - M128
+     - ``modules/export/field.weave`` (check)
+     - E609 in ``modules/export/field.weave`` line 5
+     - :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+   * - M129
+     - ``modules/export/private_ok.weave`` (check)
+     - ACCEPT
+     - :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+   * - M130
+     - ``modules/rooted/app/main.weave`` (check with root ``modules/shapes``)
+     - E605 in ``modules/rooted/app/main.weave`` line 1
+     - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`
+   * - M201
+     - ``modules/shapes/main.weave``: ``double_area(3, 4)``
+     - VALUE ``24``
+     - :ref:`MOD-RUN-1 <MOD-RUN-1>`
+   * - M202
+     - ``modules/identity/aliases.weave``: ``roundtrip(5)``
+     - VALUE ``6``
+     - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`, :ref:`MOD-RUN-1 <MOD-RUN-1>`
+   * - M203
+     - ``modules/private/main.weave``: ``run(4)``
+     - VALUE ``41``
+     - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`, :ref:`MOD-RUN-1 <MOD-RUN-1>`
+   * - M204
+     - ``modules/rooted/app/main.weave``: ``main(3)`` with root ``modules/rooted``
+     - VALUE ``10``
+     - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`, :ref:`MOD-RUN-1 <MOD-RUN-1>`
+   * - M205
+     - ``modules/faults/main.weave``: ``run(1, 0)``
+     - E520 in ``modules/faults/lib/arith.weave`` line 2
+     - :ref:`MOD-RUN-1 <MOD-RUN-1>`, :ref:`P0-ARITH-2 <P0-ARITH-2>`
+   * - M206
+     - ``modules/entry/main.weave``: ``main(21)``
+     - VALUE ``42``
+     - :ref:`MOD-RUN-1 <MOD-RUN-1>`
+   * - M207
+     - ``modules/entry/main.weave``: ``twice(21)``
+     - E540
+     - :ref:`MOD-RUN-1 <MOD-RUN-1>`, :ref:`P0-RUN-1 <P0-RUN-1>`
+   * - M301
+     - ``modules/flows/hold.weave`` (flow)
+     - ACCEPT; as the ``--net`` form
+     - :ref:`MOD-NET-1 <MOD-NET-1>`
+   * - M302
+     - ``modules/flows/hold.weave`` (flow, ``--net nets/Inventory.weave``)
+     - ACCEPT
+     - :ref:`MOD-NET-1 <MOD-NET-1>`
+   * - M303
+     - ``modules/flows/hold.weave`` (flow, ``--net nets/Lease.weave``)
+     - E610 at line 1, column 1
+     - :ref:`MOD-NET-1 <MOD-NET-1>`
+   * - M304
+     - ``modules/flows/forge.weave`` (flow)
+     - E205 at line 5, column 5; as the ``--net`` form
+     - :ref:`MOD-NET-1 <MOD-NET-1>`
+   * - M305
+     - ``modules/flows/missing_net.weave`` (flow)
+     - E601 at line 1, column 9
+     - :ref:`MOD-NET-1 <MOD-NET-1>`, :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+   * - M306
+     - ``modules/flows/late_header.weave`` (flow, ``--net nets/Inventory.weave``)
+     - E200 at line 4, column 1
+     - :ref:`MOD-NET-1 <MOD-NET-1>`
+
+
 Generated grammar comparison
 -----------------------------
 

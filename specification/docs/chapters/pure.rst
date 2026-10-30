@@ -23,7 +23,10 @@ call P0 functions in this revision: a flow file names only flows and net or
 foreign operations, so an F0 checker still rejects any other call (E206), and
 an F0, N0 or N1 checker still rejects every P0 construct. P0 has no fork/join,
 no higher-order functions, no modules or imports, and no termination checking:
-a budget bounds a run, it does not prove that a function terminates.
+a budget bounds a run, it does not prove that a function terminates. Modules,
+imports and exports are the versioned extension modules-1
+(:ref:`chapters/names:P0 modules (modules-1)`), which changes no rule of this
+chapter.
 
 Implementations: the Rust crates ``crates/weave-check`` (static rules) and
 ``crates/weave-eval`` (evaluation), with the ``weave`` command of
@@ -94,6 +97,7 @@ The P0 productions of the shared grammar are:
 .. literalinclude:: ../../grammar/weave.ebnf
    :language: text
    :start-at: (* P0 pure files
+   :end-before: (* modules-1 module files
    :caption: P0 productions of the portable grammar
    :name: listing-p0-grammar
 
@@ -401,7 +405,11 @@ When a file satisfies every static rule, a checker states one claim for the
 file with the result label **CHECKED pure**: P0 type, effect, path and
 recursion-shape checks passed for every function of the file
 (:doc:`verification`). The label says nothing about termination, faults or
-budgets. A P0 file is not a flow, so it never receives CHECKED flow.
+budgets. A P0 file is not a flow, so it never receives CHECKED flow. A program of
+several module files (modules-1, :ref:`chapters/names:P0 modules (modules-1)`)
+receives one such claim per loaded module file, the entry first, with the same
+meaning for the functions of each file; for a module file it also implies that
+the ``MOD-*`` rules passed for the program.
 
 Dynamic semantics
 -----------------------
@@ -720,10 +728,14 @@ quaat/weave#15 is not part of P0.
 Implementations and evidence
 ----------------------------------
 
-**Rust.** ``weave check FILE`` prints ``CHECKED pure FILE: f, g, ...`` and
-exits 0, or prints the first diagnostic and exits 1.
-``weave run FILE --entry NAME --args JSON [--fuel N] [--max-depth N]
-[--int-bits N]`` checks the file and then runs it, printing the outcome and
+**Rust.** ``weave check FILE [--root DIR]`` prints ``CHECKED pure FILE: f, g,
+...`` and exits 0, or prints the first diagnostic and exits 1. For a file
+without imports that is one claim, exactly as before; with modules-1 imports,
+resolved from ``--root DIR`` or else the directory of ``FILE``, it prints one
+such line per loaded module file, the entry first, and a diagnostic names the
+file it is in. ``weave run FILE --entry NAME [--root DIR] --args JSON [--fuel N]
+[--max-depth N] [--int-bits N]`` checks the file (and its imports) and then runs
+its entry function, printing the outcome and
 the budgets; it exits 0 for a value, 3 for a fault and 4 for exhaustion, 1
 for a rejected file or an invalid request, and 70 for an internal error of
 the implementation, which is never reported as a rejection. ``--json`` prints one JSON object

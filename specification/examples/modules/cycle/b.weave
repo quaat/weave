@@ -1,0 +1,4 @@
+from c import fc
+
+export fn fb(n: Int) -> Int:
+    return fc(n)

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 [package]
 name = "weave-syntax"
-version = "0.1.0"
+version = "0.2.0"
 description = "Grammar-driven Weave parser: lexer, layout, concrete syntax tree with spans and trivia, syntax diagnostics"
 edition.workspace = true
 rust-version.workspace = true

@@ -1,0 +1,4 @@
+from ..lib import two
+
+fn one() -> Int:
+    return 1

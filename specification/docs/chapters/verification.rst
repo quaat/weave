@@ -38,7 +38,14 @@ profile (:doc:`pure`, quaat/weave#10); the other six predate it. It is a compati
 addition: no existing result changes label, and no label changes meaning.
 CHECKED pure applies only to P0 files and says nothing about termination,
 faults or budgets; a P0 run's outcome is runtime status, and a run compared with
-an asserted expectation is a passed scenario. The labels are used as follows.
+an asserted expectation is a passed scenario. For a P0 program of several module
+files (the modules-1 extension, :ref:`chapters/names:P0 modules (modules-1)`,
+quaat/weave#12) a checker states one CHECKED pure claim per loaded module file,
+the entry first, each with the same meaning for the functions of that file. For a
+module file the claim also implies that the ``MOD-*`` rules passed for the whole
+program: every import resolved, no import cycle, no collision and the export rule
+held, so the file's checks used the declarations it imports. The label's meaning
+is otherwise unchanged; modules-1 adds no label. The labels are used as follows.
 
 * **One label per claim.** A label attaches to an individual claim: one stated
   result about one subject, such as the invariants of one net, one bounded

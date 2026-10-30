@@ -1,0 +1,5 @@
+from lib import norm
+from other import norm
+
+fn one() -> Int:
+    return 1

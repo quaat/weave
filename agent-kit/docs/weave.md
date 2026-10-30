@@ -123,6 +123,40 @@ enum ChargeOutcome[t, o]:
 ```
 
 The enum itself is linear. Its cases preserve the identity indices of the permit.
+
+### Selecting the net with `use net`
+
+A flow file may name its net in a header before its first flow (blank and comment
+lines may precede it), instead of passing `--net` on every command:
+
+```text
+use net nets.Inventory
+
+flow arm_hold(hold: Hold[t, o]) -> Escrow[t, o]:
+    let escrow = await Inventory.arm(hold)
+    return escrow
+```
+
+`use net nets.Inventory` selects `<root>/nets/Inventory.weave`, where the root is
+`--root DIR` or else the flow file's directory, never the current directory. A
+flow file outside a `--root` you give (judged by its canonical path, so a link by
+its target) is E605, before any net is selected, header or not. The
+path is dotted names that must match the directory and file names exactly, in case
+too (E602 otherwise), must name an existing file (E601) and must stay inside the
+root once symbolic links are resolved (E603); a malformed header is E600. A
+`--net` that names a different net is E610; one that names the same file is
+accepted, and `--net` without a header works as before. `check`, `lower` and
+`simulate` read the header. `lower` copies it into its output only when, from the
+output's root (`--root`, or the output's directory), it selects the same net file;
+otherwise a blank line takes its place, and the result names the net (JSON
+`net`; an indented `net:` line in text) so you can check the output with `--net`.
+To check a flow, the runner hands the vendored prototype the flow with the
+header line blanked, so every diagnostic keeps its line and column. The
+files of one `check` command must select the same net. The header selects one
+existing net only: it does not compose nets, it is not checked by the Rust tools,
+and flows still cannot call pure code. This is the specification's modules-1
+extension (names chapter, "Net selection"), quaat/weave#12; the prototype itself,
+run directly, still rejects the header (E200).
 Matching consumes the enum and introduces the selected payload obligation.
 Do not interchange `Paid`, `Unpaid`, and `Uncertain` simply because their indices
 match. `Unknown` is neither successful payment nor final rejection.
@@ -378,6 +412,11 @@ still has no loops, arithmetic other than `<=`, mutual recursion, higher-order
 functions, generics, or effects, and none of its constructs are available in
 flows. Unsupported syntax is rejected; do not treat it as pseudocode in a file
 claimed to be executable.
+
+The `use net` header selects one net per flow file; there are no imports between
+flow files, no composition of several nets (quaat/weave#91) and no protocol
+packages (quaat/weave#19). Local modules of P0 pure code (imports and exports) are
+checked by the specification's Rust `weave` command, not by this kit.
 
 There is no provider I/O, persistence, crash recovery, distributed scheduling,
 asynchronous cancellation, webhook validation, or upgrade implementation. The

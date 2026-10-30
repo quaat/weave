@@ -1,0 +1,4 @@
+flow keep(hold: Hold[t, o]) -> Hold[t, o]:
+    return hold
+
+use net nets.Inventory

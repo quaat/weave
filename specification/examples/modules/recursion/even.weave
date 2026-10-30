@@ -1,0 +1,8 @@
+# Indirect recursion across modules needs an import cycle, which is rejected.
+from odd import is_odd
+
+export fn is_even(n: Int) -> Bool:
+    if n == 0:
+        return true
+    else:
+        return is_odd(n - 1)

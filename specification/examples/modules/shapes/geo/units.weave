@@ -1,0 +1,3 @@
+# geo.units: imported by main and by geo.shapes; loaded once.
+export fn scale(x: Int, factor: Int) -> Int:
+    return x * factor

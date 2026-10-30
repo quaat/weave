@@ -222,7 +222,7 @@ fn invalid_requests_and_usage() {
     }
     let out = weave(&["--version"], None);
     assert_eq!(out.status.code(), Some(0));
-    assert!(stdout(&out).starts_with("weave 0.1.0"));
+    assert!(stdout(&out).starts_with("weave 0.2.0"));
 }
 
 #[test]

@@ -1,0 +1,4 @@
+from lib import hidden
+
+fn one() -> Int:
+    return hidden()

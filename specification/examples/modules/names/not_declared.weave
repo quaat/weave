@@ -1,0 +1,4 @@
+from lib import nrom
+
+fn one() -> Int:
+    return 1

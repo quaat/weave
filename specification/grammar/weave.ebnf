@@ -90,7 +90,10 @@ property = "property", IDENT, ":", "marked", IDENT,
            "requires", "rejected_evidence", NL ;
 requirement = "paid_evidence" | "rejected_evidence" | "marked", IDENT ;
 
-flow-file = flow, { flow } ;
+(* use-net is the modules-1 net selection header (chapters/names.rst,
+   MOD-NET-1); an F0 checker without modules-1 rejects it. *)
+flow-file = [ use-net ], flow, { flow } ;
+use-net = "use", "net", qname, NL ;
 flow = "flow", IDENT, "(", [ parameters ], ")", [ "->", type ],
        ":", NL, INDENT, body, DEDENT ;
 body = { simple }, ending ;
@@ -147,3 +150,13 @@ name-expr = IDENT, [ prefixed ], { ".", IDENT },
 prefixed = IDENT, ".", IDENT ;
 call-args = call-arg, { ",", call-arg } ;
 call-arg = expr, [ ":", expr ] ;
+
+
+(* modules-1 module files (chapters/names.rst, "P0 modules"). A module file
+   is a P0 pure file that may begin with selective imports and mark
+   declarations with export; pure-file itself is unchanged. from, import, as,
+   export and use are contextual. *)
+module-file = { import-decl }, module-item, { module-item } ;
+import-decl = "from", qname, "import", import-name, { ",", import-name }, NL ;
+import-name = IDENT, [ "as", IDENT ] ;
+module-item = [ "export" ], pure-item ;

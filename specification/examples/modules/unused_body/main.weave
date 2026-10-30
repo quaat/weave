@@ -1,0 +1,4 @@
+from lib import ok
+
+fn run() -> Int:
+    return ok()

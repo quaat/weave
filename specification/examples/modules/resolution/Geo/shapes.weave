@@ -1,0 +1,2 @@
+export fn area() -> Int:
+    return 1

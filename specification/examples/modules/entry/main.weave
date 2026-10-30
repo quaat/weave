@@ -1,0 +1,4 @@
+from lib import twice
+
+export fn main(n: Int) -> Int:
+    return twice(n)

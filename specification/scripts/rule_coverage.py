@@ -4,7 +4,8 @@
 """Check rule coverage and generate docs/chapters/rule-coverage.rst.
 
 Every rule ID in ``rules.json`` needs a conformance case in
-``examples/manifest.json`` or ``examples/pure/manifest.json`` (P0), a test listed in
+``examples/manifest.json``, ``examples/pure/manifest.json`` (P0) or
+``examples/modules/manifest.json`` (modules-1), a test listed in
 ``tests/rule-coverage.json``, or a pending-implementation entry there. Listed tests must exist, and a listed
 diagnostic code must appear as a string literal in the test method.
 ``--check`` fails on a gap, a broken reference or a stale generated page.
@@ -23,6 +24,7 @@ FORMAT = "weave-rule-coverage-v1"
 ISSUE = re.compile(r"quaat/weave#[1-9]\d*")
 CODE = re.compile(r"E\d{3}")
 P0_FORMAT = "weave-p0-conformance-v1"
+MODULES_FORMAT = "weave-modules-conformance-v1"
 POSITIVE_RESULTS = {"ACCEPT", "VALUE"}
 
 
@@ -31,12 +33,15 @@ class CoverageError(ValueError):
 
 
 def load(root: Path = ROOT) -> tuple[dict, dict, dict]:
-    """rules.json, the conformance cases of both manifests (as one ``cases`` list), the map."""
+    """rules.json, the conformance cases of the three manifests (as one ``cases`` list), the map."""
     read = lambda rel: json.loads((root / rel).read_text(encoding="utf-8"))
     manifest, pure = read("examples/manifest.json"), read("examples/pure/manifest.json")
+    modules = read("examples/modules/manifest.json")
     if pure.get("format") != P0_FORMAT:
         raise CoverageError(f"Unsupported P0 manifest format: {pure.get('format')!r}; expected {P0_FORMAT}")
-    manifest = dict(manifest, cases=manifest["cases"] + pure["cases"])
+    if modules.get("format") != MODULES_FORMAT:
+        raise CoverageError(f"Unsupported modules manifest format: {modules.get('format')!r}; expected {MODULES_FORMAT}")
+    manifest = dict(manifest, cases=manifest["cases"] + pure["cases"] + modules["cases"])
     return read("rules.json"), manifest, read("tests/rule-coverage.json")
 
 
@@ -138,8 +143,9 @@ def render(rows: list[dict]) -> str:
         "===================",
         "",
         "This generated page records, for each rule ID in ``rules.json``, the",
-        "conformance cases (from ``examples/manifest.json`` and, for P0,",
-        "``examples/pure/manifest.json``) and tests that exercise it,",
+        "conformance cases (from ``examples/manifest.json``, for P0",
+        "``examples/pure/manifest.json`` and, for modules-1,",
+        "``examples/modules/manifest.json``) and tests that exercise it,",
         "or a pending-implementation entry. The map is ``tests/rule-coverage.json``.",
         "``python scripts/rule_coverage.py`` regenerates this page and ``--check`` fails",
         "if a rule has no case, test or pending entry, if a listed test does not exist,",
@@ -151,9 +157,11 @@ def render(rows: list[dict]) -> str:
         "asserts one. A listed test exercises the rule through the reference prototype in",
         "``reference/prototype/``, or, for the ``P0-*`` rules, through the P0 reference",
         "evaluator ``scripts/p0_reference.py`` (``test_p0``; the Rust crates have their own",
-        "tests, and ``scripts/p0_differential.py`` compares the two): it is regression",
+        "tests, and ``scripts/p0_differential.py`` compares the two), or, for the ``MOD-*``",
+        "rules, through ``scripts/modules_conformance.py`` (``test_modules``; the modules-1",
+        "cases of P0 programs run through the Rust ``weave`` command): it is regression",
         "evidence for that implementation, not a proof that the rule holds for every input.",
-        "Tests from ``test_rule_cases``, ``test_documentation`` and ``test_p0`` are in",
+        "Tests from ``test_rule_cases``, ``test_documentation``, ``test_p0`` and ``test_modules`` are in",
         "``tests/``; the others are the prototype's tests in ``reference/prototype/tests/``.",
         "",
         f"**Summary.** {len(rows)} rule IDs; {len(covered)} with a test or conformance case and",

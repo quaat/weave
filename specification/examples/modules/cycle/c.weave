@@ -1,0 +1,5 @@
+# Importing a closes the cycle a -> b -> c -> a.
+from a import fa
+
+export fn fc(n: Int) -> Int:
+    return n

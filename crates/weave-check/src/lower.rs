@@ -18,7 +18,7 @@
 
 use crate::ast::*;
 use weave_syntax::diagnostic::PURE_SYNTAX_CODE;
-use weave_syntax::{Cst, Diagnostic, Element, Node, Span};
+use weave_syntax::{Cst, Diagnostic, Element, FileId, Node, Span};
 
 /// Largest syntax depth of a P0 file: nested production nodes of its
 /// derivation tree from `pure-file`, the root counting 1, not counting the
@@ -49,34 +49,109 @@ fn check_syntax_depth(cst: &Cst) -> Result<(), Diagnostic> {
             if let Element::Node(n) = child
                 && n.kind != "UINT"
             {
-                stack.push((n, depth + 1));
+                // A module file's `module-item` wraps a `pure-item` and is not
+                // counted, so a declaration has the same depth in a module
+                // file as in a pure file.
+                let d = if n.kind == "module-item" {
+                    depth
+                } else {
+                    depth + 1
+                };
+                stack.push((n, d));
             }
         }
     }
     Ok(())
 }
 
+/// Lower a `pure-file` or `module-file` tree. Every span of the AST is in the
+/// tree's file ([`Cst::file`]).
 pub fn lower(cst: &Cst) -> Result<FileAst, Diagnostic> {
     check_syntax_depth(cst)?;
-    let l = Lowering { cst };
+    let l = Lowering {
+        cst,
+        file: cst.file(),
+    };
     let mut items = Vec::new();
-    for item in l.nodes(&cst.root, "pure-item") {
-        for child in l.all_nodes(item) {
-            match child.kind.as_str() {
-                "record-decl" => items.push(Item::Record(l.record(child)?)),
-                "fn-decl" => items.push(Item::Fn(l.function(child)?)),
-                other => return Err(l.shape(other, child.span)),
+    let mut imports = Vec::new();
+    for top in l.all_nodes(&cst.root) {
+        match top.kind.as_str() {
+            "pure-item" => l.item(top, false, &mut items)?,
+            "module-item" => {
+                let exported = l.leaves(top).iter().any(|(t, _)| *t == "export");
+                l.item(l.node(top, "pure-item")?, exported, &mut items)?;
             }
+            "import-decl" => imports.push(l.import(top)?),
+            other => return Err(l.shape(other, top.span)),
         }
     }
-    Ok(FileAst { items })
+    Ok(FileAst { imports, items })
 }
 
 struct Lowering<'a> {
     cst: &'a Cst,
+    file: FileId,
 }
 
 impl<'a> Lowering<'a> {
+    /// A span in this tree's file.
+    fn span(&self, start: usize, end: usize) -> Span {
+        Span::new(start, end).in_file(self.file)
+    }
+
+    fn item(&self, node: &Node, exported: bool, items: &mut Vec<Item>) -> Result<(), Diagnostic> {
+        for child in self.all_nodes(node) {
+            match child.kind.as_str() {
+                "record-decl" => {
+                    let mut r = self.record(child)?;
+                    r.exported = exported;
+                    items.push(Item::Record(r));
+                }
+                "fn-decl" => {
+                    let mut f = self.function(child)?;
+                    f.exported = exported;
+                    items.push(Item::Fn(f));
+                }
+                other => return Err(self.shape(other, child.span)),
+            }
+        }
+        Ok(())
+    }
+
+    /// `"from", qname, "import", import-name, { ",", import-name }, NL`.
+    fn import(&self, node: &Node) -> Result<ImportAst, Diagnostic> {
+        let qname = self.node(node, "qname")?;
+        let path: Vec<Name> = self
+            .leaves(qname)
+            .into_iter()
+            .filter(|(t, _)| *t != ".")
+            .map(|(t, span)| Name {
+                text: t.to_string(),
+                span,
+            })
+            .collect();
+        let mut names = Vec::new();
+        for n in self.nodes(node, "import-name") {
+            let name = self.leaf_name(n, 0)?;
+            let alias = if self.leaves(n).len() > 1 {
+                Some(self.leaf_name(n, 2)?)
+            } else {
+                None
+            };
+            names.push(ImportName {
+                name,
+                alias,
+                span: n.span,
+            });
+        }
+        let end = names.last().map_or(qname.span.end, |n| n.span.end);
+        Ok(ImportAst {
+            path,
+            path_span: qname.span,
+            names,
+            span: self.span(node.span.start, end),
+        })
+    }
     /// An AST expression, rejected with `E500` at stage `limit` when its depth
     /// exceeds [`EXPR_DEPTH_LIMIT`].
     fn expr_node(&self, kind: ExprKind, span: Span) -> Result<ExprAst, Diagnostic> {
@@ -170,6 +245,7 @@ impl<'a> Lowering<'a> {
             fields.push((fname, ty));
         }
         Ok(RecordAst {
+            exported: false,
             name,
             fields,
             span: node.span,
@@ -189,6 +265,7 @@ impl<'a> Lowering<'a> {
         let ret = self.pure_type(self.node(node, "pure-type")?)?;
         let body = self.block(self.node(node, "pure-block")?)?;
         Ok(FnAst {
+            exported: false,
             name,
             params,
             ret,
@@ -227,7 +304,7 @@ impl<'a> Lowering<'a> {
         }
         // The block's span excludes the leading ':' and line end: it covers the statements.
         let span = match (stmts.first(), stmts.last()) {
-            (Some(a), Some(b)) => Span::new(a.span.start, b.span.end),
+            (Some(a), Some(b)) => a.span.to(b.span),
             _ => node.span,
         };
         Ok(BlockAst { stmts, span })
@@ -236,7 +313,7 @@ impl<'a> Lowering<'a> {
     fn keyword_span(&self, node: &Node) -> Span {
         self.leaves(node)
             .first()
-            .map_or(Span::at(node.span.start), |(_, s)| *s)
+            .map_or(self.span(node.span.start, node.span.start), |(_, s)| *s)
     }
 
     /// A `let` or `return` statement's span without its line end: it ends with its expression.
@@ -245,7 +322,7 @@ impl<'a> Lowering<'a> {
             .all_nodes(node)
             .last()
             .map_or(node.span.end, |n| n.span.end);
-        Span::new(node.span.start, end)
+        node.span.until(end)
     }
 
     fn statement(&self, node: &Node) -> Result<StmtAst, Diagnostic> {
@@ -279,8 +356,8 @@ impl<'a> Lowering<'a> {
         let span = match &kind {
             StmtKind::If {
                 then, otherwise, ..
-            } => Span::new(node.span.start, otherwise.as_ref().unwrap_or(then).span.end),
-            StmtKind::Fork(block) => Span::new(node.span.start, block.span.end),
+            } => node.span.until(otherwise.as_ref().unwrap_or(then).span.end),
+            StmtKind::Fork(block) => node.span.until(block.span.end),
             StmtKind::Let { .. } | StmtKind::Return(_) => self.stmt_span(node),
         };
         Ok(StmtAst {
@@ -312,7 +389,7 @@ impl<'a> Lowering<'a> {
                     acc = Some(match (acc, pending.take()) {
                         (None, _) => rhs,
                         (Some(lhs), Some(o)) => {
-                            let span = Span::new(start, n.span.end);
+                            let span = self.span(start, n.span.end);
                             self.expr_node(ExprKind::Binary(o, Box::new(lhs), Box::new(rhs)), span)?
                         }
                         (Some(_), None) => return Err(self.shape(operand, n.span)),

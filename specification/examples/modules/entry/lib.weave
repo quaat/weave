@@ -1,0 +1,2 @@
+export fn twice(n: Int) -> Int:
+    return 2 * n

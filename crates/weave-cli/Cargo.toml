@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 [package]
 name = "weave-cli"
-version = "0.1.0"
-description = "The weave command: check and run P0 pure files"
+version = "0.2.0"
+description = "The weave command: check and run P0 pure files and modules-1 programs of several files"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

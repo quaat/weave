@@ -152,9 +152,11 @@ Evidence schemas
 ~~~~~~~~~~~~~~~~~~~~~~
 
 An evidence document MUST name its schema in a top-level ``format`` field of
-the form ``weave-<artefact>-v<N>``. Nine format strings are used by committed
+the form ``weave-<artefact>-v<N>``. Eleven format strings are used by committed
 files (seven existed when this policy was written; quaat/weave#4 added
-``weave-rule-coverage-v1`` and quaat/weave#10 ``weave-p0-conformance-v1``), but
+``weave-rule-coverage-v1``, quaat/weave#10 ``weave-p0-conformance-v1`` and
+quaat/weave#12 ``weave-modules-conformance-v1`` and
+``weave-modules-conformance-report-v1``), but
 many existing evidence files have no ``format``
 field; both groups are listed under `Existing evidence files`_. Four more are
 defined by JSON Schemas in ``evidence/schemas/`` and written by tools rather than
@@ -205,8 +207,10 @@ Current identifiers
 -------------------------
 
 These are the identifiers in the repository at the time this policy was written,
-plus the rule-coverage map row, which quaat/weave#4 added later, and the P0 rows
-(profile, tools and corpus manifest), which quaat/weave#10 added later.
+plus the rule-coverage map row, which quaat/weave#4 added later, the P0 rows
+(profile, tools and corpus manifest), which quaat/weave#10 added later, and the
+modules-1 rows (extension, corpus manifest and report), which quaat/weave#12
+added later.
 "None yet" means the repository has no identifier for that item.
 
 .. list-table::
@@ -238,10 +242,15 @@ plus the rule-coverage map row, which quaat/weave#4 added later, and the P0 rows
      - ``agent-kit/PROVENANCE.json`` (``kit_version``)
    * - Tools
      - Production checker, runtime and CLI
-     - For P0 only: ``weave-check``, ``weave-eval`` and ``weave-cli`` (command
-       ``weave``), each ``0.1.0`` (quaat/weave#10); the syntax crate
-       ``weave-syntax`` is ``0.1.0`` (quaat/weave#9). No checker or runtime yet
-       for F0, N0, N1 or R0
+     - For P0 only: ``weave-check`` and ``weave-cli`` (command ``weave``)
+       ``0.2.0`` and ``weave-eval`` ``0.1.0`` (``0.1.0`` each in quaat/weave#10);
+       the syntax crate ``weave-syntax`` is ``0.2.0`` (``0.1.0`` in
+       quaat/weave#9). quaat/weave#12 raised the three to ``0.2.0``: for the
+       ``weave`` command, modules-1, ``--root`` and the new JSON fields are a
+       compatible addition; the crates' library API changed incompatibly
+       (``Span`` and ``Diagnostic`` gained public fields, so struct literals no
+       longer compile, and ``weave-syntax`` gained the ``module-file`` start
+       symbol), which while MAJOR is 0 also increments MINOR. No checker or runtime yet for F0, N0, N1 or R0
      - ``version`` in each ``crates/*/Cargo.toml``; ``weave --version``. The root
        ``README.md`` states there is no general compiler and no distributed
        runtime
@@ -253,6 +262,13 @@ plus the rule-coverage map row, which quaat/weave#4 added later, and the P0 rows
      - P0, added by quaat/weave#10
      - Defined by 0.2-draft; no separate revision
      - :doc:`pure`; profile table in :doc:`status`
+   * - Profiles
+     - modules-1, a versioned extension of P0 (quaat/weave#12)
+     - Extension ``modules-1`` (name ``modules``, version 1), extending P0 as
+       defined by 0.2-draft
+     - :ref:`chapters/names:P0 modules (modules-1)`; ``extension`` in
+       ``specification/examples/modules/manifest.json``; profile table in
+       :doc:`status`
    * - Profiles
      - D0, N2 (targets, unimplemented)
      - Defined by 0.2-draft; no separate revision
@@ -298,6 +314,14 @@ plus the rule-coverage map row, which quaat/weave#4 added later, and the P0 rows
      - P0 conformance corpus manifest, added by quaat/weave#10
      - ``weave-p0-conformance-v1``
      - ``format`` in ``specification/examples/pure/manifest.json``
+   * - Evidence schemas
+     - modules-1 conformance corpus manifest, added by quaat/weave#12
+     - ``weave-modules-conformance-v1``
+     - ``format`` in ``specification/examples/modules/manifest.json``
+   * - Evidence schemas
+     - modules-1 corpus run report, added by quaat/weave#12
+     - ``weave-modules-conformance-report-v1``
+     - ``format`` in ``specification/validation/modules-conformance.json``
    * - Evidence schemas
      - Scenario results, agent-kit demo traces and artefacts, specification
        audit reports
@@ -365,6 +389,15 @@ manifest ``specification/examples/pure/manifest.json`` has the format string
 ``weave-conformance-v1`` readers do not perform. The Rust/Python P0 differential
 report ``specification/validation/p0-differential.json`` has no ``format`` field;
 it is a specification build report, like ``grammar-report.json``.
+
+quaat/weave#12 added two more. The modules-1 conformance corpus manifest
+``specification/examples/modules/manifest.json`` has the format string
+``weave-modules-conformance-v1``; it is a conformance artefact beside
+``weave-conformance-v1`` and ``weave-p0-conformance-v1``, kept separate because
+its multi-file check, run and ``use net`` flow cases need checks that readers of
+the other two do not perform, and neither of them changed. The corpus run report
+``specification/validation/modules-conformance.json`` has the format string
+``weave-modules-conformance-report-v1``; it is a specification build report.
 
 The byte-identical prototype copies in
 ``agent-kit/.agents/skills/weave/assets/prototype/`` and
@@ -495,6 +528,13 @@ versioned extensions or new profiles, never by changing those four:
   sorts, tenant and order (:doc:`net-semantics`).
 * **Durable execution**: execution of arbitrary flows with persisted state,
   beyond R0's concrete process-crash model of the Inventory protocol.
+* **Modules**: code split over several files. quaat/weave#12 added local P0
+  modules and the ``use net`` header of flow files as the versioned extension
+  modules-1 (:ref:`chapters/names:P0 modules (modules-1)`), without changing P0
+  or F0: a P0 file without imports or ``export`` and a flow file without the
+  header are checked and run exactly as before, a P0 error inside an imported
+  module keeps its P0 code, and an F0 checker without modules-1 still rejects the
+  header.
 
 A checker for an existing profile MUST continue to reject such constructs, as
 :ref:`CONF-REQ-1 <CONF-REQ-1>` requires for unsupported constructs. Supporting a

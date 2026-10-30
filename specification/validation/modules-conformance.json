@@ -1,0 +1,389 @@
+{
+  "format": "weave-modules-conformance-report-v1",
+  "manifest": "weave-modules-conformance-v1",
+  "scope": "modules-1 corpus: P0 programs through the weave binary; use net flow cases through this script's header resolution and the unchanged reference checker.",
+  "cases": 43,
+  "flow_cases": [
+    {
+      "id": "M301",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT",
+      "same_as_net_form": true
+    },
+    {
+      "id": "M302",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "id": "M303",
+      "expected": "E610",
+      "actual": "E610",
+      "at": {
+        "line": 1,
+        "column": 1
+      }
+    },
+    {
+      "id": "M304",
+      "expected": "E205",
+      "actual": "E205",
+      "at": {
+        "line": 5,
+        "column": 5
+      },
+      "same_as_net_form": true
+    },
+    {
+      "id": "M305",
+      "expected": "E601",
+      "actual": "E601",
+      "at": {
+        "line": 1,
+        "column": 9
+      }
+    },
+    {
+      "id": "M306",
+      "expected": "E200",
+      "actual": "E200",
+      "at": {
+        "line": 4,
+        "column": 1
+      }
+    }
+  ],
+  "rust": {
+    "status": "compared",
+    "binary": "cargo build --offline --locked",
+    "compared": 37,
+    "rows": [
+      {
+        "id": "M101",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M102",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M103",
+        "expected": "E510",
+        "actual": "E510",
+        "at": [
+          "modules/identity/distinct.weave",
+          6
+        ]
+      },
+      {
+        "id": "M104",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M105",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M106",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M107",
+        "expected": "E601",
+        "actual": "E601",
+        "at": [
+          "modules/rooted/app/main.weave",
+          2
+        ]
+      },
+      {
+        "id": "M108",
+        "expected": "E510",
+        "actual": "E510",
+        "at": [
+          "modules/unused_body/lib.weave",
+          6
+        ]
+      },
+      {
+        "id": "M109",
+        "expected": "E600",
+        "actual": "E600",
+        "at": [
+          "modules/syntax/late_import.weave",
+          4
+        ]
+      },
+      {
+        "id": "M110",
+        "expected": "E600",
+        "actual": "E600",
+        "at": [
+          "modules/syntax/dotdot.weave",
+          1
+        ]
+      },
+      {
+        "id": "M111",
+        "expected": "E600",
+        "actual": "E600",
+        "at": [
+          "modules/syntax/absolute.weave",
+          1
+        ]
+      },
+      {
+        "id": "M112",
+        "expected": "E600",
+        "actual": "E600",
+        "at": [
+          "modules/syntax/wildcard.weave",
+          1
+        ]
+      },
+      {
+        "id": "M113",
+        "expected": "E601",
+        "actual": "E601",
+        "at": [
+          "modules/missing/main.weave",
+          1
+        ]
+      },
+      {
+        "id": "M114",
+        "expected": "E602",
+        "actual": "E602",
+        "at": [
+          "modules/resolution/case.weave",
+          2
+        ]
+      },
+      {
+        "id": "M115",
+        "expected": "E604",
+        "actual": "E604",
+        "at": [
+          "modules/cycle/c.weave",
+          2
+        ],
+        "related": [
+          [
+            "modules/cycle/a.weave",
+            1
+          ],
+          [
+            "modules/cycle/b.weave",
+            1
+          ],
+          [
+            "modules/cycle/c.weave",
+            2
+          ]
+        ]
+      },
+      {
+        "id": "M116",
+        "expected": "E604",
+        "actual": "E604",
+        "at": [
+          "modules/self_import/loop.weave",
+          1
+        ],
+        "related": [
+          [
+            "modules/self_import/loop.weave",
+            1
+          ]
+        ]
+      },
+      {
+        "id": "M117",
+        "expected": "E604",
+        "actual": "E604",
+        "at": [
+          "modules/recursion/odd.weave",
+          1
+        ],
+        "related": [
+          [
+            "modules/recursion/even.weave",
+            2
+          ],
+          [
+            "modules/recursion/odd.weave",
+            1
+          ]
+        ]
+      },
+      {
+        "id": "M118",
+        "expected": "E604",
+        "actual": "E604",
+        "at": [
+          "modules/record_cycle/forest.weave",
+          1
+        ],
+        "related": [
+          [
+            "modules/record_cycle/tree.weave",
+            2
+          ],
+          [
+            "modules/record_cycle/forest.weave",
+            1
+          ]
+        ]
+      },
+      {
+        "id": "M119",
+        "expected": "E606",
+        "actual": "E606",
+        "at": [
+          "modules/names/not_declared.weave",
+          1
+        ]
+      },
+      {
+        "id": "M120",
+        "expected": "E607",
+        "actual": "E607",
+        "at": [
+          "modules/names/not_exported.weave",
+          1
+        ]
+      },
+      {
+        "id": "M121",
+        "expected": "E608",
+        "actual": "E608",
+        "at": [
+          "modules/names/import_collision.weave",
+          2
+        ]
+      },
+      {
+        "id": "M122",
+        "expected": "E608",
+        "actual": "E608",
+        "at": [
+          "modules/names/local_collision.weave",
+          1
+        ]
+      },
+      {
+        "id": "M123",
+        "expected": "E608",
+        "actual": "E608",
+        "at": [
+          "modules/names/builtin_alias.weave",
+          1
+        ]
+      },
+      {
+        "id": "M124",
+        "expected": "E506",
+        "actual": "E506",
+        "at": [
+          "modules/names/let_shadows_import.weave",
+          4
+        ]
+      },
+      {
+        "id": "M125",
+        "expected": "E512",
+        "actual": "E512",
+        "at": [
+          "modules/names/qualified_call.weave",
+          5
+        ]
+      },
+      {
+        "id": "M126",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M127",
+        "expected": "E609",
+        "actual": "E609",
+        "at": [
+          "modules/export/signature.weave",
+          4
+        ]
+      },
+      {
+        "id": "M128",
+        "expected": "E609",
+        "actual": "E609",
+        "at": [
+          "modules/export/field.weave",
+          5
+        ]
+      },
+      {
+        "id": "M129",
+        "expected": "ACCEPT",
+        "actual": "ACCEPT"
+      },
+      {
+        "id": "M130",
+        "expected": "E605",
+        "actual": "E605",
+        "at": [
+          "modules/rooted/app/main.weave",
+          1
+        ]
+      },
+      {
+        "id": "M201",
+        "expected": "VALUE",
+        "actual": "VALUE",
+        "value": 24
+      },
+      {
+        "id": "M202",
+        "expected": "VALUE",
+        "actual": "VALUE",
+        "value": 6
+      },
+      {
+        "id": "M203",
+        "expected": "VALUE",
+        "actual": "VALUE",
+        "value": 41
+      },
+      {
+        "id": "M204",
+        "expected": "VALUE",
+        "actual": "VALUE",
+        "value": 10
+      },
+      {
+        "id": "M205",
+        "expected": "E520",
+        "actual": "E520",
+        "at": [
+          "modules/faults/lib/arith.weave",
+          2
+        ]
+      },
+      {
+        "id": "M206",
+        "expected": "VALUE",
+        "actual": "VALUE",
+        "value": 42
+      },
+      {
+        "id": "M207",
+        "expected": "E540",
+        "actual": "E540"
+      }
+    ]
+  }
+}

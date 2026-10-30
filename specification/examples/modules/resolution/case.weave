@@ -1,0 +1,5 @@
+# The directory on disk is Geo; module paths match file names exactly.
+from geo.shapes import area
+
+fn one() -> Int:
+    return area()

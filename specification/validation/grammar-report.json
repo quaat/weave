@@ -1,5 +1,5 @@
 {
-  "productions": 95,
+  "productions": 100,
   "cases": [
     {
       "file": "valid/return_hold.weave",
@@ -193,8 +193,9 @@
   ],
   "agreement": 27,
   "scope": "Independent generated syntax front end plus shared reference semantic checks; not independent semantic equivalence.",
-  "corpus_files_parsed": 59,
+  "corpus_files_parsed": 110,
   "pure_files_parsed": 27,
+  "module_files_parsed": 47,
   "probes": [
     {
       "id": "SD-01",
@@ -387,13 +388,29 @@
       "reference": "REJECT",
       "ebnf": "REJECT",
       "discrepancy": false
+    },
+    {
+      "id": "SD-13",
+      "start": "flow-file",
+      "probe": "use net header (modules-1; the runner blanks it before the reference checks the flow)",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SA-13",
+      "start": "flow-file",
+      "probe": "use net header after a flow",
+      "reference": "REJECT",
+      "ebnf": "REJECT",
+      "discrepancy": false
     }
   ],
   "rust_differential": {
     "status": "compared",
     "binary": "cargo build --offline --locked",
-    "compared": 83,
-    "agreements": 83,
+    "compared": 136,
+    "agreements": 136,
     "rows": [
       {
         "input": "valid/return_hold.weave",
@@ -583,6 +600,363 @@
         "generated": "REJECT",
         "rust": "REJECT",
         "rust_code": "E001"
+      },
+      {
+        "input": "modules/cycle/a.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/cycle/b.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/cycle/c.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/entry/lib.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/entry/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/export/field.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/export/private_ok.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/export/signature.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/faults/lib/arith.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/faults/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/flows/forge.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/flows/hold.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/flows/late_header.weave",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "modules/flows/missing_net.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/identity/a.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/identity/aliases.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/identity/b.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/identity/distinct.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/identity/separate.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/missing/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/builtin_alias.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/import_collision.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/let_shadows_import.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/lib.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/local_collision.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/not_declared.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/not_exported.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/other.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/qualified_call.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/names/renamed.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/private/lib.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/private/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/record_cycle/forest.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/record_cycle/tree.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/recursion/even.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/recursion/odd.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/resolution/Geo/shapes.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/resolution/case.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/rooted/app/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/rooted/lib/math.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/self_import/loop.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/shapes/geo/shapes.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/shapes/geo/units.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/shapes/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/syntax/absolute.weave",
+        "start": "module-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E500"
+      },
+      {
+        "input": "modules/syntax/dotdot.weave",
+        "start": "module-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E500"
+      },
+      {
+        "input": "modules/syntax/late_import.weave",
+        "start": "module-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E500"
+      },
+      {
+        "input": "modules/syntax/lib.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/syntax/wildcard.weave",
+        "start": "module-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E500"
+      },
+      {
+        "input": "modules/unused_body/lib.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "modules/unused_body/main.weave",
+        "start": "module-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
       },
       {
         "input": "nets/Inventory.coloured.weave",
@@ -971,6 +1345,20 @@
       },
       {
         "input": "SA-12",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SD-13",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-13",
         "start": "flow-file",
         "generated": "REJECT",
         "rust": "REJECT",

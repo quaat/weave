@@ -1,0 +1,6 @@
+use net nets.Inventory
+
+# The same E205 at the same line and column as with --net nets/Inventory.weave.
+flow forge(tenant: TenantId, order: OrderId):
+    let escrow = Inventory.Escrow(tenant, order)
+    return

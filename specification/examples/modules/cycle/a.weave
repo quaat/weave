@@ -1,0 +1,4 @@
+from b import fb
+
+export fn fa(n: Int) -> Int:
+    return fb(n)

@@ -66,6 +66,13 @@ current exclusions and new rationale.
      - Immutable computation separated from effects; scoped joins with explicit
        identity and bounded resources
      - Merge-sort brief, not a completed implementation
+   * - Modules / imports
+     - Local P0 modules adopted as modules-1 (quaat/weave#12); cross-project
+       imports (quaat/weave#13), protocol packages (quaat/weave#19) and net
+       composition (quaat/weave#91) deferred
+     - Code reuse across files with declaration identity kept: nominal records,
+       private helpers, no shadowing; flows keep one net
+     - Maintainer decision on quaat/weave#12 (scope amended from protocol imports)
 
 The explanation of why obligations are not garbage and why waiting is selected
 is this draft's :doc:`rationale`. It must not be misread as a quotation from a
@@ -164,6 +171,31 @@ Known evolution
   ``sort_items`` is checked on output ids. The concurrent fork/join merge-sort
   brief remains incomplete (quaat/weave#42, M6). No rule, diagnostic code,
   profile, label or corpus case changed.
+* Local modules, added during 0.2-draft (quaat/weave#12): a versioned extension
+  of P0, modules-1 (:ref:`chapters/names:P0 modules (modules-1)`), with rule IDs
+  ``MOD-*`` and diagnostic codes E600 to E610 (of the range E600 to E619). The
+  ``module-file`` start symbol and its productions (``import-decl``,
+  ``import-name``, ``module-item``) were added to ``grammar/weave.ebnf``, SYN-01
+  now lists the module file kind, and ``flow-file`` gained the optional
+  ``use-net`` header. ``pure-file`` is unchanged, a P0 file without imports or
+  ``export`` is checked and run exactly as before, and a P0 error inside an
+  imported module keeps its E5xx code. The Rust and generated parsers agree on
+  every earlier corpus file and probe; the probes SD-13 and SA-13 were added for
+  the header, which the reference checker predates. The ``weave`` command gained
+  ``--root`` and checks and runs programs of several modules, with every span
+  carrying its file; the agent kit's runner reads ``use net`` and hands the
+  unchanged prototype the flow with the header blanked. The modules corpus is
+  ``examples/modules/manifest.json`` (``weave-modules-conformance-v1``), run by
+  ``scripts/modules_conformance.py``; ``weave-conformance-v1`` and
+  ``weave-p0-conformance-v1`` are unchanged. The crates ``weave-syntax``,
+  ``weave-check`` and ``weave-cli`` moved to ``0.2.0``: a compatible addition for
+  the ``weave`` command and an incompatible change of the library API (new public
+  fields of ``Span`` and ``Diagnostic``), each a MINOR increment while MAJOR is 0.
+  For the language these are compatible additions
+  (MINOR at the next draft cut, :doc:`stability`); no existing rule, code,
+  profile, label or manifest changed meaning. The scope was amended by the
+  maintainer: protocol imports across projects became quaat/weave#13,
+  quaat/weave#19 and quaat/weave#91.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

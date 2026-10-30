@@ -1,0 +1,4 @@
+from lib import norm as length
+
+fn one() -> Int:
+    return 1

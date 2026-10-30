@@ -1,0 +1,4 @@
+from lib.arith import ratio
+
+fn run(a: Int, b: Int) -> Int:
+    return ratio(a, b) + 1

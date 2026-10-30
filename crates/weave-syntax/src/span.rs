@@ -1,26 +1,62 @@
 // SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
 // SPDX-License-Identifier: MIT
 
-//! Byte spans and their 1-based line/column positions.
+//! Byte spans, the source files they belong to, and their 1-based
+//! line/column positions.
 
-/// A half-open byte range `[start, end)` into the source text.
+/// The identity of one source file within a checked program. A single-file
+/// check has one file, [`FileId::ENTRY`]; a modules-1 program numbers its
+/// files in the order they are loaded (the entry file first), and every span
+/// of every loaded module carries the identity of its file, so diagnostics
+/// and run-time faults can name the file they are in.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
+pub struct FileId(pub u32);
+
+impl FileId {
+    /// The entry file (and the only file of a single-file check).
+    pub const ENTRY: FileId = FileId(0);
+
+    pub fn index(self) -> usize {
+        self.0 as usize
+    }
+}
+
+/// A half-open byte range `[start, end)` into the text of the source file `file`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
+    pub file: FileId,
 }
 
 impl Span {
+    /// A span in the entry file.
     pub fn new(start: usize, end: usize) -> Span {
-        Span { start, end }
+        Span {
+            start,
+            end,
+            file: FileId::ENTRY,
+        }
     }
 
-    /// A zero-width span at `offset`.
+    /// A zero-width span at `offset` in the entry file.
     pub fn at(offset: usize) -> Span {
-        Span {
-            start: offset,
-            end: offset,
-        }
+        Span::new(offset, offset)
+    }
+
+    /// This span in `file`.
+    pub fn in_file(self, file: FileId) -> Span {
+        Span { file, ..self }
+    }
+
+    /// From the start of this span to `end`, in this span's file.
+    pub fn until(self, end: usize) -> Span {
+        Span { end, ..self }
+    }
+
+    /// From the start of this span to the end of `last`, in this span's file.
+    pub fn to(self, last: Span) -> Span {
+        self.until(last.end)
     }
 
     pub fn len(&self) -> usize {

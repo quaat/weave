@@ -74,6 +74,32 @@ impl Element {
 }
 
 impl Cst {
+    /// Put every span of the tree (nodes, tokens and trivia) in `file`, so a
+    /// tree of a loaded module carries its file's identity into everything
+    /// built from it. Iterative, like printing.
+    pub fn set_file(&mut self, file: crate::span::FileId) {
+        for token in &mut self.tokens {
+            token.span = token.span.in_file(file);
+            for trivia in &mut token.trivia {
+                trivia.span = trivia.span.in_file(file);
+            }
+        }
+        let mut stack: Vec<&mut Node> = vec![&mut self.root];
+        while let Some(node) = stack.pop() {
+            node.span = node.span.in_file(file);
+            for child in &mut node.children {
+                if let Element::Node(n) = child {
+                    stack.push(n);
+                }
+            }
+        }
+    }
+
+    /// The file of this tree's spans.
+    pub fn file(&self) -> crate::span::FileId {
+        self.root.span.file
+    }
+
     fn text(&self, span: Span) -> &str {
         self.source.get(span.start..span.end).unwrap_or_default()
     }

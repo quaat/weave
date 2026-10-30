@@ -23,7 +23,7 @@ from checker import CheckError, check_flow, explore_order, lower_flow_source, pa
 from simulate import simulate
 from verify_certificate import verify
 import weave_pure.cli as pure_cli
-from weave_diagnostics import from_check_error, from_pure_error, location, tool_error
+from weave_diagnostics import from_check_error, from_pure_error, location, region, rules, tool_error
 from weave_labels import BOUNDED, FLOW, NOT_ESTABLISHED, PROVED, SCRIPTED, VIOLATED, claim_line, labelled
 from weave_pure import PureError, check_source as check_pure_source
 
@@ -55,6 +55,147 @@ def appended_diagnostic(error: CheckError, net_path: Path, net_source: str, file
         else:
             span["file"] = str(net_path)
     return document
+
+
+# ---- modules-1: the `use net` header (specification, names chapter, "Net selection").
+#
+# A flow file may begin with `use net a.b`, which selects <root>/a/b.weave as the flow's
+# net, exactly as --net does. The root is --root, or else the flow file's directory. The
+# header is resolved here and replaced by a blank line before the unchanged prototype
+# checks the flow, so every other line and column, and so every diagnostic location, is
+# that of the file as written. It selects one net only: it is not Rust flow checking,
+# not net composition and not a way for flows to call pure code.
+_IDENT = r"[A-Za-z_][A-Za-z0-9_]*"
+_HEADER = re.compile(rf"use[ ]+net[ ]+(?P<path>{_IDENT}(?:[ ]*\.[ ]*{_IDENT})*)[ ]*(?:#.*)?", re.ASCII)
+
+
+class ModuleError(Exception):
+    """A modules-1 failure (E600-E619) with its weave-diagnostic-v1 document."""
+
+    def __init__(self, document: dict):
+        super().__init__(document["message"])
+        self.document = document
+
+
+def module_diagnostic(code: str, message: str, file, line: int, column: int, end_column: int) -> dict:
+    entry = rules(code)
+    return {"format": "weave-diagnostic-v1", "code": code, "category": entry["category"], "rule": entry["rule"],
+            "secondary_rules": list(entry["secondary_rules"]), "severity": "error", "stage": "module",
+            "message": message, "span": region(str(file), line, column, line, end_column), "related": [],
+            "details": {}}
+
+
+def net_header(text: str, file) -> tuple[int, str, int, int] | None:
+    """The `use net` header: (line, dotted path, start column, end column), or None.
+
+    The header is the first line that is neither blank nor a comment, when it is not
+    indented and its first word is `use`. Such a line that is not `use net a.b` is E600.
+    A `use` line anywhere else is left to the prototype, which rejects it (E200)."""
+    for number, raw in enumerate(text.splitlines(), 1):
+        line = raw.rstrip("\r")
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not re.match(r"use(?![A-Za-z0-9_])", line):
+            return None
+        found = _HEADER.fullmatch(line.rstrip(" "))
+        if found is None:
+            raise ModuleError(module_diagnostic(
+                "E600", "A use net header is 'use net a.b' on its own line, before the first flow.",
+                file, number, 1, len(line.rstrip(" ")) + 1))
+        dotted = re.sub(r"[ ]+", "", found["path"])
+        return number, dotted, found.start("path") + 1, found.end("path") + 1
+    return None
+
+
+def blank_header(text: str, line: int) -> str:
+    """``text`` with the header line emptied; every other line and column is unchanged."""
+    lines = text.splitlines(keepends=True)
+    ending = lines[line - 1][len(lines[line - 1].rstrip("\r\n")):]
+    lines[line - 1] = ending
+    return "".join(lines)
+
+
+def resolve_module(root: Path, dotted: str, file, line: int, start: int, end: int) -> Path:
+    """<root>/a/b.weave for `a.b`, with the modules-1 resolution rules (E601-E603)."""
+    fail = lambda code, message: ModuleError(module_diagnostic(code, message, file, line, start, end))
+    segments = dotted.split(".")
+    canonical_root = root.resolve()
+    path = root
+    for i, segment in enumerate(segments):
+        name = segment + ".weave" if i == len(segments) - 1 else segment
+        try:
+            names = os.listdir(path)
+        except OSError:
+            names = []
+        if name not in names:
+            same = [n for n in names if n.lower() == name.lower()]
+            if same:
+                raise fail("E602", f"Module path '{dotted}' names {name}, but the name on disk is {same[0]}: "
+                                   "module paths match file names exactly, in case too.")
+            raise fail("E601", f"No module '{dotted}': there is no file {'/'.join(segments)}.weave under "
+                               f"the project root {root}.")
+        path = path / name
+        canonical = path.resolve()
+        if canonical != canonical_root and canonical_root not in canonical.parents:
+            raise fail("E603", f"Module '{dotted}' resolves through {name} to a file outside the project root {root}.")
+        if (i == len(segments) - 1) != canonical.is_file():
+            raise fail("E601", f"No module '{dotted}': {'/'.join(segments)}.weave is not a file.")
+    return path
+
+
+def entry_in_root(file: Path, root: Path | None) -> None:
+    """MOD-ROOT-1 for a flow file: an explicit --root must contain the file.
+
+    The canonical file must lie in the canonical root, compared by whole path
+    components, as the Rust ``weave`` command compares an entry with --root; a file
+    outside it is E605, before any header is read or net selected, whether or not the
+    file has a header. A symbolic link is judged by its target. Without --root the
+    root is the file's own directory (a link's directory, not its target's), which
+    always contains it, so there is no such check. A --root that is not a directory
+    is a usage error."""
+    if root is None:
+        return
+    canonical_root = Path(root).resolve()
+    if not canonical_root.is_dir():
+        raise ValueError(f"The project root {root} is not a directory")
+    entry = Path(file).resolve()
+    if entry != canonical_root and canonical_root not in entry.parents:
+        raise ModuleError(module_diagnostic(
+            "E605", f"The flow file is outside the project root {root} given with --root.", file, 1, 1, 1))
+
+
+def flow_source(file: Path, explicit_net: Path | None, root: Path | None) -> tuple[str, str, Path | None]:
+    """(text as written, text for the prototype, selected net or None) for a flow file.
+
+    The selected net is the header's, when there is one; a --net that names another
+    file is E610."""
+    text = read(file)
+    entry_in_root(file, root)
+    header = net_header(text, file)
+    if header is None:
+        return text, text, explicit_net
+    line, dotted, start, end = header
+    selected = resolve_module(root if root is not None else file.parent, dotted, file, line, start, end)
+    if explicit_net is not None and Path(explicit_net).resolve() != selected.resolve():
+        raise ModuleError(module_diagnostic(
+            "E610", f"The header selects the net {selected}, but --net names {explicit_net}.",
+            file, line, 1, end))
+    return text, blank_header(text, line), selected
+
+
+def output_keeps_header(header: tuple, output: Path, root: Path | None, net: Path) -> str:
+    """``kept`` when the header, resolved from the output's root, selects ``net``; else ``blanked``.
+
+    The output's root is --root when given, or else the output file's directory. A
+    header that does not resolve there, or resolves to another file (such as a decoy
+    ``nets/Inventory.weave`` next to the output), would make the lowered file select a
+    different net or none, so it is not copied."""
+    line, dotted, start, end = header
+    try:
+        there = resolve_module(root if root is not None else Path(output).parent, dotted, output, line, start, end)
+    except ModuleError:
+        return "blanked"
+    return "kept" if there.resolve() == Path(net).resolve() else "blanked"
 
 
 class NetFailure(Exception):
@@ -215,7 +356,13 @@ def parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="Inspect Python and bundled files")
     for name in ("analyze", "check", "lower", "simulate"):
         s = sub.add_parser(name)
-        s.add_argument("--net", type=Path, default=PROTOTYPE / "Inventory.weave")
+        if name == "analyze":
+            s.add_argument("--net", type=Path, default=PROTOTYPE / "Inventory.weave")
+        else:
+            s.add_argument("--net", type=Path, default=None,
+                           help="Net file; a flow's use net header selects it instead (default: the bundled Inventory)")
+            s.add_argument("--root", type=Path, default=None,
+                           help="Project root for use net headers (default: each flow file's directory)")
         if name != "simulate":
             s.add_argument("--max-states", type=int, default=10000)
         if name == "analyze":
@@ -247,8 +394,30 @@ def flow_claim(file: Path, names: list[str], **extra) -> dict:
     return {"file": str(file), "ok": True, **labelled(FLOW, flows=names, **extra)}
 
 
+DEFAULT_NET = PROTOTYPE / "Inventory.weave"
+
+
+def select_net(args) -> tuple[Path, dict]:
+    """The net of a check, lower or simulate command, and each flow file's two texts.
+
+    A header that does not resolve, or that conflicts with --net, fails the command
+    before any net is checked (ModuleError); the files of one command must select one
+    net."""
+    files = args.files if args.command == "check" else [args.file]
+    explicit = args.net
+    texts, selected = {}, {}
+    for file in files:
+        written, prepared, net = flow_source(file, explicit, args.root)
+        texts[file] = (written, prepared)
+        chosen = Path(net or explicit or DEFAULT_NET)
+        selected.setdefault(chosen.resolve(), chosen)
+    if len(selected) > 1:
+        raise ValueError("The flow files select different nets; check them in separate commands")
+    return next(iter(selected.values())), texts
+
+
 def execute(args) -> tuple[dict, int]:
-    label = getattr(args, "net", PROTOTYPE)
+    label = getattr(args, "net", None) or DEFAULT_NET
     stage = "net"
     try:
         if args.command == "doctor":
@@ -289,6 +458,11 @@ def execute(args) -> tuple[dict, int]:
                     "accounting": labelled(PROVED, invariants=names, method="certificate recheck",
                                            scope="Accounting only; verify_certificate.py shares the parser, "
                                                  "not an independent formal proof; ordering not rechecked")}, 0
+        texts = {}
+        if args.command in ("check", "lower", "simulate"):
+            stage, label = "flow", (args.files[0] if args.command == "check" else args.file)
+            args.net, texts = select_net(args)
+            label, stage = args.net, "net"
         net, certificate, claims = checked_net(args.net, getattr(args, "max_states", 10000))
         result = {"command": args.command, "ok": True, "net": str(args.net), **claims}
         if args.command == "analyze":
@@ -299,9 +473,9 @@ def execute(args) -> tuple[dict, int]:
             result["files"] = []
             for file in args.files:
                 stage, label = "flow", file
-                text = read(file)
+                text, prepared = texts[file]
                 try:
-                    names = check_flow(net, text)
+                    names = check_flow(net, prepared)
                     result["files"].append(flow_claim(file, names))
                 except CheckError as error:
                     result["ok"] = False
@@ -309,18 +483,29 @@ def execute(args) -> tuple[dict, int]:
                                             "diagnostic": diagnostic(error, file, "flow", text)})
         elif args.command == "lower":
             stage, label = "flow", args.file
-            source = read(args.file)
+            written, source = texts[args.file]
             names = check_flow(net, source)
             lowered = lower_flow_source(source)
             if check_flow(net, lowered) != names:
                 raise ValueError("Lowered declarations differ from source")
+            header = net_header(written, args.file)
+            kept = "none"
+            if header is not None:
+                # Keep the header only where it selects the same net from the output's root;
+                # otherwise a blank line takes its place, so the lowered lines are the same.
+                kept = output_keeps_header(header, args.output, args.root, args.net)
+                first = written.splitlines()[header[0] - 1].rstrip("\r") if kept == "kept" else ""
+                lowered = first + "\n" + lowered
             write_output(args.output, lowered, [args.net, args.file])
-            result.update({"output": str(args.output), "flows": names,
+            # ``net`` (JSON and text) names the net the flow was checked against, so the
+            # output can be checked with --net when its header was blanked or absent. The
+            # header's fate is for the text report only (``_`` keys are not in the JSON).
+            result.update({"output": str(args.output), "flows": names, "_output_header": kept,
                            "files": [flow_claim(args.file, names),
                                      flow_claim(args.output, names, lowered_from=str(args.file))]})
         elif args.command == "simulate":
             stage, label = "flow", args.file
-            source = read(args.file)
+            source = texts[args.file][1]
             check_flow(net, source)
             stage = "execution"
             outcomes = ["Ok", "Err", "Unknown"] if args.outcome == "all" else [args.outcome]
@@ -340,6 +525,8 @@ def execute(args) -> tuple[dict, int]:
                 "diagnostic": diagnostic(failure.error, label, stage)}, 1
     except CheckError as error:
         return {"command": args.command, "ok": False, "diagnostic": diagnostic(error, label, stage)}, 1
+    except ModuleError as error:
+        return {"command": args.command, "ok": False, "diagnostic": error.document}, 1
     except (OSError, ValueError, KeyError, TypeError, AssertionError, subprocess.TimeoutExpired) as error:
         return {"command": args.command, "ok": False, "diagnostic": tool_error(str(error), label, stage)}, 2
 
@@ -410,10 +597,17 @@ def render(result: dict) -> None:
             if item["ok"]:
                 lowered = f" (lowered from {item['lowered_from']})" if "lowered_from" in item else ""
                 print(claim_line(item["claim_label"], f"{item['file']}{lowered}: {', '.join(item['flows'])}"))
+                if "lowered_from" in item and "_output_header" in result:
+                    how = {"kept": "its use net header was kept and selects it",
+                           "blanked": "its use net header would select another net or none from the output's "
+                                      "root, so a blank line replaced it; check it with --net",
+                           "none": "the source has no use net header; check it with --net"}[result["_output_header"]]
+                    print(f"  net: {result['net']} ({how})")
             else:
                 print_diagnostic(item["diagnostic"])
         if "certificate" in result:
             print(f"certificate: written to {result['certificate']}")
+
         for run in result.get("runs", []):
             occupied = ", ".join(f"{k}={v}" for k, v in run["marking"].items() if v)
             print(claim_line(run["claim_label"], f"{run['outcome']} via {run['entry']}: {occupied}"))
@@ -431,7 +625,8 @@ def main(argv=None) -> int:
     if captured.getvalue():
         result["upstream_output"] = captured.getvalue()
     if args.json:
-        print(json.dumps(result, ensure_ascii=False, separators=(",", ":")))
+        public = {key: value for key, value in result.items() if not key.startswith("_")}
+        print(json.dumps(public, ensure_ascii=False, separators=(",", ":")))
     else:
         render(result)
     return status

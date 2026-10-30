@@ -1,0 +1,607 @@
+{
+  "format": "weave-modules-conformance-v1",
+  "specification": "0.2-draft",
+  "extension": "modules-1",
+  "profile": "P0",
+  "description": "modules-1 conformance corpus (docs/chapters/names.rst, 'P0 modules' and 'Net selection'). Paths are relative to examples/. A check case checks the program whose entry is entry, with the project root root (default: the entry's directory); it requires ACCEPT or the code of the first diagnostic, whose primary span is in file at line, and, for related, a related span in each listed [file, line] in order. A run case checks the program and calls function with the JSON array args under the tool's default budgets; it requires VALUE with value, or the code of the fault or invalid run request, located like a check diagnostic where file is given. A flow case checks an F0 flow file whose use net header is resolved from root ('.' is examples/), with --net net when net is given; it requires ACCEPT or the code of the first diagnostic at line and column, and, where same_as_net is given, the same result and location as checking the flow with that net through --net. In modules/, files under a flows/ directory are flow files and every other file is a module file (start symbol module-file). Kept apart from manifest.json (weave-conformance-v1) and pure/manifest.json (weave-p0-conformance-v1), whose readers do not implement these kinds.",
+  "cases": [
+    {
+      "id": "M101",
+      "kind": "check",
+      "entry": "modules/shapes/main.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-FILE-1",
+        "MOD-RESOLVE-1",
+        "MOD-IMPORT-1",
+        "MOD-RESOLVE-4",
+        "MOD-CHECK-1"
+      ],
+      "lesson": "Selective imports, with an alias, resolve from the entry file's directory; a module imported twice is loaded once."
+    },
+    {
+      "id": "M102",
+      "kind": "check",
+      "entry": "modules/identity/separate.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-IDENT-1"
+      ],
+      "lesson": "Same-named records from two modules are used side by side under aliases."
+    },
+    {
+      "id": "M103",
+      "kind": "check",
+      "entry": "modules/identity/distinct.weave",
+      "expect": "E510",
+      "file": "modules/identity/distinct.weave",
+      "line": 6,
+      "rules": [
+        "MOD-IDENT-1",
+        "P0-TYPE-2"
+      ],
+      "lesson": "a.Point and b.Point are distinct nominal types even with equal fields."
+    },
+    {
+      "id": "M104",
+      "kind": "check",
+      "entry": "modules/identity/aliases.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-IDENT-1",
+        "MOD-NAME-1"
+      ],
+      "lesson": "Two aliases of one record are one type."
+    },
+    {
+      "id": "M105",
+      "kind": "check",
+      "entry": "modules/private/main.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-IDENT-1",
+        "MOD-NAME-1"
+      ],
+      "lesson": "A caller's own helper does not collide with a private helper of the imported module."
+    },
+    {
+      "id": "M106",
+      "kind": "check",
+      "entry": "modules/rooted/app/main.weave",
+      "root": "modules/rooted",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-ROOT-1"
+      ],
+      "lesson": "--root makes lib.math resolve from the project root, not the entry's directory."
+    },
+    {
+      "id": "M107",
+      "kind": "check",
+      "entry": "modules/rooted/app/main.weave",
+      "expect": "E601",
+      "file": "modules/rooted/app/main.weave",
+      "line": 2,
+      "rules": [
+        "MOD-ROOT-1",
+        "MOD-RESOLVE-1"
+      ],
+      "lesson": "Without --root the root is app/, which has no lib/math.weave."
+    },
+    {
+      "id": "M108",
+      "kind": "check",
+      "entry": "modules/unused_body/main.weave",
+      "expect": "E510",
+      "file": "modules/unused_body/lib.weave",
+      "line": 6,
+      "rules": [
+        "MOD-CHECK-1",
+        "P0-DECL-4",
+        "P0-TYPE-2"
+      ],
+      "lesson": "A private, unused body of an imported module is checked; its error keeps its P0 code and names its file."
+    },
+    {
+      "id": "M109",
+      "kind": "check",
+      "entry": "modules/syntax/late_import.weave",
+      "expect": "E600",
+      "file": "modules/syntax/late_import.weave",
+      "line": 4,
+      "rules": [
+        "MOD-FILE-1"
+      ],
+      "lesson": "Imports come before the first declaration."
+    },
+    {
+      "id": "M110",
+      "kind": "check",
+      "entry": "modules/syntax/dotdot.weave",
+      "expect": "E600",
+      "file": "modules/syntax/dotdot.weave",
+      "line": 1,
+      "rules": [
+        "MOD-FILE-1",
+        "MOD-RESOLVE-3"
+      ],
+      "lesson": "A module path is dotted identifiers: '..' cannot be written."
+    },
+    {
+      "id": "M111",
+      "kind": "check",
+      "entry": "modules/syntax/absolute.weave",
+      "expect": "E600",
+      "file": "modules/syntax/absolute.weave",
+      "line": 1,
+      "rules": [
+        "MOD-FILE-1",
+        "MOD-RESOLVE-3"
+      ],
+      "lesson": "An absolute path cannot be written as a module path."
+    },
+    {
+      "id": "M112",
+      "kind": "check",
+      "entry": "modules/syntax/wildcard.weave",
+      "expect": "E600",
+      "file": "modules/syntax/wildcard.weave",
+      "line": 1,
+      "rules": [
+        "MOD-FILE-1",
+        "MOD-IMPORT-1"
+      ],
+      "lesson": "There are no wildcard imports."
+    },
+    {
+      "id": "M113",
+      "kind": "check",
+      "entry": "modules/missing/main.weave",
+      "expect": "E601",
+      "file": "modules/missing/main.weave",
+      "line": 1,
+      "rules": [
+        "MOD-RESOLVE-1"
+      ],
+      "lesson": "A module path must name an existing file under the root."
+    },
+    {
+      "id": "M114",
+      "kind": "check",
+      "entry": "modules/resolution/case.weave",
+      "expect": "E602",
+      "file": "modules/resolution/case.weave",
+      "line": 2,
+      "rules": [
+        "MOD-RESOLVE-2"
+      ],
+      "lesson": "geo.shapes does not match the directory Geo, on any file system."
+    },
+    {
+      "id": "M115",
+      "kind": "check",
+      "entry": "modules/cycle/a.weave",
+      "expect": "E604",
+      "file": "modules/cycle/c.weave",
+      "line": 2,
+      "related": [
+        [
+          "modules/cycle/a.weave",
+          1
+        ],
+        [
+          "modules/cycle/b.weave",
+          1
+        ],
+        [
+          "modules/cycle/c.weave",
+          2
+        ]
+      ],
+      "rules": [
+        "MOD-CYCLE-1"
+      ],
+      "lesson": "An import cycle is rejected at the import that closes it, with every import of the cycle."
+    },
+    {
+      "id": "M116",
+      "kind": "check",
+      "entry": "modules/self_import/loop.weave",
+      "expect": "E604",
+      "file": "modules/self_import/loop.weave",
+      "line": 1,
+      "related": [
+        [
+          "modules/self_import/loop.weave",
+          1
+        ]
+      ],
+      "rules": [
+        "MOD-CYCLE-1"
+      ],
+      "lesson": "A module cannot import itself."
+    },
+    {
+      "id": "M117",
+      "kind": "check",
+      "entry": "modules/recursion/even.weave",
+      "expect": "E604",
+      "file": "modules/recursion/odd.weave",
+      "line": 1,
+      "related": [
+        [
+          "modules/recursion/even.weave",
+          2
+        ],
+        [
+          "modules/recursion/odd.weave",
+          1
+        ]
+      ],
+      "rules": [
+        "MOD-CYCLE-1",
+        "P0-REC-1"
+      ],
+      "lesson": "Indirect recursion across modules needs an import cycle, which is rejected."
+    },
+    {
+      "id": "M118",
+      "kind": "check",
+      "entry": "modules/record_cycle/tree.weave",
+      "expect": "E604",
+      "file": "modules/record_cycle/forest.weave",
+      "line": 1,
+      "related": [
+        [
+          "modules/record_cycle/tree.weave",
+          2
+        ],
+        [
+          "modules/record_cycle/forest.weave",
+          1
+        ]
+      ],
+      "rules": [
+        "MOD-CYCLE-1",
+        "P0-DECL-3"
+      ],
+      "lesson": "A record cycle across modules needs an import cycle, which is rejected."
+    },
+    {
+      "id": "M119",
+      "kind": "check",
+      "entry": "modules/names/not_declared.weave",
+      "expect": "E606",
+      "file": "modules/names/not_declared.weave",
+      "line": 1,
+      "rules": [
+        "MOD-IMPORT-1"
+      ],
+      "lesson": "An imported name must be declared by the module."
+    },
+    {
+      "id": "M120",
+      "kind": "check",
+      "entry": "modules/names/not_exported.weave",
+      "expect": "E607",
+      "file": "modules/names/not_exported.weave",
+      "line": 1,
+      "rules": [
+        "MOD-IMPORT-2"
+      ],
+      "lesson": "Only declarations marked export can be imported."
+    },
+    {
+      "id": "M121",
+      "kind": "check",
+      "entry": "modules/names/import_collision.weave",
+      "expect": "E608",
+      "file": "modules/names/import_collision.weave",
+      "line": 2,
+      "rules": [
+        "MOD-NAME-1"
+      ],
+      "lesson": "Two imports may not introduce the same name."
+    },
+    {
+      "id": "M122",
+      "kind": "check",
+      "entry": "modules/names/local_collision.weave",
+      "expect": "E608",
+      "file": "modules/names/local_collision.weave",
+      "line": 1,
+      "rules": [
+        "MOD-NAME-1"
+      ],
+      "lesson": "An import may not collide with a declaration of the importing module."
+    },
+    {
+      "id": "M123",
+      "kind": "check",
+      "entry": "modules/names/builtin_alias.weave",
+      "expect": "E608",
+      "file": "modules/names/builtin_alias.weave",
+      "line": 1,
+      "rules": [
+        "MOD-NAME-1"
+      ],
+      "lesson": "An import may not be named like a built-in."
+    },
+    {
+      "id": "M124",
+      "kind": "check",
+      "entry": "modules/names/let_shadows_import.weave",
+      "expect": "E506",
+      "file": "modules/names/let_shadows_import.weave",
+      "line": 4,
+      "rules": [
+        "MOD-NAME-1",
+        "P0-NAME-2"
+      ],
+      "lesson": "A local binding may not shadow an imported name."
+    },
+    {
+      "id": "M125",
+      "kind": "check",
+      "entry": "modules/names/qualified_call.weave",
+      "expect": "E512",
+      "file": "modules/names/qualified_call.weave",
+      "line": 5,
+      "rules": [
+        "MOD-NAME-1",
+        "P0-EFFECT-1"
+      ],
+      "lesson": "Imported names are called unqualified; a dotted call is still an operation."
+    },
+    {
+      "id": "M126",
+      "kind": "check",
+      "entry": "modules/names/renamed.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-NAME-1"
+      ],
+      "lesson": "'as' renames imports apart."
+    },
+    {
+      "id": "M127",
+      "kind": "check",
+      "entry": "modules/export/signature.weave",
+      "expect": "E609",
+      "file": "modules/export/signature.weave",
+      "line": 4,
+      "rules": [
+        "MOD-EXPORT-1"
+      ],
+      "lesson": "An exported function may not expose an unexported record."
+    },
+    {
+      "id": "M128",
+      "kind": "check",
+      "entry": "modules/export/field.weave",
+      "expect": "E609",
+      "file": "modules/export/field.weave",
+      "line": 5,
+      "rules": [
+        "MOD-EXPORT-1"
+      ],
+      "lesson": "An exported record may not expose an unexported record in a field."
+    },
+    {
+      "id": "M129",
+      "kind": "check",
+      "entry": "modules/export/private_ok.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-EXPORT-1"
+      ],
+      "lesson": "Unexported records may appear in unexported declarations and in bodies."
+    },
+    {
+      "id": "M130",
+      "kind": "check",
+      "entry": "modules/rooted/app/main.weave",
+      "root": "modules/shapes",
+      "expect": "E605",
+      "file": "modules/rooted/app/main.weave",
+      "line": 1,
+      "rules": [
+        "MOD-ROOT-1"
+      ],
+      "lesson": "An entry file outside the given --root is rejected."
+    },
+    {
+      "id": "M201",
+      "kind": "run",
+      "entry": "modules/shapes/main.weave",
+      "function": "double_area",
+      "args": [
+        3,
+        4
+      ],
+      "expect": "VALUE",
+      "value": 24,
+      "rules": [
+        "MOD-RUN-1"
+      ],
+      "lesson": "An imported function runs with its module's own imports."
+    },
+    {
+      "id": "M202",
+      "kind": "run",
+      "entry": "modules/identity/aliases.weave",
+      "function": "roundtrip",
+      "args": [
+        5
+      ],
+      "expect": "VALUE",
+      "value": 6,
+      "rules": [
+        "MOD-IDENT-1",
+        "MOD-RUN-1"
+      ],
+      "lesson": "A record built under one alias is returned under another."
+    },
+    {
+      "id": "M203",
+      "kind": "run",
+      "entry": "modules/private/main.weave",
+      "function": "run",
+      "args": [
+        4
+      ],
+      "expect": "VALUE",
+      "value": 41,
+      "rules": [
+        "MOD-IDENT-1",
+        "MOD-RUN-1"
+      ],
+      "lesson": "lib.weighted calls lib's private helper, not the caller's."
+    },
+    {
+      "id": "M204",
+      "kind": "run",
+      "entry": "modules/rooted/app/main.weave",
+      "root": "modules/rooted",
+      "function": "main",
+      "args": [
+        3
+      ],
+      "expect": "VALUE",
+      "value": 10,
+      "rules": [
+        "MOD-ROOT-1",
+        "MOD-RUN-1"
+      ],
+      "lesson": "A run with --root."
+    },
+    {
+      "id": "M205",
+      "kind": "run",
+      "entry": "modules/faults/main.weave",
+      "function": "run",
+      "args": [
+        1,
+        0
+      ],
+      "expect": "E520",
+      "file": "modules/faults/lib/arith.weave",
+      "line": 2,
+      "rules": [
+        "MOD-RUN-1",
+        "P0-ARITH-2"
+      ],
+      "lesson": "A fault inside an imported function keeps its code and is located in that function's file."
+    },
+    {
+      "id": "M206",
+      "kind": "run",
+      "entry": "modules/entry/main.weave",
+      "function": "main",
+      "args": [
+        21
+      ],
+      "expect": "VALUE",
+      "value": 42,
+      "rules": [
+        "MOD-RUN-1"
+      ],
+      "lesson": "export is allowed on the entry function."
+    },
+    {
+      "id": "M207",
+      "kind": "run",
+      "entry": "modules/entry/main.weave",
+      "function": "twice",
+      "args": [
+        21
+      ],
+      "expect": "E540",
+      "rules": [
+        "MOD-RUN-1",
+        "P0-RUN-1"
+      ],
+      "lesson": "The entry is a function declared in the entry file, not an imported one."
+    },
+    {
+      "id": "M301",
+      "kind": "flow",
+      "file": "modules/flows/hold.weave",
+      "root": ".",
+      "expect": "ACCEPT",
+      "same_as_net": "nets/Inventory.weave",
+      "rules": [
+        "MOD-NET-1"
+      ],
+      "lesson": "use net nets.Inventory selects examples/nets/Inventory.weave as the flow's net."
+    },
+    {
+      "id": "M302",
+      "kind": "flow",
+      "file": "modules/flows/hold.weave",
+      "root": ".",
+      "net": "nets/Inventory.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "MOD-NET-1"
+      ],
+      "lesson": "A --net naming the header's net is accepted."
+    },
+    {
+      "id": "M303",
+      "kind": "flow",
+      "file": "modules/flows/hold.weave",
+      "root": ".",
+      "net": "nets/Lease.weave",
+      "expect": "E610",
+      "line": 1,
+      "column": 1,
+      "rules": [
+        "MOD-NET-1"
+      ],
+      "lesson": "A --net naming a different net is rejected."
+    },
+    {
+      "id": "M304",
+      "kind": "flow",
+      "file": "modules/flows/forge.weave",
+      "root": ".",
+      "expect": "E205",
+      "line": 5,
+      "column": 5,
+      "same_as_net": "nets/Inventory.weave",
+      "rules": [
+        "MOD-NET-1"
+      ],
+      "lesson": "The header leaves every other line in place: the F0 diagnostic has the line and column of the --net form."
+    },
+    {
+      "id": "M305",
+      "kind": "flow",
+      "file": "modules/flows/missing_net.weave",
+      "root": ".",
+      "expect": "E601",
+      "line": 1,
+      "column": 9,
+      "rules": [
+        "MOD-NET-1",
+        "MOD-RESOLVE-1"
+      ],
+      "lesson": "use net resolves from the root like an import."
+    },
+    {
+      "id": "M306",
+      "kind": "flow",
+      "file": "modules/flows/late_header.weave",
+      "root": ".",
+      "net": "nets/Inventory.weave",
+      "expect": "E200",
+      "line": 4,
+      "column": 1,
+      "rules": [
+        "MOD-NET-1"
+      ],
+      "lesson": "The header must come before the first flow; anywhere else the reference checker rejects it as F0 syntax."
+    }
+  ]
+}
