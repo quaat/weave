@@ -22,7 +22,7 @@ pub const WEAVE_EBNF: &str = include_str!("../../../specification/grammar/weave.
 pub const N2_DELTA_EBNF: &str = include_str!("../../../specification/grammar/weave-n2-delta.ebnf");
 
 /// Start symbols of the portable grammar (SYN-01).
-pub const START_SYMBOLS: [&str; 3] = ["flow-file", "n0-file", "n1-file"];
+pub const START_SYMBOLS: [&str; 4] = ["flow-file", "n0-file", "n1-file", "pure-file"];
 
 /// Special-sequence productions and the lexer tokens that implement them.
 pub const LEXICAL: [(&str, Symbol); 5] = [
@@ -33,9 +33,12 @@ pub const LEXICAL: [(&str, Symbol); 5] = [
     ("DEDENT", Symbol::Dedent),
 ];
 
-/// Punctuation the lexer produces as single tokens.
-pub const PUNCTUATION: [&str; 14] = [
-    "(", ")", "[", "]", ",", ":", ".", "=", "->", "==", "+", "-", "*", "?",
+/// Punctuation the lexer produces as single tokens. `<`, `<=`, `>`, `>=` and
+/// `!=` are used only by the P0 grammar; in other files they are tokens the
+/// grammar does not derive.
+pub const PUNCTUATION: [&str; 19] = [
+    "(", ")", "[", "]", ",", ":", ".", "=", "->", "==", "+", "-", "*", "?", "<", "<=", ">", ">=",
+    "!=",
 ];
 
 /// Lookahead bound of the conflict analysis, in tokens.

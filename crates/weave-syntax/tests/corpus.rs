@@ -4,7 +4,7 @@
 //! The shared conformance corpus (`specification/examples/`), read in place.
 //!
 //! Every `.weave` file is parsed with the start symbol its manifest kind or
-//! directory selects; net-append mutations are attached to the manifest's net
+//! directory selects (`pure/` holds P0 pure files, start symbol `pure-file`); net-append mutations are attached to the manifest's net
 //! as `scripts/grammar_audit.py` does. Syntactically valid files must round
 //! trip and satisfy the span invariants; syntactically invalid files must give
 //! the reference checker's code with a rule ID and a span.
@@ -30,10 +30,13 @@ const N1_NETS: [&str; 2] = [
     "nets/cross_order_read.weave",
 ];
 
-/// Corpus files the grammar rejects, with the code the reference checker reports.
-const SYNTAX_INVALID: [(&str, &str); 2] = [
+/// Corpus files the grammar rejects, with the code the reference checker (F0)
+/// or the P0 manifest (`pure/manifest.json`) requires.
+const SYNTAX_INVALID: [(&str, &str); 4] = [
     ("invalid/unsupported_if.weave", "E200"),
     ("invalid/skipped_level.weave", "E001"),
+    ("pure/invalid/chained_comparison.weave", "E500"),
+    ("pure/invalid/flow_in_pure_file.weave", "E500"),
 ];
 
 struct Case {
@@ -84,6 +87,7 @@ fn cases() -> Vec<Case> {
             let kind = kinds.get(&file).cloned().unwrap_or_else(|| {
                 match dir {
                     "valid" | "invalid" => "flow",
+                    "pure" => "pure",
                     "mutations" => "net_append",
                     "nets" if N1_NETS.contains(&file.as_str()) => "n1",
                     "nets" => "net",
@@ -97,6 +101,7 @@ fn cases() -> Vec<Case> {
                 "net" if N1_NETS.contains(&file.as_str()) => (Start::N1File, source),
                 "net" => (Start::N0File, source),
                 "n1" => (Start::N1File, source),
+                "pure" => (Start::PureFile, source),
                 "net_append" => (
                     Start::N0File,
                     format!("{}\n\n{}", base_source.trim_end(), source),
@@ -183,7 +188,11 @@ fn check_spans(cst: &Cst) {
 #[test]
 fn corpus_round_trips_with_spans_or_reports_the_reference_code() {
     let cases = cases();
-    assert!(cases.len() >= 32, "corpus has {} files", cases.len());
+    assert!(cases.len() >= 59, "corpus has {} files", cases.len());
+    assert!(
+        cases.iter().filter(|c| c.start == Start::PureFile).count() >= 27,
+        "P0 files"
+    );
     let mut accepted = 0;
     for case in &cases {
         let expected = SYNTAX_INVALID
@@ -259,6 +268,50 @@ fn trivia_keep_comments_and_blank_lines() {
     ] {
         assert!(kinds.contains(&kind), "{kind}");
     }
+}
+
+#[test]
+fn the_p0_manifest_syntax_cases_are_the_grammar_rejections() {
+    let pure = json::parse(&read("pure/manifest.json")).expect("pure manifest is JSON");
+    let mut required: Vec<String> = pure
+        .get("cases")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .filter(|c| {
+            c.get("kind").and_then(Value::as_str) == Some("check")
+                && matches!(
+                    c.get("expect").and_then(Value::as_str),
+                    Some("E500" | "E001")
+                )
+        })
+        .map(|c| c.get("file").and_then(Value::as_str).unwrap().to_string())
+        .collect();
+    required.sort();
+    let mut listed: Vec<String> = SYNTAX_INVALID
+        .iter()
+        .filter(|(f, _)| f.starts_with("pure/"))
+        .map(|(f, _)| f.to_string())
+        .collect();
+    listed.sort();
+    assert_eq!(required, listed);
+}
+
+#[test]
+fn pure_files_are_not_flows_or_nets_and_flows_are_not_pure_files() {
+    let sort = read("pure/valid/merge_sort.weave");
+    assert!(parse(&sort, Start::PureFile).is_ok());
+    for start in [Start::FlowFile, Start::N0File, Start::N1File] {
+        assert!(parse(&sort, start).is_err(), "{start:?}");
+    }
+    assert!(parse(&read("valid/checkout.weave"), Start::PureFile).is_err());
+    assert!(parse(&read("nets/Inventory.weave"), Start::PureFile).is_err());
+    let d = parse(
+        &read("pure/invalid/chained_comparison.weave"),
+        Start::PureFile,
+    )
+    .unwrap_err();
+    assert_eq!((d.code, d.rule().as_deref()), ("E500", Some("P0-FILE-1")));
 }
 
 #[test]

@@ -148,5 +148,6 @@ fn grammar_reports_no_problems() {
     assert_eq!(out.status.code(), Some(0));
     let doc = stdout_json(&out);
     assert_eq!(doc.get("problems"), Some(&Value::Array(Vec::new())));
-    assert_eq!(doc.get("productions"), Some(&Value::from_usize(68)));
+    // 68 F0/N0/N1 productions (quaat/weave#9) and 27 P0 productions (quaat/weave#10).
+    assert_eq!(doc.get("productions"), Some(&Value::from_usize(95)));
 }
