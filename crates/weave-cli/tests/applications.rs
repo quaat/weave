@@ -74,6 +74,21 @@ fn both_programs_run_as_documented() {
         "{}",
         text(&out)
     );
+    let out = weave(&[
+        "run",
+        ROUTING,
+        "--entry",
+        "route",
+        "--args",
+        r#"[[{"dest": 1, "cost": 2}], 10]"#,
+    ]);
+    assert_eq!(out.status.code(), Some(1));
+    assert!(
+        text(&out).contains("E540 (P0-RUN-1) [run]"),
+        "{}",
+        text(&out)
+    );
+    assert!(!text(&out).contains("budgets"), "{}", text(&out));
 }
 
 #[test]
