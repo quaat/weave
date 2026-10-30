@@ -263,6 +263,7 @@
       "agent-kit (Python 3.11)",
       "agent-kit (Python 3.12)",
       "agent-kit (Python 3.13)",
+      "rust (weave-syntax)",
       "specification (validate)",
       "workflow tooling and documentation audit"
     ],
