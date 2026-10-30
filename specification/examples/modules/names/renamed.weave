@@ -1,0 +1,6 @@
+# Aliases avoid collisions: two norm functions under different names.
+from lib import norm as norm_point, origin
+from other import norm as norm_int
+
+fn one() -> Int:
+    return norm_int(norm_point(origin()))

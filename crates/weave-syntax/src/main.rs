@@ -5,8 +5,8 @@
 //! differential audit. It is not the user-facing Weave CLI.
 //!
 //! ```text
-//! weave-syntax parse --start <flow-file|n0-file|n1-file|pure-file> FILE
-//! weave-syntax roundtrip --start <flow-file|n0-file|n1-file|pure-file> FILE
+//! weave-syntax parse --start <flow-file|n0-file|n1-file|pure-file|module-file> FILE
+//! weave-syntax roundtrip --start <flow-file|n0-file|n1-file|pure-file|module-file> FILE
 //! weave-syntax grammar
 //! ```
 //!
@@ -23,7 +23,7 @@ use weave_syntax::grammar;
 use weave_syntax::json::Value;
 use weave_syntax::{Options, Start, parse_bytes};
 
-const USAGE: &str = "usage: weave-syntax parse|roundtrip --start <flow-file|n0-file|n1-file|pure-file> FILE\n       weave-syntax grammar";
+const USAGE: &str = "usage: weave-syntax parse|roundtrip --start <flow-file|n0-file|n1-file|pure-file|module-file> FILE\n       weave-syntax grammar";
 
 fn emit(text: &str) {
     let mut out = std::io::stdout().lock();

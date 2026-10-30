@@ -24,9 +24,9 @@ pub mod parser;
 pub mod span;
 
 pub use cst::{Cst, Element, Leaf, Node};
-pub use diagnostic::Diagnostic;
+pub use diagnostic::{Diagnostic, Related, SingleSource, SourceMap};
 pub use parser::{Options, Start, parse, parse_bytes, parse_with};
-pub use span::Span;
+pub use span::{FileId, Span};
 
 /// Parse, print and re-parse `source`; true when the print equals the source and
 /// the re-parsed tree equals the first.

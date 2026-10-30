@@ -1,0 +1,11 @@
+# The caller declares its own helper; lib.weighted still uses lib's private helper.
+from lib import weighted
+
+fn helper(flag: Bool) -> Bool:
+    return not(flag)
+
+fn run(n: Int) -> Int:
+    if helper(false):
+        return weighted(n)
+    else:
+        return 0

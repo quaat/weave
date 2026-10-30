@@ -1,17 +1,22 @@
 // SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
 // SPDX-License-Identifier: MIT
 
-//! `weave`: check and run P0 pure files (`specification/docs/chapters/pure.rst`).
+//! `weave`: check and run P0 pure files (`specification/docs/chapters/pure.rst`)
+//! and P0 programs of several modules (modules-1, `chapters/names.rst`).
 //!
 //! ```text
-//! weave check FILE [--json]
-//! weave run FILE --entry NAME [--args JSON] [--fuel N] [--max-depth N] [--int-bits N] [--json]
+//! weave check FILE [--root DIR] [--json]
+//! weave run FILE --entry NAME [--root DIR] [--args JSON] [--fuel N] [--max-depth N] [--int-bits N] [--json]
 //! weave --version
 //! ```
 //!
-//! `FILE` may be `-` for standard input. `check` states one claim per file,
-//! labelled `CHECKED pure`, or prints the first diagnostic. `run` checks the
-//! file, then calls the entry function with the JSON array `--args` (default
+//! `FILE` may be `-` for standard input. Imports resolve from the project
+//! root: `--root DIR`, or else the directory of `FILE`; standard input has no
+//! root unless `--root` is given. The working directory never affects
+//! resolution. `check` states one claim per loaded file (the entry first),
+//! labelled `CHECKED pure`, or prints the first diagnostic, located in the
+//! file it is in. `run` checks the program, then calls the entry function,
+//! declared in the entry file, with the JSON array `--args` (default
 //! `[]`) and reports the value, the pure fault or the exhausted budget,
 //! together with every budget and what the run used of it. A run's outcome is
 //! runtime status, not evidence: it carries no result label. With `--json`
@@ -24,13 +29,16 @@
 //! 4 an exhausted budget; 70 an internal error of the checker or evaluator.
 
 use std::io::{Read, Write};
+use std::path::PathBuf;
 use std::process::ExitCode;
+use weave_check::{Entry, Sources};
 use weave_eval::{Budgets, DEFAULT_BUDGETS, Outcome, RunError};
 use weave_syntax::Diagnostic;
+use weave_syntax::diagnostic::SourceMap;
 use weave_syntax::json::{self, Value as Json};
 use weave_syntax::span::LineIndex;
 
-const USAGE: &str = "usage: weave check FILE [--json]\n       weave run FILE --entry NAME [--args JSON] [--fuel N] [--max-depth N] [--int-bits N] [--json]\n       weave --version";
+const USAGE: &str = "usage: weave check FILE [--root DIR] [--json]\n       weave run FILE --entry NAME [--root DIR] [--args JSON] [--fuel N] [--max-depth N] [--int-bits N] [--json]\n       weave --version";
 const LABEL: &str = "CHECKED pure";
 const PROFILE: &str = "P0";
 const SPECIFICATION: &str = "0.2-draft";
@@ -51,6 +59,7 @@ struct Options {
     file: String,
     json: bool,
     entry: Option<String>,
+    root: Option<PathBuf>,
     args: String,
     budgets: Budgets,
 }
@@ -66,6 +75,7 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
         file: String::new(),
         json: false,
         entry: None,
+        root: None,
         args: "[]".into(),
         budgets: DEFAULT_BUDGETS,
     };
@@ -85,6 +95,12 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
         };
         match a.as_str() {
             "--json" => o.json = true,
+            "--root" => {
+                let dir = it.next().ok_or("--root needs a directory")?;
+                if o.root.replace(PathBuf::from(dir)).is_some() {
+                    return Err("--root is given more than once".into());
+                }
+            }
             "--entry" => {
                 run_only(a)?;
                 o.entry = Some(it.next().cloned().ok_or("--entry needs a name")?);
@@ -132,29 +148,44 @@ fn read(path: &str) -> Result<Vec<u8>, String> {
     }
 }
 
-/// `FILE:line:col: CODE (RULE) [stage] message`.
-fn render(d: &Diagnostic, file: &str, source: &str) -> String {
-    let p = LineIndex::new(source).position(d.span.start);
+fn position(sources: &dyn SourceMap, span: weave_syntax::Span) -> String {
+    let p = LineIndex::new(sources.text(span.file)).position(span.start);
+    format!("{}:{}:{}", sources.name(span.file), p.line, p.column)
+}
+
+/// `FILE:line:col: CODE (RULE) [stage] message`, then one indented line per
+/// related span.
+fn render(d: &Diagnostic, sources: &dyn SourceMap) -> String {
     let rule = d.rule().unwrap_or_else(|| "no rule".into());
-    format!(
-        "{file}:{}:{}: {} ({rule}) [{}] {}\n",
-        p.line, p.column, d.code, d.stage, d.message
-    )
+    let mut out = format!(
+        "{}: {} ({rule}) [{}] {}\n",
+        position(sources, d.span),
+        d.code,
+        d.stage,
+        d.message
+    );
+    for r in &d.related {
+        out.push_str(&format!(
+            "  {}: {}: {}\n",
+            position(sources, r.span),
+            r.role,
+            r.label
+        ));
+    }
+    out
 }
 
 struct Report {
-    file: String,
-    source: String,
+    sources: Sources,
     json: bool,
     fields: Vec<(String, Json)>,
     text: String,
 }
 
 impl Report {
-    fn new(command: &str, file: &str, source: &str, json: bool) -> Report {
+    fn new(command: &str, file: &str, root: Option<&weave_check::Root>, json: bool) -> Report {
         Report {
-            file: file.to_string(),
-            source: source.to_string(),
+            sources: Sources::default(),
             json,
             fields: vec![
                 ("tool".into(), Json::str("weave")),
@@ -163,6 +194,10 @@ impl Report {
                 ("profile".into(), Json::str(PROFILE)),
                 ("specification".into(), Json::str(SPECIFICATION)),
                 ("file".into(), Json::str(file)),
+                (
+                    "root".into(),
+                    root.map_or(Json::Null, |r| Json::str(r.display.display().to_string())),
+                ),
             ],
             text: String::new(),
         }
@@ -173,13 +208,10 @@ impl Report {
     }
 
     fn diagnostics(&mut self, ds: &[Diagnostic]) {
-        let docs = ds
-            .iter()
-            .map(|d| d.to_json(&self.file, &self.source))
-            .collect();
+        let docs = ds.iter().map(|d| d.to_json_in(&self.sources)).collect();
         self.set("diagnostics", Json::Array(docs));
         for d in ds {
-            let line = render(d, &self.file, &self.source);
+            let line = render(d, &self.sources);
             self.text.push_str(&line);
         }
     }
@@ -194,24 +226,34 @@ impl Report {
     }
 }
 
-fn claim(file: &str, program: &weave_check::Program) -> (Json, String) {
-    let names: Vec<&str> = program.functions.iter().map(|f| f.name.as_str()).collect();
-    let json = Json::Object(vec![
-        ("label".into(), Json::str(LABEL)),
-        ("subject".into(), Json::str(file)),
-        (
-            "statement".into(),
-            Json::str(
-                "P0 type, effect, path and recursion-shape checks passed for every function of the file",
+/// One `CHECKED pure` claim per loaded file, the entry first.
+fn claims(program: &weave_check::Program) -> (Json, String) {
+    let mut json = Vec::new();
+    let mut text = String::new();
+    for (index, module) in program.modules.iter().enumerate() {
+        let file = program.sources.name(module.file);
+        let names: Vec<&str> = program
+            .functions_of(index)
+            .map(|f| f.name.as_str())
+            .collect();
+        json.push(Json::Object(vec![
+            ("label".into(), Json::str(LABEL)),
+            ("subject".into(), Json::str(file)),
+            ("module".into(), Json::str(module.name.clone())),
+            (
+                "statement".into(),
+                Json::str(
+                    "P0 type, effect, path and recursion-shape checks passed for every function of the file",
+                ),
             ),
-        ),
-        (
-            "functions".into(),
-            Json::Array(names.iter().map(|n| Json::str(*n)).collect()),
-        ),
-    ]);
-    let text = format!("{LABEL} {file}: {}\n", names.join(", "));
-    (json, text)
+            (
+                "functions".into(),
+                Json::Array(names.iter().map(|n| Json::str(*n)).collect()),
+            ),
+        ]));
+        text.push_str(&format!("{LABEL} {file}: {}\n", names.join(", ")));
+    }
+    (Json::Array(json), text)
 }
 
 fn main() -> ExitCode {
@@ -238,7 +280,12 @@ fn main() -> ExitCode {
         Err(e) => {
             let at = e.utf8_error().valid_up_to();
             let lossy = String::from_utf8_lossy(e.as_bytes()).into_owned();
-            let mut r = Report::new(&o.command, name, &lossy, o.json);
+            let mut r = Report::new(&o.command, name, None, o.json);
+            r.sources.files.push(weave_check::SourceFile {
+                name: name.to_string(),
+                text: lossy,
+                module: String::new(),
+            });
             r.set("claims", Json::Array(Vec::new()));
             r.diagnostics(&[Diagnostic::new(
                 weave_syntax::diagnostic::PURE_SYNTAX_CODE,
@@ -249,25 +296,36 @@ fn main() -> ExitCode {
             return r.finish(1);
         }
     };
-    let mut report = Report::new(&o.command, name, &source, o.json);
-    let program = match weave_check::check(&source) {
+    let entry = Entry {
+        name: name.to_string(),
+        text: source,
+        path: (o.file != "-").then(|| PathBuf::from(&o.file)),
+    };
+    let root = match weave_check::project_root(&entry, o.root.as_deref()) {
+        Ok(r) => r,
+        Err(e) => return usage(&e),
+    };
+    let mut report = Report::new(&o.command, name, root.as_ref(), o.json);
+    let program = match weave_check::check_entry(entry, root) {
         Ok(p) => p,
         // A checker defect is not a rejection of the file: no claim, no diagnostic.
-        Err(d) if weave_check::is_internal(&d) => {
-            eprintln!("weave: internal checker error: {}", d.message);
+        Err(f) if weave_check::is_internal(&f.diagnostic) => {
+            eprintln!("weave: internal checker error: {}", f.diagnostic.message);
             return ExitCode::from(70);
         }
-        Err(d) => {
+        Err(f) => {
+            report.sources = f.sources;
             report.set("claims", Json::Array(Vec::new()));
             if o.command == "run" {
                 report.set("outcome", Json::Null);
             }
-            report.diagnostics(&[d]);
+            report.diagnostics(&[*f.diagnostic]);
             return report.finish(1);
         }
     };
-    let (claim_json, claim_text) = claim(name, &program);
-    report.set("claims", Json::Array(vec![claim_json]));
+    report.sources = program.sources.clone();
+    let (claim_json, claim_text) = claims(&program);
+    report.set("claims", claim_json);
     report.text.push_str(&claim_text);
     if o.command == "check" {
         report.diagnostics(&[]);

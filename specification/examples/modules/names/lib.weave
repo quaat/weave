@@ -1,0 +1,12 @@
+export record Point:
+    x: Int
+    y: Int
+
+export fn origin() -> Point:
+    return Point(x: 0, y: 0)
+
+export fn norm(p: Point) -> Int:
+    return p.x + p.y
+
+fn hidden() -> Int:
+    return 0

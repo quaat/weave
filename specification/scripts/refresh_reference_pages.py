@@ -18,7 +18,9 @@ def generate():
             rules[id]={"chapter":p.stem,"line":s[:match.start()].count("\n")+1}
     pure=json.loads((ROOT/"examples/pure/manifest.json").read_text())
     if pure.get("format")!="weave-p0-conformance-v1":raise ValueError("Unsupported P0 manifest format")
-    for c in m["cases"]+pure["cases"]:
+    modules=json.loads((ROOT/"examples/modules/manifest.json").read_text())
+    if modules.get("format")!="weave-modules-conformance-v1":raise ValueError("Unsupported modules manifest format")
+    for c in m["cases"]+pure["cases"]+modules["cases"]:
         for rule in c["rules"]:
             if rule not in rules:raise ValueError(f"Unknown rule {rule} in {c['file']}")
     conf="""Conformance appendix
@@ -119,6 +121,58 @@ do not cover the concurrent fork/join merge sort (quaat/weave#42, M6).
             if c.get("usage"):
                 u=c["usage"]
                 result+=f"; usage fuel {u['fuel']}, depth {u['depth']}, bits {u['int_bits']}"
+        conf+=f"   * - {c['id']}\n     - {what}\n     - {result}\n     - {refs}\n"
+    conf+="""
+
+modules-1 corpus
+---------------------
+
+The modules-1 cases are in ``examples/modules/manifest.json`` (format
+``weave-modules-conformance-v1``), apart from the F0/N0 and P0 manifests, whose
+formats are unchanged (:ref:`chapters/names:P0 modules (modules-1)`). A *check*
+case checks the program whose entry file is given, with the project root given
+(else the entry's directory); it requires ACCEPT or the code of the first
+diagnostic, whose primary span is in the given file at the given line and, for an
+import cycle, whose related spans are the listed imports. A *run* case also calls
+the entry function with the given arguments under the default budgets and requires
+VALUE with the value, or the code of the fault or invalid request at the given
+file and line. A *flow* case checks an F0 flow whose ``use net`` header is resolved
+from the given root (``.`` is ``examples/``), with ``--net`` where a net is given;
+it requires ACCEPT or the code at the given line and column, and, where a net form
+is given, the same result and location as the flow with a comment in place of its
+header checked against that net. CONF-CASE-1 applies to these cases for modules-1.
+``scripts/modules_conformance.py`` runs the check and run cases through the Rust
+``weave`` command (recording them as not established when no binary is available,
+never as agreement) and the flow cases through its own header resolution and the
+reference checker; ``crates/weave-cli/tests/modules.rs`` runs the check and run
+cases too, and ``agent-kit/tests/test_use_net.py`` covers the kit runner's header.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 8 40 18 34
+
+   * - ID
+     - Case
+     - Required result
+     - Rules
+"""
+    for c in modules["cases"]:
+        refs=", ".join(f":ref:`{x} <{x}>`" for x in c["rules"])
+        root=f" with root ``{c['root']}``" if c.get("root") and c["kind"]!="flow" else ""
+        if c["kind"]=="check":
+            what=f"``{c['entry']}`` (check{root})"
+        elif c["kind"]=="run":
+            args=json.dumps(c["args"],separators=(", ",": "))
+            what=f"``{c['entry']}``: ``{c['function']}({args[1:-1]})``{root}"
+        else:
+            net=f", ``--net {c['net']}``" if c.get("net") else ""
+            what=f"``{c['file']}`` (flow{net})"
+        result=c["expect"]
+        if c["expect"]=="VALUE":result=f"VALUE ``{json.dumps(c['value'])}``"
+        if c.get("file") and c["kind"]!="flow":result+=f" in ``{c['file']}`` line {c['line']}"
+        elif c.get("line"):result+=f" at line {c['line']}, column {c['column']}"
+        if c.get("related"):result+=f"; {len(c['related'])} related import(s)"
+        if c.get("same_as_net"):result+="; as the ``--net`` form"
         conf+=f"   * - {c['id']}\n     - {what}\n     - {result}\n     - {refs}\n"
     conf+="""
 

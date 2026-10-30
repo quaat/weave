@@ -84,6 +84,22 @@ siblings can progress, either can complete first, joins match identities, and
 completion leaves no orphan tasks. Inventory accounting does not prove a future
 task scheduler correct.
 
+Modules and packages
+--------------------------
+
+.. note::
+
+   **Local P0 modules adopted as modules-1.** quaat/weave#12 adopted local P0
+   modules, with the maintainer's decisions recorded there, as the versioned
+   extension modules-1 (:ref:`chapters/names:P0 modules (modules-1)`): selective
+   imports of exported functions and records from one project root, and the
+   ``use net`` header that selects one net for a flow file. Its scope was amended
+   from importing protocols across projects. What remains proposed, and is not
+   accepted syntax: locked cross-project imports, package identity and lockfiles
+   (quaat/weave#13); reusable protocol packages (quaat/weave#19); composition of
+   several nets or protocols (quaat/weave#91); and qualified calls, wildcard
+   imports, re-exports and opaque types, which modules-1 deliberately leaves out.
+
 Future effect providers and durable services
 --------------------------------------------------
 
@@ -100,7 +116,8 @@ included in the acceptance corpus.
 Promotion process
 -----------------------
 
-P0 followed this process for pure computation (:doc:`pure`). To promote a
+P0 followed this process for pure computation (:doc:`pure`), and modules-1 for
+local modules (:doc:`names`). To promote a
 proposal, adopt its complete grammar and semantics, implement the
 parser/checker/evaluator, add positive and negative cases, test runtime failure
 paths, preserve existing conformance cases, update provenance, and revise the

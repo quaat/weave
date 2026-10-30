@@ -1,0 +1,10 @@
+# Unexported records may appear in unexported declarations and in bodies.
+record Secret:
+    value: Int
+
+fn make(n: Int) -> Secret:
+    return Secret(value: n)
+
+export fn hide(n: Int) -> Int:
+    let s = make(n)
+    return s.value

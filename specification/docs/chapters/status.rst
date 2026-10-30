@@ -36,6 +36,11 @@ conflated. These profile names are introduced by this draft:
        records, terminal conditionals, direct recursion, run budgets
      - Rust ``crates/weave-check`` and ``crates/weave-eval`` (command
        ``weave``); Python ``scripts/p0_reference.py``; not the snapshot
+   * - modules-1 (extension of P0)
+     - P0 programs of several module files: selective imports and exports from
+       one project root; the ``use net`` header that selects a flow's net
+     - Rust ``crates/weave-check`` (command ``weave``) for P0 modules; the agent
+       kit's runner over ``checker.py`` for ``use net``; not the snapshot
 
 Supporting N1 does not imply supporting R0. Accepting an F0 program does not
 establish that every operation is enabled or that a real service completes it.
@@ -123,6 +128,25 @@ have no implementation, so no command establishes them.
        (needs Lark) with ``cargo`` on ``PATH``: exit 0, ``PASS: P0 reference
        equals the oracles: ...`` and ``PASS: weave run equals the oracles and
        the P0 reference on 2729 runs``
+   * - modules-1 (extension of P0)
+     - :doc:`names` ("P0 modules (modules-1)", "Net selection"); :doc:`grammar`;
+       rules ``MOD-*``
+     - Yes, outside the snapshot: P0 modules by ``crates/weave-check`` and the
+       ``weave`` command (``--root``); ``use net`` by the agent kit's runner,
+       which hands the unchanged prototype checker the flow with the header
+       blanked. The Python P0 reference implements P0 only
+     - Conformance cases M101--M306 (``examples/modules/manifest.json``);
+       ``tests/test_modules.py``; ``cargo test --all``
+       (``crates/weave-check/tests/modules.rs``,
+       ``crates/weave-eval/tests/modules.rs``,
+       ``crates/weave-cli/tests/modules.rs``);
+       ``agent-kit/tests/test_use_net.py``
+     - ``python3 scripts/modules_conformance.py`` (needs Lark) with ``cargo`` on
+       ``PATH``: exit 0, ``PASS: 6 use net flow cases with the reference
+       checker, ...`` and ``PASS: weave agrees with 37 modules-1 check and run
+       cases (codes, files, lines, related imports)``; without ``cargo`` or
+       ``WEAVE_BIN`` the second line is ``SKIP: modules-1 P0 cases not
+       established: ...``
    * - D0 (target)
      - :doc:`execution-contract`; rules ``D0-*``
      - No
@@ -156,7 +180,10 @@ independently, by the Python reference evaluator; a P0 conformance claim names
 the implementation and the budgets used. Its
 acceptance is compared with the generated parser on the corpus
 (:ref:`chapters/grammar:Generated-parser agreement`); run ``cargo test --all``
-from the repository root.
+from the repository root. The modules-1 extension (quaat/weave#12) is
+implemented by the same Rust crates for P0 programs of several files, and by the
+agent kit's runner for the ``use net`` header of flow files; flows are still
+checked only by the reference checker.
 
 Authority and normative language
 --------------------------------------
@@ -237,6 +264,14 @@ The profile table above lists implemented reference scopes only.
 (quaat/weave#10). It is implemented by the Rust crates and the Python reference
 evaluator, not by the snapshot. Flows do not call P0 functions in this
 revision.
+
+**D-04:** :doc:`names` defines modules-1, a versioned extension of P0
+(quaat/weave#12): local P0 modules with selective imports and exports resolved
+from one project root, and the ``use net`` header that selects one net for a
+flow file. Its rules are ``MOD-*``, its codes E600 to E619, and its corpus has
+its own manifest. It changes no meaning of F0, N0, N1 or P0 and no existing
+manifest. Cross-project imports (quaat/weave#13), protocol packages
+(quaat/weave#19) and composition of nets (quaat/weave#91) are not part of it.
 
 A new implementation can claim F0 static conformance without a D0 runtime. It
 must name that limitation. Neither a future N2 implementation nor a D0 scheduler

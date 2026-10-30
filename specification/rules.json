@@ -73,59 +73,59 @@
   },
   "SYN-01": {
     "chapter": "grammar",
-    "line": 208
+    "line": 216
   },
   "SYN-02": {
     "chapter": "grammar",
-    "line": 215
+    "line": 224
   },
   "SYN-03": {
     "chapter": "grammar",
-    "line": 221
+    "line": 230
   },
   "SYN-04": {
     "chapter": "grammar",
-    "line": 228
+    "line": 237
   },
   "SYN-05": {
     "chapter": "grammar",
-    "line": 234
+    "line": 243
   },
   "SYN-06": {
     "chapter": "grammar",
-    "line": 240
+    "line": 249
   },
   "SYN-07": {
     "chapter": "grammar",
-    "line": 246
+    "line": 255
   },
   "SYN-08": {
     "chapter": "grammar",
-    "line": 252
+    "line": 261
   },
   "SYN-09": {
     "chapter": "grammar",
-    "line": 258
+    "line": 267
   },
   "SYN-10": {
     "chapter": "grammar",
-    "line": 264
+    "line": 273
   },
   "SYN-11": {
     "chapter": "grammar",
-    "line": 271
+    "line": 280
   },
   "SYN-12": {
     "chapter": "grammar",
-    "line": 276
+    "line": 285
   },
   "SYN-13": {
     "chapter": "grammar",
-    "line": 281
+    "line": 290
   },
   "SYN-14": {
     "chapter": "grammar",
-    "line": 287
+    "line": 296
   },
   "LEX-REQ-1": {
     "chapter": "lexical",
@@ -134,6 +134,66 @@
   "LEX-REQ-2": {
     "chapter": "lexical",
     "line": 114
+  },
+  "MOD-FILE-1": {
+    "chapter": "names",
+    "line": 120
+  },
+  "MOD-ROOT-1": {
+    "chapter": "names",
+    "line": 140
+  },
+  "MOD-RESOLVE-1": {
+    "chapter": "names",
+    "line": 150
+  },
+  "MOD-RESOLVE-2": {
+    "chapter": "names",
+    "line": 157
+  },
+  "MOD-RESOLVE-3": {
+    "chapter": "names",
+    "line": 164
+  },
+  "MOD-RESOLVE-4": {
+    "chapter": "names",
+    "line": 170
+  },
+  "MOD-IMPORT-1": {
+    "chapter": "names",
+    "line": 183
+  },
+  "MOD-IMPORT-2": {
+    "chapter": "names",
+    "line": 190
+  },
+  "MOD-EXPORT-1": {
+    "chapter": "names",
+    "line": 197
+  },
+  "MOD-NAME-1": {
+    "chapter": "names",
+    "line": 209
+  },
+  "MOD-IDENT-1": {
+    "chapter": "names",
+    "line": 225
+  },
+  "MOD-CYCLE-1": {
+    "chapter": "names",
+    "line": 242
+  },
+  "MOD-CHECK-1": {
+    "chapter": "names",
+    "line": 253
+  },
+  "MOD-RUN-1": {
+    "chapter": "names",
+    "line": 272
+  },
+  "MOD-NET-1": {
+    "chapter": "names",
+    "line": 305
   },
   "NET-FIRE-1": {
     "chapter": "net-semantics",
@@ -157,131 +217,131 @@
   },
   "P0-FILE-1": {
     "chapter": "pure",
-    "line": 37
+    "line": 40
   },
   "P0-DECL-1": {
     "chapter": "pure",
-    "line": 167
+    "line": 171
   },
   "P0-DECL-2": {
     "chapter": "pure",
-    "line": 172
+    "line": 176
   },
   "P0-DECL-3": {
     "chapter": "pure",
-    "line": 177
+    "line": 181
   },
   "P0-DECL-4": {
     "chapter": "pure",
-    "line": 183
+    "line": 187
   },
   "P0-TYPE-1": {
     "chapter": "pure",
-    "line": 189
+    "line": 193
   },
   "P0-NAME-1": {
     "chapter": "pure",
-    "line": 200
+    "line": 204
   },
   "P0-NAME-2": {
     "chapter": "pure",
-    "line": 206
+    "line": 210
   },
   "P0-TYPE-2": {
     "chapter": "pure",
-    "line": 283
+    "line": 287
   },
   "P0-TYPE-3": {
     "chapter": "pure",
-    "line": 289
+    "line": 293
   },
   "P0-CALL-1": {
     "chapter": "pure",
-    "line": 296
+    "line": 300
   },
   "P0-RECORD-1": {
     "chapter": "pure",
-    "line": 306
+    "line": 310
   },
   "P0-RECORD-2": {
     "chapter": "pure",
-    "line": 312
+    "line": 316
   },
   "P0-EFFECT-1": {
     "chapter": "pure",
-    "line": 324
+    "line": 328
   },
   "P0-EFFECT-2": {
     "chapter": "pure",
-    "line": 331
+    "line": 335
   },
   "P0-FORK-1": {
     "chapter": "pure",
-    "line": 336
+    "line": 340
   },
   "P0-PATH-1": {
     "chapter": "pure",
-    "line": 352
+    "line": 356
   },
   "P0-REC-1": {
     "chapter": "pure",
-    "line": 361
+    "line": 365
   },
   "P0-VALUE-1": {
     "chapter": "pure",
-    "line": 417
+    "line": 421
   },
   "P0-EVAL-1": {
     "chapter": "pure",
-    "line": 429
+    "line": 433
   },
   "P0-EVAL-2": {
     "chapter": "pure",
-    "line": 441
+    "line": 445
   },
   "P0-EVAL-3": {
     "chapter": "pure",
-    "line": 450
+    "line": 454
   },
   "P0-ARITH-1": {
     "chapter": "pure",
-    "line": 463
+    "line": 467
   },
   "P0-ARITH-2": {
     "chapter": "pure",
-    "line": 472
+    "line": 476
   },
   "P0-LIST-1": {
     "chapter": "pure",
-    "line": 506
+    "line": 510
   },
   "P0-FAULT-1": {
     "chapter": "pure",
-    "line": 516
+    "line": 520
   },
   "P0-BUDGET-1": {
     "chapter": "pure",
-    "line": 541
+    "line": 545
   },
   "P0-BUDGET-2": {
     "chapter": "pure",
-    "line": 556
+    "line": 560
   },
   "P0-BUDGET-3": {
     "chapter": "pure",
-    "line": 566
+    "line": 570
   },
   "P0-BUDGET-4": {
     "chapter": "pure",
-    "line": 573
+    "line": 577
   },
   "P0-RUN-1": {
     "chapter": "pure",
-    "line": 599
+    "line": 603
   },
   "P0-RUN-2": {
     "chapter": "pure",
-    "line": 610
+    "line": 614
   },
   "SEC-CAP-1": {
     "chapter": "security",
@@ -353,15 +413,15 @@
   },
   "CONF-REQ-1": {
     "chapter": "status",
-    "line": 186
+    "line": 213
   },
   "CONF-REQ-2": {
     "chapter": "status",
-    "line": 193
+    "line": 220
   },
   "CONF-REQ-3": {
     "chapter": "status",
-    "line": 211
+    "line": 238
   },
   "TYPE-REQ-1": {
     "chapter": "types",

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 [package]
 name = "weave-check"
-version = "0.1.0"
-description = "P0 static checker: typed AST with spans from the weave-syntax CST, names, types, purity, recursion shape and block termination"
+version = "0.2.0"
+description = "P0 static checker: typed AST with spans from the weave-syntax CST, names, types, purity, recursion shape and block termination; modules-1 loading and resolution"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

@@ -84,9 +84,13 @@ that the reference parser's literal spaces reject. Each difference is a probe in
 they do not decide those items.
 
 The Rust comparisons in ``make validate-offline`` need ``cargo`` or a named
-binary. They are the grammar audit's, the P0 differential's and the P0
-conformance applications' (``scripts/p0_applications.py``, quaat/weave#11).
+binary. They are the grammar audit's, the P0 differential's, the P0
+conformance applications' (``scripts/p0_applications.py``, quaat/weave#11) and
+the modules-1 corpus run (``scripts/modules_conformance.py``, quaat/weave#12).
 Without a binary, each is recorded as not established, never as agreement. The
+Rust ``weave`` command is the only implementation of P0 programs of several
+modules: the Python P0 reference implements P0 only, so modules-1 has no
+differential. The
 applications compare merge sort, a stable record sort and a routing function
 with independent oracles on finite input sets. That is evidence for those
 inputs, not a proof.
@@ -102,6 +106,26 @@ The P0 profile (:doc:`pure`) has pure functions, if/else, direct recursion,
 lists and records in separate pure files that flows cannot call yet; it has no
 loops, fork/join, higher-order calls, closures, imports or termination
 checking.
+
+The modules-1 extension (:ref:`chapters/names:P0 modules (modules-1)`,
+quaat/weave#12) adds local P0 modules and the ``use net`` header, and stops
+there:
+
+* **Local modules only.** Imports resolve under one project root. There are no
+  cross-project imports, package manifests, lockfiles or search paths
+  (quaat/weave#13), and no reusable protocol packages (quaat/weave#19).
+* **One net per flow file.** ``use net`` selects one existing net, as ``--net``
+  does. Composing several nets or protocols is quaat/weave#91. Flows are still
+  checked only by the reference checker through the agent kit's runner, and
+  flows still cannot call P0 functions.
+* **Selective, unqualified imports.** There are no qualified calls (a dotted call
+  is still an operation, :ref:`P0-EFFECT-1 <P0-EFFECT-1>`), no wildcard imports, no re-exports and no opaque
+  types; a record named by an exported declaration must be exported, fields and
+  all.
+* **Identity by file.** A module is its canonical file under the root. Module
+  paths are matched by exact name, so a project whose file names differ only in
+  case is not portable to a case-insensitive file system, and a module reached
+  only through a symbolic link out of the root is rejected (E603).
 
 P0's run budgets bound user-function calls (fuel), active calls (depth) and
 integer size, and nothing else (quaat/weave#10). Two consequences are open

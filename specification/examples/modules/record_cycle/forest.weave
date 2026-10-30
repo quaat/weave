@@ -1,0 +1,4 @@
+from tree import Tree
+
+export record Forest:
+    trees: List[Tree]

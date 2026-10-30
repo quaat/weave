@@ -1,5 +1,5 @@
 {
-  "description": "Code-to-rule map for every diagnostic code the reference prototype (reference/prototype/checker.py, coloured.py, durable.py), the P0 implementations (crates/weave-syntax, crates/weave-check, crates/weave-eval and scripts/p0_reference.py; codes E500-E540) and the agent kit (agent-kit/.agents/skills/weave/scripts/) can emit. Each code has exactly one principal rule and optional secondary rules. Category 'specification': rule IDs from rules.json. Category 'kit-extension': rule IDs of the agent kit's pure fn extension, defined in agent-kit/docs/weave.md, outside the specified fragment. Category 'tool': not a language diagnostic; rule is null. related_roles maps each related-span role a diagnostic of that code can carry to 'always' or to the condition under which it is present. scripts/refresh_reference_pages.py generates the tables in docs/chapters/diagnostics.rst from this file; agent-kit/.agents/skills/weave/assets/diagnostics.json is a byte-identical copy.",
+  "description": "Code-to-rule map for every diagnostic code the reference prototype (reference/prototype/checker.py, coloured.py, durable.py), the P0 implementations (crates/weave-syntax, crates/weave-check, crates/weave-eval and scripts/p0_reference.py; codes E500-E540), the modules-1 implementations (crates/weave-check, the agent kit's use net support and scripts/modules_conformance.py; codes E600-E619) and the agent kit (agent-kit/.agents/skills/weave/scripts/) can emit. Each code has exactly one principal rule and optional secondary rules. Category 'specification': rule IDs from rules.json. Category 'kit-extension': rule IDs of the agent kit's pure fn extension, defined in agent-kit/docs/weave.md, outside the specified fragment. Category 'tool': not a language diagnostic; rule is null. related_roles maps each related-span role a diagnostic of that code can carry to 'always' or to the condition under which it is present. scripts/refresh_reference_pages.py generates the tables in docs/chapters/diagnostics.rst from this file; agent-kit/.agents/skills/weave/assets/diagnostics.json is a byte-identical copy.",
   "categories": {
     "specification": "Language diagnostic of the reference prototype or of a P0 implementation; the rule is a rule ID in rules.json",
     "kit-extension": "Diagnostic of the agent kit's pure fn extension; the rule is a kit rule ID defined in agent-kit/docs/weave.md",
@@ -541,6 +541,88 @@
       "secondary_rules": [],
       "meaning": "Invalid run request: unknown entry function, or arguments that do not match its parameters",
       "correction": "Name a declared function and pass one JSON value of the right type per parameter"
+    },
+    "E600": {
+      "category": "specification",
+      "rule": "MOD-FILE-1",
+      "secondary_rules": [
+        "SYN-01"
+      ],
+      "meaning": "Invalid modules-1 header syntax: a malformed import declaration, or one after the first declaration, in a module file; or a malformed use net header in a flow file",
+      "correction": "Write imports as 'from a.b import x, y as z', one per line before the first declaration, and the header as 'use net a.b' before the first flow"
+    },
+    "E601": {
+      "category": "specification",
+      "rule": "MOD-RESOLVE-1",
+      "secondary_rules": [],
+      "meaning": "No module file: a module path names no file <root>/a/b.weave under the project root",
+      "correction": "Create the module file, or correct the path; paths resolve from the project root, never from the working directory"
+    },
+    "E602": {
+      "category": "specification",
+      "rule": "MOD-RESOLVE-2",
+      "secondary_rules": [],
+      "meaning": "A module path differs in case from the directory or file names on disk",
+      "correction": "Spell each segment exactly as the directory or file is named"
+    },
+    "E603": {
+      "category": "specification",
+      "rule": "MOD-RESOLVE-3",
+      "secondary_rules": [],
+      "meaning": "A module path leaves the project root once symbolic links are resolved",
+      "correction": "Keep every module, and every directory on its path, inside the project root"
+    },
+    "E604": {
+      "category": "specification",
+      "rule": "MOD-CYCLE-1",
+      "secondary_rules": [],
+      "meaning": "Import cycle: this import closes a cycle of imports (including a module importing itself); cross-module recursion and record cycles always need one",
+      "correction": "Move the shared declarations into a module that both import",
+      "related_roles": {
+        "import": "always"
+      }
+    },
+    "E605": {
+      "category": "specification",
+      "rule": "MOD-ROOT-1",
+      "secondary_rules": [],
+      "meaning": "No project root: an import in a file read without a project root, or an entry file outside the project root given with --root",
+      "correction": "Give the project root with --root, or check a file inside it"
+    },
+    "E606": {
+      "category": "specification",
+      "rule": "MOD-IMPORT-1",
+      "secondary_rules": [],
+      "meaning": "An imported name is not a function or record declared in the named module",
+      "correction": "Import a declaration the module declares; imports are selective and there are no wildcards"
+    },
+    "E607": {
+      "category": "specification",
+      "rule": "MOD-IMPORT-2",
+      "secondary_rules": [],
+      "meaning": "An imported declaration is not marked export in its module",
+      "correction": "Mark the declaration export in its module, or do not import it"
+    },
+    "E608": {
+      "category": "specification",
+      "rule": "MOD-NAME-1",
+      "secondary_rules": [],
+      "meaning": "An import name collides with a built-in name, another import or a declaration of the importing module",
+      "correction": "Rename the import with 'as'; imports never shadow and are never shadowed"
+    },
+    "E609": {
+      "category": "specification",
+      "rule": "MOD-EXPORT-1",
+      "secondary_rules": [],
+      "meaning": "An exported declaration names, in its signature or field types, a record that is not exported",
+      "correction": "Export the record too, or do not export the declaration"
+    },
+    "E610": {
+      "category": "specification",
+      "rule": "MOD-NET-1",
+      "secondary_rules": [],
+      "meaning": "A flow's use net header and the --net argument select different nets",
+      "correction": "Drop --net, or make it name the header's net file"
     },
     "P400": {
       "category": "kit-extension",

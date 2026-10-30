@@ -251,6 +251,50 @@ and is not complete: it is quaat/weave#42, in milestone M6, and fork/join
 remains a proposal (:doc:`proposals`). The agent kit's ``merge_sort`` demo runs
 on the kit's separate pure extension, not on P0.
 
+Modules (modules-1)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``weave`` command checks and runs P0 programs of several module files
+(:ref:`chapters/names:P0 modules (modules-1)`, quaat/weave#12). Imports resolve
+from the project root, ``--root DIR`` or else the entry file's directory, never
+from the working directory:
+
+.. code-block:: bash
+
+   cargo run -q -p weave-cli -- check specification/examples/modules/shapes/main.weave
+   cargo run -q -p weave-cli -- run specification/examples/modules/rooted/app/main.weave \
+       --root specification/examples/modules/rooted --entry main --args '[3]'
+
+``check`` prints one ``CHECKED pure`` claim per loaded file, the entry first, or
+the first diagnostic, located in the file it is in; with ``--json`` each
+diagnostic's ``span.file`` and ``related[].span.file`` name that file, and an
+import cycle lists every import of the cycle as a related span (role
+``import``). The JSON report adds ``root`` and gives each claim its ``module``.
+A ``--root`` that is not a directory is a usage error (exit 2). Standard input
+has no root unless ``--root`` is given. The Rust tests
+(``crates/weave-check/tests/modules.rs``, ``crates/weave-eval/tests/modules.rs``,
+``crates/weave-cli/tests/modules.rs``) cover identity (same-named records, aliases,
+private helpers), every modules-1 code, symbolic links out of and inside the
+root, case mismatches, independence from the working directory, faults inside
+imported functions, and a chain of 10,000 modules (and the same chain closed into
+a cycle), which loading and checking walk without recursion.
+
+``scripts/modules_conformance.py`` runs ``examples/modules/manifest.json``
+(``weave-modules-conformance-v1``): the check and run cases through the
+``weave`` binary, built with ``cargo build --offline --locked`` or named by
+``WEAVE_BIN`` (recorded as not established in
+``validation/modules-conformance.json`` without either, never as agreement), and
+the ``use net`` flow cases through its own header resolution and the reference
+checker, each at the location of the ``--net`` form. ``tests/test_modules.py``
+adds 13 tests of the header and resolution rules, the not-established path and a
+disagreeing binary.
+
+A flow file's ``use net`` header (:ref:`MOD-NET-1 <MOD-NET-1>`) is read by the
+agent kit's runner, ``python3 scripts/weave.py check|lower|simulate FILE
+[--root DIR]`` in ``agent-kit/``; the pinned prototype checks the flow with the
+header line blanked, so diagnostics keep their lines and columns. The Rust
+``weave`` command does not check flows.
+
 For direct reference commands:
 
 .. code-block:: bash
@@ -337,11 +381,12 @@ comparison is skipped as not established without ``cargo``, requires a named
 binary to exist, and fails on a disagreeing verdict.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 133 tests (nine documentation tests, the rule cases, the rule
+specification's 147 tests (nine documentation tests, the rule cases, the rule
 coverage check, the diagnostic map tests, the result-label lint of
 :ref:`chapters/verification:Result labels in tool output`, the grammar-audit
-tests, the P0 tests and 14 tests of the conformance applications), the P0
-differential, the P0 conformance applications, 143 upstream tests, strict HTML with weave-check, the local
+tests, the P0 tests, 14 tests of the conformance applications and 13 modules-1
+tests), the P0 differential, the P0 conformance applications, the modules-1
+corpus run, 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.
 No unreachable URL is silently ignored.

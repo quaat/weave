@@ -1,0 +1,5 @@
+record Inner:
+    value: Int
+
+export record Outer:
+    inner: List[Inner]

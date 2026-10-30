@@ -1,0 +1,9 @@
+# One record under two aliases is one nominal type.
+from a import Point as P, Point as Q
+
+fn swap(p: P) -> Q:
+    return Q(x: p.y, y: p.x)
+
+fn roundtrip(n: Int) -> Int:
+    let q = swap(P(x: n, y: 1))
+    return q.x + q.y

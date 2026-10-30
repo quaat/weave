@@ -23,7 +23,10 @@ call P0 functions in this revision: a flow file names only flows and net or
 foreign operations, so an F0 checker still rejects any other call (E206), and
 an F0, N0 or N1 checker still rejects every P0 construct. P0 has no fork/join,
 no higher-order functions, no modules or imports, and no termination checking:
-a budget bounds a run, it does not prove that a function terminates.
+a budget bounds a run, it does not prove that a function terminates. Modules,
+imports and exports are the versioned extension modules-1
+(:ref:`chapters/names:P0 modules (modules-1)`), which changes no rule of this
+chapter.
 
 Implementations: the Rust crates ``crates/weave-check`` (static rules) and
 ``crates/weave-eval`` (evaluation), with the ``weave`` command of
@@ -94,6 +97,7 @@ The P0 productions of the shared grammar are:
 .. literalinclude:: ../../grammar/weave.ebnf
    :language: text
    :start-at: (* P0 pure files
+   :end-before: (* modules-1 module files
    :caption: P0 productions of the portable grammar
    :name: listing-p0-grammar
 

@@ -24,6 +24,8 @@ pub struct TypeAst {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RecordAst {
+    /// The `export` marker (modules-1); always false in a pure file.
+    pub exported: bool,
     pub name: Name,
     pub fields: Vec<(Name, TypeAst)>,
     pub span: Span,
@@ -31,6 +33,8 @@ pub struct RecordAst {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnAst {
+    /// The `export` marker (modules-1); always false in a pure file.
+    pub exported: bool,
     pub name: Name,
     pub params: Vec<(Name, TypeAst)>,
     pub ret: TypeAst,
@@ -44,8 +48,63 @@ pub enum Item {
     Fn(FnAst),
 }
 
+impl Item {
+    pub fn name(&self) -> &Name {
+        match self {
+            Item::Record(r) => &r.name,
+            Item::Fn(f) => &f.name,
+        }
+    }
+
+    pub fn exported(&self) -> bool {
+        match self {
+            Item::Record(r) => r.exported,
+            Item::Fn(f) => f.exported,
+        }
+    }
+}
+
+/// One imported name of an `import-decl`: `name` or `name as alias`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ImportName {
+    pub name: Name,
+    pub alias: Option<Name>,
+    pub span: Span,
+}
+
+impl ImportName {
+    /// The name the import introduces into the importing module.
+    pub fn local(&self) -> &Name {
+        self.alias.as_ref().unwrap_or(&self.name)
+    }
+}
+
+/// `from a.b import x, y as z` (modules-1).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ImportAst {
+    /// The dotted module path, one name per segment.
+    pub path: Vec<Name>,
+    /// The span of the whole dotted path.
+    pub path_span: Span,
+    pub names: Vec<ImportName>,
+    /// The whole declaration, without its line end.
+    pub span: Span,
+}
+
+impl ImportAst {
+    pub fn dotted(&self) -> String {
+        self.path
+            .iter()
+            .map(|n| n.text.as_str())
+            .collect::<Vec<_>>()
+            .join(".")
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FileAst {
+    /// Imports (modules-1); empty in a pure file.
+    pub imports: Vec<ImportAst>,
     pub items: Vec<Item>,
 }
 

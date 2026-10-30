@@ -1,6 +1,6 @@
 {
   "format": "weave-rule-coverage-v1",
-  "description": "Tests that exercise each rule ID in rules.json, and pending entries for rules without an implementation. Conformance cases are read from examples/manifest.json. Test references are relative to specification/. scripts/rule_coverage.py checks this file and generates docs/chapters/rule-coverage.rst.",
+  "description": "Tests that exercise each rule ID in rules.json, and pending entries for rules without an implementation. Conformance cases are read from examples/manifest.json, examples/pure/manifest.json and examples/modules/manifest.json. Test references are relative to specification/. scripts/rule_coverage.py checks this file and generates docs/chapters/rule-coverage.rst.",
   "rules": {
     "CONF-CASE-1": {
       "tests": [
@@ -411,6 +411,102 @@
         }
       ],
       "note": "A MAY rule; it has no rejection case."
+    },
+    "MOD-CHECK-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-CYCLE-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-EXPORT-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-FILE-1": {
+      "tests": [
+        {
+          "test": "tests/test_modules.py::Header::test_header_and_its_location",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_modules.py::Header::test_malformed_headers_are_e600",
+          "polarity": "negative",
+          "code": "E600"
+        }
+      ],
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-IDENT-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-IMPORT-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-IMPORT-2": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-NAME-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-NET-1": {
+      "tests": [
+        {
+          "test": "tests/test_modules.py::Header::test_flow_cases_keep_the_locations_of_the_net_form",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_modules.py::Header::test_a_conflicting_net_is_e610_and_the_same_net_is_accepted",
+          "polarity": "negative",
+          "code": "E610"
+        }
+      ],
+      "note": "The flow cases run through scripts/modules_conformance.py and the reference checker; agent-kit/tests/test_use_net.py tests the kit runner's header."
+    },
+    "MOD-RESOLVE-1": {
+      "tests": [
+        {
+          "test": "tests/test_modules.py::Resolution::test_paths_name_files_exactly",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_modules.py::Resolution::test_paths_name_files_exactly",
+          "polarity": "negative",
+          "code": "E601"
+        }
+      ],
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-RESOLVE-2": {
+      "tests": [
+        {
+          "test": "tests/test_modules.py::Resolution::test_paths_name_files_exactly",
+          "polarity": "negative",
+          "code": "E602"
+        }
+      ],
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-RESOLVE-3": {
+      "tests": [
+        {
+          "test": "tests/test_modules.py::Resolution::test_links_may_not_leave_the_root",
+          "polarity": "positive"
+        },
+        {
+          "test": "tests/test_modules.py::Resolution::test_links_may_not_leave_the_root",
+          "polarity": "negative",
+          "code": "E603"
+        }
+      ],
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-RESOLVE-4": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-ROOT-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
+    },
+    "MOD-RUN-1": {
+      "note": "Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule."
     },
     "N0-DECL-1": {
       "tests": [

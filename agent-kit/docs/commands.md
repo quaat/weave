@@ -19,7 +19,14 @@ from any directory, including after copying the canonical skill elsewhere.
 
 `--net PATH` is available for `check`, `analyze`, `lower`, `simulate`, and `verify`.
 The default is the bundled `Inventory.weave`, not a net inferred from your current
-directory. `--max-states N` is available for `check`, `analyze`, and `lower`;
+directory. For `check`, `lower` and `simulate`, a flow file's `use net a.b` header
+selects `<root>/a/b.weave` instead, where the root is `--root DIR` or the flow file's
+directory (see `docs/weave.md`, "Selecting the net with `use net`"). A header that
+does not resolve (E600 to E603) or a `--net` naming another net (E610) fails the
+command with that diagnostic and exit 1 before any net is checked; the files of one
+`check` must select one net (otherwise a `TOOL_ERROR`, exit 2). The vendored prototype
+checks the flow with the header line blanked, so diagnostic lines and columns are those
+of the file as written. `--max-states N` is available for `check`, `analyze`, and `lower`;
 `simulate` retains the upstream default of 10,000 states. A net without an order
 model cannot pass combined checks. Use upstream `checker.py prove NET` only when
 accounting alone is explicitly the intended scope.
@@ -36,6 +43,7 @@ python3 scripts/weave.py verify proof.json --net examples/nets/Inventory.weave
 python3 scripts/weave.py lower examples/valid/checkout_propagating.weave --output lowered.weave
 python3 scripts/weave.py simulate examples/valid/checkout_propagating.weave --entry checkout_propagating --outcome Unknown --trace
 python3 scripts/weave.py test --pattern test_composition.py --verbose
+python3 scripts/weave.py check ../specification/examples/modules/flows/hold.weave --root ../specification/examples
 ```
 
 Put `--json` **before** the subcommand. It emits one JSON object with `command`

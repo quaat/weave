@@ -20,10 +20,17 @@
 //! The first violation is reported. Signatures are registered before any body
 //! is checked, and every body is checked whether or not it is called
 //! (`P0-DECL-4`).
+//!
+//! A program of several modules (modules-1, `chapters/names.rst`) is checked
+//! module by module, each after the modules it imports ([`Builder`]); within a
+//! module the imports are checked after step 1, and the export rule after step
+//! 4 (`MOD-CHECK-1`). Records and functions of all modules share one index
+//! space, so an imported name resolves to the declaration itself.
 
 use crate::ast::{self, ArgAst, BinOp, ExprAst, ExprKind, FileAst, Item, Name, StmtKind, TypeAst};
 use crate::typed::*;
 use std::collections::BTreeMap;
+use weave_syntax::FileId;
 use weave_syntax::{Diagnostic, Span};
 
 /// Built-in type names and value names (`P0-DECL-1`, `P0-NAME-2`). P0 has one
@@ -84,12 +91,16 @@ fn ty_depth_with(ty: &Ty, record: impl Fn(usize) -> usize) -> usize {
     }
 }
 
-/// The depth of every record, by an explicit-stack post-order walk of the
-/// record graph, which is acyclic once `P0-DECL-3` holds.
-fn record_depths(records: &[Record]) -> Vec<usize> {
+/// The depth of every record from index `from` on, by an explicit-stack
+/// post-order walk of the record graph, which is acyclic once `P0-DECL-3`
+/// holds. `depths` holds the depths of the records before `from` (those of
+/// modules checked earlier) and is extended to cover every record.
+fn extend_record_depths(records: &[Record], depths: &mut Vec<usize>, from: usize) {
     let n = records.len();
-    let mut depth: Vec<Option<usize>> = vec![None; n];
-    for start in 0..n {
+    let known = depths.len().min(from);
+    let mut depth: Vec<Option<usize>> = depths.iter().take(known).copied().map(Some).collect();
+    depth.resize(n, None);
+    for start in known..n {
         let mut stack = vec![start];
         while let Some(&i) = stack.last() {
             if depth.get(i).copied().flatten().is_some() || stack.len() > n + 1 {
@@ -118,7 +129,7 @@ fn record_depths(records: &[Record]) -> Vec<usize> {
             }
         }
     }
-    depth.into_iter().map(|d| d.unwrap_or(1)).collect()
+    *depths = depth.into_iter().map(|d| d.unwrap_or(1)).collect();
 }
 
 pub fn is_builtin(name: &str) -> bool {
@@ -131,11 +142,33 @@ fn err(code: &'static str, message: impl Into<String>, span: Span) -> Diagnostic
     Diagnostic::new(code, "static", message, span)
 }
 
+/// A top-level name of a module: a record or a function, by index into the
+/// program's records or functions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Global {
+pub enum Global {
     Record(usize),
     Function(usize),
 }
+
+/// What a checked module offers to importers: each of its own top-level
+/// declarations, with its index and whether it is marked `export`. Imported
+/// names are not listed: modules-1 has no re-exports.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ModuleScope {
+    pub declared: BTreeMap<String, (Global, bool)>,
+}
+
+/// Code of a module-specific name failure: an imported name the module does
+/// not declare (`MOD-IMPORT-1`).
+pub const NOT_DECLARED_CODE: &str = "E606";
+/// An imported declaration that is not exported (`MOD-IMPORT-2`).
+pub const NOT_EXPORTED_CODE: &str = "E607";
+/// An import name that collides with a built-in name, another import or a
+/// declaration of the importing module (`MOD-NAME-1`).
+pub const IMPORT_COLLISION_CODE: &str = "E608";
+/// An exported declaration whose signature or fields expose a record that is
+/// not exported (`MOD-EXPORT-1`).
+pub const EXPOSED_RECORD_CODE: &str = "E609";
 
 struct Local {
     name: String,
@@ -143,8 +176,25 @@ struct Local {
     ty: Ty,
 }
 
-struct Checker<'a> {
-    globals: BTreeMap<&'a str, Global>,
+/// A program under construction: the modules checked so far, in checking
+/// order (every module after the modules it imports).
+#[derive(Default)]
+pub struct Builder {
+    records: Vec<Record>,
+    record_depths: Vec<usize>,
+    signatures: Vec<(Vec<(String, Ty)>, Ty)>,
+    functions: Vec<Function>,
+    /// Calls of each function: (callee, span), by function index.
+    graph: Vec<Vec<(usize, Span)>>,
+    /// By module index; `None` until the module is checked.
+    scopes: Vec<Option<ModuleScope>>,
+}
+
+struct Checker {
+    /// The module's namespace: its declarations and its imported names.
+    globals: BTreeMap<String, Global>,
+    /// Names in `globals` that are imported.
+    imported: BTreeMap<String, String>,
     records: Vec<Record>,
     record_depths: Vec<usize>,
     signatures: Vec<(Vec<(String, Ty)>, Ty)>,
@@ -154,18 +204,27 @@ struct Checker<'a> {
     calls: Vec<(usize, Span)>,
 }
 
-/// Check a lowered file; `source` is kept in the program for diagnostics.
+/// Check a lowered file on its own, as module 0 of a one-module program;
+/// `source` is kept in the program for diagnostics. A file with imports
+/// needs a project root (`MOD-ROOT-1`, E605); use [`crate::modules`].
 pub fn check_program(file: &FileAst, source: &str) -> Result<Program, Diagnostic> {
-    let mut c = Checker {
-        globals: BTreeMap::new(),
-        records: Vec::new(),
-        record_depths: Vec::new(),
-        signatures: Vec::new(),
-        scopes: Vec::new(),
-        slots: 0,
-        calls: Vec::new(),
+    if let Some(import) = file.imports.first() {
+        return Err(crate::modules::no_root(import.path_span));
+    }
+    let mut b = Builder::default();
+    b.check_module(0, crate::modules::ANONYMOUS_MODULE, file, &[])?;
+    let sources = Sources {
+        files: vec![SourceFile {
+            name: String::new(),
+            text: source.to_string(),
+            module: crate::modules::ANONYMOUS_MODULE.to_string(),
+        }],
     };
-    let record_asts: Vec<&ast::RecordAst> = file
+    Ok(b.finish(sources, vec![crate::modules::ANONYMOUS_MODULE.to_string()]))
+}
+
+fn local_items(file: &FileAst) -> (Vec<&ast::RecordAst>, Vec<&ast::FnAst>) {
+    let records = file
         .items
         .iter()
         .filter_map(|i| match i {
@@ -173,7 +232,7 @@ pub fn check_program(file: &FileAst, source: &str) -> Result<Program, Diagnostic
             Item::Fn(_) => None,
         })
         .collect();
-    let fn_asts: Vec<&ast::FnAst> = file
+    let functions = file
         .items
         .iter()
         .filter_map(|i| match i {
@@ -181,167 +240,361 @@ pub fn check_program(file: &FileAst, source: &str) -> Result<Program, Diagnostic
             Item::Record(_) => None,
         })
         .collect();
+    (records, functions)
+}
 
-    // 1. Top-level names.
-    let (mut nrec, mut nfn) = (0, 0);
-    for item in &file.items {
-        let (name, global) = match item {
-            Item::Record(r) => {
-                nrec += 1;
-                (&r.name, Global::Record(nrec - 1))
-            }
-            Item::Fn(f) => {
-                nfn += 1;
-                (&f.name, Global::Function(nfn - 1))
-            }
+impl Builder {
+    /// The checked program, with its sources and the names of its modules
+    /// (index = file index).
+    pub fn finish(self, sources: Sources, modules: Vec<String>) -> Program {
+        let modules = modules
+            .into_iter()
+            .enumerate()
+            .map(|(i, name)| Module {
+                name,
+                file: FileId(u32::try_from(i).unwrap_or(u32::MAX)),
+            })
+            .collect();
+        Program {
+            source: sources
+                .files
+                .first()
+                .map(|f| f.text.clone())
+                .unwrap_or_default(),
+            sources,
+            modules,
+            records: self.records,
+            functions: self.functions,
+        }
+    }
+
+    /// Check module `module` (named `name`), whose imports have already been
+    /// checked: `targets[i]` is the module index that `file.imports[i]` names.
+    ///
+    /// Order (`MOD-CHECK-1`): the module's top-level declaration names
+    /// (`P0-DECL-1`); its imports, name by name in source order
+    /// (`MOD-IMPORT-1`, `MOD-IMPORT-2`, `MOD-NAME-1`); then the P0 steps 2 to
+    /// 4 of `pure.rst`; the export rule (`MOD-EXPORT-1`) in file order; the
+    /// bodies (P0 step 5); and mutual recursion among the module's functions
+    /// (P0 step 6). A call cycle or record cycle through two modules would need
+    /// an import cycle, which loading rejects first (`MOD-CYCLE-1`).
+    pub fn check_module(
+        &mut self,
+        module: usize,
+        name: &str,
+        file: &FileAst,
+        targets: &[usize],
+    ) -> Result<(), Diagnostic> {
+        let mut c = Checker {
+            globals: BTreeMap::new(),
+            imported: BTreeMap::new(),
+            records: std::mem::take(&mut self.records),
+            record_depths: std::mem::take(&mut self.record_depths),
+            signatures: std::mem::take(&mut self.signatures),
+            scopes: Vec::new(),
+            slots: 0,
+            calls: Vec::new(),
         };
-        if is_builtin(&name.text) {
-            return Err(err(
-                "E501",
-                format!(
-                    "'{}' is a built-in name; a function or record cannot be named like it.",
-                    name.text
-                ),
-                name.span,
-            ));
-        }
-        if c.globals.insert(name.text.as_str(), global).is_some() {
-            return Err(err(
-                "E501",
-                format!("'{}' is declared more than once in this file.", name.text),
-                name.span,
-            ));
-        }
+        let result = self.check_module_with(&mut c, module, name, file, targets);
+        self.records = c.records;
+        self.record_depths = c.record_depths;
+        self.signatures = c.signatures;
+        result
     }
 
-    // 2. Records: placeholders first so field types can name any record.
-    for r in &record_asts {
-        c.records.push(Record {
-            name: r.name.text.clone(),
-            fields: Vec::new(),
-            span: r.span,
-            name_span: r.name.span,
-        });
-    }
-    for (i, r) in record_asts.iter().enumerate() {
-        let mut fields: Vec<(String, Ty)> = Vec::new();
-        for (fname, fty) in &r.fields {
-            if fields.iter().any(|(n, _)| *n == fname.text) {
+    fn check_module_with(
+        &mut self,
+        c: &mut Checker,
+        module: usize,
+        module_name: &str,
+        file: &FileAst,
+        targets: &[usize],
+    ) -> Result<(), Diagnostic> {
+        let (record_asts, fn_asts) = local_items(file);
+        let rec_base = c.records.len();
+        let fn_base = c.signatures.len();
+        let symbol = |name: &str| Symbol {
+            package: Package::Local,
+            module: module_name.to_string(),
+            name: name.to_string(),
+        };
+
+        // 1. Top-level names.
+        let (mut nrec, mut nfn) = (rec_base, fn_base);
+        for item in &file.items {
+            let (name, global) = match item {
+                Item::Record(r) => {
+                    nrec += 1;
+                    (&r.name, Global::Record(nrec - 1))
+                }
+                Item::Fn(f) => {
+                    nfn += 1;
+                    (&f.name, Global::Function(nfn - 1))
+                }
+            };
+            if is_builtin(&name.text) {
                 return Err(err(
-                    "E502",
+                    "E501",
                     format!(
-                        "Record '{}' declares the field '{}' more than once.",
-                        r.name.text, fname.text
+                        "'{}' is a built-in name; a function or record cannot be named like it.",
+                        name.text
                     ),
-                    fname.span,
+                    name.span,
                 ));
             }
-            let ty = c.resolve_type(fty)?;
-            fields.push((fname.text.clone(), ty));
-        }
-        if let Some(rec) = c.records.get_mut(i) {
-            rec.fields = fields;
-        }
-    }
-
-    // 3. Recursive records.
-    for (i, r) in record_asts.iter().enumerate() {
-        if c.record_reaches(i, i) {
-            return Err(err(
-                "E503",
-                format!(
-                    "Record '{}' contains itself through its field types; P0 has no recursive records.",
-                    r.name.text
-                ),
-                r.name.span,
-            ));
-        }
-    }
-
-    // 3b. Record type depth.
-    c.record_depths = record_depths(&c.records);
-    for (i, r) in record_asts.iter().enumerate() {
-        if c.record_depths.get(i).copied().unwrap_or(1) > TYPE_DEPTH_LIMIT {
-            return Err(type_limit(r.name.span));
-        }
-    }
-
-    // 4. Signatures.
-    for f in &fn_asts {
-        let mut params: Vec<(String, Ty)> = Vec::new();
-        for (pname, pty) in &f.params {
-            if params.iter().any(|(n, _)| *n == pname.text) {
+            if c.globals.insert(name.text.clone(), global).is_some() {
                 return Err(err(
-                    "E506",
-                    format!(
-                        "Parameter '{}' of '{}' is declared twice.",
-                        pname.text, f.name.text
-                    ),
-                    pname.span,
-                ));
-            }
-            c.fresh_name(pname)?;
-            let ty = c.resolve_type(pty)?;
-            c.depth_ok(&ty, pty.span)?;
-            params.push((pname.text.clone(), ty));
-        }
-        let ret = c.resolve_type(&f.ret)?;
-        c.depth_ok(&ret, f.ret.span)?;
-        c.signatures.push((params, ret));
-    }
-
-    // 5. Bodies.
-    let mut functions = Vec::new();
-    let mut graph: Vec<Vec<(usize, Span)>> = Vec::new();
-    for (index, f) in fn_asts.iter().enumerate() {
-        structure(&f.body)?;
-        let (params, ret) = c.signatures.get(index).cloned().unwrap_or_default_sig();
-        c.scopes = vec![Vec::new()];
-        c.slots = 0;
-        c.calls = Vec::new();
-        for (name, ty) in &params {
-            c.bind(name, ty.clone());
-        }
-        let body = c.block(&f.body, &ret)?;
-        let mut calls = std::mem::take(&mut c.calls);
-        calls.sort_by_key(|(_, span)| span.start);
-        graph.push(calls);
-        functions.push(Function {
-            name: f.name.text.clone(),
-            params,
-            ret,
-            body,
-            locals: c.slots,
-            span: f.span,
-            name_span: f.name.span,
-        });
-    }
-
-    // 6. Mutual recursion.
-    let n = graph.len();
-    let reach: Vec<Vec<bool>> = (0..n).map(|f| reachable(&graph, f)).collect();
-    let reaches = |a: usize, b: usize| reach.get(a).and_then(|r| r.get(b)).copied() == Some(true);
-    for (f, calls) in graph.iter().enumerate() {
-        for (g, span) in calls {
-            if *g != f && reaches(*g, f) {
-                let fname = functions.get(f).map_or("?", |x| x.name.as_str());
-                let gname = functions.get(*g).map_or("?", |x| x.name.as_str());
-                return Err(err(
-                    "E516",
-                    format!(
-                        "'{fname}' calls '{gname}', which calls '{fname}' again: only direct self-recursion is allowed."
-                    ),
-                    *span,
+                    "E501",
+                    format!("'{}' is declared more than once in this file.", name.text),
+                    name.span,
                 ));
             }
         }
-    }
 
-    Ok(Program {
-        source: source.to_string(),
-        records: c.records,
-        functions,
-    })
+        // 1b. Imports, name by name.
+        for (import, target) in file.imports.iter().zip(targets) {
+            let dotted = import.dotted();
+            let scope = self.scopes.get(*target).and_then(Option::as_ref);
+            for n in &import.names {
+                let found = scope.and_then(|s| s.declared.get(&n.name.text)).copied();
+                let global = match found {
+                    None => {
+                        return Err(err(
+                            NOT_DECLARED_CODE,
+                            format!(
+                                "Module '{dotted}' declares no function or record named '{}'.",
+                                n.name.text
+                            ),
+                            n.name.span,
+                        ));
+                    }
+                    Some((_, false)) => {
+                        return Err(err(
+                            NOT_EXPORTED_CODE,
+                            format!(
+                                "'{}' is not exported by module '{dotted}': only declarations marked export can be imported.",
+                                n.name.text
+                            ),
+                            n.name.span,
+                        ));
+                    }
+                    Some((g, true)) => g,
+                };
+                let local = n.local();
+                let clash = if is_builtin(&local.text) {
+                    Some("a built-in name".to_string())
+                } else if let Some(from) = c.imported.get(&local.text) {
+                    Some(format!("a name already imported from '{from}'"))
+                } else if c.globals.contains_key(&local.text) {
+                    Some("a function or record declared in this module".to_string())
+                } else {
+                    None
+                };
+                if let Some(what) = clash {
+                    return Err(err(
+                        IMPORT_COLLISION_CODE,
+                        format!(
+                            "The import name '{}' collides with {what}; imports never shadow and are never shadowed (use 'as' to rename).",
+                            local.text
+                        ),
+                        local.span,
+                    ));
+                }
+                c.globals.insert(local.text.clone(), global);
+                c.imported.insert(local.text.clone(), dotted.clone());
+            }
+        }
+
+        // 2. Records: placeholders first so field types can name any record.
+        for r in &record_asts {
+            c.records.push(Record {
+                symbol: symbol(&r.name.text),
+                module,
+                exported: r.exported,
+                name: r.name.text.clone(),
+                fields: Vec::new(),
+                span: r.span,
+                name_span: r.name.span,
+            });
+        }
+        for (i, r) in record_asts.iter().enumerate() {
+            let mut fields: Vec<(String, Ty)> = Vec::new();
+            for (fname, fty) in &r.fields {
+                if fields.iter().any(|(n, _)| *n == fname.text) {
+                    return Err(err(
+                        "E502",
+                        format!(
+                            "Record '{}' declares the field '{}' more than once.",
+                            r.name.text, fname.text
+                        ),
+                        fname.span,
+                    ));
+                }
+                let ty = c.resolve_type(fty)?;
+                fields.push((fname.text.clone(), ty));
+            }
+            if let Some(rec) = c.records.get_mut(rec_base + i) {
+                rec.fields = fields;
+            }
+        }
+
+        // 3. Recursive records (only this module's records can form a cycle:
+        // an imported record never mentions a record of its importer).
+        for (i, r) in record_asts.iter().enumerate() {
+            if c.record_reaches(rec_base + i, rec_base + i, rec_base) {
+                return Err(err(
+                    "E503",
+                    format!(
+                        "Record '{}' contains itself through its field types; P0 has no recursive records.",
+                        r.name.text
+                    ),
+                    r.name.span,
+                ));
+            }
+        }
+
+        // 3b. Record type depth.
+        extend_record_depths(&c.records, &mut c.record_depths, rec_base);
+        for (i, r) in record_asts.iter().enumerate() {
+            if c.record_depths.get(rec_base + i).copied().unwrap_or(1) > TYPE_DEPTH_LIMIT {
+                return Err(type_limit(r.name.span));
+            }
+        }
+
+        // 4. Signatures.
+        for f in &fn_asts {
+            let mut params: Vec<(String, Ty)> = Vec::new();
+            for (pname, pty) in &f.params {
+                if params.iter().any(|(n, _)| *n == pname.text) {
+                    return Err(err(
+                        "E506",
+                        format!(
+                            "Parameter '{}' of '{}' is declared twice.",
+                            pname.text, f.name.text
+                        ),
+                        pname.span,
+                    ));
+                }
+                c.fresh_name(pname)?;
+                let ty = c.resolve_type(pty)?;
+                c.depth_ok(&ty, pty.span)?;
+                params.push((pname.text.clone(), ty));
+            }
+            let ret = c.resolve_type(&f.ret)?;
+            c.depth_ok(&ret, f.ret.span)?;
+            c.signatures.push((params, ret));
+        }
+
+        // 4b. The export rule: an exported declaration exposes only exported records.
+        for item in file.items.iter().filter(|i| i.exported()) {
+            let types: Vec<&TypeAst> = match item {
+                Item::Record(r) => r.fields.iter().map(|(_, t)| t).collect(),
+                Item::Fn(f) => f
+                    .params
+                    .iter()
+                    .map(|(_, t)| t)
+                    .chain(std::iter::once(&f.ret))
+                    .collect(),
+            };
+            for t in types {
+                let ty = c.resolve_type(t)?;
+                if let Some(r) = base_record(&ty)
+                    .and_then(|r| c.records.get(r))
+                    .filter(|r| !r.exported)
+                {
+                    return Err(err(
+                        EXPOSED_RECORD_CODE,
+                        format!(
+                            "Exported '{}' exposes the record '{}', which is not exported: export '{}' too.",
+                            item.name().text,
+                            r.name,
+                            r.name
+                        ),
+                        t.span,
+                    ));
+                }
+            }
+        }
+
+        // 5. Bodies.
+        for (index, f) in fn_asts.iter().enumerate() {
+            structure(&f.body)?;
+            let (params, ret) = c
+                .signatures
+                .get(fn_base + index)
+                .cloned()
+                .unwrap_or_default_sig();
+            c.scopes = vec![Vec::new()];
+            c.slots = 0;
+            c.calls = Vec::new();
+            for (name, ty) in &params {
+                c.bind(name, ty.clone());
+            }
+            let body = c.block(&f.body, &ret)?;
+            let mut calls = std::mem::take(&mut c.calls);
+            calls.sort_by_key(|(_, span)| span.start);
+            self.graph.push(calls);
+            self.functions.push(Function {
+                symbol: symbol(&f.name.text),
+                module,
+                exported: f.exported,
+                name: f.name.text.clone(),
+                params,
+                ret,
+                body,
+                locals: c.slots,
+                span: f.span,
+                name_span: f.name.span,
+            });
+        }
+
+        // 6. Mutual recursion among this module's functions (an imported
+        // function never calls a function of its importer).
+        let n = self.graph.len();
+        let reach: Vec<Vec<bool>> = (fn_base..n)
+            .map(|f| reachable(&self.graph, f, fn_base))
+            .collect();
+        let reaches = |a: usize, b: usize| {
+            a >= fn_base
+                && reach
+                    .get(a - fn_base)
+                    .and_then(|r| r.get(b.wrapping_sub(fn_base)))
+                    .copied()
+                    == Some(true)
+        };
+        for f in fn_base..n {
+            for (g, span) in self.graph.get(f).map_or(&[][..], |v| &v[..]) {
+                if *g != f && reaches(*g, f) {
+                    let fname = self.functions.get(f).map_or("?", |x| x.name.as_str());
+                    let gname = self.functions.get(*g).map_or("?", |x| x.name.as_str());
+                    return Err(err(
+                        "E516",
+                        format!(
+                            "'{fname}' calls '{gname}', which calls '{fname}' again: only direct self-recursion is allowed."
+                        ),
+                        *span,
+                    ));
+                }
+            }
+        }
+
+        // What importers may name.
+        let mut scope = ModuleScope::default();
+        for item in &file.items {
+            if let Some(g) = c.globals.get(&item.name().text) {
+                scope
+                    .declared
+                    .insert(item.name().text.clone(), (*g, item.exported()));
+            }
+        }
+        if self.scopes.len() <= module {
+            self.scopes.resize(module + 1, None);
+        }
+        if let Some(slot) = self.scopes.get_mut(module) {
+            *slot = Some(scope);
+        }
+        Ok(())
+    }
 }
 
 trait DefaultSig {
@@ -354,20 +607,25 @@ impl DefaultSig for Option<(Vec<(String, Ty)>, Ty)> {
     }
 }
 
-/// Functions reachable from `from` by one or more calls.
-fn reachable(graph: &[Vec<(usize, Span)>], from: usize) -> Vec<bool> {
-    let mut seen = vec![false; graph.len()];
-    let mut work: Vec<usize> = graph
-        .get(from)
-        .map(|c| c.iter().map(|(g, _)| *g).collect())
-        .unwrap_or_default();
+/// Functions with index `base` or more reachable from `from` by one or more
+/// calls through such functions; entry `i` is function `base + i`.
+fn reachable(graph: &[Vec<(usize, Span)>], from: usize, base: usize) -> Vec<bool> {
+    let mut seen = vec![false; graph.len().saturating_sub(base)];
+    let local = |calls: &Vec<(usize, Span)>| -> Vec<usize> {
+        calls
+            .iter()
+            .filter(|(g, _)| *g >= base)
+            .map(|(g, _)| *g - base)
+            .collect()
+    };
+    let mut work: Vec<usize> = graph.get(from).map(local).unwrap_or_default();
     while let Some(g) = work.pop() {
         if let Some(s) = seen.get_mut(g)
             && !*s
         {
             *s = true;
-            if let Some(next) = graph.get(g) {
-                work.extend(next.iter().map(|(h, _)| *h));
+            if let Some(next) = graph.get(base + g) {
+                work.extend(local(next));
             }
         }
     }
@@ -425,8 +683,10 @@ fn structure(block: &ast::BlockAst) -> Result<(), Diagnostic> {
     }
 }
 
-impl<'a> Checker<'a> {
-    fn record_reaches(&self, from: usize, target: usize) -> bool {
+impl Checker {
+    /// Does record `from` contain record `target` through its field types,
+    /// following only records with index `base` or more?
+    fn record_reaches(&self, from: usize, target: usize, base: usize) -> bool {
         fn mentions(ty: &Ty, out: &mut Vec<usize>) {
             match ty {
                 Ty::Record(i) => out.push(*i),
@@ -434,7 +694,7 @@ impl<'a> Checker<'a> {
                 Ty::Int | Ty::Bool => {}
             }
         }
-        let mut seen = vec![false; self.records.len()];
+        let mut seen = vec![false; self.records.len().saturating_sub(base)];
         let mut work = Vec::new();
         if let Some(r) = self.records.get(from) {
             for (_, t) in &r.fields {
@@ -445,7 +705,10 @@ impl<'a> Checker<'a> {
             if i == target {
                 return true;
             }
-            if let Some(s) = seen.get_mut(i)
+            if i < base {
+                continue;
+            }
+            if let Some(s) = seen.get_mut(i - base)
                 && !*s
             {
                 *s = true;
@@ -478,8 +741,8 @@ impl<'a> Checker<'a> {
                 format!("{name} takes no type arguments."),
                 t.span,
             )),
-            _ => match (self.globals.get(name), &t.args) {
-                (Some(Global::Record(i)), None) => Ok(Ty::Record(*i)),
+            _ => match (self.globals.get(name).copied(), &t.args) {
+                (Some(Global::Record(i)), None) => Ok(Ty::Record(i)),
                 (Some(Global::Record(_)), Some(_)) => Err(err(
                     "E504",
                     format!("Record type '{name}' takes no type arguments."),
@@ -516,6 +779,8 @@ impl<'a> Checker<'a> {
         let text = name.text.as_str();
         let clash = if self.lookup(text).is_some() {
             Some("a binding already in scope")
+        } else if self.imported.contains_key(text) {
+            Some("an imported name")
         } else if self.globals.contains_key(text) {
             Some("a function or record of this file")
         } else if is_builtin(text) {
@@ -779,7 +1044,12 @@ impl<'a> Checker<'a> {
                 Self::mk(ExprK::Bool(root.text == "true"), Ty::Bool, root.span)
             }
             None => {
-                let what = if self.globals.contains_key(root.text.as_str()) {
+                let what = if self.imported.contains_key(root.text.as_str()) {
+                    format!(
+                        "'{}' is an imported function or record, not a value; functions are not values in P0.",
+                        root.text
+                    )
+                } else if self.globals.contains_key(root.text.as_str()) {
                     format!(
                         "'{}' is a function or record of this file, not a value; functions are not values in P0.",
                         root.text
@@ -822,7 +1092,7 @@ impl<'a> Checker<'a> {
                     field.span,
                 ));
             };
-            let s = Span::new(current.span.start, field.span.end);
+            let s = current.span.to(field.span);
             current = Self::mk(ExprK::Field(Box::new(current), index), ty, s);
         }
         Ok(current)

@@ -1,0 +1,5 @@
+# Checked with --root modules/rooted: lib.math resolves from the root, not from app/.
+from lib.math import square
+
+fn main(n: Int) -> Int:
+    return square(n) + 1

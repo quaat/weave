@@ -28,14 +28,18 @@ pub enum Start {
     N1File,
     /// A P0 pure file (`chapters/pure.rst`).
     PureFile,
+    /// A modules-1 module file: P0 declarations with imports and `export`
+    /// markers (`chapters/names.rst`).
+    ModuleFile,
 }
 
 impl Start {
-    pub const ALL: [Start; 4] = [
+    pub const ALL: [Start; 5] = [
         Start::FlowFile,
         Start::N0File,
         Start::N1File,
         Start::PureFile,
+        Start::ModuleFile,
     ];
 
     pub fn name(self) -> &'static str {
@@ -44,6 +48,7 @@ impl Start {
             Start::N0File => "n0-file",
             Start::N1File => "n1-file",
             Start::PureFile => "pure-file",
+            Start::ModuleFile => "module-file",
         }
     }
 
@@ -52,12 +57,14 @@ impl Start {
     }
 
     /// The syntax code: the reference checker's E200 for flows and E003 for
-    /// nets; E500 for P0 pure files.
+    /// nets; E500 for P0 pure files and module files (a modules-1 checker
+    /// reports a fault inside an import line as E600 instead; see
+    /// `weave-check`).
     pub fn syntax_code(self) -> &'static str {
         match self {
             Start::FlowFile => FLOW_SYNTAX_CODE,
             Start::N0File | Start::N1File => NET_SYNTAX_CODE,
-            Start::PureFile => PURE_SYNTAX_CODE,
+            Start::PureFile | Start::ModuleFile => PURE_SYNTAX_CODE,
         }
     }
 }

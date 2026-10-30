@@ -4,7 +4,9 @@
 //! The shared conformance corpus (`specification/examples/`), read in place.
 //!
 //! Every `.weave` file is parsed with the start symbol its manifest kind or
-//! directory selects (`pure/` holds P0 pure files, start symbol `pure-file`); net-append mutations are attached to the manifest's net
+//! directory selects (`pure/` holds P0 pure files, start symbol `pure-file`;
+//! `modules/` holds modules-1 module files, start symbol `module-file`, and
+//! flow files under `flows/`); net-append mutations are attached to the manifest's net
 //! as `scripts/grammar_audit.py` does. Syntactically valid files must round
 //! trip and satisfy the span invariants; syntactically invalid files must give
 //! the reference checker's code with a rule ID and a span.
@@ -31,12 +33,19 @@ const N1_NETS: [&str; 2] = [
 ];
 
 /// Corpus files the grammar rejects, with the code the reference checker (F0)
-/// or the P0 manifest (`pure/manifest.json`) requires.
-const SYNTAX_INVALID: [(&str, &str); 4] = [
+/// or the P0 manifest (`pure/manifest.json`) requires, or, for module files,
+/// the parser's code (E500); a modules-1 checker reports a fault on an
+/// import line as E600 (`modules/manifest.json`).
+const SYNTAX_INVALID: [(&str, &str); 9] = [
     ("invalid/unsupported_if.weave", "E200"),
     ("invalid/skipped_level.weave", "E001"),
     ("pure/invalid/chained_comparison.weave", "E500"),
     ("pure/invalid/flow_in_pure_file.weave", "E500"),
+    ("modules/flows/late_header.weave", "E200"),
+    ("modules/syntax/absolute.weave", "E500"),
+    ("modules/syntax/dotdot.weave", "E500"),
+    ("modules/syntax/late_import.weave", "E500"),
+    ("modules/syntax/wildcard.weave", "E500"),
 ];
 
 struct Case {
@@ -88,6 +97,8 @@ fn cases() -> Vec<Case> {
                 match dir {
                     "valid" | "invalid" => "flow",
                     "pure" => "pure",
+                    "modules" if file.contains("/flows/") => "flow",
+                    "modules" => "module",
                     "mutations" => "net_append",
                     "nets" if N1_NETS.contains(&file.as_str()) => "n1",
                     "nets" => "net",
@@ -102,6 +113,7 @@ fn cases() -> Vec<Case> {
                 "net" => (Start::N0File, source),
                 "n1" => (Start::N1File, source),
                 "pure" => (Start::PureFile, source),
+                "module" => (Start::ModuleFile, source),
                 "net_append" => (
                     Start::N0File,
                     format!("{}\n\n{}", base_source.trim_end(), source),
@@ -295,6 +307,77 @@ fn the_p0_manifest_syntax_cases_are_the_grammar_rejections() {
         .collect();
     listed.sort();
     assert_eq!(required, listed);
+}
+
+#[test]
+fn the_modules_manifest_syntax_cases_are_the_grammar_rejections() {
+    let modules = json::parse(&read("modules/manifest.json")).expect("modules manifest is JSON");
+    let mut required: Vec<String> = modules
+        .get("cases")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .filter(|c| {
+            matches!(
+                c.get("expect").and_then(Value::as_str),
+                Some("E600" | "E500" | "E001" | "E200")
+            )
+        })
+        .map(|c| {
+            c.get("file")
+                .or_else(|| c.get("entry"))
+                .and_then(Value::as_str)
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    required.sort();
+    let mut listed: Vec<String> = SYNTAX_INVALID
+        .iter()
+        .filter(|(f, _)| f.starts_with("modules/"))
+        .map(|(f, _)| f.to_string())
+        .collect();
+    listed.sort();
+    assert_eq!(required, listed);
+}
+
+#[test]
+fn module_files_extend_pure_files_and_flows_take_a_use_net_header() {
+    // Every pure file is a module file with the same tree below the root.
+    let sort = read("pure/valid/merge_sort.weave");
+    assert!(parse(&sort, Start::ModuleFile).is_ok());
+    // Imports and export markers are module-file syntax only.
+    let module = read("modules/shapes/geo/shapes.weave");
+    assert!(parse(&module, Start::ModuleFile).is_ok());
+    assert!(parse(&module, Start::PureFile).is_err());
+    // An import after a declaration, or an import without a declaration.
+    assert!(
+        parse(
+            "fn f() -> Int:\n    return 1\nfrom a import b\n",
+            Start::ModuleFile
+        )
+        .is_err()
+    );
+    assert!(parse("from a import b\n", Start::ModuleFile).is_err());
+    assert!(
+        parse(
+            "export export fn f() -> Int:\n    return 1\n",
+            Start::ModuleFile
+        )
+        .is_err()
+    );
+    // use net: one header, before the first flow.
+    let flow = read("modules/flows/hold.weave");
+    assert!(parse(&flow, Start::FlowFile).is_ok());
+    assert!(parse(&format!("use net nets.Other\n{flow}"), Start::FlowFile).is_err());
+    assert!(parse(&flow, Start::ModuleFile).is_err());
+    assert!(
+        parse(
+            &flow.replace("use net nets.Inventory", "use net"),
+            Start::FlowFile
+        )
+        .is_err()
+    );
 }
 
 #[test]

@@ -1,0 +1,6 @@
+# A record cycle across modules needs an import cycle, which is rejected.
+from forest import Forest
+
+export record Tree:
+    label: Int
+    children: Forest

@@ -1,0 +1,4 @@
+from geo.nowhere import area
+
+fn one() -> Int:
+    return 1

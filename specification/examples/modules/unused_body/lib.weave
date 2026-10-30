@@ -1,0 +1,6 @@
+export fn ok() -> Int:
+    return 1
+
+# Never called, never imported: still checked (MOD-CHECK-1, P0-DECL-4).
+fn broken(flag: Bool) -> Int:
+    return flag + 1

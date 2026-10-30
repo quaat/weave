@@ -1,0 +1,7 @@
+from even import is_even
+
+export fn is_odd(n: Int) -> Bool:
+    if n == 0:
+        return false
+    else:
+        return is_even(n - 1)

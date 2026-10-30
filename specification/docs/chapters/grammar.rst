@@ -127,7 +127,9 @@ Syntax diagnostics
 The Rust parser reports the first fault as one ``weave-diagnostic-v1`` document
 with a code from ``diagnostics.json`` and that code's rules
 (:doc:`diagnostics`). For flow and net files it uses the reference checker's
-syntax family; for P0 pure files it uses E500 (:ref:`P0-FILE-1 <P0-FILE-1>`):
+syntax family; for P0 pure files and modules-1 module files it uses E500
+(:ref:`P0-FILE-1 <P0-FILE-1>`). A modules-1 checker reports a fault on an import
+line of a module file as E600 instead (:ref:`MOD-FILE-1 <MOD-FILE-1>`):
 
 .. list-table::
    :header-rows: 1
@@ -144,7 +146,7 @@ syntax family; for P0 pure files it uses E500 (:ref:`P0-FILE-1 <P0-FILE-1>`):
      - :ref:`LEX-REQ-1 <LEX-REQ-1>`
    * - Character outside every token, carriage return outside a CRLF ending, a
        word starting with a digit, invalid UTF-8
-     - E200 in a flow file, E003 in a net file, E500 in a pure file
+     - E200 in a flow file, E003 in a net file, E500 in a pure or module file
      - ``lexical``
      - :ref:`CONF-REQ-1 <CONF-REQ-1>` (E200), :ref:`SYN-04 <SYN-04>` (E003),
        :ref:`P0-FILE-1 <P0-FILE-1>` (E500)
@@ -173,10 +175,16 @@ stack, and the input is not checked further.
 Start symbols
 -------------------
 
-``n0-file`` selects N0, ``n1-file`` selects N1, ``flow-file`` selects F0, and
-``pure-file`` selects P0 (:doc:`pure`). SYN-01 requires exactly one start symbol
-per file. The P0 productions are reachable only from ``pure-file``, so they add
-nothing to the files the other start symbols derive. Common declarations refer to places
+``n0-file`` selects N0, ``n1-file`` selects N1, ``flow-file`` selects F0,
+``pure-file`` selects P0 (:doc:`pure`), and ``module-file`` selects a modules-1
+module file: P0 declarations, optionally marked ``export``, after selective
+imports (:ref:`chapters/names:P0 modules (modules-1)`). SYN-01 requires exactly one
+start symbol per file. The P0 productions are reachable only from ``pure-file`` and
+``module-file``, so they add nothing to the files the other start symbols derive;
+``pure-file`` is unchanged, and every pure file is a module file with no imports and
+no ``export``. The one modules-1 production of ``flow-file`` is the optional
+``use-net`` header before the first flow (:ref:`MOD-NET-1 <MOD-NET-1>`); a flow file
+without it derives exactly as before. Common declarations refer to places
 without indices; N1 inscriptions appear on places, transitions, arcs, and
 invariant families.
 
@@ -208,9 +216,10 @@ The following numbered constraints are normative and applied after parsing.
 .. _SYN-01:
 
 **SYN-01 — File kind.** A file MUST select exactly one start symbol: N0 net,
-N1 net, F0 flows, or P0 pure file. A net file contains exactly one net.
-(quaat/weave#10 added the P0 pure file to this list as a compatible
-clarification: no F0, N0 or N1 file is accepted or rejected differently.)
+N1 net, F0 flows, P0 pure file, or modules-1 module file. A net file contains
+exactly one net. (quaat/weave#10 added the P0 pure file to this list, and
+quaat/weave#12 the module file, as compatible clarifications: no F0, N0, N1 or P0
+file is accepted or rejected differently.)
 
 .. _SYN-02:
 
@@ -344,7 +353,10 @@ parsers. ``scripts/grammar_audit.py`` asserts every verdict in this table, and
 Probes ``SD-*`` differ; probes ``SA-*`` agree and guard comments, blank lines and
 spacing that both accept or both reject. The differences are instances of the
 open portability items LEX-01 to LEX-04 in :doc:`limitations`; recording them
-does not decide those items, and the reference snapshot is unchanged.
+does not decide those items, and the reference snapshot is unchanged. SD-13 is
+not a portability item: the reference checker predates the modules-1 ``use net``
+header, and the runners that implement modules-1 replace the header with a blank
+line before the reference checks the flow (:ref:`MOD-NET-1 <MOD-NET-1>`).
 
 .. list-table::
    :header-rows: 1
@@ -449,6 +461,15 @@ does not decide those items, and the reference snapshot is unchanged.
      - REJECT
    * - SA-12
      - P0 function declaration in a flow file
+     - REJECT
+     - REJECT
+   * - SD-13
+     - ``use net`` header (modules-1; the runner blanks it before the reference
+       checks the flow)
+     - REJECT
+     - ACCEPT
+   * - SA-13
+     - ``use net`` header after a flow
      - REJECT
      - REJECT
 

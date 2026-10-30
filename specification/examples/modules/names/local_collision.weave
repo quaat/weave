@@ -1,0 +1,4 @@
+from lib import origin
+
+fn origin() -> Int:
+    return 0

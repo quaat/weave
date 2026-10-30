@@ -202,6 +202,39 @@ as E003 (duplicate declaration), not E214.
    * - E540
      - Invalid run request: unknown entry function, or arguments that do not match its parameters
      - Name a declared function and pass one JSON value of the right type per parameter
+   * - E600
+     - Invalid modules-1 header syntax: a malformed import declaration, or one after the first declaration, in a module file; or a malformed use net header in a flow file
+     - Write imports as 'from a.b import x, y as z', one per line before the first declaration, and the header as 'use net a.b' before the first flow
+   * - E601
+     - No module file: a module path names no file <root>/a/b.weave under the project root
+     - Create the module file, or correct the path; paths resolve from the project root, never from the working directory
+   * - E602
+     - A module path differs in case from the directory or file names on disk
+     - Spell each segment exactly as the directory or file is named
+   * - E603
+     - A module path leaves the project root once symbolic links are resolved
+     - Keep every module, and every directory on its path, inside the project root
+   * - E604
+     - Import cycle: this import closes a cycle of imports (including a module importing itself); cross-module recursion and record cycles always need one
+     - Move the shared declarations into a module that both import
+   * - E605
+     - No project root: an import in a file read without a project root, or an entry file outside the project root given with --root
+     - Give the project root with --root, or check a file inside it
+   * - E606
+     - An imported name is not a function or record declared in the named module
+     - Import a declaration the module declares; imports are selective and there are no wildcards
+   * - E607
+     - An imported declaration is not marked export in its module
+     - Mark the declaration export in its module, or do not import it
+   * - E608
+     - An import name collides with a built-in name, another import or a declaration of the importing module
+     - Rename the import with 'as'; imports never shadow and are never shadowed
+   * - E609
+     - An exported declaration names, in its signature or field types, a record that is not exported
+     - Export the record too, or do not export the declaration
+   * - E610
+     - A flow's use net header and the --net argument select different nets
+     - Drop --net, or make it name the header's net file
 
 .. END GENERATED: diagnostic-codes
 
@@ -236,8 +269,17 @@ Ownership diagnostics also carry *related spans*, each with a role:
   ``moved``, where it was consumed. When one call passes the same handle twice,
   ``moved`` is the handle's first argument occurrence in that call.
 
+* E604 (modules-1, :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`): always ``import``, one
+  span for every import of the cycle, each in the file that contains it.
+
 ``diagnostics.json`` records these roles for each code (``related_roles``),
 marking each as ``always`` or naming its condition.
+
+In a P0 program of several modules (modules-1, :doc:`names`), every span names
+the file it is in: a primary or related span may be in an imported module, and a
+P0 error or run-time fault inside an imported module keeps its P0 code and is
+located there. The modules-1 codes E600 to E619 are for failures specific to
+modules (E600 to E610 are used).
 
 The machine-readable form of a diagnostic is the evidence format
 ``weave-diagnostic-v1`` (``evidence/schemas/diagnostic.v1.schema.json`` in the
@@ -451,6 +493,39 @@ its own.
      - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
    * - E540
      - :ref:`P0-RUN-1 <P0-RUN-1>`
+     - none
+   * - E600
+     - :ref:`MOD-FILE-1 <MOD-FILE-1>`
+     - :ref:`SYN-01 <SYN-01>`
+   * - E601
+     - :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+     - none
+   * - E602
+     - :ref:`MOD-RESOLVE-2 <MOD-RESOLVE-2>`
+     - none
+   * - E603
+     - :ref:`MOD-RESOLVE-3 <MOD-RESOLVE-3>`
+     - none
+   * - E604
+     - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`
+     - none
+   * - E605
+     - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`
+     - none
+   * - E606
+     - :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`
+     - none
+   * - E607
+     - :ref:`MOD-IMPORT-2 <MOD-IMPORT-2>`
+     - none
+   * - E608
+     - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+     - none
+   * - E609
+     - :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+     - none
+   * - E610
+     - :ref:`MOD-NET-1 <MOD-NET-1>`
      - none
 
 .. END GENERATED: rule-cross-reference

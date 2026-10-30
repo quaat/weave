@@ -122,3 +122,25 @@ envelope. The demo artifacts were regenerated with the commands in the demo READ
 Accepted and rejected programs, diagnostic codes and exit codes are unchanged. The output
 shape and, for some inputs, the label a result receives changed; see the migration note in
 `CHANGELOG.md`.
+
+## Addendum: `use net` header (2026-10-30, quaat/weave#12)
+
+Environment: Python 3.13.5 on Linux. The vendored prototype and `PROVENANCE.json` are
+unchanged. The runner reads a flow file's modules-1 `use net a.b` header (`--root`, or the
+flow file's directory) and hands the prototype the flow with the header line blanked;
+`tests/test_use_net.py` (12 tests) shows that a header flow gives the same result and the same
+diagnostics, at the same lines and columns, as the `--net` form, and covers a conflicting
+`--net` (E610), resolution failures (E600 to E603, a symbolic link out of the root included),
+independence from the working directory, `lower` and `simulate`, and the unchanged prototype
+hashes. The skill's copy of `specification/diagnostics.json` was synced for the new codes.
+
+| Check | Result |
+| --- | --- |
+| Original prototype regression suite (`weave.py test`) | `tool status: PASS bundled prototype regression tests` |
+| Kit tests (`tests/`) | 117 passed, including the 12 `use net` tests |
+| Teaching manifest (`weave.py examples`) | 34/34 expectations matched |
+| Merge-sort demo tests | 13 passed |
+| Tiny Shop demo tests | 17 passed |
+| `weave.py doctor` | `tool status: READY` |
+
+Flows without a header are accepted and rejected as before, with the same codes and exit codes.

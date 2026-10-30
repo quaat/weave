@@ -12,7 +12,9 @@ checker can raise is never missed.
 
 The P0 implementations are scanned too: the Python reference evaluator
 (``scripts/p0_reference.py``) as above, and the Rust crates by their string
-literals of the same form (``rust_codes``).
+literals of the same form (``rust_codes``). So is the modules-1 corpus runner
+(``scripts/modules_conformance.py``), which emits the ``use net`` codes; the Rust
+crates and the agent kit emit the other modules-1 codes (E600 to E619).
 
 ``python scripts/diagnostic_map.py`` checks the pinned prototype, the P0
 implementations and, when it is present in the repository, the agent kit; it
@@ -33,6 +35,7 @@ PROTOTYPE = [ROOT / "reference/prototype" / name for name in
              ("checker.py", "coloured.py", "durable.py", "simulate.py", "verify_certificate.py")]
 KIT_SCRIPTS = ROOT.parent / "agent-kit/.agents/skills/weave/scripts"
 P0_REFERENCE = [ROOT / "scripts/p0_reference.py"]
+MODULES_RUNNER = [ROOT / "scripts/modules_conformance.py"]
 RUST_CRATES = ROOT.parent / "crates"
 RUST_LITERAL = re.compile(r'"([EP]\d{3})"')
 
@@ -80,7 +83,8 @@ def kit_sources() -> list[Path]:
 
 def main() -> int:
     codes = load_map()
-    missing = sorted(set(unmapped(PROTOTYPE + P0_REFERENCE + kit_sources(), codes)) | (rust_codes() - set(codes)))
+    missing = sorted(set(unmapped(PROTOTYPE + P0_REFERENCE + MODULES_RUNNER + kit_sources(), codes))
+                     | (rust_codes() - set(codes)))
     if missing:
         print("Unmapped diagnostic codes: " + ", ".join(missing), file=sys.stderr)
         return 1

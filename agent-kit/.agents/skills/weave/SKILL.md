@@ -32,8 +32,10 @@ only claim is `NOT ESTABLISHED`, because pure programs are outside every specifi
 Termination is not checked; concurrency is cooperative on one thread.
 
 Replace paths and entry names with the task's actual files and declaration.
-Use `--net PATH` for a changed net. Batch flows sharing a net to check that net
-once. Put `--json` before the command for machine-readable output. Add `--trace`
+Use `--net PATH` for a changed net, or a `use net a.b` first line in the flow
+file, which selects `<root>/a/b.weave` (root: `--root DIR`, else the flow file's
+directory); a `--net` naming another net is E610. Batch flows sharing a net to
+check that net once. Put `--json` before the command for machine-readable output. Add `--trace`
 to simulation only when snapshots are needed. Run `test` for all bundled
 regressions after implementation changes. In the starter kit, run `examples`
 for the teaching corpus; elsewhere pass `examples --manifest PATH`.

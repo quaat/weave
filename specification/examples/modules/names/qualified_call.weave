@@ -1,0 +1,5 @@
+# Imported names are called unqualified; a dotted call is an operation (E512).
+from lib import norm, origin
+
+fn one() -> Int:
+    return lib.norm(origin())

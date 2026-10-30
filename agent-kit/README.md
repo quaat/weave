@@ -59,7 +59,9 @@ This ZIP does not install a personal skill in ChatGPT. To reuse the skill in
 another repository, copy the entire `.agents/skills/weave/` directory to that
 repository's `.agents/skills/weave/` for Codex, or to `.claude/skills/weave/` for
 Claude Code. The canonical skill is self-contained. Its runner works by absolute
-path from any current directory. Supply your flow path and optionally `--net`.
+path from any current directory. Supply your flow path and optionally `--net`, or
+begin the flow file with a `use net a.b` header, which selects `<root>/a/b.weave`
+(the root is `--root DIR` or the flow file's directory; see `docs/weave.md`).
 The standalone `examples` command needs `--manifest` pointing to this kit's
 teaching manifest; `test` always runs the bundled prototype's regressions.
 

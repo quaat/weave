@@ -7,7 +7,8 @@ language, with separate profiles for legacy nets, coloured nets, and the
 process-crash reference model, and a pure computation profile, P0 (typed pure
 functions in separate pure files, `docs/chapters/pure.rst`), implemented in Rust
 (`../crates/weave-check`, `../crates/weave-eval`, command `weave`) and by a Python
-reference evaluator. New D0 waiting/identity semantics and N2
+reference evaluator, with its versioned extension modules-1 (local P0 modules with selective
+imports and exports, and the `use net` header of flow files, `docs/chapters/names.rst`). New D0 waiting/identity semantics and N2
 evidence/correlation design rules are explicit **unimplemented targets**. Proposed fork/join is explicitly
 outside the implemented profiles.
 
@@ -16,8 +17,8 @@ outside the implemented profiles.
 Build the HTML reference (below) and open `_build/html/index.html`. The editable
 source is in `docs/`; the consolidated grammar is `grammar/weave.ebnf`.
 Start with **Status and conformance**, then **Language overview**.
-The status chapter's profile matrix names, for each profile (F0, N0, N1, R0, P0 and
-the targets D0 and N2), where it is specified, implemented and tested, and the
+The status chapter's profile matrix names, for each profile (F0, N0, N1, R0, P0, the
+extension modules-1 and the targets D0 and N2), where it is specified, implemented and tested, and the
 command that produces its evidence. **Claims, baseline and pinned identifiers**
 (`docs/chapters/baseline.rst`) lists the public claims with their profile and
 command, and the procedure that reproduces the baseline from a fresh clone.
@@ -49,6 +50,7 @@ python scripts/p0_reference.py check examples/pure/valid/merge_sort.weave
 python scripts/p0_reference.py run examples/pure/valid/merge_sort.weave --entry merge_sort --args '[[3, 1, 2]]'
 python scripts/p0_differential.py
 python scripts/p0_applications.py
+python scripts/modules_conformance.py
 make validate
 ```
 
@@ -88,6 +90,14 @@ must be invalid run requests (P0-RUN-1). It writes the seed and counts to `valid
 missing binary as not established, and is tested by `tests/test_p0_applications.py`
 (docs/chapters/tooling.rst, "Conformance applications"). The applications are sequential;
 the concurrent fork/join merge-sort brief is quaat/weave#42 (M6) and is not complete.
+modules-1 (quaat/weave#12): `examples/modules/manifest.json` (`weave-modules-conformance-v1`)
+is the modules corpus, kept apart from the two manifests above, which are unchanged.
+`scripts/modules_conformance.py` (also in `make validate-offline`) runs its multi-file check
+and run cases through the Rust `weave` binary (codes, files, lines and the related imports of
+a cycle; with `cargo` or `WEAVE_BIN`, otherwise `validation/modules-conformance.json` records
+them as not established) and its `use net` flow cases through its own header resolution and
+the reference checker, each at the location of the `--net` form; `tests/test_modules.py`
+tests it. The Python P0 reference implements P0 only.
 `make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 

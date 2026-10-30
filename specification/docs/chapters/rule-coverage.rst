@@ -7,8 +7,9 @@ Rule coverage
 ===================
 
 This generated page records, for each rule ID in ``rules.json``, the
-conformance cases (from ``examples/manifest.json`` and, for P0,
-``examples/pure/manifest.json``) and tests that exercise it,
+conformance cases (from ``examples/manifest.json``, for P0
+``examples/pure/manifest.json`` and, for modules-1,
+``examples/modules/manifest.json``) and tests that exercise it,
 or a pending-implementation entry. The map is ``tests/rule-coverage.json``.
 ``python scripts/rule_coverage.py`` regenerates this page and ``--check`` fails
 if a rule has no case, test or pending entry, if a listed test does not exist,
@@ -20,15 +21,17 @@ A *positive* test or case expects acceptance or the conforming behaviour; a
 asserts one. A listed test exercises the rule through the reference prototype in
 ``reference/prototype/``, or, for the ``P0-*`` rules, through the P0 reference
 evaluator ``scripts/p0_reference.py`` (``test_p0``; the Rust crates have their own
-tests, and ``scripts/p0_differential.py`` compares the two): it is regression
+tests, and ``scripts/p0_differential.py`` compares the two), or, for the ``MOD-*``
+rules, through ``scripts/modules_conformance.py`` (``test_modules``; the modules-1
+cases of P0 programs run through the Rust ``weave`` command): it is regression
 evidence for that implementation, not a proof that the rule holds for every input.
-Tests from ``test_rule_cases``, ``test_documentation`` and ``test_p0`` are in
+Tests from ``test_rule_cases``, ``test_documentation``, ``test_p0`` and ``test_modules`` are in
 ``tests/``; the others are the prototype's tests in ``reference/prototype/tests/``.
 
-**Summary.** 97 rule IDs; 80 with a test or conformance case and
+**Summary.** 112 rule IDs; 95 with a test or conformance case and
 no pending entry; 17 pending implementation, each with a tracking issue.
 
-Rules with tests or cases in one direction only: LEX-REQ-2, P0-EFFECT-2, P0-EVAL-2, P0-FAULT-1, P0-FORK-1, P0-RUN-2, P0-VALUE-1.
+Rules with tests or cases in one direction only: LEX-REQ-2, MOD-CYCLE-1, MOD-IMPORT-2, MOD-RESOLVE-2, MOD-RESOLVE-4, P0-EFFECT-2, P0-EVAL-2, P0-FAULT-1, P0-FORK-1, P0-RUN-2, P0-VALUE-1.
 
 Summary table
 -------------------
@@ -172,6 +175,81 @@ Summary table
      - 1
      - 0
      - tested
+   * - :ref:`MOD-CHECK-1 <MOD-CHECK-1>`
+     - M101, M108
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`
+     - M115, M116, M117, M118
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+     - M127, M128, M129
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-FILE-1 <MOD-FILE-1>`
+     - M101, M109, M110, M111, M112
+     - 1
+     - 1
+     - tested
+   * - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`
+     - M102, M103, M104, M105, M202, M203
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`
+     - M101, M112, M119
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-IMPORT-2 <MOD-IMPORT-2>`
+     - M120
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+     - M104, M105, M121, M122, M123, M124, M125, M126
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-NET-1 <MOD-NET-1>`
+     - M301, M302, M303, M304, M305, M306
+     - 1
+     - 1
+     - tested
+   * - :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+     - M101, M107, M113, M305
+     - 1
+     - 1
+     - tested
+   * - :ref:`MOD-RESOLVE-2 <MOD-RESOLVE-2>`
+     - M114
+     - 0
+     - 1
+     - tested
+   * - :ref:`MOD-RESOLVE-3 <MOD-RESOLVE-3>`
+     - M110, M111
+     - 1
+     - 1
+     - tested
+   * - :ref:`MOD-RESOLVE-4 <MOD-RESOLVE-4>`
+     - M101
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`
+     - M106, M107, M130, M204
+     - 0
+     - 0
+     - tested
+   * - :ref:`MOD-RUN-1 <MOD-RUN-1>`
+     - M201, M202, M203, M204, M205, M206, M207
+     - 0
+     - 0
+     - tested
    * - :ref:`N0-DECL-1 <N0-DECL-1>`
      - none
      - 1
@@ -268,7 +346,7 @@ Summary table
      - 1
      - tested
    * - :ref:`P0-ARITH-2 <P0-ARITH-2>`
-     - C131, C132, C133, C134, C135, C136, C137, C138, C139, C166
+     - C131, C132, C133, C134, C135, C136, C137, C138, C139, C166, M205
      - 1
      - 1
      - tested
@@ -308,17 +386,17 @@ Summary table
      - 1
      - tested
    * - :ref:`P0-DECL-3 <P0-DECL-3>`
-     - C104, C113
+     - C104, C113, M118
      - 0
      - 1
      - tested
    * - :ref:`P0-DECL-4 <P0-DECL-4>`
-     - C104, C127
+     - C104, C127, M108
      - 1
      - 1
      - tested
    * - :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
-     - C105, C122
+     - C105, C122, M125
      - 1
      - 1
      - tested
@@ -368,7 +446,7 @@ Summary table
      - 1
      - tested
    * - :ref:`P0-NAME-2 <P0-NAME-2>`
-     - C102, C108, C116
+     - C102, C108, C116, M124
      - 1
      - 1
      - tested
@@ -378,7 +456,7 @@ Summary table
      - 1
      - tested
    * - :ref:`P0-REC-1 <P0-REC-1>`
-     - C101, C104, C107, C126
+     - C101, C104, C107, C126, M117
      - 1
      - 1
      - tested
@@ -393,7 +471,7 @@ Summary table
      - 1
      - tested
    * - :ref:`P0-RUN-1 <P0-RUN-1>`
-     - C139, C145, C154, C161, C175, C176, C177, C178
+     - C139, C145, C154, C161, C175, C176, C177, C178, M207
      - 1
      - 1
      - tested
@@ -408,7 +486,7 @@ Summary table
      - 1
      - tested
    * - :ref:`P0-TYPE-2 <P0-TYPE-2>`
-     - C101, C106, C120, C127
+     - C101, C106, C120, C127, M103, M108
      - 1
      - 1
      - tested
@@ -710,6 +788,90 @@ Tests by rule
   * positive: ``test_rule_cases.RuleCases.test_contextual_words_are_identifiers``
   * Note: A MAY rule; it has no rejection case.
 
+* :ref:`MOD-CHECK-1 <MOD-CHECK-1>`
+
+  * Conformance cases: M101 (ACCEPT), M108 (E510)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`
+
+  * Conformance cases: M115 (E604), M116 (E604), M117 (E604), M118 (E604)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+
+  * Conformance cases: M127 (E609), M128 (E609), M129 (ACCEPT)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-FILE-1 <MOD-FILE-1>`
+
+  * Conformance cases: M101 (ACCEPT), M109 (E600), M110 (E600), M111 (E600), M112 (E600)
+  * positive: ``test_modules.Header.test_header_and_its_location``
+  * negative, E600: ``test_modules.Header.test_malformed_headers_are_e600``
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-IDENT-1 <MOD-IDENT-1>`
+
+  * Conformance cases: M102 (ACCEPT), M103 (E510), M104 (ACCEPT), M105 (ACCEPT), M202 (VALUE), M203 (VALUE)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`
+
+  * Conformance cases: M101 (ACCEPT), M112 (E600), M119 (E606)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-IMPORT-2 <MOD-IMPORT-2>`
+
+  * Conformance cases: M120 (E607)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-NAME-1 <MOD-NAME-1>`
+
+  * Conformance cases: M104 (ACCEPT), M105 (ACCEPT), M121 (E608), M122 (E608), M123 (E608), M124 (E506), M125 (E512), M126 (ACCEPT)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-NET-1 <MOD-NET-1>`
+
+  * Conformance cases: M301 (ACCEPT), M302 (ACCEPT), M303 (E610), M304 (E205), M305 (E601), M306 (E200)
+  * positive: ``test_modules.Header.test_flow_cases_keep_the_locations_of_the_net_form``
+  * negative, E610: ``test_modules.Header.test_a_conflicting_net_is_e610_and_the_same_net_is_accepted``
+  * Note: The flow cases run through scripts/modules_conformance.py and the reference checker; agent-kit/tests/test_use_net.py tests the kit runner's header.
+
+* :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+
+  * Conformance cases: M101 (ACCEPT), M107 (E601), M113 (E601), M305 (E601)
+  * positive: ``test_modules.Resolution.test_paths_name_files_exactly``
+  * negative, E601: ``test_modules.Resolution.test_paths_name_files_exactly``
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-RESOLVE-2 <MOD-RESOLVE-2>`
+
+  * Conformance cases: M114 (E602)
+  * negative, E602: ``test_modules.Resolution.test_paths_name_files_exactly``
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-RESOLVE-3 <MOD-RESOLVE-3>`
+
+  * Conformance cases: M110 (E600), M111 (E600)
+  * positive: ``test_modules.Resolution.test_links_may_not_leave_the_root``
+  * negative, E603: ``test_modules.Resolution.test_links_may_not_leave_the_root``
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-RESOLVE-4 <MOD-RESOLVE-4>`
+
+  * Conformance cases: M101 (ACCEPT)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-ROOT-1 <MOD-ROOT-1>`
+
+  * Conformance cases: M106 (ACCEPT), M107 (E601), M130 (E605), M204 (VALUE)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
+* :ref:`MOD-RUN-1 <MOD-RUN-1>`
+
+  * Conformance cases: M201 (VALUE), M202 (VALUE), M203 (VALUE), M204 (VALUE), M205 (E520), M206 (VALUE), M207 (E540)
+  * Note: Conformance cases in examples/modules/manifest.json run through the Rust weave command (scripts/modules_conformance.py); the Rust tests crates/weave-check/tests/modules.rs, crates/weave-eval/tests/modules.rs and crates/weave-cli/tests/modules.rs test the same rule.
+
 * :ref:`N0-DECL-1 <N0-DECL-1>`
 
   * positive: ``test_rule_cases.RuleCases.test_reference_nets_are_accepted``
@@ -838,7 +1000,7 @@ Tests by rule
 
 * :ref:`P0-ARITH-2 <P0-ARITH-2>`
 
-  * Conformance cases: C131 (VALUE), C132 (VALUE), C133 (VALUE), C134 (VALUE), C135 (VALUE), C136 (VALUE), C137 (E520), C138 (E520), C139 (VALUE), C166 (VALUE)
+  * Conformance cases: C131 (VALUE), C132 (VALUE), C133 (VALUE), C134 (VALUE), C135 (VALUE), C136 (VALUE), C137 (E520), C138 (E520), C139 (VALUE), C166 (VALUE), M205 (E520)
   * positive: ``test_p0.Dynamic.test_euclidean_division``
   * negative, E520: ``test_p0.Dynamic.test_euclidean_division``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
@@ -893,20 +1055,20 @@ Tests by rule
 
 * :ref:`P0-DECL-3 <P0-DECL-3>`
 
-  * Conformance cases: C104 (ACCEPT), C113 (E503)
+  * Conformance cases: C104 (ACCEPT), C113 (E503), M118 (E604)
   * negative, E503: ``test_p0.Static.test_records``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
 
 * :ref:`P0-DECL-4 <P0-DECL-4>`
 
-  * Conformance cases: C104 (ACCEPT), C127 (E510)
+  * Conformance cases: C104 (ACCEPT), C127 (E510), M108 (E510)
   * positive: ``test_p0.Static.test_signatures_first_and_unused_bodies``
   * negative, E510: ``test_p0.Static.test_signatures_first_and_unused_bodies``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
 
 * :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
 
-  * Conformance cases: C105 (ACCEPT), C122 (E512)
+  * Conformance cases: C105 (ACCEPT), C122 (E512), M125 (E512)
   * positive: ``test_p0.Static.test_purity``
   * negative, E512: ``test_p0.Static.test_purity``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
@@ -973,7 +1135,7 @@ Tests by rule
 
 * :ref:`P0-NAME-2 <P0-NAME-2>`
 
-  * Conformance cases: C102 (ACCEPT), C108 (ACCEPT), C116 (E506)
+  * Conformance cases: C102 (ACCEPT), C108 (ACCEPT), C116 (E506), M124 (E506)
   * positive: ``test_p0.Static.test_no_shadowing``
   * negative, E506: ``test_p0.Static.test_no_shadowing``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
@@ -987,7 +1149,7 @@ Tests by rule
 
 * :ref:`P0-REC-1 <P0-REC-1>`
 
-  * Conformance cases: C101 (ACCEPT), C104 (ACCEPT), C107 (ACCEPT), C126 (E516)
+  * Conformance cases: C101 (ACCEPT), C104 (ACCEPT), C107 (ACCEPT), C126 (E516), M117 (E604)
   * positive: ``test_p0.Static.test_direct_recursion_only``
   * negative, E516: ``test_p0.Static.test_direct_recursion_only``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
@@ -1007,7 +1169,7 @@ Tests by rule
 
 * :ref:`P0-RUN-1 <P0-RUN-1>`
 
-  * Conformance cases: C139 (VALUE), C145 (VALUE), C154 (VALUE), C161 (VALUE), C175 (E532), C176 (E540), C177 (E540), C178 (E540)
+  * Conformance cases: C139 (VALUE), C145 (VALUE), C154 (VALUE), C161 (VALUE), C175 (E532), C176 (E540), C177 (E540), C178 (E540), M207 (E540)
   * positive: ``test_p0.Dynamic.test_corpus_run_cases``
   * negative, E540: ``test_p0.Dynamic.test_run_requests``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
@@ -1027,7 +1189,7 @@ Tests by rule
 
 * :ref:`P0-TYPE-2 <P0-TYPE-2>`
 
-  * Conformance cases: C101 (ACCEPT), C106 (ACCEPT), C120 (E510), C127 (E510)
+  * Conformance cases: C101 (ACCEPT), C106 (ACCEPT), C120 (E510), C127 (E510), M103 (E510), M108 (E510)
   * positive: ``test_p0.Static.test_type_mismatch``
   * negative, E510: ``test_p0.Static.test_type_mismatch``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.

@@ -47,7 +47,8 @@ check_clause: /admit(?![A-Za-z0-9_])/ IDENT /once(?![A-Za-z0-9_])/ NL | /observe
 guard_class: /establishes_paid(?![A-Za-z0-9_])/ | /establishes_rejected(?![A-Za-z0-9_])/ | /nondeterministic(?![A-Za-z0-9_])/
 property: /property(?![A-Za-z0-9_])/ IDENT ":" /marked(?![A-Za-z0-9_])/ IDENT /requires(?![A-Za-z0-9_])/ requirement NL | /property(?![A-Za-z0-9_])/ IDENT ":" /after(?![A-Za-z0-9_])/ /paid_evidence(?![A-Za-z0-9_])/ /forbid(?![A-Za-z0-9_])/ IDENT NL | /property(?![A-Za-z0-9_])/ IDENT ":" /after(?![A-Za-z0-9_])/ /dispatch(?![A-Za-z0-9_])/ /marked(?![A-Za-z0-9_])/ IDENT /requires(?![A-Za-z0-9_])/ /rejected_evidence(?![A-Za-z0-9_])/ NL
 requirement: /paid_evidence(?![A-Za-z0-9_])/ | /rejected_evidence(?![A-Za-z0-9_])/ | /marked(?![A-Za-z0-9_])/ IDENT
-flow_file: flow ( flow )*
+flow_file: ( use_net )? flow ( flow )*
+use_net: /use(?![A-Za-z0-9_])/ /net(?![A-Za-z0-9_])/ qname NL
 flow: /flow(?![A-Za-z0-9_])/ IDENT "(" ( parameters )? ")" ( "->" type )? ":" NL INDENT body DEDENT
 body: ( simple )* ending
 simple: let_call | unit_call | propagate_bound | propagate_call
@@ -87,6 +88,10 @@ name_expr: IDENT ( prefixed )? ( "." IDENT )* ( "(" ( call_args )? ")" )?
 prefixed: IDENT "." IDENT
 call_args: call_arg ( "," call_arg )*
 call_arg: expr ( ":" expr )?
+module_file: ( import_decl )* module_item ( module_item )*
+import_decl: /from(?![A-Za-z0-9_])/ qname /import(?![A-Za-z0-9_])/ import_name ( "," import_name )* NL
+import_name: IDENT ( /as(?![A-Za-z0-9_])/ IDENT )?
+module_item: ( /export(?![A-Za-z0-9_])/ )? pure_item
 IDENT: /[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_])/
 UINT: /(0|[1-9][0-9]*)(?![A-Za-z0-9_])/
 POSINT: /[1-9][0-9]*(?![A-Za-z0-9_])/

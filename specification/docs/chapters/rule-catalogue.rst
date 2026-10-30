@@ -69,6 +69,36 @@ the conformance table, run ``python scripts/refresh_reference_pages.py``.
      - :doc:`lexical`
    * - :ref:`LEX-REQ-2 <LEX-REQ-2>`
      - :doc:`lexical`
+   * - :ref:`MOD-CHECK-1 <MOD-CHECK-1>`
+     - :doc:`names`
+   * - :ref:`MOD-CYCLE-1 <MOD-CYCLE-1>`
+     - :doc:`names`
+   * - :ref:`MOD-EXPORT-1 <MOD-EXPORT-1>`
+     - :doc:`names`
+   * - :ref:`MOD-FILE-1 <MOD-FILE-1>`
+     - :doc:`names`
+   * - :ref:`MOD-IDENT-1 <MOD-IDENT-1>`
+     - :doc:`names`
+   * - :ref:`MOD-IMPORT-1 <MOD-IMPORT-1>`
+     - :doc:`names`
+   * - :ref:`MOD-IMPORT-2 <MOD-IMPORT-2>`
+     - :doc:`names`
+   * - :ref:`MOD-NAME-1 <MOD-NAME-1>`
+     - :doc:`names`
+   * - :ref:`MOD-NET-1 <MOD-NET-1>`
+     - :doc:`names`
+   * - :ref:`MOD-RESOLVE-1 <MOD-RESOLVE-1>`
+     - :doc:`names`
+   * - :ref:`MOD-RESOLVE-2 <MOD-RESOLVE-2>`
+     - :doc:`names`
+   * - :ref:`MOD-RESOLVE-3 <MOD-RESOLVE-3>`
+     - :doc:`names`
+   * - :ref:`MOD-RESOLVE-4 <MOD-RESOLVE-4>`
+     - :doc:`names`
+   * - :ref:`MOD-ROOT-1 <MOD-ROOT-1>`
+     - :doc:`names`
+   * - :ref:`MOD-RUN-1 <MOD-RUN-1>`
+     - :doc:`names`
    * - :ref:`N0-DECL-1 <N0-DECL-1>`
      - :doc:`declarations`
    * - :ref:`N0-DECL-2 <N0-DECL-2>`

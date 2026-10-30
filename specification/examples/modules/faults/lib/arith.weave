@@ -1,0 +1,2 @@
+export fn ratio(a: Int, b: Int) -> Int:
+    return div(a, b)

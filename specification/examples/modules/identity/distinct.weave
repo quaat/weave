@@ -1,0 +1,6 @@
+# a.Point and b.Point are distinct nominal types, although their fields match.
+from a import Point as APoint
+from b import Point as BPoint
+
+fn convert(p: APoint) -> BPoint:
+    return p

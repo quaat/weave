@@ -1,0 +1,5 @@
+record Secret:
+    value: Int
+
+export fn reveal(s: Secret) -> Int:
+    return s.value

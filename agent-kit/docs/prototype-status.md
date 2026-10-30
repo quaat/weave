@@ -103,6 +103,7 @@ command and checked against oracles (quaat/weave#11); P0 has no fork/join.
 | Ordering | One order, one item, one admission, explicit place/search bounds |
 | Guards | Abstract witnesses; provider truth and correlation assumed |
 | Flow checking | Static transfer/type discipline, not proof every call can fire |
+| Net selection | A flow's `use net` header (quaat/weave#12) is read by the runner, which blanks it before the unchanged prototype checks the flow; one net per flow, no composition |
 | Cancellation | Route validation, not a durable scheduler or cancellation stack |
 | Simulation | Chosen outcomes; no persistence, worker crashes, provider I/O, or adapter delivery model |
 | Certificate recheck | Shared parser/expression reader, not an independent proof assistant |

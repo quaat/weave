@@ -1,0 +1,2 @@
+export fn norm(n: Int) -> Int:
+    return n

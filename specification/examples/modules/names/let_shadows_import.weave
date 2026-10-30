@@ -1,0 +1,5 @@
+from lib import origin
+
+fn one() -> Int:
+    let origin = 1
+    return origin
