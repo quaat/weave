@@ -137,6 +137,10 @@ def flow_case(case: dict) -> dict:
     root = EXAMPLES / case["root"]
     explicit = EXAMPLES / case["net"] if "net" in case else None
     try:
+        # A case's root is explicit (--root): it must contain the flow file (MOD-ROOT-1).
+        base = root.resolve()
+        if file.resolve() != base and base not in file.resolve().parents:
+            raise ModuleFailure("E605", 1, 1, "the flow file is outside the root")
         found = header(text)
         if found is None:
             selected, prepared = explicit, text

@@ -145,7 +145,7 @@ canonicalised. For an entry that is a symbolic link, that is the directory of th
 link, not of its target. Every import, in every module at any depth, resolves from
 that root; the working directory of the process never takes part. Only a root
 given with ``--root`` can exclude the entry: an entry file whose canonical path is
-outside it is E605. The entry is never outside the implicit root, so an entry
+outside it is E605 (for a flow file, :ref:`MOD-NET-1 <MOD-NET-1>`). The entry is never outside the implicit root, so an entry
 without imports is checked and run exactly as by P0, wherever its target lies. An
 import in a file that has no root (standard input without ``--root``) is also
 E605. A ``--root`` that is not an existing directory is a usage error of the
@@ -318,7 +318,14 @@ lines may precede it. The header selects ``<root>/a/b.weave`` as the flow's net,
 exactly as the ``--net`` argument does, with the root and the path rules of
 modules-1 (:ref:`MOD-ROOT-1 <MOD-ROOT-1>` to :ref:`MOD-RESOLVE-3
 <MOD-RESOLVE-3>`, E601 to E603, at the path); the root is ``--root``, or else the
-flow file's directory. A first line that begins with ``use`` but is not such a
+flow file's directory as written (for a symbolic link, the link's directory). As
+for a P0 entry, a root given with ``--root`` MUST contain the flow file: a flow file
+whose canonical path is not inside the canonical root, compared by whole path
+components (a symbolic link is judged by its target), is E605 at the start of the
+file, before any header is read or net selected. This holds for every flow file
+checked with ``--root``, with or without a header, since ``--root`` names the
+project the file belongs to; without ``--root`` there is no such check, and a flow
+without a header is checked exactly as before. A first line that begins with ``use`` but is not such a
 header is E600. A ``--net`` argument that names another net than the header is
 E610; one that names the same file is accepted. The header selects one existing
 net and nothing else: it is not checking of flows by the Rust tools, not

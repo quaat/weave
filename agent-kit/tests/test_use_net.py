@@ -176,6 +176,68 @@ class UseNet(unittest.TestCase):
             with self.subTest(cwd=str(cwd)):
                 self.assertEqual(run_cli('check', file, '--root', self.tmp, cwd=cwd), (code, data))
 
+    def test_an_explicit_root_must_contain_the_flow(self):
+        """MOD-ROOT-1 in MOD-NET-1: E605 before any net is selected (F-14)."""
+        prototype = ROOT / '.agents/skills/weave/assets/prototype'
+        flow = self.tmp / 'f.weave'
+        flow.write_text('use net Inventory\nflow f():\n    return\n', encoding='utf-8')
+        # The reproduction: the header would resolve from that root, but the file is outside it.
+        code, data = run_cli('check', flow, '--root', prototype)
+        self.assertEqual(code, 1, data)
+        d = data['diagnostic']
+        self.assertEqual((d['code'], d['rule'], d['category']), ('E605', 'MOD-ROOT-1', 'specification'))
+        self.assertEqual((d['span']['file'], d['span']['start']), (str(flow), {'line': 1, 'column': 1}))
+        self.assertNotIn('accounting', data)
+        # Every command, and a flow without a header too: --root names the project.
+        headerless = self.tmp / 'plain.weave'
+        headerless.write_text(CHECKOUT.read_text(encoding='utf-8'), encoding='utf-8')
+        for args in (('check', headerless, '--root', prototype),
+                     ('lower', flow, '--output', self.tmp / 'x.weave', '--root', prototype),
+                     ('simulate', flow, '--entry', 'f', '--root', prototype)):
+            with self.subTest(args=args[0]):
+                code, data = run_cli(*args)
+                self.assertEqual((code, data['diagnostic']['code']), (1, 'E605'))
+        self.assertFalse((self.tmp / 'x.weave').exists())
+        # Inside the root: accepted, header or not.
+        file, _ = self.pair('inside', CHECKOUT.read_text(encoding='utf-8'))
+        self.assertEqual(run_cli('check', file, '--root', self.tmp)[0], 0)
+        self.assertEqual(run_cli('check', headerless, '--root', self.tmp)[0], 0)
+        # Whole path components: a sibling whose name extends the root's is outside it.
+        sibling = Path(str(self.tmp) + '-sibling')
+        sibling.mkdir()
+        self.addCleanup(shutil.rmtree, sibling, True)
+        shutil.copy(headerless, sibling / 'plain.weave')
+        self.assertEqual(run_cli('check', sibling / 'plain.weave', '--root', self.tmp)[1]['diagnostic']['code'],
+                         'E605')
+        # A --root that is not a directory is a usage error.
+        code, data = run_cli('check', file, '--root', self.tmp / 'nowhere')
+        self.assertEqual((code, data['diagnostic']['code']), (2, 'TOOL_ERROR'))
+
+    @unittest.skipIf(os.name == 'nt', 'symbolic links')
+    def test_a_symlinked_flow_and_an_explicit_root(self):
+        """As the Rust weave command: a link is judged by its target against --root;
+        without --root its own directory is the root and there is no E605."""
+        target_dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, target_dir, True)
+        (target_dir / 'nets').mkdir()
+        shutil.copy(NET, target_dir / 'nets/Inventory.weave')
+        target = target_dir / 'checkout.weave'
+        target.write_text('use net nets.Inventory\n' + CHECKOUT.read_text(encoding='utf-8'), encoding='utf-8')
+        link = self.tmp / 'linked.weave'
+        link.symlink_to(target)
+        # No --root: the link's directory is the root; its nets/Inventory.weave is used.
+        code, data = run_cli('check', link)
+        self.assertEqual(code, 0, data)
+        self.assertEqual(Path(data['net']), self.tmp / 'nets/Inventory.weave')
+        # --root at the link's directory: the target is outside it.
+        code, data = run_cli('check', link, '--root', self.tmp)
+        self.assertEqual((code, data['diagnostic']['code']), (1, 'E605'))
+        self.assertEqual(data['diagnostic']['span']['file'], str(link))
+        # --root at the target's directory contains the target: accepted, resolved from there.
+        code, data = run_cli('check', link, '--root', target_dir)
+        self.assertEqual(code, 0, data)
+        self.assertEqual(Path(data['net']), target_dir / 'nets/Inventory.weave')
+
     def test_lower_and_simulate_use_the_header(self):
         file, _ = self.pair('checkout', CHECKOUT.read_text(encoding='utf-8'))
         out = self.tmp / 'lowered.weave'

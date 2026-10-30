@@ -92,6 +92,11 @@ class Header(unittest.TestCase):
         self.assertEqual(mc.flow_case(CASES["M302"])["code"], "ACCEPT")
         self.assertEqual(mc.flow_case(dict(CASES["M302"], net="nets/../nets/Inventory.weave"))["code"], "ACCEPT")
 
+    def test_an_explicit_root_must_contain_the_flow(self):
+        outside = dict(CASES["M301"], root="pure")
+        self.assertEqual(mc.flow_case(outside), {"code": "E605", "start": {"line": 1, "column": 1}})
+        self.assertEqual(mc.flow_case(dict(CASES["M301"], root="modules"))["code"], "E601")
+
     def test_a_wrong_location_fails(self):
         with self.assertRaises(AssertionError):
             mc.assert_flow(dict(CASES["M304"], column=6), mc.flow_case(CASES["M304"]))

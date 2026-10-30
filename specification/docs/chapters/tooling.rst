@@ -286,7 +286,7 @@ a cycle), which loading and checking walk without recursion.
 ``validation/modules-conformance.json`` without either, never as agreement), and
 the ``use net`` flow cases through its own header resolution and the reference
 checker, each at the location of the ``--net`` form. ``tests/test_modules.py``
-adds 13 tests of the header and resolution rules, the not-established path and a
+adds 14 tests of the header and resolution rules, the not-established path and a
 disagreeing binary.
 
 A flow file's ``use net`` header (:ref:`MOD-NET-1 <MOD-NET-1>`) is read by the
@@ -381,10 +381,10 @@ comparison is skipped as not established without ``cargo``, requires a named
 binary to exist, and fails on a disagreeing verdict.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 147 tests (nine documentation tests, the rule cases, the rule
+specification's 148 tests (nine documentation tests, the rule cases, the rule
 coverage check, the diagnostic map tests, the result-label lint of
 :ref:`chapters/verification:Result labels in tool output`, the grammar-audit
-tests, the P0 tests, 14 tests of the conformance applications and 13 modules-1
+tests, the P0 tests, 14 tests of the conformance applications and 14 modules-1
 tests), the P0 differential, the P0 conformance applications, the modules-1
 corpus run, 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.

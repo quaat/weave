@@ -138,7 +138,9 @@ flow arm_hold(hold: Hold[t, o]) -> Escrow[t, o]:
 ```
 
 `use net nets.Inventory` selects `<root>/nets/Inventory.weave`, where the root is
-`--root DIR` or else the flow file's directory, never the current directory. The
+`--root DIR` or else the flow file's directory, never the current directory. A
+flow file outside a `--root` you give (judged by its canonical path, so a link by
+its target) is E605, before any net is selected, header or not. The
 path is dotted names that must match the directory and file names exactly, in case
 too (E602 otherwise), must name an existing file (E601) and must stay inside the
 root once symbolic links are resolved (E603); a malformed header is E600. A

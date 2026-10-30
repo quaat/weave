@@ -143,12 +143,34 @@ def resolve_module(root: Path, dotted: str, file, line: int, start: int, end: in
     return path
 
 
+def entry_in_root(file: Path, root: Path | None) -> None:
+    """MOD-ROOT-1 for a flow file: an explicit --root must contain the file.
+
+    The canonical file must lie in the canonical root, compared by whole path
+    components, as the Rust ``weave`` command compares an entry with --root; a file
+    outside it is E605, before any header is read or net selected, whether or not the
+    file has a header. A symbolic link is judged by its target. Without --root the
+    root is the file's own directory (a link's directory, not its target's), which
+    always contains it, so there is no such check. A --root that is not a directory
+    is a usage error."""
+    if root is None:
+        return
+    canonical_root = Path(root).resolve()
+    if not canonical_root.is_dir():
+        raise ValueError(f"The project root {root} is not a directory")
+    entry = Path(file).resolve()
+    if entry != canonical_root and canonical_root not in entry.parents:
+        raise ModuleError(module_diagnostic(
+            "E605", f"The flow file is outside the project root {root} given with --root.", file, 1, 1, 1))
+
+
 def flow_source(file: Path, explicit_net: Path | None, root: Path | None) -> tuple[str, str, Path | None]:
     """(text as written, text for the prototype, selected net or None) for a flow file.
 
     The selected net is the header's, when there is one; a --net that names another
     file is E610."""
     text = read(file)
+    entry_in_root(file, root)
     header = net_header(text, file)
     if header is None:
         return text, text, explicit_net

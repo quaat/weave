@@ -22,9 +22,10 @@ The default is the bundled `Inventory.weave`, not a net inferred from your curre
 directory. For `check`, `lower` and `simulate`, a flow file's `use net a.b` header
 selects `<root>/a/b.weave` instead, where the root is `--root DIR` or the flow file's
 directory (see `docs/weave.md`, "Selecting the net with `use net`"). A header that
-does not resolve (E600 to E603) or a `--net` naming another net (E610) fails the
-command with that diagnostic and exit 1 before any net is checked; the files of one
-`check` must select one net (otherwise a `TOOL_ERROR`, exit 2). The vendored prototype
+does not resolve (E600 to E603), a flow file outside a `--root` you give (E605, header or
+not), or a `--net` naming another net (E610) fails the command with that diagnostic and
+exit 1 before any net is checked. A `--root` that is not a directory, and files of one
+`check` that select different nets, are a `TOOL_ERROR` (exit 2). The vendored prototype
 checks the flow with the header line blanked, so diagnostic lines and columns are those
 of the file as written. `lower` keeps the header in its output only when it selects the
 same net from the output's root (`--root`, or the output's directory), and otherwise writes
