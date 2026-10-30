@@ -167,7 +167,7 @@ Execution scenarios and supplemental evidence
 
 The three manifest scenarios are normative for the legacy scripted simulator's
 selected outcomes and asserted markings. They do not confer D0 or R0 conformance.
-The validator additionally checks all eight accepted flows and their lowerings
+The validator additionally checks all 9 accepted flows and their lowerings
 against N1's API projection.
 
 The lease example requires structural/accounting and F0 acceptance, and E300
@@ -181,7 +181,7 @@ suite in this delivery. No existing test-pass claim establishes them.
 Generated grammar comparison
 -----------------------------
 
-The generated parser pipeline agrees on all 25 required outcomes. Its syntax
+The generated parser pipeline agrees on all 27 required outcomes. Its syntax
 parser and layout pass are independent; its semantic stage is the reference
 checker. This is not independent confirmation of the semantic implementation.
 See ``validation/grammar-report.json`` for both stages separately.
