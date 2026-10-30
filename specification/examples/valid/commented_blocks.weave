@@ -1,0 +1,33 @@
+# Positive layout case: comments and blank lines in every block position.
+# They are trivia (LEX-REQ-1): they change neither block structure nor the flow.
+
+flow commented_settle(result: ChargeOutcome[t, o]):  # after a flow header
+
+    # before the first statement of a flow body
+    match result:  # after a match header
+
+        # before the first branch
+        Ok(paid):  # after a branch header
+            # before the first statement of a branch
+            await Inventory.sell(paid)
+
+            return  # after the last statement of a branch
+        # between branches
+  # a comment-only line at any indentation does not affect layout
+        Err(unpaid):
+            await Inventory.release(unpaid)
+            # between two statements
+            return
+
+        Unknown(uncertain):
+
+            await Inventory.handoff(uncertain)
+            return
+    # after a terminal match, at flow-body level
+
+# between flows
+
+flow commented_return(hold: Hold[t, o]) -> Hold[t, o]:
+    # before the only statement
+    return hold
+# at the end of the file

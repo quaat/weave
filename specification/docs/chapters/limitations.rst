@@ -74,6 +74,15 @@ identifier character set, canonical decimal integers, and avoidance of
 special-type redefinitions or API/helper name collisions. The stricter spellings are
 not claimed to be rejected by the current checker.
 
+The grammar-driven parsers, the generated grammar audit and the Rust parser in
+``crates/weave-syntax`` (quaat/weave#9), read the EBNF as tokens and do reject
+non-portable identifiers, integers, whitespace characters and line breaks
+(:ref:`chapters/lexical:Tokens and line endings`). Conversely they accept spacing
+that the reference parser's literal spaces reject. Each difference is a probe in
+:ref:`chapters/grammar:Reference parser discrepancies`, asserted by
+``scripts/grammar_audit.py``. These probes record instances of LEX-01 to LEX-04;
+they do not decide those items.
+
 Unsupported source features
 ---------------------------------
 

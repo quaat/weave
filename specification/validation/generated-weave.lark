@@ -6,32 +6,32 @@ type: IDENT ( indices )?
 parameter: IDENT ":" type
 parameters: parameter ( "," parameter )*
 arguments: IDENT ( "," IDENT )*
-owner: "domain" | "activation" | "runtime" | "adapter"
+owner: /domain(?![A-Za-z0-9_])/ | /activation(?![A-Za-z0-9_])/ | /runtime(?![A-Za-z0-9_])/ | /adapter(?![A-Za-z0-9_])/
 initial: UINT | IDENT
-n0_file: "net" IDENT "(" IDENT ":" "Nat" ")" ":" NL INDENT n0_item ( n0_item )* DEDENT
-n1_file: "net" IDENT "(" IDENT ":" "Nat" ")" ":" NL INDENT n1_item ( n1_item )* DEDENT
+n0_file: /net(?![A-Za-z0-9_])/ IDENT "(" IDENT ":" /Nat(?![A-Za-z0-9_])/ ")" ":" NL INDENT n0_item ( n0_item )* DEDENT
+n1_file: /net(?![A-Za-z0-9_])/ IDENT "(" IDENT ":" /Nat(?![A-Za-z0-9_])/ ")" ":" NL INDENT n1_item ( n1_item )* DEDENT
 n0_item: place0 | transition0 | aggregate | check0 | common
 n1_item: place1 | transition1 | aggregate | family | check1 | common
 common: resource | runtime_state | runtime_cancel | enum | api | foreign
-place0: "place" IDENT "=" initial "owner" owner NL
-place1: "place" IDENT ( colour )? "=" initial "owner" owner NL
-resource: "linear" IDENT indices "at" IDENT "issuer" IDENT "cancel" IDENT ( "registered" IDENT )? NL
-runtime_state: "runtime_state" IDENT ( "consumers" names | "terminal" ) NL
-runtime_cancel: "runtime_cancel" IDENT "via" IDENT NL
-enum: "enum" IDENT indices ":" NL INDENT case_decl ( case_decl )* DEDENT
+place0: /place(?![A-Za-z0-9_])/ IDENT "=" initial /owner(?![A-Za-z0-9_])/ owner NL
+place1: /place(?![A-Za-z0-9_])/ IDENT ( colour )? "=" initial /owner(?![A-Za-z0-9_])/ owner NL
+resource: /linear(?![A-Za-z0-9_])/ IDENT indices /at(?![A-Za-z0-9_])/ IDENT /issuer(?![A-Za-z0-9_])/ IDENT /cancel(?![A-Za-z0-9_])/ IDENT ( /registered(?![A-Za-z0-9_])/ IDENT )? NL
+runtime_state: /runtime_state(?![A-Za-z0-9_])/ IDENT ( /consumers(?![A-Za-z0-9_])/ names | /terminal(?![A-Za-z0-9_])/ ) NL
+runtime_cancel: /runtime_cancel(?![A-Za-z0-9_])/ IDENT /via(?![A-Za-z0-9_])/ IDENT NL
+enum: /enum(?![A-Za-z0-9_])/ IDENT indices ":" NL INDENT case_decl ( case_decl )* DEDENT
 case_decl: IDENT "(" type ")" NL
-transition0: "transition" IDENT ":" NL INDENT step0 ( step0 )* DEDENT
-transition1: "transition" IDENT colour ":" NL INDENT step1 ( step1 )* DEDENT
+transition0: /transition(?![A-Za-z0-9_])/ IDENT ":" NL INDENT step0 ( step0 )* DEDENT
+transition1: /transition(?![A-Za-z0-9_])/ IDENT colour ":" NL INDENT step1 ( step1 )* DEDENT
 step0: arc0 | guard
 step1: arc1 | guard
-arc0: ( "take" | "put" | "read" ) POSINT IDENT NL
-arc1: ( "take" | "put" | "read" ) POSINT IDENT ( colour )? NL
-guard: "guard" IDENT NL
-api: "api" IDENT "(" ( parameters )? ")" "->" type "via" IDENT NL
-foreign: "foreign" qname "(" ( parameters )? ")" "->" type ":" NL INDENT foreign_clause ( foreign_clause )* DEDENT
-foreign_clause: "dispatch" IDENT NL | "pending" IDENT NL | "keyed" "by" names NL | "correlate" "client_key" "or" "provider_reference" NL | "outcome" IDENT "via" IDENT NL
-aggregate: "invariant" IDENT ":" NL INDENT expr0 "==" expr0 NL DEDENT
-family: "invariant" IDENT colour ":" NL INDENT expr1 "==" expr1 NL DEDENT
+arc0: ( /take(?![A-Za-z0-9_])/ | /put(?![A-Za-z0-9_])/ | /read(?![A-Za-z0-9_])/ ) POSINT IDENT NL
+arc1: ( /take(?![A-Za-z0-9_])/ | /put(?![A-Za-z0-9_])/ | /read(?![A-Za-z0-9_])/ ) POSINT IDENT ( colour )? NL
+guard: /guard(?![A-Za-z0-9_])/ IDENT NL
+api: /api(?![A-Za-z0-9_])/ IDENT "(" ( parameters )? ")" "->" type /via(?![A-Za-z0-9_])/ IDENT NL
+foreign: /foreign(?![A-Za-z0-9_])/ qname "(" ( parameters )? ")" "->" type ":" NL INDENT foreign_clause ( foreign_clause )* DEDENT
+foreign_clause: /dispatch(?![A-Za-z0-9_])/ IDENT NL | /pending(?![A-Za-z0-9_])/ IDENT NL | /keyed(?![A-Za-z0-9_])/ /by(?![A-Za-z0-9_])/ names NL | /correlate(?![A-Za-z0-9_])/ /client_key(?![A-Za-z0-9_])/ /or(?![A-Za-z0-9_])/ /provider_reference(?![A-Za-z0-9_])/ NL | /outcome(?![A-Za-z0-9_])/ IDENT /via(?![A-Za-z0-9_])/ IDENT NL
+aggregate: /invariant(?![A-Za-z0-9_])/ IDENT ":" NL INDENT expr0 "==" expr0 NL DEDENT
+family: /invariant(?![A-Za-z0-9_])/ IDENT colour ":" NL INDENT expr1 "==" expr1 NL DEDENT
 expr0: product0 ( ( "+" | "-" ) product0 )*
 product0: unary0 ( "*" unary0 )*
 unary0: "-" unary0 | atom0
@@ -40,29 +40,29 @@ expr1: product1 ( ( "+" | "-" ) product1 )*
 product1: unary1 ( "*" unary1 )*
 unary1: "-" unary1 | atom1
 atom1: UINT | IDENT colour | "(" expr1 ")"
-check0: "check" IDENT "for" "one_order" ":" NL INDENT check_clause ( check_clause )* DEDENT
-check1: "check" IDENT "for" "orders" POSINT ":" NL INDENT coloured_clause ( coloured_clause )* DEDENT
-coloured_clause: check_clause | "property" IDENT ":" "tokens" "match" "firing" NL
-check_clause: "admit" IDENT "once" NL | "observe" "dispatch" IDENT NL | "place_bound" POSINT NL | "guard" IDENT guard_class NL | property
-guard_class: "establishes_paid" | "establishes_rejected" | "nondeterministic"
-property: "property" IDENT ":" "marked" IDENT "requires" requirement NL | "property" IDENT ":" "after" "paid_evidence" "forbid" IDENT NL | "property" IDENT ":" "after" "dispatch" "marked" IDENT "requires" "rejected_evidence" NL
-requirement: "paid_evidence" | "rejected_evidence" | "marked" IDENT
+check0: /check(?![A-Za-z0-9_])/ IDENT /for(?![A-Za-z0-9_])/ /one_order(?![A-Za-z0-9_])/ ":" NL INDENT check_clause ( check_clause )* DEDENT
+check1: /check(?![A-Za-z0-9_])/ IDENT /for(?![A-Za-z0-9_])/ /orders(?![A-Za-z0-9_])/ POSINT ":" NL INDENT coloured_clause ( coloured_clause )* DEDENT
+coloured_clause: check_clause | /property(?![A-Za-z0-9_])/ IDENT ":" /tokens(?![A-Za-z0-9_])/ /match(?![A-Za-z0-9_])/ /firing(?![A-Za-z0-9_])/ NL
+check_clause: /admit(?![A-Za-z0-9_])/ IDENT /once(?![A-Za-z0-9_])/ NL | /observe(?![A-Za-z0-9_])/ /dispatch(?![A-Za-z0-9_])/ IDENT NL | /place_bound(?![A-Za-z0-9_])/ POSINT NL | /guard(?![A-Za-z0-9_])/ IDENT guard_class NL | property
+guard_class: /establishes_paid(?![A-Za-z0-9_])/ | /establishes_rejected(?![A-Za-z0-9_])/ | /nondeterministic(?![A-Za-z0-9_])/
+property: /property(?![A-Za-z0-9_])/ IDENT ":" /marked(?![A-Za-z0-9_])/ IDENT /requires(?![A-Za-z0-9_])/ requirement NL | /property(?![A-Za-z0-9_])/ IDENT ":" /after(?![A-Za-z0-9_])/ /paid_evidence(?![A-Za-z0-9_])/ /forbid(?![A-Za-z0-9_])/ IDENT NL | /property(?![A-Za-z0-9_])/ IDENT ":" /after(?![A-Za-z0-9_])/ /dispatch(?![A-Za-z0-9_])/ /marked(?![A-Za-z0-9_])/ IDENT /requires(?![A-Za-z0-9_])/ /rejected_evidence(?![A-Za-z0-9_])/ NL
+requirement: /paid_evidence(?![A-Za-z0-9_])/ | /rejected_evidence(?![A-Za-z0-9_])/ | /marked(?![A-Za-z0-9_])/ IDENT
 flow_file: flow ( flow )*
-flow: "flow" IDENT "(" ( parameters )? ")" ( "->" type )? ":" NL INDENT body DEDENT
+flow: /flow(?![A-Za-z0-9_])/ IDENT "(" ( parameters )? ")" ( "->" type )? ":" NL INDENT body DEDENT
 body: ( simple )* ending
 simple: let_call | unit_call | propagate_bound | propagate_call
 call: qname "(" ( arguments )? ")"
-let_call: "let" IDENT "=" ( "await" )? call NL
-unit_call: "await" call NL
-propagate_bound: "let" IDENT "=" IDENT "?" NL
-propagate_call: "let" IDENT "=" "(" "await" call ")" "?" NL
+let_call: /let(?![A-Za-z0-9_])/ IDENT "=" ( /await(?![A-Za-z0-9_])/ call | call ) NL
+unit_call: /await(?![A-Za-z0-9_])/ call NL
+propagate_bound: /let(?![A-Za-z0-9_])/ IDENT "=" IDENT "?" NL
+propagate_call: /let(?![A-Za-z0-9_])/ IDENT "=" "(" /await(?![A-Za-z0-9_])/ call ")" "?" NL
 ending: return | match
-return: "return" ( IDENT ( "(" ( IDENT )? ")" )? )? NL
-match: "match" IDENT ":" NL INDENT branch ( branch )* DEDENT
+return: /return(?![A-Za-z0-9_])/ ( IDENT ( "(" ( IDENT )? ")" )? )? NL
+match: /match(?![A-Za-z0-9_])/ IDENT ":" NL INDENT branch ( branch )* DEDENT
 branch: IDENT "(" ( IDENT )? ")" ":" NL INDENT body DEDENT
-IDENT: /[A-Za-z_][A-Za-z0-9_]*/
-UINT: /0|[1-9][0-9]*/
-POSINT: /[1-9][0-9]*/
+IDENT: /[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_])/
+UINT: /(0|[1-9][0-9]*)(?![A-Za-z0-9_])/
+POSINT: /[1-9][0-9]*(?![A-Za-z0-9_])/
 NL: "\n"
 INDENT: "⟪"
 DEDENT: "⟫"

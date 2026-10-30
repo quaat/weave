@@ -175,8 +175,587 @@
       "pipeline": "E320",
       "reference": "E320",
       "expected": "E320"
+    },
+    {
+      "file": "valid/commented_blocks.weave",
+      "syntax": "ACCEPT",
+      "pipeline": "ACCEPT",
+      "reference": "ACCEPT",
+      "expected": "ACCEPT"
+    },
+    {
+      "file": "invalid/skipped_level.weave",
+      "syntax": "REJECT",
+      "pipeline": "E001",
+      "reference": "E001",
+      "expected": "E001"
     }
   ],
-  "agreement": 25,
-  "scope": "Independent generated syntax front end plus shared reference semantic checks; not independent semantic equivalence."
+  "agreement": 27,
+  "scope": "Independent generated syntax front end plus shared reference semantic checks; not independent semantic equivalence.",
+  "corpus_files_parsed": 32,
+  "probes": [
+    {
+      "id": "SD-01",
+      "start": "flow-file",
+      "probe": "Extra spaces between tokens of a flow header",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-02",
+      "start": "flow-file",
+      "probe": "No spaces between tokens of a flow header",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-03",
+      "start": "flow-file",
+      "probe": "Two spaces after return",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-04",
+      "start": "flow-file",
+      "probe": "Spaces inside the parentheses of a propagated call",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-05",
+      "start": "n0-file",
+      "probe": "Two spaces in a place declaration",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-06",
+      "start": "n0-file",
+      "probe": "Spaces inside a net header's parentheses",
+      "reference": "REJECT",
+      "ebnf": "ACCEPT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-07",
+      "start": "flow-file",
+      "probe": "Non-ASCII identifier (the reference uses Unicode-aware \\w)",
+      "reference": "ACCEPT",
+      "ebnf": "REJECT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-08",
+      "start": "flow-file",
+      "probe": "Flow name starting with a digit",
+      "reference": "ACCEPT",
+      "ebnf": "REJECT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-09",
+      "start": "n0-file",
+      "probe": "Hexadecimal integer in an invariant (read by the host AST reader)",
+      "reference": "ACCEPT",
+      "ebnf": "REJECT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-10",
+      "start": "flow-file",
+      "probe": "Trailing no-break space (Python strips Unicode whitespace)",
+      "reference": "ACCEPT",
+      "ebnf": "REJECT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-11",
+      "start": "flow-file",
+      "probe": "Trailing form feed",
+      "reference": "ACCEPT",
+      "ebnf": "REJECT",
+      "discrepancy": true
+    },
+    {
+      "id": "SD-12",
+      "start": "flow-file",
+      "probe": "Carriage return alone as a line break (Python splitlines)",
+      "reference": "ACCEPT",
+      "ebnf": "REJECT",
+      "discrepancy": true
+    },
+    {
+      "id": "SA-01",
+      "start": "flow-file",
+      "probe": "Comment after a block header",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-02",
+      "start": "flow-file",
+      "probe": "Trailing spaces",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-03",
+      "start": "flow-file",
+      "probe": "Blank lines at the start of a block",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-04",
+      "start": "flow-file",
+      "probe": "Comment-only line at an indentation that is not a level",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-05",
+      "start": "flow-file",
+      "probe": "Tab inside a comment (E001)",
+      "reference": "REJECT",
+      "ebnf": "REJECT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-06",
+      "start": "flow-file",
+      "probe": "Keyword glued to an identifier",
+      "reference": "REJECT",
+      "ebnf": "REJECT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-07",
+      "start": "flow-file",
+      "probe": "Spaces inside call parentheses",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-08",
+      "start": "flow-file",
+      "probe": "Operation named await without the await keyword (reference E212 is static)",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-09",
+      "start": "n0-file",
+      "probe": "Arc count with a leading zero",
+      "reference": "REJECT",
+      "ebnf": "REJECT",
+      "discrepancy": false
+    },
+    {
+      "id": "SA-10",
+      "start": "n0-file",
+      "probe": "Comment after a net header",
+      "reference": "ACCEPT",
+      "ebnf": "ACCEPT",
+      "discrepancy": false
+    }
+  ],
+  "rust_differential": {
+    "status": "compared",
+    "binary": "cargo build --offline --locked",
+    "compared": 54,
+    "agreements": 54,
+    "rows": [
+      {
+        "input": "valid/return_hold.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/arm_hold.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/finish_paid.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/settle.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/propagate_bound.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/checkout.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/checkout_composed.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/checkout_propagating.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/direct_charge.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/drop_hold.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/forge_escrow.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/wrong_order.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/reuse_hold.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/missing_unknown.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/paid_release.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/early_return_leak.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/recursion.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/unsupported_if.weave",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "mutations/skim.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "mutations/lose_paid.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "mutations/bogus_sell.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "mutations/quick_recover.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "mutations/leak.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "mutations/manual_leak.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "nets/unsafe_paid_release.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/commented_blocks.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "invalid/skipped_level.weave",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E001"
+      },
+      {
+        "input": "nets/Inventory.coloured.weave",
+        "start": "n1-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "nets/Inventory.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "nets/Lease.weave",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "nets/cross_order_read.weave",
+        "start": "n1-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "valid/lease_roundtrip.weave",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-01",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-02",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-03",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-04",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-05",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-06",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SD-07",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SD-08",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SD-09",
+        "start": "n0-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E003"
+      },
+      {
+        "input": "SD-10",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SD-11",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SD-12",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SA-01",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-02",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-03",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-04",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-05",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E001"
+      },
+      {
+        "input": "SA-06",
+        "start": "flow-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E200"
+      },
+      {
+        "input": "SA-07",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-08",
+        "start": "flow-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      },
+      {
+        "input": "SA-09",
+        "start": "n0-file",
+        "generated": "REJECT",
+        "rust": "REJECT",
+        "rust_code": "E003"
+      },
+      {
+        "input": "SA-10",
+        "start": "n0-file",
+        "generated": "ACCEPT",
+        "rust": "ACCEPT",
+        "round_trip": true
+      }
+    ]
+  }
 }

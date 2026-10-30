@@ -54,6 +54,14 @@ from `rules.json`, `examples/manifest.json` and `tests/rule-coverage.json`; its
 diagnostic fixture per code. `tests/test_result_labels.py` checks the result-label policy in
 `docs/chapters/verification.rst` against the envelope schema and the agent kit's label lint,
 and lints the envelopes wrapped from `validation/report.json` (quaat/weave#8).
+`scripts/grammar_audit.py` compares the generated Lark parser with the reference checker on
+the corpus and on the syntax probes of the grammar chapter's discrepancy table
+(`tests/test_grammar_audit.py` keeps table and probes equal). With `cargo` on `PATH`, or
+`WEAVE_SYNTAX_BIN` naming the binary, it also builds and runs the Rust parser
+(`../crates/weave-syntax`, quaat/weave#9) on every corpus file and probe and requires the same
+verdicts and an exact round trip; otherwise `validation/grammar-report.json` records that
+comparison as not established. The Rust crate's own tests run with `cargo test --all` from the
+repository root.
 `make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 
@@ -93,6 +101,10 @@ synthetic design specimen.
   foreign outcomes, and verification contracts.
 - Normative conformance cases, rule IDs, inference rules, generated grammar audit,
   and build-time `weave-check` tests of inline and included examples.
+- One grammar for parser and documentation: `grammar/weave.ebnf` is shown in the grammar
+  chapter, interpreted by the Rust parser in `../crates/weave-syntax` (concrete syntax tree
+  with spans and comments, exact round trip, normalisation check) and translated for the
+  generated audit; the chapter also lists the reference parser's syntax discrepancies.
 - A profile matrix, the public claims with their profile and supporting command,
   a generated rule-coverage page (a test or a pending-implementation entry for
   each rule ID), the source-to-model trust boundary, and a reproducible baseline

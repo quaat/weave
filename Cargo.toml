@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
+# SPDX-License-Identifier: MIT
+#
+# Virtual workspace for the Rust implementation (docs/decisions/0009-rust-implementation.md).
+[workspace]
+resolver = "3"
+members = ["crates/weave-syntax"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.89"
+license = "MIT"
+repository = "https://github.com/quaat/weave"
+publish = false

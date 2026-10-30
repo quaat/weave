@@ -19,7 +19,6 @@ Verification methods:
 
 Notes on the bootstrap seed:
 
-<!-- docs-audit: planned Cargo.toml rust-toolchain.toml -- Rust workspace, created by the Rust ADR task -->
 <!-- docs-audit: external agent-kit/docs/open-design-gaps.md -- named only to record that it does not exist -->
 
 - `agent-kit/CHANGELOG.md` was created during bootstrap so the changelog rule has a target.

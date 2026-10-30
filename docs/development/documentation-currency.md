@@ -80,7 +80,7 @@ A path that does not exist yet, or that names something outside the repository, 
 the document so the audit skips it:
 
 ```markdown
-<!-- docs-audit: planned crates/weave-core/ -- created by the Rust ADR task -->
+<!-- docs-audit: planned crates/weave-check/ -- created by the Rust checker task -->
 <!-- docs-audit: external preview/specimen.pdf -- path inside the original design bundle -->
 ```
 

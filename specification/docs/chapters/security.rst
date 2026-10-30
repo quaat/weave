@@ -115,7 +115,7 @@ reference code in ``reference/prototype/`` is correct.
 * The structural rules ``SYN-01`` to ``SYN-14`` of :doc:`grammar`, for the inputs
   the tests exercise.
 * The generated parser of ``scripts/grammar_audit.py`` agrees with the reference
-  checker on the 25 corpus outcomes. Its syntax stage is independent; its
+  checker on the 27 corpus outcomes. Its syntax stage is independent; its
   semantic stage is the reference checker (:doc:`grammar`).
 * ``scripts/validate.py`` fails unless every file of the snapshot matches the
   SHA-256 recorded in ``PROVENANCE.json``, so results are produced by the pinned

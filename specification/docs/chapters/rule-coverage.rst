@@ -160,7 +160,7 @@ Summary table
      - 3
      - tested
    * - :ref:`LEX-REQ-1 <LEX-REQ-1>`
-     - none
+     - C026, C027
      - 1
      - 3
      - tested
@@ -536,6 +536,7 @@ Tests by rule
 
 * :ref:`LEX-REQ-1 <LEX-REQ-1>`
 
+  * Conformance cases: C026 (ACCEPT), C027 (E001)
   * positive: ``test_rule_cases.RuleCases.test_four_space_indentation_is_accepted``
   * negative, E001: ``test_rule_cases.RuleCases.test_tabs_are_rejected``
   * negative, E001: ``test_rule_cases.RuleCases.test_indentation_other_than_four_spaces_is_rejected``
