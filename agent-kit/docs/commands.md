@@ -53,10 +53,11 @@ persistent result cache.
 
 ## Claims, tool status and runtime status
 
-Every claim the runner makes carries exactly one of the six result labels of the
-specification (`verification.rst`, Result vocabulary), verbatim: `PROVED`,
-`CHECKED WITHIN BOUNDS`, `CHECKED flow`, `SCRIPTED / passed scenario`, `VIOLATED`,
-`NOT ESTABLISHED`. A label belongs to one claim, never to a whole command. Nothing
+Every claim the runner makes carries exactly one of the result labels of the
+specification (`verification.rst`, Result vocabulary), verbatim. The specification has
+seven; the runner emits six of them: `PROVED`, `CHECKED WITHIN BOUNDS`, `CHECKED flow`,
+`SCRIPTED / passed scenario`, `VIOLATED`, `NOT ESTABLISHED`. The seventh, `CHECKED pure`,
+is stated only by the P0 `weave` command (quaat/weave#10). A label belongs to one claim, never to a whole command. Nothing
 else the runner reports is a claim, and it is never written with a label.
 
 | What | JSON | Text |
@@ -102,7 +103,7 @@ run can produce, each with its reason. The prototype's own certificate written b
 `analyze --certificate` is raw tool output and keeps its `status: PROVED` fields.
 
 Text output is a closed set of line forms. An unindented line is a claim only if it
-begins with one of the six labels exactly as written (not `proved`, `Checked flow` or
+begins with one of the seven labels exactly as written (not `proved`, `Checked flow` or
 `CHECKED FLOW`). Every other unindented line is blank, a diagnostic header
 (`file:line:column: CODE (RULE) [stage]` with a code from the diagnostic map and that
 code's principal rule, or `file: TOOL_ERROR [stage]` with a file path or nothing before

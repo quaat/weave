@@ -95,6 +95,22 @@ lists and records in separate pure files that flows cannot call yet; it has no
 loops, fork/join, higher-order calls, closures, imports or termination
 checking.
 
+P0's run budgets bound user-function calls (fuel), active calls (depth) and
+integer size, and nothing else (quaat/weave#10). Two consequences are open
+items, not decided here:
+
+* **Memory and output size are not budgeted.** Lists share their suffixes,
+  but a result that shares structure is written out in full, so a run that
+  stays well within its fuel can build a JSON result, or an internal value,
+  far larger than the memory available, and the process then fails rather
+  than reporting an exhausted budget. Copying a large integer into many list
+  elements has the same effect.
+* **Time is not budgeted.** A call does a bounded amount of work, but the bound
+  grows with the body's size and with the cost of arithmetic on integers up to
+  the size budget, so a run within the default budgets can take many minutes.
+  Callers that run untrusted or generated programs should apply their own time
+  and memory limits.
+
 General arithmetic exists only inside invariant equalities. The net grammar has
 no inhibitor arcs, arbitrary colour expressions, timed transitions, or priorities.
 Do not infer these features from their presence in other Petri-net tools.

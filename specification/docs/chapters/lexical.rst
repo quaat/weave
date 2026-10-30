@@ -125,7 +125,8 @@ Punctuation is ``(``, ``)``, ``[``, ``]``, ``,``, ``:``, ``.``, ``=``,
 ``->``, ``==``, ``+``, ``-``, ``*``, and ``?``, and, for P0 pure files
 (:doc:`pure`), ``<``, ``<=``, ``>``, ``>=`` and ``!=``. Their presence does not
 imply a general expression language: only the P0 grammar derives the five P0
-tokens, so a flow or net that contains one is rejected as before.
+tokens, so a flow or net that contains one is rejected as before, with the same
+code, now at the syntax stage (:ref:`chapters/grammar:Syntax diagnostics`).
 
 Integer tokens
 --------------------

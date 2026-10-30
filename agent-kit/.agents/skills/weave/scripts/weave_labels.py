@@ -125,7 +125,7 @@ _CLAIM_LINE = re.compile("^(" + "|".join(re.escape(label) for label in RESULT_LA
 
 
 def labelled(label: str, **fields) -> dict:
-    """A claim object; refuses any label outside the six."""
+    """A claim object; refuses any label outside the seven."""
     if label not in RESULT_LABELS:
         raise ValueError(f"{label!r} is not one of the seven result labels")
     return {"claim_label": label, **fields}

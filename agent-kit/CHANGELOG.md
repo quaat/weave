@@ -9,7 +9,7 @@ change to the kit's runner, skills, examples or policy.
 - **Axis and identifier:** tools: agent kit (version unchanged until the next release).
 - **Kind:** compatible addition.
 - **Change:** the specification added the P0 profile (quaat/weave#10) with diagnostic codes
-  diagnostic codes in the new E5xx range and the result label CHECKED pure. The skill's byte-identical copy of
+  in the new E5xx range and the result label CHECKED pure. The skill's byte-identical copy of
   `specification/diagnostics.json` (`assets/diagnostics.json`) is synced by
   `scripts/sync_skill_reference.py`, and the label lint (`weave_labels.RESULT_LABELS`)
   accepts the seventh label. The kit emits no P0 diagnostic and no CHECKED pure claim, and

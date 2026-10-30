@@ -157,6 +157,12 @@ syntax family; for P0 pure files it uses E500 (:ref:`P0-FILE-1 <P0-FILE-1>`):
      - ``limit``
      - as above
 
+Since quaat/weave#10 the lexer also produces the P0 tokens ``<``, ``<=``,
+``>``, ``>=`` and ``!=`` in every file kind. In a flow or net file they were
+lexical errors before and are now tokens that the flow and net grammars do not
+derive, so such a file is rejected at stage ``syntax`` instead of ``lexical``,
+with a different message but the same code (E200 or E003) and the same verdict.
+
 The message names the expected symbols and the token found. The span covers the
 offending character or token. The reference checker reports some of the same
 faults as E002 (types, brackets and parameter lists) or, in a coloured net,
