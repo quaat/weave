@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
+name = "weave-check"
+version = "0.1.0"
+dependencies = [
+ "weave-syntax",
+]
+
+[[package]]
 name = "weave-syntax"
 version = "0.1.0"

@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
+# SPDX-License-Identifier: MIT
+[package]
+name = "weave-check"
+version = "0.1.0"
+description = "P0 static checker: typed AST with spans from the weave-syntax CST, names, types, purity, recursion shape and block termination"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+weave-syntax = { path = "../weave-syntax" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
