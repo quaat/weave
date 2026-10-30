@@ -24,10 +24,26 @@ pub use check::check_program;
 pub use typed::{Prim, Program, Ty};
 pub use weave_syntax::{Diagnostic, Span};
 
-/// Stack for lowering and checking. The AST is as deep as the parse tree,
-/// which the parser bounds; a dedicated thread keeps the bound independent of
-/// the caller's stack.
+pub use lower::{EXPR_DEPTH_LIMIT, SYNTAX_DEPTH_LIMIT};
+
+/// Stack for lowering and checking. Recursion follows the syntax tree and the
+/// AST: the syntax depth is at most [`SYNTAX_DEPTH_LIMIT`] and the expression
+/// depth at most [`EXPR_DEPTH_LIMIT`], both checked before any recursive pass
+/// over the AST (a flat operator chain is shallow in the syntax tree but deep
+/// in the AST, so the parser's limit alone would not bound it). The bounded
+/// passes would fit a default thread; the dedicated thread keeps the bound
+/// independent of the caller's stack.
 pub const CHECK_STACK_BYTES: usize = 64 << 20;
+
+/// Stage of a diagnostic that reports a defect of this implementation (or a
+/// failure to start its thread), not a rejection of the source. Its code is
+/// not a statement about the file; tools report it as an internal error.
+pub const INTERNAL_STAGE: &str = "internal";
+
+/// True when `d` reports a defect of the checker rather than a P0 rejection.
+pub fn is_internal(d: &Diagnostic) -> bool {
+    d.stage == INTERNAL_STAGE
+}
 
 /// Parse, lower and check a P0 pure file.
 pub fn check(source: &str) -> Result<Program, Diagnostic> {
@@ -47,13 +63,13 @@ pub fn check(source: &str) -> Result<Program, Diagnostic> {
         Ok(Ok(result)) => result,
         Ok(Err(_)) => Err(Diagnostic::new(
             weave_syntax::diagnostic::PURE_SYNTAX_CODE,
-            "internal",
+            INTERNAL_STAGE,
             "Internal checker error.",
             Span::at(0),
         )),
         Err(e) => Err(Diagnostic::new(
             weave_syntax::diagnostic::PURE_SYNTAX_CODE,
-            "limit",
+            INTERNAL_STAGE,
             format!("Could not start the checker thread: {e}"),
             Span::at(0),
         )),

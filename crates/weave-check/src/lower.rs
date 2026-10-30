@@ -7,15 +7,57 @@
 //! the lowering preserves the source mapping. Binary operators fold to the
 //! left; parentheses disappear, leaving the inner expression's span.
 //!
-//! The only diagnostic raised here is `E500` (`P0-FILE-1`) for a word other
-//! than `await` before a qualified name, which the grammar admits only so that
-//! `await` can be rejected statically.
+//! The diagnostics raised here are `E500` (`P0-FILE-1`): for a word other than
+//! `await` before a qualified name, which the grammar admits only so that
+//! `await` can be rejected statically, and, at stage `limit`, for a file
+//! beyond the nesting limits of `pure.rst` ([`SYNTAX_DEPTH_LIMIT`],
+//! [`EXPR_DEPTH_LIMIT`]). The expression depth is computed bottom-up while the
+//! AST is built, so an over-deep expression (such as a long flat operator
+//! chain) is rejected before any deep tree exists; every later recursive pass
+//! (checking, lowering to instructions, dropping) is then bounded.
 
 use crate::ast::*;
 use weave_syntax::diagnostic::PURE_SYNTAX_CODE;
 use weave_syntax::{Cst, Diagnostic, Element, Node, Span};
 
+/// Largest syntax depth of a P0 file: nested production nodes of its
+/// derivation tree from `pure-file`, the root counting 1, not counting the
+/// lexical productions (`UINT` is a node in this parser and is not counted).
+pub const SYNTAX_DEPTH_LIMIT: usize = 300;
+/// Largest expression depth (see [`ExprAst::depth`]).
+pub const EXPR_DEPTH_LIMIT: usize = 256;
+
+fn limit(message: String, span: Span, limit: usize) -> Diagnostic {
+    Diagnostic::new(PURE_SYNTAX_CODE, "limit", message, span)
+        .with_detail("limit", weave_syntax::json::Value::from_usize(limit))
+}
+
+/// The first node (in pre-order) deeper than [`SYNTAX_DEPTH_LIMIT`], if any.
+fn check_syntax_depth(cst: &Cst) -> Result<(), Diagnostic> {
+    let mut stack: Vec<(&Node, usize)> = vec![(&cst.root, 1)];
+    while let Some((node, depth)) = stack.pop() {
+        if depth > SYNTAX_DEPTH_LIMIT {
+            return Err(limit(
+                format!(
+                    "Nesting exceeds the P0 syntax depth limit of {SYNTAX_DEPTH_LIMIT} productions."
+                ),
+                node.span,
+                SYNTAX_DEPTH_LIMIT,
+            ));
+        }
+        for child in node.children.iter().rev() {
+            if let Element::Node(n) = child
+                && n.kind != "UINT"
+            {
+                stack.push((n, depth + 1));
+            }
+        }
+    }
+    Ok(())
+}
+
 pub fn lower(cst: &Cst) -> Result<FileAst, Diagnostic> {
+    check_syntax_depth(cst)?;
     let l = Lowering { cst };
     let mut items = Vec::new();
     for item in l.nodes(&cst.root, "pure-item") {
@@ -35,6 +77,22 @@ struct Lowering<'a> {
 }
 
 impl<'a> Lowering<'a> {
+    /// An AST expression, rejected with `E500` at stage `limit` when its depth
+    /// exceeds [`EXPR_DEPTH_LIMIT`].
+    fn expr_node(&self, kind: ExprKind, span: Span) -> Result<ExprAst, Diagnostic> {
+        let e = ExprAst::new(kind, span);
+        if e.depth > EXPR_DEPTH_LIMIT {
+            return Err(limit(
+                format!(
+                    "Expression nesting exceeds the P0 expression depth limit of {EXPR_DEPTH_LIMIT}."
+                ),
+                span,
+                EXPR_DEPTH_LIMIT,
+            ));
+        }
+        Ok(e)
+    }
+
     fn text(&self, span: Span) -> &'a str {
         self.cst
             .source
@@ -255,10 +313,7 @@ impl<'a> Lowering<'a> {
                         (None, _) => rhs,
                         (Some(lhs), Some(o)) => {
                             let span = Span::new(start, n.span.end);
-                            ExprAst {
-                                kind: ExprKind::Binary(o, Box::new(lhs), Box::new(rhs)),
-                                span,
-                            }
+                            self.expr_node(ExprKind::Binary(o, Box::new(lhs), Box::new(rhs)), span)?
                         }
                         (Some(_), None) => return Err(self.shape(operand, n.span)),
                     });
@@ -315,10 +370,7 @@ impl<'a> Lowering<'a> {
     fn unary(&self, node: &Node) -> Result<ExprAst, Diagnostic> {
         if let Some(inner) = self.nodes(node, "unary").next() {
             let operand = self.unary(inner)?;
-            return Ok(ExprAst {
-                kind: ExprKind::Neg(Box::new(operand)),
-                span: node.span,
-            });
+            return self.expr_node(ExprKind::Neg(Box::new(operand)), node.span);
         }
         self.primary(self.node(node, "primary")?)
     }
@@ -331,10 +383,7 @@ impl<'a> Lowering<'a> {
         match child.kind.as_str() {
             "UINT" => {
                 let text = self.text(child.span).to_string();
-                Ok(ExprAst {
-                    kind: ExprKind::Int(text),
-                    span: child.span,
-                })
+                self.expr_node(ExprKind::Int(text), child.span)
             }
             // "(", expr, ")": the inner expression keeps its own span.
             "expr" => self.expr(child),
@@ -343,10 +392,7 @@ impl<'a> Lowering<'a> {
                     .nodes(child, "expr")
                     .map(|n| self.expr(n))
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(ExprAst {
-                    kind: ExprKind::List(items),
-                    span: child.span,
-                })
+                self.expr_node(ExprKind::List(items), child.span)
             }
             "name-expr" => self.name_expr(child),
             other => Err(self.shape(other, child.span)),
@@ -425,13 +471,13 @@ impl<'a> Lowering<'a> {
         if parts.is_empty() {
             return Err(self.shape("name-expr", node.span));
         }
-        Ok(ExprAst {
-            kind: ExprKind::Path {
+        self.expr_node(
+            ExprKind::Path {
                 prefix,
                 parts,
                 call,
             },
-            span: node.span,
-        })
+            node.span,
+        )
     }
 }

@@ -175,7 +175,7 @@ cargo run -q -p weave-cli -- run specification/examples/pure/valid/budgets.weave
     --entry spin --args '[0]' --fuel 1000        # stops at its fuel budget: exit 4
 ```
 
-`weave check FILE` prints one `CHECKED pure` claim for the file or the first diagnostic (code, rule, span). `weave run FILE --entry NAME --args JSON` also prints the outcome, a value, a pure fault (`division-by-zero`, `empty-list`) or an exhausted budget (`fuel`, `depth`, `int-size`), and every budget with what the run used; `--fuel`, `--max-depth` and `--int-bits` set the budgets and `--json` prints one JSON object. Exit status: 0 checked or a value, 1 a rejected file or invalid request, 2 usage, 3 a fault, 4 an exhausted budget.
+`weave check FILE` prints one `CHECKED pure` claim for the file or the first diagnostic (code, rule, span). `weave run FILE --entry NAME --args JSON` also prints the outcome, a value, a pure fault (`division-by-zero`, `empty-list`) or an exhausted budget (`fuel`, `depth`, `int-size`), and every budget with what the run used; `--fuel`, `--max-depth` and `--int-bits` set the budgets and `--json` prints one JSON object. Exit status: 0 checked or a value, 1 a rejected file or invalid request, 2 usage, 3 a fault, 4 an exhausted budget, 70 an internal error. Expressions are limited to depth 256 (such as 256 operands in one operator chain) and files to syntax depth 300; deeper input is rejected with a syntax-limit diagnostic, never a crash (the P0 chapter, "Nesting limits").
 
 With `cargo` on `PATH`, `make validate-offline` also compares the Rust parser with the generated grammar audit on the whole corpus, and the `weave` command with the Python P0 reference evaluator; without it, both comparisons are reported as not established.
 

@@ -603,3 +603,29 @@ fn outcomes_are_closed_and_distinct() {
         assert!(info.rule.unwrap().starts_with("P0-"));
     }
 }
+
+#[test]
+fn expressions_at_the_depth_limit_evaluate_on_a_small_stack() {
+    // The evaluator's setup recursion (lowering to instructions, dropping the
+    // typed tree) follows the expression depth, which the checker bounds.
+    let limit = weave_check::EXPR_DEPTH_LIMIT;
+    let handle = std::thread::Builder::new()
+        .stack_size(1 << 20)
+        .spawn(move || {
+            let chain = vec!["x"; limit].join(" * ");
+            let minus = format!("{}x", "-".repeat(limit - 1));
+            let src = format!(
+                "fn p(x: Int) -> Int:\n    return {chain}\n\nfn m(x: Int) -> Int:\n    return {minus}\n"
+            );
+            let program = weave_check::check(&src).map_err(|d| d.message)?;
+            let mut out = Vec::new();
+            for f in ["p", "m"] {
+                let r = run(&program, f, &json::parse("[1]").unwrap(), DEFAULT_BUDGETS)
+                    .map_err(|e| format!("{e:?}"))?;
+                out.push(matches!(r.outcome, Outcome::Value(_)));
+            }
+            Ok::<_, String>(out)
+        })
+        .unwrap();
+    assert_eq!(handle.join().unwrap(), Ok(vec![true, true]));
+}

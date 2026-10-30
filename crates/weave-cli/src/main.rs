@@ -21,7 +21,7 @@
 //!
 //! Exit status: 0 checked, or a run that returned a value; 1 a rejected file
 //! or an invalid run request (E540); 2 usage or input errors; 3 a pure fault;
-//! 4 an exhausted budget.
+//! 4 an exhausted budget; 70 an internal error of the checker or evaluator.
 
 use std::io::{Read, Write};
 use std::process::ExitCode;
@@ -252,6 +252,11 @@ fn main() -> ExitCode {
     let mut report = Report::new(&o.command, name, &source, o.json);
     let program = match weave_check::check(&source) {
         Ok(p) => p,
+        // A checker defect is not a rejection of the file: no claim, no diagnostic.
+        Err(d) if weave_check::is_internal(&d) => {
+            eprintln!("weave: internal checker error: {}", d.message);
+            return ExitCode::from(70);
+        }
         Err(d) => {
             report.set("claims", Json::Array(Vec::new()));
             if o.command == "run" {

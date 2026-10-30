@@ -38,11 +38,38 @@ Pure files
 
 **P0-FILE-1 — Pure-file syntax.** A P0 file MUST be derived from the start
 symbol ``pure-file`` of ``grammar/weave.ebnf`` (:ref:`SYN-01 <SYN-01>`), read
-through :doc:`lexical`. In a ``prefixed`` part of ``name-expr`` the first word
-MUST be ``await``. A lexical fault, input the grammar does not derive, nesting
-beyond the parser's limit (:ref:`chapters/grammar:Syntax diagnostics`) or
-another word before a qualified name is reported as E500. Layout faults are
-E001, as for every file kind (:ref:`LEX-REQ-1 <LEX-REQ-1>`).
+through :doc:`lexical`. In ``name-expr``, the word before a ``prefixed`` part
+MUST be ``await``. A lexical fault, input the grammar does not derive, another
+word before a ``prefixed`` part, or nesting beyond the limits of
+`Nesting limits`_ is reported as E500. Layout faults are E001, as for every
+file kind (:ref:`LEX-REQ-1 <LEX-REQ-1>`).
+
+Nesting limits
+~~~~~~~~~~~~~~~~~~~~
+
+Both P0 implementations reject, with E500 at stage ``limit``, a file whose
+nesting exceeds either of two limits. They are limits of these
+implementations, which keep recursion within a fixed stack, not properties of
+the grammar; a program within them is portable between the two.
+
+* **Syntax depth** at most **300**: the largest number of nested production
+  nodes in the file's derivation tree from ``pure-file``, the root counting 1,
+  not counting the lexical productions (``IDENT``, ``UINT``, ``POSINT``,
+  ``NL``, ``INDENT``, ``DEDENT``). A parenthesised level costs seven
+  productions, so ``return`` with 41 parentheses around a literal is at depth
+  300, and a call nested in a call costs ten. The Rust parser's own limit of 400
+  productions (:ref:`chapters/grammar:Syntax diagnostics`) is never reached
+  first by a derivable file within this limit.
+* **Expression depth** at most **256**: a literal has depth 1; ``-e`` one more
+  than ``e``; a binary operator one more than its deeper operand; a list
+  literal one more than its deepest element; a name with ``k`` dotted parts
+  ``k``, plus the depth of its deepest argument (or argument label) if it is a
+  call. Parentheses add nothing. A chain of ``n`` operands such as
+  ``x + x + ... + x`` has depth ``n``, so at most 256 operands; a flat chain is
+  shallow in the syntax tree, so the syntax depth alone would not bound it.
+
+Each implementation checks the syntax depth after parsing and the expression
+depth while it builds each expression, before any recursive pass over it.
 
 The P0 productions of the shared grammar are:
 
@@ -325,11 +352,11 @@ Checking order
 
 This order is informative: :doc:`conformance` fixes only the required code of
 each corpus case, each of which has one violation. Both P0 implementations
-report the first violation found in this order, so their codes can be compared
-on any input:
+report the first violation found in this order and share the
+`Nesting limits`_, so their codes can be compared on any input:
 
-#. syntax and layout (E001, E500), including the prefix word of
-   :ref:`P0-FILE-1 <P0-FILE-1>`;
+#. syntax and layout (E001, E500), including the nesting limits and the
+   prefix word of :ref:`P0-FILE-1 <P0-FILE-1>`;
 #. top-level names in file order (E501);
 #. records in file order, each field in order: duplicate name (E502), then
    type (E504);
@@ -402,9 +429,9 @@ function, uses no budget and raises no fault.
 .. _P0-EVAL-3:
 
 **P0-EVAL-3 — Calls.** A call of a function of the file evaluates its
-arguments, is then admitted (fuel first, :ref:`P0-BUDGET-2 <P0-BUDGET-2>`,
-then depth, :ref:`P0-BUDGET-3 <P0-BUDGET-3>`), binds the parameters to the
-argument values and runs the body; the value of the ``return`` that ends the
+arguments, then takes one unit of fuel (:ref:`P0-BUDGET-2 <P0-BUDGET-2>`)
+and then an active-call slot (:ref:`P0-BUDGET-3 <P0-BUDGET-3>`), binds the
+parameters to the argument values and runs the body; the value of the ``return`` that ends the
 body is the value of the call. The entry is called the same way, with the
 run's arguments. Primitive calls and record constructions are not function
 calls and use neither fuel nor depth.
@@ -496,8 +523,10 @@ Budgets
 integers given as run parameters: **fuel** ``F``, **depth** ``D`` and
 **integer size** ``B`` in bits. A tool supplies defaults for those not given,
 and reports all three, with what the run used of each, whatever the outcome.
-Usage is the number of calls admitted, the largest number of calls active at
-once, and the largest bit length of an integer admitted. A run that exceeds a
+Usage is the number of calls that took fuel (a call that then exceeds the
+depth budget counts), the largest number of calls active at once, and the
+largest bit length of an integer admitted. Budgets bound calls, depth and
+integer size, not memory or time (:doc:`limitations`). A run that exceeds a
 budget ends with the outcome *exhausted* and that budget's kind (``fuel``,
 ``depth`` or ``int-size``). Exhaustion is not a fault and is not a value: it
 says nothing about whether the program would terminate, fault or return with a
@@ -506,8 +535,8 @@ larger budget.
 .. _P0-BUDGET-2:
 
 **P0-BUDGET-2 — Fuel.** Each call of a function of the file, the entry call
-included, takes one unit of fuel when it is admitted. If ``F`` calls have
-already been admitted, the call is not admitted and the run ends with fuel
+included, takes one unit of fuel before it runs. If ``F`` calls have already
+taken fuel, the call takes none, does not run, and the run ends with fuel
 exhaustion (E530) at the span of the call (for the entry call, the entry
 function's name). Fuel counts calls, so the exhaustion point is the same in
 every implementation. With no loops, a call does a bounded amount of work, so
@@ -515,9 +544,10 @@ every non-terminating P0 run exhausts fuel or depth.
 
 .. _P0-BUDGET-3:
 
-**P0-BUDGET-3 — Depth.** A call is active from its admission until its
-``return``. If, after the call has taken its fuel, ``D`` calls are already
-active, the run ends with depth exhaustion (E531) at the span of the call.
+**P0-BUDGET-3 — Depth.** A call is active from the moment it takes its slot
+until its ``return``. If, after the call has taken its fuel, ``D`` calls are
+already active, the call takes no slot, does not run, and the run ends with
+depth exhaustion (E531) at the span of the call.
 
 .. _P0-BUDGET-4:
 
@@ -673,8 +703,9 @@ Implementations and evidence
 exits 0, or prints the first diagnostic and exits 1.
 ``weave run FILE --entry NAME --args JSON [--fuel N] [--max-depth N]
 [--int-bits N]`` checks the file and then runs it, printing the outcome and
-the budgets; it exits 0 for a value, 3 for a fault and 4 for exhaustion, and 1
-for a rejected file or an invalid request. ``--json`` prints one JSON object
+the budgets; it exits 0 for a value, 3 for a fault and 4 for exhaustion, 1
+for a rejected file or an invalid request, and 70 for an internal error of
+the implementation, which is never reported as a rejection. ``--json`` prints one JSON object
 with the claims, the outcome, the budgets and ``weave-diagnostic-v1``
 diagnostics. Calls use an explicit frame stack, never the host stack; integers
 use an arbitrary-precision implementation in the crate; neither crate panics
@@ -689,8 +720,9 @@ the ``weave`` command.
 
 **Differential.** ``scripts/p0_differential.py``, part of
 ``make validate-offline``, runs both implementations on the P0 corpus
-(``examples/pure/manifest.json``) and on seeded generated programs and inputs,
-and requires equal static codes, outcome kinds, values, fault and exhaustion
+(``examples/pure/manifest.json``), on seeded generated programs and inputs,
+and on inputs just under and just over the `Nesting limits`_, and requires
+equal static codes, outcome kinds, values, fault and exhaustion
 kinds and budget usage. When ``cargo`` is not on ``PATH`` and
 ``WEAVE_BIN`` does not name the ``weave`` binary, the comparison is recorded as
 not established in ``validation/p0-differential.json``, never as agreement.

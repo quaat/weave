@@ -789,6 +789,10 @@
           "test": "tests/test_p0.py::Dynamic::test_fuel_and_depth",
           "polarity": "negative",
           "code": "E530"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_negative_budgets_are_usage_errors",
+          "polarity": "negative"
         }
       ],
       "note": "The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations."
@@ -973,6 +977,11 @@
         },
         {
           "test": "tests/test_p0.py::Static::test_file_syntax",
+          "polarity": "negative",
+          "code": "E500"
+        },
+        {
+          "test": "tests/test_p0.py::Static::test_nesting_limits",
           "polarity": "negative",
           "code": "E500"
         }

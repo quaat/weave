@@ -171,6 +171,32 @@ class Static(unittest.TestCase):
                     "fn odd(n: Int) -> Bool:\n    return n != 0 and even(n - 1)\n")
         self.assertEqual(spanned(even_odd), ("E516", "P0-REC-1", "odd(n - 1)"))
 
+    # P0-FILE-1: the nesting limits, the same in both implementations
+    def test_nesting_limits(self):
+        limit = ref.EXPR_DEPTH_LIMIT
+        self.assertEqual((ref.SYNTAX_DEPTH_LIMIT, limit), (300, 256))
+        self.assertEqual(code(fn("return " + " + ".join(["x"] * limit))), "ACCEPT")
+        for source in (fn("return " + " + ".join(["x"] * (limit + 1))),
+                       fn("return " + " or ".join(["true"] * (limit + 1)), "(x: Int) -> Bool"),
+                       fn("return " + "-" * limit + "1"),
+                       fn("return " + "(" * 42 + "1" + ")" * 42)):
+            try:
+                ref.check(source)
+            except ref.Diagnostic as d:
+                self.assertEqual((d.code, d.stage), ("E500", "limit"))
+            else:
+                self.fail("accepted")
+        self.assertEqual(code(fn("return " + "(" * 41 + "1" + ")" * 41)), "ACCEPT")
+
+    def test_negative_budgets_are_usage_errors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "b.weave"
+            path.write_text(BUDGETS, encoding="utf-8")
+            for flag in ("--fuel", "--max-depth", "--int-bits"):
+                with self.subTest(flag), mock.patch("sys.stderr"), self.assertRaises(SystemExit) as raised:
+                    ref.main(["run", str(path), "--entry", "identity", "--args", "[1]", flag, "-1"])
+                self.assertEqual(raised.exception.code, 2)
+
     def test_corpus_check_cases(self):
         manifest = json.loads((EXAMPLES / "pure/manifest.json").read_text(encoding="utf-8"))
         for case in manifest["cases"]:

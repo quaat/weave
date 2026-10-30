@@ -275,7 +275,7 @@ Summary table
    * - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
      - C143, C170
      - 1
-     - 1
+     - 2
      - tested
    * - :ref:`P0-BUDGET-2 <P0-BUDGET-2>`
      - C168, C169, C170
@@ -350,7 +350,7 @@ Summary table
    * - :ref:`P0-FILE-1 <P0-FILE-1>`
      - C101, C108, C109, C110
      - 1
-     - 1
+     - 2
      - tested
    * - :ref:`P0-FORK-1 <P0-FORK-1>`
      - C124
@@ -848,6 +848,7 @@ Tests by rule
   * Conformance cases: C143 (E532), C170 (E530)
   * positive: ``test_p0.Dynamic.test_corpus_run_cases``
   * negative, E530: ``test_p0.Dynamic.test_fuel_and_depth``
+  * negative: ``test_p0.Static.test_negative_budgets_are_usage_errors``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
 
 * :ref:`P0-BUDGET-2 <P0-BUDGET-2>`
@@ -947,6 +948,7 @@ Tests by rule
   * Conformance cases: C101 (ACCEPT), C108 (ACCEPT), C109 (E500), C110 (E500)
   * positive: ``test_p0.Static.test_file_syntax``
   * negative, E500: ``test_p0.Static.test_file_syntax``
+  * negative, E500: ``test_p0.Static.test_nesting_limits``
   * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
 
 * :ref:`P0-FORK-1 <P0-FORK-1>`

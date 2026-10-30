@@ -73,59 +73,59 @@
   },
   "SYN-01": {
     "chapter": "grammar",
-    "line": 202
+    "line": 208
   },
   "SYN-02": {
     "chapter": "grammar",
-    "line": 209
+    "line": 215
   },
   "SYN-03": {
     "chapter": "grammar",
-    "line": 215
+    "line": 221
   },
   "SYN-04": {
     "chapter": "grammar",
-    "line": 222
+    "line": 228
   },
   "SYN-05": {
     "chapter": "grammar",
-    "line": 228
+    "line": 234
   },
   "SYN-06": {
     "chapter": "grammar",
-    "line": 234
+    "line": 240
   },
   "SYN-07": {
     "chapter": "grammar",
-    "line": 240
+    "line": 246
   },
   "SYN-08": {
     "chapter": "grammar",
-    "line": 246
+    "line": 252
   },
   "SYN-09": {
     "chapter": "grammar",
-    "line": 252
+    "line": 258
   },
   "SYN-10": {
     "chapter": "grammar",
-    "line": 258
+    "line": 264
   },
   "SYN-11": {
     "chapter": "grammar",
-    "line": 265
+    "line": 271
   },
   "SYN-12": {
     "chapter": "grammar",
-    "line": 270
+    "line": 276
   },
   "SYN-13": {
     "chapter": "grammar",
-    "line": 275
+    "line": 281
   },
   "SYN-14": {
     "chapter": "grammar",
-    "line": 281
+    "line": 287
   },
   "LEX-REQ-1": {
     "chapter": "lexical",
@@ -161,127 +161,127 @@
   },
   "P0-DECL-1": {
     "chapter": "pure",
-    "line": 122
+    "line": 149
   },
   "P0-DECL-2": {
     "chapter": "pure",
-    "line": 127
+    "line": 154
   },
   "P0-DECL-3": {
     "chapter": "pure",
-    "line": 132
+    "line": 159
   },
   "P0-DECL-4": {
     "chapter": "pure",
-    "line": 138
+    "line": 165
   },
   "P0-TYPE-1": {
     "chapter": "pure",
-    "line": 144
+    "line": 171
   },
   "P0-NAME-1": {
     "chapter": "pure",
-    "line": 155
+    "line": 182
   },
   "P0-NAME-2": {
     "chapter": "pure",
-    "line": 161
+    "line": 188
   },
   "P0-TYPE-2": {
     "chapter": "pure",
-    "line": 238
+    "line": 265
   },
   "P0-TYPE-3": {
     "chapter": "pure",
-    "line": 244
+    "line": 271
   },
   "P0-CALL-1": {
     "chapter": "pure",
-    "line": 251
+    "line": 278
   },
   "P0-RECORD-1": {
     "chapter": "pure",
-    "line": 261
+    "line": 288
   },
   "P0-RECORD-2": {
     "chapter": "pure",
-    "line": 267
+    "line": 294
   },
   "P0-EFFECT-1": {
     "chapter": "pure",
-    "line": 279
+    "line": 306
   },
   "P0-EFFECT-2": {
     "chapter": "pure",
-    "line": 286
+    "line": 313
   },
   "P0-FORK-1": {
     "chapter": "pure",
-    "line": 291
+    "line": 318
   },
   "P0-PATH-1": {
     "chapter": "pure",
-    "line": 307
+    "line": 334
   },
   "P0-REC-1": {
     "chapter": "pure",
-    "line": 316
+    "line": 343
   },
   "P0-VALUE-1": {
     "chapter": "pure",
-    "line": 369
+    "line": 396
   },
   "P0-EVAL-1": {
     "chapter": "pure",
-    "line": 381
+    "line": 408
   },
   "P0-EVAL-2": {
     "chapter": "pure",
-    "line": 393
+    "line": 420
   },
   "P0-EVAL-3": {
     "chapter": "pure",
-    "line": 402
+    "line": 429
   },
   "P0-ARITH-1": {
     "chapter": "pure",
-    "line": 415
+    "line": 442
   },
   "P0-ARITH-2": {
     "chapter": "pure",
-    "line": 424
+    "line": 451
   },
   "P0-LIST-1": {
     "chapter": "pure",
-    "line": 458
+    "line": 485
   },
   "P0-FAULT-1": {
     "chapter": "pure",
-    "line": 468
+    "line": 495
   },
   "P0-BUDGET-1": {
     "chapter": "pure",
-    "line": 493
+    "line": 520
   },
   "P0-BUDGET-2": {
     "chapter": "pure",
-    "line": 506
+    "line": 535
   },
   "P0-BUDGET-3": {
     "chapter": "pure",
-    "line": 516
+    "line": 545
   },
   "P0-BUDGET-4": {
     "chapter": "pure",
-    "line": 522
+    "line": 552
   },
   "P0-RUN-1": {
     "chapter": "pure",
-    "line": 548
+    "line": 578
   },
   "P0-RUN-2": {
     "chapter": "pure",
-    "line": 559
+    "line": 589
   },
   "SEC-CAP-1": {
     "chapter": "security",

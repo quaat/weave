@@ -10,7 +10,9 @@ Inputs:
 * sequential merge sort (``examples/pure/valid/merge_sort.weave``) on every list of
   length 0 to 5 over {0, 1, 2} and on seeded random lists, against Python ``sorted``;
 * seeded generated programs: well-typed programs run on random arguments under
-  random budgets, and copies with one injected static error whose code is known.
+  random budgets, and copies with one injected static error whose code is known;
+* the nesting limits of pure.rst: inputs just under and just over the syntax depth
+  and expression depth limits, which both implementations must classify alike.
 
 Compared: the static code (or ACCEPT), the outcome kind, the value, the fault or
 exhaustion kind, the diagnostic code, and the budget usage. The Rust side is the
@@ -362,12 +364,54 @@ def generated(binary: Path | None, rng: random.Random, programs: int = GENERATED
             "compared_runs": outcomes}
 
 
+def _int_fn(expr: str) -> str:
+    return f"fn f(x: Int) -> Int:\n    return {expr}\n"
+
+
+def _bool_fn(expr: str) -> str:
+    return f"fn f(x: Bool) -> Bool:\n    return {expr}\n"
+
+
+_G = "fn g(x: Int) -> Int:\n    return x\n\n"
+E = ref.EXPR_DEPTH_LIMIT
+
+# (name, source, required code) at and just over each nesting limit.
+LIMIT_PROBES = [
+    ("sum chain at the expression limit", _int_fn(" + ".join(["x"] * E)), "ACCEPT"),
+    ("sum chain over the expression limit", _int_fn(" + ".join(["x"] * (E + 1))), "E500"),
+    ("product chain over the limit", _int_fn(" * ".join(["x"] * (E + 1))), "E500"),
+    ("and chain at the limit", _bool_fn(" and ".join(["x"] * E)), "ACCEPT"),
+    ("or chain over the limit", _bool_fn(" or ".join(["x"] * (E + 1))), "E500"),
+    ("long sum chain", _int_fn(" + ".join(["x"] * 2000)), "E500"),
+    ("unary minus at the limit", _int_fn("-" * (E - 1) + "1"), "ACCEPT"),
+    ("unary minus over the limit", _int_fn("-" * E + "1"), "E500"),
+    ("parentheses at the syntax limit", _int_fn("(" * 41 + "1" + ")" * 41), "ACCEPT"),
+    ("parentheses over the syntax limit", _int_fn("(" * 42 + "1" + ")" * 42), "E500"),
+    ("parenthesised name over the syntax limit", _int_fn("(" * 41 + "x" + ")" * 41), "E500"),
+    ("nested calls at the syntax limit", _G + _int_fn("g(" * 28 + "x" + ")" * 28), "ACCEPT"),
+    ("nested calls over the syntax limit", _G + _int_fn("g(" * 29 + "x" + ")" * 29), "E500"),
+    ("parentheses far over the parser limit", _int_fn("(" * 70 + "1" + ")" * 70), "E500"),
+]
+
+
+def limits(binary: Path | None) -> dict:
+    for name, source, want in LIMIT_PROBES:
+        py = python_check(source)[0]
+        if py != want:
+            raise AssertionError(f"limit probe {name}: Python reference {py}, required {want}")
+        if binary is not None and rust_check(binary, source) != py:
+            raise AssertionError(f"limit probe {name}: Rust {rust_check(binary, source)}, Python reference {py}")
+    return {"probes": len(LIMIT_PROBES), "syntax_depth_limit": ref.SYNTAX_DEPTH_LIMIT,
+            "expression_depth_limit": ref.EXPR_DEPTH_LIMIT}
+
+
 def build_report(binary: Path | None, how: str, programs: int = GENERATED_PROGRAMS) -> dict:
     """Run every comparison; without a binary, check the reference alone and say so."""
     rng = random.Random(SEED)
     rows = corpus(binary)
     sorting = merge_sort(binary, rng)
     gen = generated(binary, rng, programs)
+    bounds = limits(binary)
     report = {
         "scope": "Rust weave versus the Python P0 reference evaluator: static codes, outcome kinds, values, fault and "
                  "exhaustion kinds, diagnostic codes and budget usage. Regression evidence on these inputs, not a proof "
@@ -375,6 +419,7 @@ def build_report(binary: Path | None, how: str, programs: int = GENERATED_PROGRA
         "corpus": {"cases": len(rows), "rows": rows},
         "merge_sort": sorting,
         "generated": gen,
+        "limits": bounds,
     }
     if binary is None:
         report["rust_differential"] = {"status": "skipped", "compared": 0,
@@ -382,7 +427,7 @@ def build_report(binary: Path | None, how: str, programs: int = GENERATED_PROGRA
     else:
         report["rust_differential"] = {"status": "compared", "binary": how,
                                        "compared": len(rows) + sorting["inputs"] + gen["runs"] + gen["mutants"]
-                                       + gen["programs"]}
+                                       + gen["programs"] + bounds["probes"]}
     return report
 
 
@@ -394,7 +439,8 @@ def main() -> int:
     out.mkdir(exist_ok=True)
     (out / "p0-differential.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(f"PASS: P0 reference meets {len(rows)} corpus expectations; merge sort agrees with sorted() on "
-          f"{sorting['inputs']} lists; {gen['programs']} generated programs, {gen['runs']} runs, {gen['mutants']} mutants")
+          f"{sorting['inputs']} lists; {gen['programs']} generated programs, {gen['runs']} runs, {gen['mutants']} mutants; "
+          f"{report['limits']['probes']} nesting-limit probes")
     if binary is None:
         print(f"SKIP: {report['rust_differential']['note']}")
     else:

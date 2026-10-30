@@ -248,3 +248,45 @@ fn standard_input_and_invalid_utf8() {
     let diag = &d.get("diagnostics").and_then(Value::as_array).unwrap()[0];
     assert_eq!(s(diag, "code"), "E500");
 }
+
+#[test]
+fn long_operator_chains_are_limit_diagnostics_under_check_and_run() {
+    // S-1: a flat chain is shallow in the syntax tree but deep in the AST; the
+    // expression depth limit (256) rejects it before any recursive pass.
+    let source = |n: usize| {
+        format!(
+            "fn f(x: Int) -> Int:\n    return {}\n",
+            vec!["x"; n].join(" + ")
+        )
+    };
+    let at = source(256);
+    let out = weave(&["run", "-", "--entry", "f", "--args", "[2]"], Some(&at));
+    assert_eq!(out.status.code(), Some(0), "{}", stdout(&out));
+    assert!(stdout(&out).contains("result: 512\n"));
+    for n in [257, 100_000] {
+        let src = source(n);
+        for args in [
+            &["check", "-", "--json"][..],
+            &["run", "-", "--entry", "f", "--args", "[2]", "--json"][..],
+        ] {
+            let out = weave(args, Some(&src));
+            assert_eq!(out.status.code(), Some(1), "{n} {args:?}");
+            let d = doc(&out);
+            let diag = &d.get("diagnostics").and_then(Value::as_array).unwrap()[0];
+            assert_eq!(
+                (s(diag, "code"), s(diag, "rule"), s(diag, "stage")),
+                ("E500", "P0-FILE-1", "limit")
+            );
+        }
+    }
+    let bools = format!(
+        "fn f(x: Bool) -> Bool:\n    return {}\n",
+        vec!["x"; 50_000].join(" and ")
+    );
+    let out = weave(
+        &["run", "-", "--entry", "f", "--args", "[true]"],
+        Some(&bools),
+    );
+    assert_eq!(out.status.code(), Some(1));
+    assert!(stdout(&out).contains("E500 (P0-FILE-1) [limit]"));
+}

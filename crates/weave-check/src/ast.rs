@@ -141,9 +141,33 @@ pub enum ExprKind {
 pub struct ExprAst {
     pub kind: ExprKind,
     pub span: Span,
+    /// Expression depth (`pure.rst`, "Nesting limits"): 1 for a literal; one
+    /// more than the deepest operand, element or argument; a name with `k`
+    /// dotted parts counts `k`, plus its deepest argument.
+    pub depth: usize,
 }
 
 impl ExprAst {
+    /// A node with its depth computed from its children, without recursion.
+    pub fn new(kind: ExprKind, span: Span) -> ExprAst {
+        let depth = match &kind {
+            ExprKind::Int(_) => 1,
+            ExprKind::List(items) => 1 + items.iter().map(|e| e.depth).max().unwrap_or(0),
+            ExprKind::Path { parts, call, .. } => {
+                let args = call.as_ref().map_or(0, |args| {
+                    args.iter()
+                        .map(|a| a.value.depth.max(a.label.as_ref().map_or(0, |l| l.depth)))
+                        .max()
+                        .unwrap_or(0)
+                });
+                parts.len().max(1) + args
+            }
+            ExprKind::Neg(x) => 1 + x.depth,
+            ExprKind::Binary(_, l, r) => 1 + l.depth.max(r.depth),
+        };
+        ExprAst { kind, span, depth }
+    }
+
     /// The identifier if this expression is a single undotted, uncalled name.
     pub fn as_plain_name(&self) -> Option<&Name> {
         match &self.kind {

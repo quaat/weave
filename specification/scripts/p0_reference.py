@@ -41,6 +41,9 @@ sys.setrecursionlimit(max(sys.getrecursionlimit(), 20000))
 
 CODES = json.loads((ROOT / "diagnostics.json").read_text(encoding="utf-8"))["codes"]
 DEFAULT_BUDGETS = {"fuel": 1_000_000, "depth": 10_000, "int_bits": 65_536}
+# Nesting limits (pure.rst, "Nesting limits"), the same as the Rust checker's.
+SYNTAX_DEPTH_LIMIT = 300
+EXPR_DEPTH_LIMIT = 256
 BUILTIN_TYPES = ("Int", "Bool", "List")
 BUILTIN_CONSTANTS = ("true", "false")
 PRIMITIVES = {"length": 1, "is_empty": 1, "head": 1, "tail": 1, "cons": 2, "div": 2, "mod": 2, "not": 1}
@@ -152,10 +155,25 @@ class Positions:
         return (*self.point(t.line, t.column), *self.point(t.end_line, t.end_column))
 
     def node(self, tree: Tree):
-        tokens = [t for t in tree.scan_values(lambda v: isinstance(v, Token)) if t.value not in (MARK_IN, MARK_OUT, "\n")]
-        if not tokens:
+        """From the node's first to its last source token (iterative, for deep trees)."""
+        first = self._edge(tree, 0)
+        last = self._edge(tree, -1)
+        if first is None or last is None:
             return NOWHERE
-        return span_of(self.token(tokens[0]), self.token(tokens[-1]))
+        return span_of(self.token(first), self.token(last))
+
+    @staticmethod
+    def _edge(tree: Tree, end: int):
+        """The first (end=0) or last (end=-1) source token under tree, by an explicit stack."""
+        stack = [tree]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, Token):
+                if node.value not in (MARK_IN, MARK_OUT, "\n"):
+                    return node
+                continue
+            stack.extend(node.children if end == -1 else reversed(node.children))
+        return None
 
 
 def parse(source: str):
@@ -170,10 +188,26 @@ def parse(source: str):
         raise Diagnostic("E500", message, (line, column, line, column + 1), "lexical")
     positions = Positions(where)
     try:
-        return lark_parser().parse(text), positions
+        tree = lark_parser().parse(text)
     except UnexpectedInput as e:
         line, column = positions.point(getattr(e, "line", 1) or 1, getattr(e, "column", 1) or 1)
         raise Diagnostic("E500", f"Not P0 pure-file syntax: {type(e).__name__}.", (line, column, line, column + 1), "syntax")
+    check_syntax_depth(tree, positions)
+    return tree, positions
+
+
+def check_syntax_depth(tree: Tree, positions) -> None:
+    """P0-FILE-1: no production nested deeper than SYNTAX_DEPTH_LIMIT (iterative walk).
+
+    Every rule node counts, the root pure_file as 1; UINT is a token here, as it is
+    a lexical production in the chapter's count."""
+    stack = [(tree, 1)]
+    while stack:
+        node, depth = stack.pop()
+        if depth > SYNTAX_DEPTH_LIMIT:
+            raise Diagnostic("E500", f"Nesting exceeds the P0 syntax depth limit of {SYNTAX_DEPTH_LIMIT} productions.",
+                             positions.node(node), "limit")
+        stack.extend((c, depth + 1) for c in reversed(node.children) if isinstance(c, Tree))
 
 
 # ---------------------------------------------------------------- lowering
@@ -210,6 +244,31 @@ class Expr:
     b: object = None
     c: object = None
     d: object = None
+    depth: int = 1
+
+
+def expr_depth(e: Expr) -> int:
+    """Expression depth from the children's depths (pure.rst, "Nesting limits")."""
+    if e.kind == "int":
+        return 1
+    if e.kind == "list":
+        return 1 + max((x.depth for x in e.a), default=0)
+    if e.kind == "neg":
+        return 1 + e.a.depth
+    if e.kind == "bin":
+        return 1 + max(e.b.depth, e.c.depth)
+    args = [max(v.depth, label.depth if label is not None else 0) for label, v, _ in (e.c or [])]
+    return max(len(e.b), 1) + max(args, default=0)
+
+
+def mk(kind, span, *fields) -> Expr:
+    """An expression node; E500 at stage limit beyond EXPR_DEPTH_LIMIT."""
+    e = Expr(kind, span, *fields)
+    e.depth = expr_depth(e)
+    if e.depth > EXPR_DEPTH_LIMIT:
+        raise Diagnostic("E500", f"Expression nesting exceeds the P0 expression depth limit of {EXPR_DEPTH_LIMIT}.",
+                         span, "limit")
+    return e
 
 
 @dataclass
@@ -313,7 +372,7 @@ class Lower:
                     first = self.p.node(c)
                     acc = rhs
                 else:
-                    acc = Expr("bin", span_of(first, self.p.node(c)), pending, acc, rhs)
+                    acc = mk("bin", span_of(first, self.p.node(c)), pending, acc, rhs)
             elif isinstance(c, Tree) and c.data == "compare_op":
                 pending = c.children[0].value
             elif isinstance(c, Token) and c.value in self.OPS:
@@ -334,17 +393,17 @@ class Lower:
     def unary(self, tree):
         inner = kids(tree, "unary")
         if inner:
-            return Expr("neg", self.p.node(tree), self.unary(inner[0]))
+            return mk("neg", self.p.node(tree), self.unary(inner[0]))
         return self.primary(kid(tree, "primary"))
 
     def primary(self, tree):
         first = tree.children[0]
         if isinstance(first, Token) and first.type == "UINT":
-            return Expr("int", self.p.token(first), first.value)
+            return mk("int", self.p.token(first), first.value)
         if isinstance(first, Token) and first.value == "(":
             return self.expr(kid(tree, "expr"))
         if isinstance(first, Tree) and first.data == "list_literal":
-            return Expr("list", self.p.node(first), [self.expr(e) for e in kids(first, "expr")])
+            return mk("list", self.p.node(first), [self.expr(e) for e in kids(first, "expr")])
         if isinstance(first, Tree) and first.data == "name_expr":
             return self.name_expr(first)
         raise Diagnostic("E500", "internal: primary", NOWHERE, "internal")
@@ -369,7 +428,7 @@ class Lower:
                     exprs = [self.expr(e) for e in kids(arg, "expr")]
                     label, value = (None, exprs[0]) if len(exprs) == 1 else (exprs[0], exprs[1])
                     call.append((label, value, self.p.node(arg)))
-        return Expr("path", self.p.node(tree), prefix, parts, call)
+        return mk("path", self.p.node(tree), prefix, parts, call)
 
 
 # ---------------------------------------------------------------- types
@@ -957,15 +1016,22 @@ def run(program: Checked, entry: str, args_json, budgets: dict | None = None) ->
 
 # ---------------------------------------------------------------- command line
 
+def budget(text: str) -> int:
+    """A budget is a nonnegative integer (P0-BUDGET-1); anything else is a usage error."""
+    if not text.isdigit():
+        raise argparse.ArgumentTypeError(f"{text!r} is not a nonnegative integer")
+    return int(text)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="P0 reference evaluator")
     ap.add_argument("command", choices=["check", "run"])
     ap.add_argument("file")
     ap.add_argument("--entry")
     ap.add_argument("--args", default="[]")
-    ap.add_argument("--fuel", type=int, default=DEFAULT_BUDGETS["fuel"])
-    ap.add_argument("--max-depth", type=int, default=DEFAULT_BUDGETS["depth"])
-    ap.add_argument("--int-bits", type=int, default=DEFAULT_BUDGETS["int_bits"])
+    ap.add_argument("--fuel", type=budget, default=DEFAULT_BUDGETS["fuel"])
+    ap.add_argument("--max-depth", type=budget, default=DEFAULT_BUDGETS["depth"])
+    ap.add_argument("--int-bits", type=budget, default=DEFAULT_BUDGETS["int_bits"])
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
     if a.command == "run" and not a.entry:

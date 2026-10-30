@@ -154,13 +154,17 @@ rejected file or invalid run request, 2 a usage error, 3 a fault and 4 an
 exhausted budget. The tests check every static rule with its code, rule and
 span, every P0 corpus case, Euclidean division for every sign, the budgets
 (including recursion 300,000 calls deep on a 256 KiB thread stack, integers of
-66,000 bits and a list of a million elements), renaming and source edits that
-must change behaviour, and the command's output.
+66,000 bits and a list of a million elements), the nesting limits of
+:ref:`chapters/pure:Nesting limits` (operator chains of 100,000 operands and
+10,000 nested parentheses are limit diagnostics, never a stack overflow),
+renaming and source edits that must change behaviour, and the command's
+output. Exit status 70 reports an internal error, never a rejection.
 
 ``scripts/p0_reference.py`` is the Python P0 reference evaluator and
 ``scripts/p0_differential.py`` compares it with the ``weave`` binary, built with
 ``cargo build --offline --locked`` or named by ``WEAVE_BIN``, on the P0 corpus,
-on merge sort against Python ``sorted`` and on seeded generated programs.
+on merge sort against Python ``sorted``, on seeded generated programs and on
+inputs at the nesting limits.
 Without either, ``validation/p0-differential.json`` records the comparison as
 not established. ``tests/test_p0.py`` tests the P0 rules through the reference
 and the differential's not-established path.
@@ -251,7 +255,7 @@ comparison is skipped as not established without ``cargo``, requires a named
 binary to exist, and fails on a disagreeing verdict.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 117 tests (nine documentation tests, the rule cases, the rule
+specification's 119 tests (nine documentation tests, the rule cases, the rule
 coverage check, the diagnostic map tests, the result-label lint of
 :ref:`chapters/verification:Result labels in tool output`, the grammar-audit
 tests and the P0 tests), the P0 differential, 143 upstream tests, strict HTML with weave-check, the local
