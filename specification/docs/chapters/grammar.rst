@@ -109,7 +109,9 @@ The Rust parser builds a concrete syntax tree:
 * **Round trip.** Printing a tree writes each leaf's trivia and text in order,
   so it reproduces the source byte for byte, including CRLF line endings.
   Re-parsing the printed text gives an equal tree. The Rust tests check this,
-  and the span invariants, on every file of the conformance corpus.
+  and the span invariants, on every syntactically valid file of the conformance
+  corpus; for the syntactically invalid files they check the diagnostic's code,
+  rule ID and span instead.
   Normalised printing is the formatter's task (quaat/weave#14).
 
 The syntax layer performs no lowering, so every node maps directly to its source
