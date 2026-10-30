@@ -6,8 +6,11 @@ SPDX-License-Identifier: MIT
 # 0009: Rust implementation boundary, first slice and toolchain
 
 - **Issue:** [quaat/weave#9](https://github.com/quaat/weave/issues/9), milestone M1
-- **Status:** Proposed. Awaiting the maintainer's decision on #9. Nothing in the Rust
-  workspace is built until the decision is recorded.
+- **Status:** Decided by the maintainer on #9
+  ([decision comment](https://github.com/quaat/weave/issues/9#issuecomment-6511324664)):
+  **1A**, **3A** and **6B**. 6B was chosen over the recommended 6A. The decision was made on
+  this record at commit `8f92dd7`. See [Decisions](#decisions) and
+  [Rejected alternatives](#rejected-alternatives).
 - **Prepared against:** base revision `e7c3f3cab1e25994b96a948cbe27c96bb061d5a8`, 30 October 2026
 - **Decision owner:** the maintainer
   ([implementation-language policy](../development/implementation-language.md)).
@@ -16,8 +19,8 @@ SPDX-License-Identifier: MIT
 
 ## Context
 
-- The authoritative grammar is `specification/grammar/weave.ebnf` (110 lines, 68
-  productions, as counted by the grammar audit), plus the target-only delta `weave-n2-delta.ebnf`. The specification shows it
+- The authoritative grammar is `specification/grammar/weave.ebnf` (110 lines at the time
+  of writing, 68 productions, as counted by the grammar audit), plus the target-only delta `weave-n2-delta.ebnf`. The specification shows it
   with `literalinclude` in `grammar.rst`.
 - Two parsers exist today, and neither is a production front end:
   - `inventory-proof/checker.py` has a hand-written indentation and line parser. It keeps
@@ -131,7 +134,7 @@ SPDX-License-Identifier: MIT
   lines, non-ASCII input, tabs and truncated files, and must produce diagnostics without
   panicking.
 
-## Recommendation (not a decision)
+## Recommendation (as prepared, before the decision)
 
 Adopt **1A**, **3A** and **6A**, with the migration, layout, toolchain and conformance
 strategy above. #9 then delivers:
@@ -148,6 +151,29 @@ strategy above. #9 then delivers:
   grammar-interpreter bug cannot pass silently.
 - #14 (formatter) and #15 (IR source maps) build on the CST and its spans.
 
+## Decisions
+
+Decided by the maintainer on #9
+([decision comment](https://github.com/quaat/weave/issues/9#issuecomment-6511324664)).
+
+- [x] 1. Rust boundary: decided **1A**. The first Rust slice is the syntax layer only:
+  lexer, layout, concrete syntax tree with spans and comments, printer and syntax
+  diagnostics. Checker, IR, evaluator and runtime are later slices.
+- [x] 3. Grammar and parser: decided **3A**. The parser embeds `weave.ebnf` and interprets it
+  as an ordered-choice grammar; a normalisation check guards the ordered-choice reading.
+- [x] 6. Dependency policy: decided **6B**, not the recommended 6A. Vetted crates are
+  allowed, but standard-library code is preferred. A dependency needs a real need, an
+  MIT-compatible licence (the list in area 6), a version pinned in `Cargo.lock` and a
+  one-line justification in the commit message; the area-6 review requirements
+  (`cargo deny`, `cargo audit`, safety review) still apply.
+
+Areas 2, 4, 5 and 7 offered no alternatives. #9 implements them as described above. The
+first slice needed no dependency: `crates/weave-syntax` uses only the standard library,
+including a small JSON reader and writer, and `Cargo.lock` lists only the workspace crate.
+
 ## Rejected alternatives
 
-The rejected alternatives are listed with each decision area above: 1B, 3B and 6B.
+- Area 1: **1B**, a Python CST parser inside the specification tooling.
+- Area 3: **3B**, a hand-written recursive-descent parser kept in step with the EBNF by tests.
+- Area 6: **6A**, standard library only for the first slice. It was the recommended option;
+  the maintainer chose 6B instead.
