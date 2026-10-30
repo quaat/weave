@@ -375,3 +375,45 @@ fn the_modules_corpus() {
     }
     assert!(seen >= 30, "{seen}");
 }
+
+/// MOD-ROOT-1: a P0 entry reached through a symbolic link, without `--root`,
+/// checks and runs exactly as its target does; only `--root` can exclude it.
+#[cfg(unix)]
+#[test]
+fn a_symlinked_entry_runs_as_before() {
+    let target = project(
+        "link_target",
+        &[("real.weave", "fn f(n: Int) -> Int:\n    return n * 3\n")],
+    );
+    let dir = project("link_dir", &[("notes.txt", "the link's directory\n")]);
+    std::os::unix::fs::symlink(target.join("real.weave"), dir.join("main.weave")).unwrap();
+    let run = |file: &Path, extra: &[&str]| {
+        let mut args = vec![
+            "run",
+            file.to_str().unwrap(),
+            "--entry",
+            "f",
+            "--args",
+            "[4]",
+            "--json",
+        ];
+        args.extend_from_slice(extra);
+        weave_in(Path::new("/"), &args, None)
+    };
+    let linked = run(&dir.join("main.weave"), &[]);
+    let direct = run(&target.join("real.weave"), &[]);
+    assert_eq!(
+        linked.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&linked.stdout)
+    );
+    let (l, d) = (doc(&linked), doc(&direct));
+    for key in ["outcome", "value", "budgets", "diagnostics"] {
+        assert_eq!(l.get(key), d.get(key), "{key}");
+    }
+    let root = dir.to_str().unwrap();
+    let excluded = run(&dir.join("main.weave"), &["--root", root]);
+    assert_eq!(excluded.status.code(), Some(1));
+    assert_eq!(str_of(first_diagnostic(&doc(&excluded)), &["code"]), "E605");
+}

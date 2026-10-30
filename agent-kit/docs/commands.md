@@ -26,7 +26,11 @@ does not resolve (E600 to E603) or a `--net` naming another net (E610) fails the
 command with that diagnostic and exit 1 before any net is checked; the files of one
 `check` must select one net (otherwise a `TOOL_ERROR`, exit 2). The vendored prototype
 checks the flow with the header line blanked, so diagnostic lines and columns are those
-of the file as written. `--max-states N` is available for `check`, `analyze`, and `lower`;
+of the file as written. `lower` keeps the header in its output only when it selects the
+same net from the output's root (`--root`, or the output's directory), and otherwise writes
+a blank line in its place; its result names the net it checked against (JSON `net`; in text,
+an indented `net:` line under the lowered file's claim that says whether the header was kept,
+blanked or absent), for checking the output with `--net`. `--max-states N` is available for `check`, `analyze`, and `lower`;
 `simulate` retains the upstream default of 10,000 states. A net without an order
 model cannot pass combined checks. Use upstream `checker.py prove NET` only when
 accounting alone is explicitly the intended scope.

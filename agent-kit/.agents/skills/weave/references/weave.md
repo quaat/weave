@@ -144,8 +144,12 @@ too (E602 otherwise), must name an existing file (E601) and must stay inside the
 root once symbolic links are resolved (E603); a malformed header is E600. A
 `--net` that names a different net is E610; one that names the same file is
 accepted, and `--net` without a header works as before. `check`, `lower` and
-`simulate` read the header; the runner then hands the vendored prototype the flow
-with the header line blanked, so every diagnostic keeps its line and column. The
+`simulate` read the header. `lower` copies it into its output only when, from the
+output's root (`--root`, or the output's directory), it selects the same net file;
+otherwise a blank line takes its place, and the result names the net (JSON
+`net`; an indented `net:` line in text) so you can check the output with `--net`.
+To check a flow, the runner hands the vendored prototype the flow with the
+header line blanked, so every diagnostic keeps its line and column. The
 files of one `check` command must select the same net. The header selects one
 existing net only: it does not compose nets, it is not checked by the Rust tools,
 and flows still cannot call pure code. This is the specification's modules-1

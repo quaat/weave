@@ -243,11 +243,14 @@ added later.
    * - Tools
      - Production checker, runtime and CLI
      - For P0 only: ``weave-check`` and ``weave-cli`` (command ``weave``)
-       ``0.2.0`` and ``weave-eval`` ``0.1.0`` (``0.1.0`` each in quaat/weave#10;
-       quaat/weave#12 added modules-1 and ``--root``, a compatible addition,
-       so MINOR increments); the syntax crate ``weave-syntax`` is ``0.2.0``
-       (``0.1.0`` in quaat/weave#9; quaat/weave#12 added the ``module-file``
-       start symbol). No checker or runtime yet for F0, N0, N1 or R0
+       ``0.2.0`` and ``weave-eval`` ``0.1.0`` (``0.1.0`` each in quaat/weave#10);
+       the syntax crate ``weave-syntax`` is ``0.2.0`` (``0.1.0`` in
+       quaat/weave#9). quaat/weave#12 raised the three to ``0.2.0``: for the
+       ``weave`` command, modules-1, ``--root`` and the new JSON fields are a
+       compatible addition; the crates' library API changed incompatibly
+       (``Span`` and ``Diagnostic`` gained public fields, so struct literals no
+       longer compile, and ``weave-syntax`` gained the ``module-file`` start
+       symbol), which while MAJOR is 0 also increments MINOR. No checker or runtime yet for F0, N0, N1 or R0
      - ``version`` in each ``crates/*/Cargo.toml``; ``weave --version``. The root
        ``README.md`` states there is no general compiler and no distributed
        runtime

@@ -145,55 +145,55 @@
   },
   "MOD-RESOLVE-1": {
     "chapter": "names",
-    "line": 150
+    "line": 154
   },
   "MOD-RESOLVE-2": {
     "chapter": "names",
-    "line": 157
+    "line": 161
   },
   "MOD-RESOLVE-3": {
     "chapter": "names",
-    "line": 164
+    "line": 168
   },
   "MOD-RESOLVE-4": {
     "chapter": "names",
-    "line": 170
+    "line": 174
   },
   "MOD-IMPORT-1": {
     "chapter": "names",
-    "line": 183
+    "line": 191
   },
   "MOD-IMPORT-2": {
     "chapter": "names",
-    "line": 190
+    "line": 198
   },
   "MOD-EXPORT-1": {
     "chapter": "names",
-    "line": 197
+    "line": 205
   },
   "MOD-NAME-1": {
     "chapter": "names",
-    "line": 209
+    "line": 217
   },
   "MOD-IDENT-1": {
     "chapter": "names",
-    "line": 225
+    "line": 233
   },
   "MOD-CYCLE-1": {
     "chapter": "names",
-    "line": 242
+    "line": 250
   },
   "MOD-CHECK-1": {
     "chapter": "names",
-    "line": 253
+    "line": 261
   },
   "MOD-RUN-1": {
     "chapter": "names",
-    "line": 272
+    "line": 280
   },
   "MOD-NET-1": {
     "chapter": "names",
-    "line": 305
+    "line": 313
   },
   "NET-FIRE-1": {
     "chapter": "net-semantics",
@@ -289,59 +289,59 @@
   },
   "P0-VALUE-1": {
     "chapter": "pure",
-    "line": 421
+    "line": 425
   },
   "P0-EVAL-1": {
     "chapter": "pure",
-    "line": 433
+    "line": 437
   },
   "P0-EVAL-2": {
     "chapter": "pure",
-    "line": 445
+    "line": 449
   },
   "P0-EVAL-3": {
     "chapter": "pure",
-    "line": 454
+    "line": 458
   },
   "P0-ARITH-1": {
     "chapter": "pure",
-    "line": 467
+    "line": 471
   },
   "P0-ARITH-2": {
     "chapter": "pure",
-    "line": 476
+    "line": 480
   },
   "P0-LIST-1": {
     "chapter": "pure",
-    "line": 510
+    "line": 514
   },
   "P0-FAULT-1": {
     "chapter": "pure",
-    "line": 520
+    "line": 524
   },
   "P0-BUDGET-1": {
     "chapter": "pure",
-    "line": 545
+    "line": 549
   },
   "P0-BUDGET-2": {
     "chapter": "pure",
-    "line": 560
+    "line": 564
   },
   "P0-BUDGET-3": {
     "chapter": "pure",
-    "line": 570
+    "line": 574
   },
   "P0-BUDGET-4": {
     "chapter": "pure",
-    "line": 577
+    "line": 581
   },
   "P0-RUN-1": {
     "chapter": "pure",
-    "line": 603
+    "line": 607
   },
   "P0-RUN-2": {
     "chapter": "pure",
-    "line": 614
+    "line": 618
   },
   "SEC-CAP-1": {
     "chapter": "security",
@@ -429,19 +429,19 @@
   },
   "N1-FAMILY-1": {
     "chapter": "verification",
-    "line": 125
+    "line": 132
   },
   "N1-FAMILY-2": {
     "chapter": "verification",
-    "line": 141
+    "line": 148
   },
   "N0-ORDER-1": {
     "chapter": "verification",
-    "line": 191
+    "line": 198
   },
   "N1-ORDER-1": {
     "chapter": "verification",
-    "line": 212
+    "line": 219
   },
   "CONF-CASE-1": {
     "chapter": "conformance",

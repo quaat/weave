@@ -161,6 +161,21 @@ def flow_source(file: Path, explicit_net: Path | None, root: Path | None) -> tup
     return text, blank_header(text, line), selected
 
 
+def output_keeps_header(header: tuple, output: Path, root: Path | None, net: Path) -> str:
+    """``kept`` when the header, resolved from the output's root, selects ``net``; else ``blanked``.
+
+    The output's root is --root when given, or else the output file's directory. A
+    header that does not resolve there, or resolves to another file (such as a decoy
+    ``nets/Inventory.weave`` next to the output), would make the lowered file select a
+    different net or none, so it is not copied."""
+    line, dotted, start, end = header
+    try:
+        there = resolve_module(root if root is not None else Path(output).parent, dotted, output, line, start, end)
+    except ModuleError:
+        return "blanked"
+    return "kept" if there.resolve() == Path(net).resolve() else "blanked"
+
+
 class NetFailure(Exception):
     """A checker error in a net, with the claims established before it (accounting, a failed ordering check)."""
 
@@ -452,11 +467,18 @@ def execute(args) -> tuple[dict, int]:
             if check_flow(net, lowered) != names:
                 raise ValueError("Lowered declarations differ from source")
             header = net_header(written, args.file)
+            kept = "none"
             if header is not None:
-                # The lowered file keeps the header, so it selects the same net.
-                lowered = written.splitlines()[header[0] - 1].rstrip("\r") + "\n" + lowered
+                # Keep the header only where it selects the same net from the output's root;
+                # otherwise a blank line takes its place, so the lowered lines are the same.
+                kept = output_keeps_header(header, args.output, args.root, args.net)
+                first = written.splitlines()[header[0] - 1].rstrip("\r") if kept == "kept" else ""
+                lowered = first + "\n" + lowered
             write_output(args.output, lowered, [args.net, args.file])
-            result.update({"output": str(args.output), "flows": names,
+            # ``net`` (JSON and text) names the net the flow was checked against, so the
+            # output can be checked with --net when its header was blanked or absent. The
+            # header's fate is for the text report only (``_`` keys are not in the JSON).
+            result.update({"output": str(args.output), "flows": names, "_output_header": kept,
                            "files": [flow_claim(args.file, names),
                                      flow_claim(args.output, names, lowered_from=str(args.file))]})
         elif args.command == "simulate":
@@ -553,10 +575,17 @@ def render(result: dict) -> None:
             if item["ok"]:
                 lowered = f" (lowered from {item['lowered_from']})" if "lowered_from" in item else ""
                 print(claim_line(item["claim_label"], f"{item['file']}{lowered}: {', '.join(item['flows'])}"))
+                if "lowered_from" in item and "_output_header" in result:
+                    how = {"kept": "its use net header was kept and selects it",
+                           "blanked": "its use net header would select another net or none from the output's "
+                                      "root, so a blank line replaced it; check it with --net",
+                           "none": "the source has no use net header; check it with --net"}[result["_output_header"]]
+                    print(f"  net: {result['net']} ({how})")
             else:
                 print_diagnostic(item["diagnostic"])
         if "certificate" in result:
             print(f"certificate: written to {result['certificate']}")
+
         for run in result.get("runs", []):
             occupied = ", ".join(f"{k}={v}" for k, v in run["marking"].items() if v)
             print(claim_line(run["claim_label"], f"{run['outcome']} via {run['entry']}: {occupied}"))
@@ -574,7 +603,8 @@ def main(argv=None) -> int:
     if captured.getvalue():
         result["upstream_output"] = captured.getvalue()
     if args.json:
-        print(json.dumps(result, ensure_ascii=False, separators=(",", ":")))
+        public = {key: value for key, value in result.items() if not key.startswith("_")}
+        print(json.dumps(public, ensure_ascii=False, separators=(",", ":")))
     else:
         render(result)
     return status

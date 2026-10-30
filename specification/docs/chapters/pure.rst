@@ -405,7 +405,11 @@ When a file satisfies every static rule, a checker states one claim for the
 file with the result label **CHECKED pure**: P0 type, effect, path and
 recursion-shape checks passed for every function of the file
 (:doc:`verification`). The label says nothing about termination, faults or
-budgets. A P0 file is not a flow, so it never receives CHECKED flow.
+budgets. A P0 file is not a flow, so it never receives CHECKED flow. A program of
+several module files (modules-1, :ref:`chapters/names:P0 modules (modules-1)`)
+receives one such claim per loaded module file, the entry first, with the same
+meaning for the functions of each file; for a module file it also implies that
+the ``MOD-*`` rules passed for the program.
 
 Dynamic semantics
 -----------------------
@@ -724,10 +728,14 @@ quaat/weave#15 is not part of P0.
 Implementations and evidence
 ----------------------------------
 
-**Rust.** ``weave check FILE`` prints ``CHECKED pure FILE: f, g, ...`` and
-exits 0, or prints the first diagnostic and exits 1.
-``weave run FILE --entry NAME --args JSON [--fuel N] [--max-depth N]
-[--int-bits N]`` checks the file and then runs it, printing the outcome and
+**Rust.** ``weave check FILE [--root DIR]`` prints ``CHECKED pure FILE: f, g,
+...`` and exits 0, or prints the first diagnostic and exits 1. For a file
+without imports that is one claim, exactly as before; with modules-1 imports,
+resolved from ``--root DIR`` or else the directory of ``FILE``, it prints one
+such line per loaded module file, the entry first, and a diagnostic names the
+file it is in. ``weave run FILE --entry NAME [--root DIR] --args JSON [--fuel N]
+[--max-depth N] [--int-bits N]`` checks the file (and its imports) and then runs
+its entry function, printing the outcome and
 the budgets; it exits 0 for a value, 3 for a fault and 4 for exhaustion, 1
 for a rejected file or an invalid request, and 70 for an internal error of
 the implementation, which is never reported as a rejection. ``--json`` prints one JSON object

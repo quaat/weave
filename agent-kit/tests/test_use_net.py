@@ -182,11 +182,66 @@ class UseNet(unittest.TestCase):
         code, data = run_cli('lower', file, '--output', out)
         self.assertEqual(code, 0, data)
         lowered = out.read_text(encoding='utf-8')
+        # Next to the source, the header selects the same net, so it is kept.
         self.assertTrue(lowered.startswith('use net nets.Inventory\n'))
+        self.assertEqual(Path(data['net']), self.tmp / 'nets/Inventory.weave')
         self.assertEqual(run_cli('check', out)[0], 0)
         code, data = run_cli('simulate', file, '--entry', 'checkout', '--outcome', 'Ok')
         self.assertEqual(code, 0, data)
         self.assertEqual(data['runs'][0]['claim_label'], 'SCRIPTED / passed scenario')
+
+    def lowered_elsewhere(self, decoy: bool):
+        """Lower a header flow into another directory, optionally beside a decoy net."""
+        file, _ = self.pair('checkout', CHECKOUT.read_text(encoding='utf-8'))
+        elsewhere = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, elsewhere, True)
+        if decoy:
+            (elsewhere / 'nets').mkdir()
+            shutil.copy(ROOT / 'examples/nets/unsafe_paid_release.weave', elsewhere / 'nets/Inventory.weave')
+        out = elsewhere / 'lowered.weave'
+        code, data = run_cli('lower', file, '--output', out)
+        self.assertEqual(code, 0, data)
+        return file, out, data
+
+    def test_lower_elsewhere_blanks_a_header_that_would_not_resolve(self):
+        file, out, data = self.lowered_elsewhere(decoy=False)
+        lowered = out.read_text(encoding='utf-8')
+        # A blank line takes the header's place; the lowered lines are unchanged.
+        self.assertTrue(lowered.startswith('\n'))
+        self.assertNotIn('use net', lowered)
+        kept_file, _ = self.pair('kept', CHECKOUT.read_text(encoding='utf-8'))
+        kept_out = self.tmp / 'kept.lowered.weave'
+        self.assertEqual(run_cli('lower', kept_file, '--output', kept_out)[0], 0)
+        self.assertEqual(lowered.splitlines()[1:], kept_out.read_text(encoding='utf-8').splitlines()[1:])
+        # The result names the net (JSON ``net``; text, under the output's claim), so the
+        # output can be checked with --net.
+        self.assertEqual(Path(data['net']), self.tmp / 'nets/Inventory.weave')
+        self.assertNotIn('_output_header', data)
+        self.assertEqual(run_cli('check', out, '--net', data['net'])[0], 0)
+        text = subprocess.run([sys.executable, '-B', str(CLI), 'lower', str(file), '--output', str(out)],
+                              cwd=ROOT, text=True, capture_output=True, timeout=60).stdout
+        self.assertIn(f"  net: {self.tmp / 'nets/Inventory.weave'} (its use net header would select", text)
+        self.assertIn('check it with --net', text)
+
+    def test_lower_never_lets_a_decoy_net_be_selected(self):
+        _, out, data = self.lowered_elsewhere(decoy=True)
+        lowered = out.read_text(encoding='utf-8')
+        self.assertNotIn('use net', lowered)
+        # Checked as written, the output would use the bundled default, never the decoy;
+        # with the reported net it checks against the original one.
+        code, checked = run_cli('check', out, '--net', data['net'])
+        self.assertEqual(code, 0, checked)
+        self.assertEqual(Path(checked['net']), self.tmp / 'nets/Inventory.weave')
+
+    def test_lower_keeps_the_header_when_the_root_argument_resolves_it(self):
+        file, _ = self.pair('checkout', CHECKOUT.read_text(encoding='utf-8'))
+        elsewhere = self.tmp / 'out'
+        elsewhere.mkdir()
+        out = elsewhere / 'lowered.weave'
+        code, data = run_cli('lower', file, '--output', out, '--root', self.tmp)
+        self.assertEqual(code, 0, data)
+        self.assertTrue(out.read_text(encoding='utf-8').startswith('use net nets.Inventory\n'))
+        self.assertEqual(run_cli('check', out, '--root', self.tmp)[0], 0)
 
     def test_files_of_one_command_select_one_net(self):
         file, _ = self.pair('one', CHECKOUT.read_text(encoding='utf-8'))

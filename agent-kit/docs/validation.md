@@ -128,16 +128,17 @@ shape and, for some inputs, the label a result receives changed; see the migrati
 Environment: Python 3.13.5 on Linux. The vendored prototype and `PROVENANCE.json` are
 unchanged. The runner reads a flow file's modules-1 `use net a.b` header (`--root`, or the
 flow file's directory) and hands the prototype the flow with the header line blanked;
-`tests/test_use_net.py` (12 tests) shows that a header flow gives the same result and the same
+`tests/test_use_net.py` (15 tests) shows that a header flow gives the same result and the same
 diagnostics, at the same lines and columns, as the `--net` form, and covers a conflicting
 `--net` (E610), resolution failures (E600 to E603, a symbolic link out of the root included),
-independence from the working directory, `lower` and `simulate`, and the unchanged prototype
-hashes. The skill's copy of `specification/diagnostics.json` was synced for the new codes.
+independence from the working directory, `lower` (the header is copied only when it selects
+the same net from the output's root, also with an output in another directory or beside a decoy
+net) and `simulate`, and the unchanged prototype hashes. The skill's copy of `specification/diagnostics.json` was synced for the new codes.
 
 | Check | Result |
 | --- | --- |
 | Original prototype regression suite (`weave.py test`) | `tool status: PASS bundled prototype regression tests` |
-| Kit tests (`tests/`) | 117 passed, including the 12 `use net` tests |
+| Kit tests (`tests/`) | 120 passed, including the 15 `use net` tests |
 | Teaching manifest (`weave.py examples`) | 34/34 expectations matched |
 | Merge-sort demo tests | 13 passed |
 | Tiny Shop demo tests | 17 passed |

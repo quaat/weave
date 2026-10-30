@@ -722,3 +722,97 @@ fn a_chain_of_ten_thousand_modules_checks_without_overflow() {
     let f = load(&dir.join("m0.weave"), None).unwrap_err();
     assert_eq!((f.diagnostic.code, f.diagnostic.related.len()), ("E604", n));
 }
+
+/// MOD-ROOT-1: without `--root`, the root is the directory of the entry path
+/// as written, so a symbolic link's own directory counts and the entry is
+/// never outside it; only an explicit root can exclude the entry (E605).
+#[cfg(unix)]
+#[test]
+fn a_symlinked_entry_uses_the_directory_of_its_link() {
+    use std::os::unix::fs::symlink;
+    const PURE: &str =
+        "record R:\n    v: Int\n\nfn f(n: Int) -> Int:\n    let r = R(v: n)\n    return r.v\n";
+    let target = project(
+        "link_target",
+        &[
+            ("real.weave", PURE),
+            (
+                "importing.weave",
+                "from lib import g\n\nfn f(n: Int) -> Int:\n    return g(n)\n",
+            ),
+            // Next to the target, not the link: never used.
+            (
+                "lib.weave",
+                "export fn g(n: Int) -> Int:\n    return true\n",
+            ),
+        ],
+    );
+    let dir = project(
+        "link_dir",
+        &[(
+            "lib.weave",
+            "export fn g(n: Int) -> Int:\n    return n + 1\n",
+        )],
+    );
+    symlink(target.join("real.weave"), dir.join("main.weave")).unwrap();
+    symlink(target.join("importing.weave"), dir.join("app.weave")).unwrap();
+
+    // No imports: exactly the program of the target file checked directly,
+    // except that the module is named by the link, its path as written.
+    let linked = accept(&dir.join("main.weave"), None);
+    let direct = accept(&target.join("real.weave"), None);
+    let renamed = |p: &Program| {
+        let mut p = p.clone();
+        for f in &mut p.functions {
+            f.symbol.module = "-".into();
+        }
+        for r in &mut p.records {
+            r.symbol.module = "-".into();
+        }
+        (p.functions, p.records)
+    };
+    assert_eq!(renamed(&linked), renamed(&direct));
+    assert_eq!(linked.modules.len(), 1);
+    assert_eq!(linked.modules[0].name, "main");
+
+    // With imports: `lib` resolves from the link's directory, not the target's.
+    let p = accept(&dir.join("app.weave"), None);
+    assert_eq!(p.modules[0].name, "app");
+    let lib = p.sources.get(FileId(1)).unwrap();
+    assert!(Path::new(&lib.name).starts_with(&dir), "{}", lib.name);
+    let g = p.functions.iter().find(|f| f.name == "g").unwrap();
+    assert_eq!(g.ret, Ty::Int);
+
+    // An explicit root that does not contain the link's target still excludes it.
+    let (code, rule, _, _) = reject(&dir, &dir.join("main.weave"), Some(&dir));
+    assert_eq!((code, rule.as_str()), ("E605", "MOD-ROOT-1"));
+    // An explicit root that contains the target accepts it.
+    accept(&dir.join("main.weave"), Some(&target));
+}
+
+/// MOD-RESOLVE-4: identity is the canonical path, so two hard links to one
+/// file are two modules, and their records are two types.
+#[cfg(unix)]
+#[test]
+fn hard_links_to_one_file_are_two_modules() {
+    let dir = project(
+        "hard_links",
+        &[
+            ("a.weave", "export record P:\n    x: Int\n"),
+            (
+                "main.weave",
+                "from a import P as A\nfrom b import P as B\n\nfn f(p: A) -> Int:\n    return p.x\n",
+            ),
+            (
+                "mixed.weave",
+                "from a import P as A\nfrom b import P as B\n\nfn f(p: A) -> B:\n    return p\n",
+            ),
+        ],
+    );
+    std::fs::hard_link(dir.join("a.weave"), dir.join("b.weave")).unwrap();
+    let p = accept(&dir.join("main.weave"), None);
+    let modules: Vec<&str> = p.modules.iter().map(|m| m.name.as_str()).collect();
+    assert_eq!(modules, ["main", "a", "b"]);
+    assert_eq!(p.records.len(), 2);
+    assert_eq!(reject(&dir, &dir.join("mixed.weave"), None).0, "E510");
+}

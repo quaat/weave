@@ -140,12 +140,16 @@ Project root and module paths
 .. _MOD-ROOT-1:
 
 **MOD-ROOT-1 — One project root.** A program has one project root: the directory
-given with ``--root``, or else the directory of the entry file. Every import, in
-every module at any depth, resolves from that root; the working directory of the
-process never takes part. An entry file outside an explicit root, and any import
-in a file that has no root (standard input without ``--root``), are E605. A
-``--root`` that is not an existing directory is a usage error of the command, not
-a diagnostic.
+given with ``--root``, or else the directory of the entry path as written,
+canonicalised. For an entry that is a symbolic link, that is the directory of the
+link, not of its target. Every import, in every module at any depth, resolves from
+that root; the working directory of the process never takes part. Only a root
+given with ``--root`` can exclude the entry: an entry file whose canonical path is
+outside it is E605. The entry is never outside the implicit root, so an entry
+without imports is checked and run exactly as by P0, wherever its target lies. An
+import in a file that has no root (standard input without ``--root``) is also
+E605. A ``--root`` that is not an existing directory is a usage error of the
+command, not a diagnostic.
 
 .. _MOD-RESOLVE-1:
 
@@ -169,13 +173,17 @@ root; otherwise E603. A symbolic link that stays inside the root is allowed.
 
 .. _MOD-RESOLVE-4:
 
-**MOD-RESOLVE-4 — One file, one module.** A module is identified by its
-canonical file. Two routes to the same canonical file (for example through a
-symbolic link inside the root, or a module imported by several modules) load one
-module, checked once. Its module path is the canonical file's path relative to
-the canonical root, with ``/`` written as ``.`` and without ``.weave``; the entry
-file's module path is formed the same way, or is ``<entry>`` when the entry has
-none (standard input, or a name that is not a ``.weave`` file).
+**MOD-RESOLVE-4 — One file, one module.** A module is identified by the
+canonical path of its file (symbolic links resolved). Two routes to the same
+canonical path (for example through a symbolic link inside the root, or a module
+imported by several modules) load one module, checked once. Identity is the path,
+not the file's contents or its inode: two hard links to one file have different
+canonical paths and load as two modules, whose records are different types. A
+module's path is its canonical path relative to the canonical root, with ``/``
+written as ``.`` and without ``.weave``. The entry file's module path is formed
+the same way; an entry that is a symbolic link out of an implicit root is named
+by its path as written, the link's name without ``.weave``; an entry without a
+module path (standard input, or a file not named ``.weave``) is ``<entry>``.
 
 Imports and exports
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -323,8 +331,13 @@ A flow with a header is checked by the agent kit's runner,
 pinned Python prototype checker (F0). The runner resolves the header, then hands
 the prototype the flow with the header line replaced by a blank line, so every
 other line and column, and therefore every F0 diagnostic location, is that of the
-file as written. The files of one command must select one net. ``lower`` keeps the
-header in its output. The prototype itself, without the runner, rejects the
+file as written. The files of one command must select one net. ``lower`` copies
+the header into its output only when the header, resolved from the output's root
+(``--root``, or else the output file's directory), selects the same canonical net
+file the flow was checked against; otherwise the output has a blank line in its
+place, so the lowered lines are the same either way and the output never selects
+another net, or none, by accident. In both cases the result names the selected
+net (text and JSON), so the output can be checked with ``--net``. The prototype itself, without the runner, rejects the
 header as E200, as it rejects any line it does not know (grammar probe SD-13 in
 :doc:`grammar`). The Rust ``weave`` command checks P0 only and does not read flow
 files.

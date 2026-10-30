@@ -16,7 +16,12 @@ change to the kit's runner, skills, examples or policy.
   diagnostic keeps its line and column. A `--net` naming another net is E610; a header that does
   not resolve is E601 (missing), E602 (case mismatch) or E603 (leaves the root through a
   symbolic link); a malformed header is E600. Files of one command must select one net.
-  `lower` keeps the header in its output. `--net` without a header works as before. The
+  `lower` copies the header into its output only when, resolved from the output's root
+  (`--root`, or else the output's directory), it selects the same net file; otherwise a blank
+  line takes its place, so the output never selects another net, or none, by accident. Either
+  way the result reports the net the flow was checked against (JSON `net`; in text, an indented
+  `net:` line under the lowered file's claim saying whether the header was kept, blanked or
+  absent) for checking the output with `--net`. `--net` without a header works as before. The
   skill's copy of `specification/diagnostics.json` was synced with
   `scripts/sync_skill_reference.py` for the new codes E600 to E610. The pinned prototype and
   `PROVENANCE.json` are unchanged; the header does not mean Rust flow checking, composition of

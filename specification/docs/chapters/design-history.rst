@@ -187,7 +187,11 @@ Known evolution
   unchanged prototype the flow with the header blanked. The modules corpus is
   ``examples/modules/manifest.json`` (``weave-modules-conformance-v1``), run by
   ``scripts/modules_conformance.py``; ``weave-conformance-v1`` and
-  ``weave-p0-conformance-v1`` are unchanged. These are compatible additions
+  ``weave-p0-conformance-v1`` are unchanged. The crates ``weave-syntax``,
+  ``weave-check`` and ``weave-cli`` moved to ``0.2.0``: a compatible addition for
+  the ``weave`` command and an incompatible change of the library API (new public
+  fields of ``Span`` and ``Diagnostic``), each a MINOR increment while MAJOR is 0.
+  For the language these are compatible additions
   (MINOR at the next draft cut, :doc:`stability`); no existing rule, code,
   profile, label or manifest changed meaning. The scope was amended by the
   maintainer: protocol imports across projects became quaat/weave#13,

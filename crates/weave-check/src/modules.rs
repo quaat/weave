@@ -78,6 +78,11 @@ pub struct Root {
     pub display: PathBuf,
     /// The canonical root directory.
     pub canonical: PathBuf,
+    /// Given with `--root`. Only an explicit root can exclude the entry
+    /// (E605); the implicit root is the directory of the entry path as
+    /// written, so it contains the entry even when the entry is a symbolic
+    /// link to a file elsewhere.
+    pub explicit: bool,
 }
 
 /// A rejected program: the first diagnostic and every file loaded before it,
@@ -283,7 +288,9 @@ struct Loaded {
 }
 
 /// The project root for `entry`: `explicit` (from `--root`) if given, else
-/// the entry file's directory; `None` for standard input without `--root`.
+/// the directory of the entry path as written (canonicalised, so the
+/// directory of a symbolic link, not of its target); `None` for standard
+/// input without `--root`.
 /// An explicit root must be a directory, an `Err` with a message otherwise.
 pub fn project_root(entry: &Entry, explicit: Option<&Path>) -> Result<Option<Root>, String> {
     let display = match (explicit, &entry.path) {
@@ -302,7 +309,11 @@ pub fn project_root(entry: &Entry, explicit: Option<&Path>) -> Result<Option<Roo
             display.display()
         ));
     }
-    Ok(Some(Root { display, canonical }))
+    Ok(Some(Root {
+        display,
+        canonical,
+        explicit: explicit.is_some(),
+    }))
 }
 
 /// Load, resolve and check the program whose entry is `entry`, with project
@@ -314,7 +325,15 @@ pub fn check_program_from(entry: Entry, root: Option<Root>) -> Result<Program, F
         .as_ref()
         .and_then(|p| std::fs::canonicalize(p).ok());
     let entry_module = match (&root, &entry_canonical) {
-        (Some(r), Some(c)) => module_name(r, c),
+        (Some(r), Some(c)) => module_name(r, c).or_else(|| {
+            // An entry reached through a symbolic link out of an implicit
+            // root is named by its path as written, in the root.
+            let written = entry.path.as_ref()?;
+            if r.explicit || written.extension()?.to_str()? != EXTENSION {
+                return None;
+            }
+            Some(written.file_stem()?.to_str()?.to_string())
+        }),
         _ => None,
     }
     .unwrap_or_else(|| ANONYMOUS_MODULE.to_string());
@@ -327,7 +346,9 @@ pub fn check_program_from(entry: Entry, root: Option<Root>) -> Result<Program, F
         diagnostic: Box::new(diagnostic),
         sources,
     };
+    // Only a root given with --root can exclude the entry (MOD-ROOT-1).
     if let (Some(r), Some(c)) = (&root, &entry_canonical)
+        && r.explicit
         && !c.starts_with(&r.canonical)
     {
         return Err(fail(

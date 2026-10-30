@@ -26,8 +26,9 @@ pub enum Package {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Symbol {
     pub package: Package,
-    /// The module's dotted path from the project root, or a name in angle
-    /// brackets for an entry file that has no module path (such as `<stdin>`).
+    /// The module's dotted path from the project root, or `<entry>` for an
+    /// entry file that has no module path (standard input, or a file not
+    /// named `.weave`).
     pub module: String,
     pub name: String,
 }
