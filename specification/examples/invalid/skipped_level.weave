@@ -1,0 +1,4 @@
+# Negative layout case: the flow body is indented by eight spaces, which skips
+# a level (LEX-REQ-1). The reference checker reports E001 before any parsing.
+flow skipped_level(hold: Hold[t, o]) -> Hold[t, o]:
+        return hold

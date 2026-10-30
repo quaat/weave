@@ -124,6 +124,19 @@ Known evolution
   for any other label. The migration definition in :doc:`stability` now names
   a change of the label a result receives; the kit change carries a migration
   note. No label, rule, diagnostic code or profile changed.
+* Grammar normalisation and a grammar-driven parser, added during 0.2-draft
+  (quaat/weave#9): the Rust crate ``crates/weave-syntax`` interprets
+  ``grammar/weave.ebnf`` as an ordered-choice grammar, guarded by a
+  normalisation check, and keeps comments and spans in a concrete syntax tree
+  (:doc:`grammar`). ``let-call`` was rewritten from ``[ "await" ], call`` to the
+  equivalent ``( "await", call | call )``, so the EBNF's language is unchanged.
+  :doc:`lexical` states how the grammar-driven parsers form tokens and line
+  endings, and :doc:`grammar` lists the reference parser's differences as
+  probes under the open items LEX-01 to LEX-04. The generated audit's words and
+  numerals now end at word boundaries, and it classes layout faults as E001.
+  Conformance cases C026 (comments and blank lines in every block position) and
+  C027 (a skipped indentation level, E001) were added. The reference snapshot is
+  unchanged. No rule, diagnostic code or profile changed.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

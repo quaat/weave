@@ -151,6 +151,16 @@ These stage requirements prevent an accounting-only pass from masking E320.
      - N0
      - E320
      - :ref:`N0-ORDER-1 <N0-ORDER-1>`
+   * - C026
+     - ``valid/commented_blocks.weave`` (flow)
+     - F0/N0
+     - ACCEPT
+     - :ref:`LEX-REQ-1 <LEX-REQ-1>`
+   * - C027
+     - ``invalid/skipped_level.weave`` (flow)
+     - F0/N0
+     - E001
+     - :ref:`LEX-REQ-1 <LEX-REQ-1>`
 
 Execution scenarios and supplemental evidence
 ------------------------------------------------

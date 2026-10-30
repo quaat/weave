@@ -21,3 +21,6 @@ Thumbs.db
 
 # Agent task worktrees (weave workflow)
 .worktrees/
+
+# Rust build output
+/target/

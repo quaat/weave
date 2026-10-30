@@ -59,14 +59,14 @@ have no implementation, so no command establishes them.
        :doc:`grammar`; rules ``F0-*``, ``TYPE-REQ-1``
      - Yes: ``checker.py`` (``check_flow``, ``lower_flow_source``) against a
        validated N0 or N1 API environment
-     - Conformance cases C001--C018; ``test_checker.py``,
+     - Conformance cases C001--C018, C026 and C027; ``test_checker.py``,
        ``test_composition.py``, ``test_rejection_and_propagation.py``;
        ``tests/test_rule_cases.py``
      - ``python3 reference/prototype/checker.py check
        examples/nets/Inventory.weave examples/valid/checkout_propagating.weave``:
        exit 0, three ``CHECKED`` lines (``checkout_propagating``,
        ``place_order``, ``pay_with``).
-       ``python3 scripts/validate.py``: exit 0, ``PASS: 25 source expectations;
+       ``python3 scripts/validate.py``: exit 0, ``PASS: 27 source expectations;
        3 scripted scenarios``
    * - N0
      - :doc:`declarations`, :doc:`net-semantics` (uncoloured markings),
@@ -84,7 +84,7 @@ have no implementation, so no command establishes them.
        (coloured model)
      - Yes: ``coloured.py`` with the shared ``checker.py`` structure
        (MODEL-01 in :doc:`limitations`)
-     - ``test_coloured.py``; ``scripts/validate.py`` checks the eight accepted
+     - ``test_coloured.py``; ``scripts/validate.py`` checks the nine accepted
        flows against the N1 API projection and the E420 walkthrough. The
        conformance corpus has no N1 case.
      - ``python3 reference/prototype/coloured.py analyze
@@ -118,6 +118,15 @@ rule ID to its cases and tests or to a pending-implementation entry.
 procedure that reproduces the whole baseline from a fresh clone. What the
 checkers trust about parsing and lowering is stated in
 :ref:`source-to-model-trust-boundary`.
+
+The profiles are implemented only by the reference snapshot. The Rust crate
+``crates/weave-syntax`` (quaat/weave#9) parses F0, N0 and N1 source with the
+EBNF of :doc:`grammar` and reports syntax diagnostics. It checks syntax only:
+it implements no static rule, analysis or runtime, so it adds no profile to the
+matrix and establishes no conformance claim beyond syntax acceptance. Its
+acceptance is compared with the generated parser on the corpus
+(:ref:`chapters/grammar:Generated-parser agreement`); run ``cargo test --all``
+from the repository root.
 
 Authority and normative language
 --------------------------------------

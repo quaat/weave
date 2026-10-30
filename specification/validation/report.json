@@ -133,6 +133,16 @@
       "file": "nets/unsafe_paid_release.weave",
       "expected": "E320",
       "actual": "E320"
+    },
+    {
+      "file": "valid/commented_blocks.weave",
+      "expected": "ACCEPT",
+      "actual": "ACCEPT"
+    },
+    {
+      "file": "invalid/skipped_level.weave",
+      "expected": "E001",
+      "actual": "E001"
     }
   ],
   "accepted_flows_checked_original_and_lowered_against_n0_and_n1": [
@@ -143,7 +153,8 @@
     "valid/propagate_bound.weave",
     "valid/checkout.weave",
     "valid/checkout_composed.weave",
-    "valid/checkout_propagating.weave"
+    "valid/checkout_propagating.weave",
+    "valid/commented_blocks.weave"
   ],
   "scenarios": [
     {

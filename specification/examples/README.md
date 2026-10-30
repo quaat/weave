@@ -31,6 +31,8 @@ The manifest is executable metadata. Valid helper-only files are statically chec
 | [mutations/leak.weave](mutations/leak.weave) | `E101` | An undeclared transition cannot consume sealed activation/runtime state. |
 | [mutations/manual_leak.weave](mutations/manual_leak.weave) | `E101` | An undeclared transition cannot consume sealed activation/runtime state. |
 | [nets/unsafe_paid_release.weave](nets/unsafe_paid_release.weave) | `E320` | Even an authorized cancellation with balanced accounting can violate payment ordering. |
+| [valid/commented_blocks.weave](valid/commented_blocks.weave) | `ACCEPT` | Comments and blank lines in every block position are trivia. |
+| [invalid/skipped_level.weave](invalid/skipped_level.weave) | `E001` | A block must be indented by exactly one four-space level. |
 
 ## Scenario expectations
 

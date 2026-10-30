@@ -96,8 +96,10 @@ flow = "flow", IDENT, "(", [ parameters ], ")", [ "->", type ],
 body = { simple }, ending ;
 simple = let-call | unit-call | propagate-bound | propagate-call ;
 call = qname, "(", [ arguments ], ")" ;
-(* Parsing permits a missing await so static checking can diagnose E212/E205. *)
-let-call = "let", IDENT, "=", [ "await" ], call, NL ;
+(* Parsing permits a missing await so static checking can diagnose E212/E205.
+   ( "await", call | call ) is [ "await" ], call with the option expanded, so
+   ordered choice also accepts an operation named await (LEX-REQ-2). *)
+let-call = "let", IDENT, "=", ( "await", call | call ), NL ;
 unit-call = "await", call, NL ;
 propagate-bound = "let", IDENT, "=", IDENT, "?", NL ;
 propagate-call = "let", IDENT, "=", "(", "await", call, ")", "?", NL ;

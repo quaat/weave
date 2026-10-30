@@ -73,59 +73,59 @@
   },
   "SYN-01": {
     "chapter": "grammar",
-    "line": 52
+    "line": 193
   },
   "SYN-02": {
     "chapter": "grammar",
-    "line": 57
+    "line": 198
   },
   "SYN-03": {
     "chapter": "grammar",
-    "line": 63
+    "line": 204
   },
   "SYN-04": {
     "chapter": "grammar",
-    "line": 70
+    "line": 211
   },
   "SYN-05": {
     "chapter": "grammar",
-    "line": 76
+    "line": 217
   },
   "SYN-06": {
     "chapter": "grammar",
-    "line": 82
+    "line": 223
   },
   "SYN-07": {
     "chapter": "grammar",
-    "line": 88
+    "line": 229
   },
   "SYN-08": {
     "chapter": "grammar",
-    "line": 94
+    "line": 235
   },
   "SYN-09": {
     "chapter": "grammar",
-    "line": 100
+    "line": 241
   },
   "SYN-10": {
     "chapter": "grammar",
-    "line": 106
+    "line": 247
   },
   "SYN-11": {
     "chapter": "grammar",
-    "line": 113
+    "line": 254
   },
   "SYN-12": {
     "chapter": "grammar",
-    "line": 118
+    "line": 259
   },
   "SYN-13": {
     "chapter": "grammar",
-    "line": 123
+    "line": 264
   },
   "SYN-14": {
     "chapter": "grammar",
-    "line": 129
+    "line": 270
   },
   "LEX-REQ-1": {
     "chapter": "lexical",
@@ -133,7 +133,7 @@
   },
   "LEX-REQ-2": {
     "chapter": "lexical",
-    "line": 74
+    "line": 112
   },
   "NET-FIRE-1": {
     "chapter": "net-semantics",
@@ -225,15 +225,15 @@
   },
   "CONF-REQ-1": {
     "chapter": "status",
-    "line": 147
+    "line": 156
   },
   "CONF-REQ-2": {
     "chapter": "status",
-    "line": 154
+    "line": 163
   },
   "CONF-REQ-3": {
     "chapter": "status",
-    "line": 172
+    "line": 181
   },
   "TYPE-REQ-1": {
     "chapter": "types",

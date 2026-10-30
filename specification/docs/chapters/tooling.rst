@@ -89,6 +89,46 @@ merely to make every file accepted.
 listed test is missing, or if the page is stale. ``tests/test_rule_coverage.py``
 runs that check in ``make validate`` and ``make validate-offline``.
 
+Rust syntax crate
+-----------------------
+
+The grammar-driven parser is the Rust crate ``crates/weave-syntax`` in the
+repository's Cargo workspace (decision record
+``docs/decisions/0009-rust-implementation.md``). ``rust-toolchain.toml`` pins
+Rust 1.89.0 with ``rustfmt`` and ``clippy``; the crate uses only the standard
+library. From the repository root:
+
+.. code-block:: bash
+
+   cargo fmt --all --check
+   cargo clippy --all-targets -- -D warnings
+   cargo test --all
+   cargo run -q -p weave-syntax -- parse --start flow-file specification/examples/valid/checkout.weave
+   cargo run -q -p weave-syntax -- roundtrip --start n1-file specification/examples/nets/Inventory.coloured.weave
+   cargo run -q -p weave-syntax -- grammar
+
+The tests read ``examples/manifest.json`` and every ``.weave`` file of
+``examples/`` in place. They check the round trip and the span invariants on
+every syntactically valid file, and the code, rule and span of the diagnostic on
+every invalid one. Adversarial tests cover tabs, three- and five-space
+indentation, an indented first line, dedents to unknown levels, truncated
+files, 10,000 nested parentheses, very long lines, non-ASCII identifiers, NUL
+bytes, CRLF and lone carriage returns, invalid UTF-8 and empty files; each must
+give a diagnostic or a correct parse, never a panic. ``parse`` prints the
+``weave-cst-v1`` tree or a JSON array of ``weave-diagnostic-v1`` diagnostics
+(exit 0 or 1), ``roundtrip`` exits 0 exactly when printing reproduces the source
+and re-parsing gives an equal tree, and ``grammar`` prints the normalisation
+report (:ref:`chapters/grammar:Ordered-choice reading and normalisation`).
+Usage and input errors exit 2. The binary is a test and audit driver, not the
+user-facing Weave command.
+
+``scripts/grammar_audit.py`` builds the binary with ``cargo build --offline
+--locked`` when ``cargo`` is on ``PATH``, or uses the binary named by
+``WEAVE_SYNTAX_BIN``, and compares it with the generated parser
+(:ref:`chapters/grammar:Generated-parser agreement`). Without either, the
+specification's offline validation still passes and the report records the Rust
+comparison as not established.
+
 For direct reference commands:
 
 .. code-block:: bash
@@ -166,13 +206,19 @@ coverage check.
 
 The generated Earley grammar is derived directly from weave.ebnf. Its independent
 syntax/layout front end is followed by shared reference semantic checks; it is
-not an independently implemented type checker. Corpus stage results are recorded
-separately in ``validation/grammar-report.json``.
+not an independently implemented type checker. Corpus stage results, the syntax
+probes and the Rust differential are recorded separately in
+``validation/grammar-report.json``. ``tests/test_grammar_audit.py`` adds six
+tests: the discrepancy table equals the audited probes, the probes keep their
+verdicts, layout faults map to E001 and words end at boundaries, and the Rust
+comparison is skipped as not established without ``cargo``, requires a named
+binary to exist, and fails on a disagreeing verdict.
 
 ``make validate`` includes the grammar audit, rule-catalogue drift check, the
-specification's 80 tests (nine documentation tests, the rule cases, the rule
-coverage check, the diagnostic map tests and the result-label lint of
-:ref:`chapters/verification:Result labels in tool output`), 143 upstream tests, strict HTML with weave-check, the local
+specification's 86 tests (nine documentation tests, the rule cases, the rule
+coverage check, the diagnostic map tests, the result-label lint of
+:ref:`chapters/verification:Result labels in tool output` and the grammar-audit
+tests), 143 upstream tests, strict HTML with weave-check, the local
 HTML link and anchor audit, and Sphinx linkcheck. ``make validate-offline`` runs the same steps except external links.
 A linkcheck transport error is a failed/unestablished external check, not success.
 No unreachable URL is silently ignored.

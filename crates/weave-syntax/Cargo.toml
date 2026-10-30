@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
+# SPDX-License-Identifier: MIT
+[package]
+name = "weave-syntax"
+version = "0.1.0"
+description = "Grammar-driven Weave parser: lexer, layout, concrete syntax tree with spans and trivia, syntax diagnostics"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "weave-syntax"
+path = "src/main.rs"
+
+[dependencies]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

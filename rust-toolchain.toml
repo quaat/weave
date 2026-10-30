@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Thomas F. Hagelien
+# SPDX-License-Identifier: MIT
+#
+# Pinned toolchain; raising it is a reviewed change (docs/decisions/0009-rust-implementation.md).
+[toolchain]
+channel = "1.89.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

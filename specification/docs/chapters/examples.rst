@@ -124,7 +124,7 @@ Inventory N0. The differences and claim boundaries are in :doc:`protocol-diff`.
 Acceptance corpus
 -----------------------
 
-``examples/manifest.json`` normatively specifies 25 acceptance/rejection cases and three
+``examples/manifest.json`` normatively specifies 27 acceptance/rejection cases and three
 scripted scenarios. Valid examples are complete F0 files checked against the
 selected net. Files under mutations are net-body fragments, not standalone nets.
 The unsafe_paid_release net deliberately fails ordering despite balanced

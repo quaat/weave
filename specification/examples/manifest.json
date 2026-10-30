@@ -281,6 +281,28 @@
       "rules": [
         "N0-ORDER-1"
       ]
+    },
+    {
+      "file": "valid/commented_blocks.weave",
+      "kind": "flow",
+      "expect": "ACCEPT",
+      "lesson": "Comments and blank lines in every block position are trivia.",
+      "id": "C026",
+      "profile": "F0/N0",
+      "rules": [
+        "LEX-REQ-1"
+      ]
+    },
+    {
+      "file": "invalid/skipped_level.weave",
+      "kind": "flow",
+      "expect": "E001",
+      "lesson": "A block must be indented by exactly one four-space level.",
+      "id": "C027",
+      "profile": "F0/N0",
+      "rules": [
+        "LEX-REQ-1"
+      ]
     }
   ],
   "scenarios": [
