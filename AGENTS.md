@@ -26,7 +26,7 @@ Weave programs and the kit, and wins inside `agent-kit/`.
   explicit, reviewed snapshot refresh.
 - Expected-rejection fixtures are intentional; do not repair them.
 - Use the specification's result labels (PROVED, CHECKED WITHIN BOUNDS, CHECKED flow,
-  SCRIPTED, VIOLATED, NOT ESTABLISHED) only in its sense.
+  CHECKED pure, SCRIPTED, VIOLATED, NOT ESTABLISHED) only in its sense.
 - Documentation is part of every change: follow `docs/development/documentation-map.md` and
   run `python3 -m tools.weave_workflow docs-audit`.
 - Production interpreter, compiler and runtime work defaults to Rust; see

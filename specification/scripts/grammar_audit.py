@@ -7,7 +7,9 @@ unchanged reference checker. This is not a second independent type checker.
 Three comparisons are recorded in ``validation/grammar-report.json``:
 
 * the corpus pipeline: generated syntax front end followed by reference semantics,
-  against the reference checker and the manifest's expected result;
+  against the reference checker and the manifest's expected result; the P0 pure files
+  of ``examples/pure/`` (start symbol ``pure-file``) are parsed too, and those whose
+  P0 manifest case requires a syntax or layout code must be rejected;
 * syntax probes: small inputs on which the reference checker's hand-written parser
   and the EBNF are known to agree or to differ (the discrepancy list in the grammar
   chapter); each probe's documented verdicts are asserted;
@@ -39,7 +41,9 @@ LEXICAL = {"IDENT", "UINT", "POSINT", "NL", "INDENT", "DEDENT"}
 # the lookahead the dynamic lexer would split ``letx`` into ``let x``.
 END = r"(?![A-Za-z0-9_])"
 SYNTAX_FAMILY = {"E001", "E002", "E003", "E200"}
-START = {"flow": "flow-file", "net": "n0-file", "net_append": "n0-file", "n1": "n1-file"}
+START = {"flow": "flow-file", "net": "n0-file", "net_append": "n0-file", "n1": "n1-file", "pure": "pure-file"}
+SYNTAX_CODE = {"flow-file": "E200", "n0-file": "E003", "n1-file": "E003", "pure-file": "E500"}
+PURE_MANIFEST = "pure/manifest.json"
 N1_NETS = {"nets/Inventory.coloured.weave", "nets/cross_order_read.weave"}
 
 
@@ -130,7 +134,7 @@ def layout(source: str) -> str:
 
 def parser():
     grammar,count=generate((ROOT/"grammar/weave.ebnf").read_text(encoding="utf-8"))
-    return Lark(grammar,start=["flow_file","n0_file","n1_file"],parser="earley",lexer="dynamic"),grammar,count
+    return Lark(grammar,start=["flow_file","n0_file","n1_file","pure_file"],parser="earley",lexer="dynamic"),grammar,count
 
 def syntax(p, source: str, start: str) -> tuple[str, str | None]:
     """The generated front end's verdict and, for a rejection, the syntax-family code."""
@@ -140,7 +144,7 @@ def syntax(p, source: str, start: str) -> tuple[str, str | None]:
     except LayoutError:
         return "REJECT", "E001"
     except (UnexpectedInput, ValueError):
-        return "REJECT", "E200" if start == "flow-file" else "E003"
+        return "REJECT", SYNTAX_CODE[start]
 
 def reference(source, kind, base):
     try:
@@ -149,6 +153,15 @@ def reference(source, kind, base):
             candidate=parse_net(source);prove(candidate);explore_order(candidate)
         return "ACCEPT"
     except CheckError as e: return e.code
+
+def pure_syntax_rejections() -> set[str]:
+    """P0 corpus files whose required code is a layout or pure-file syntax code.
+
+    Each must be rejected by the generated parser. (E500 also covers a word other
+    than await before a qualified name, which the grammar derives; no corpus file
+    uses that form, and the audit would report one that did.)"""
+    pure=json.loads((ROOT/"examples"/PURE_MANIFEST).read_text(encoding="utf-8"))
+    return {c["file"] for c in pure["cases"] if c["kind"]=="check" and c["expect"] in {"E001","E500"}}
 
 def corpus(manifest) -> list[tuple[str, str, str]]:
     """Every corpus file as (file, start symbol, text to parse), manifest cases first."""
@@ -160,7 +173,7 @@ def corpus(manifest) -> list[tuple[str, str, str]]:
     for f in files:
         source=(ROOT/"examples"/f).read_text(encoding="utf-8")
         directory=f.split("/")[0]
-        kind=kinds.get(f) or {"valid":"flow","invalid":"flow","mutations":"net_append"}.get(directory) or (
+        kind=kinds.get(f) or {"valid":"flow","invalid":"flow","mutations":"net_append","pure":"pure"}.get(directory) or (
             "n1" if f in N1_NETS else "net")
         if kind=="net" and f in N1_NETS: kind="n1"
         if kind=="net_append": source=base_source.rstrip()+"\n\n"+source
@@ -220,6 +233,10 @@ PROBES = [
      "Arc count with a leading zero"),
     ("SA-10", "n0-file", _LEASE.replace("net Lease(stock: Nat):", "net Lease(stock: Nat):  # header"), "ACCEPT", "ACCEPT",
      "Comment after a net header"),
+    ("SA-11", "flow-file", _HOLD.replace("return hold", "return hold < hold"), "REJECT", "REJECT",
+     "P0 comparison operator in a flow"),
+    ("SA-12", "flow-file", "fn double(x: Int) -> Int:\n    return x * 2\n", "REJECT", "REJECT",
+     "P0 function declaration in a flow file"),
 ]
 
 def probe_reference(source: str, start: str, net) -> str:
@@ -296,9 +313,13 @@ def main():
             raise AssertionError(f"{c['file']}: generated pipeline={pipeline}, reference={ref}, expected={c['expect']}")
         rows.append({"file":c["file"],"syntax":verdict,"pipeline":pipeline,"reference":ref,"expected":c["expect"]})
     inputs=[]
+    pure_rejected=pure_syntax_rejections()
     for f,start,source in corpus(manifest):
         verdict,code=syntax(p, source, start)
-        if f not in {r["file"] for r in rows} and verdict!="ACCEPT":
+        if f in pure_rejected:
+            if verdict=="ACCEPT":
+                raise AssertionError(f"{f}: the P0 manifest requires a syntax code, but the generated parser accepts it")
+        elif f not in {r["file"] for r in rows} and verdict!="ACCEPT":
             raise AssertionError(f"{f}: supplementary corpus file rejected by the generated parser")
         inputs.append((f,start,source,verdict,code))
     probes=[]
@@ -316,6 +337,7 @@ def main():
     report={"productions":count,"cases":rows,"agreement":len(rows),
             "scope":"Independent generated syntax front end plus shared reference semantic checks; not independent semantic equivalence.",
             "corpus_files_parsed":len(inputs)-len(probes),
+            "pure_files_parsed":sum(start=="pure-file" for _,start,_,_,_ in inputs),
             "probes":probes,
             "rust_differential":rust}
     (out/"grammar-report.json").write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")

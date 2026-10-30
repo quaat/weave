@@ -48,13 +48,19 @@ extension is preserved until an explicit migration covers it.
 
 The Cargo workspace exists since #9: a virtual workspace in the root `Cargo.toml` (resolver 3,
 edition 2024, `rust-version` 1.89, MIT), a committed `Cargo.lock`, and `rust-toolchain.toml`
-pinning channel 1.89.0 with `rustfmt` and `clippy`. Its one crate, `crates/weave-syntax`, is the
-syntax layer: lexer and layout, the grammar-driven parser, the concrete syntax tree with spans
-and trivia, the printer and syntax diagnostics. It has no dependencies.
+pinning channel 1.89.0 with `rustfmt` and `clippy`. It has four crates, all standard library
+only, with no third-party dependencies. `crates/weave-syntax` (#9) is the syntax layer: lexer and
+layout, the grammar-driven parser, the concrete syntax tree with spans and trivia, the printer
+and syntax diagnostics. For the P0 pure computation profile (#10), `crates/weave-check` is the
+static checker, `crates/weave-eval` the evaluator (in-house arbitrary-precision integers, an
+explicit call-frame stack, fuel, depth and integer-size budgets) and `crates/weave-cli` the
+`weave` command.
 
 Because `Cargo.toml` exists, the workflow derives the Rust checks for every task: `cargo fmt
 --all --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test --all`, run from the
 repository root; CI runs them in its `rust` job. The conformance and differential tests named
-by the ADR are the crate's corpus tests and the Rust comparison in the specification's grammar
-audit (`make validate-offline`). Rust 1.89.0 is installed in `~/.cargo/bin` but not on the
+by the ADR are the crates' corpus tests, the Rust comparison in the specification's grammar
+audit and the P0 differential (`specification/scripts/p0_differential.py`), which compares
+the `weave` command with the Python P0 reference evaluator; both comparisons run in
+`make validate-offline`. Rust 1.89.0 is installed in `~/.cargo/bin` but not on the
 default `PATH`.

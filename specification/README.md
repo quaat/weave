@@ -4,8 +4,11 @@
 
 A source-grounded specification of Weave's implemented functional Petri-net
 language, with separate profiles for legacy nets, coloured nets, and the
-process-crash reference model. New D0 waiting/identity semantics and N2
-evidence/correlation design rules are explicit **unimplemented targets**. Proposed pure functions and fork/join are explicitly
+process-crash reference model, and a pure computation profile, P0 (typed pure
+functions in separate pure files, `docs/chapters/pure.rst`), implemented in Rust
+(`../crates/weave-check`, `../crates/weave-eval`, command `weave`) and by a Python
+reference evaluator. New D0 waiting/identity semantics and N2
+evidence/correlation design rules are explicit **unimplemented targets**. Proposed fork/join is explicitly
 outside the implemented profiles.
 
 ## Read
@@ -13,7 +16,7 @@ outside the implemented profiles.
 Build the HTML reference (below) and open `_build/html/index.html`. The editable
 source is in `docs/`; the consolidated grammar is `grammar/weave.ebnf`.
 Start with **Status and conformance**, then **Language overview**.
-The status chapter's profile matrix names, for each profile (F0, N0, N1, R0 and
+The status chapter's profile matrix names, for each profile (F0, N0, N1, R0, P0 and
 the targets D0 and N2), where it is specified, implemented and tested, and the
 command that produces its evidence. **Claims, baseline and pinned identifiers**
 (`docs/chapters/baseline.rst`) lists the public claims with their profile and
@@ -42,6 +45,9 @@ python scripts/test_reference.py
 python scripts/grammar_audit.py
 python scripts/rule_coverage.py --check
 python scripts/diagnostic_map.py
+python scripts/p0_reference.py check examples/pure/valid/merge_sort.weave
+python scripts/p0_reference.py run examples/pure/valid/merge_sort.weave --entry merge_sort --args '[[3, 1, 2]]'
+python scripts/p0_differential.py
 make validate
 ```
 
@@ -62,6 +68,15 @@ the corpus and on the syntax probes of the grammar chapter's discrepancy table
 verdicts and an exact round trip; otherwise `validation/grammar-report.json` records that
 comparison as not established. The Rust crate's own tests run with `cargo test --all` from the
 repository root.
+P0 (quaat/weave#10): `examples/pure/manifest.json` (`weave-p0-conformance-v1`) is the P0
+corpus, kept apart from `examples/manifest.json`. The Python reference evaluator
+`scripts/p0_reference.py` parses with the generated Lark grammar and checks and evaluates from
+`docs/chapters/pure.rst`. `scripts/p0_differential.py` (in `make validate-offline`) checks
+the reference against every corpus expectation and compares the Rust `weave` binary with it
+on the corpus, on merge sort against Python `sorted` and on seeded
+generated programs; with `cargo` on `PATH`, or `WEAVE_BIN` naming the binary, it builds and
+runs the binary, otherwise `validation/p0-differential.json` records the comparison as not
+established. `tests/test_p0.py` tests the P0 rules through the reference.
 `make validate-offline` omits only the external linkcheck step.
 `make.bat html` and `make.bat latexpdf` provide the Windows builds.
 

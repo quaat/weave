@@ -71,7 +71,8 @@ LEX-01 to LEX-04 of :doc:`limitations`.
   (:ref:`LEX-REQ-2 <LEX-REQ-2>`). A word that starts with a digit must consist of digits only
   and is an integer token. Adjacent words therefore need a separator:
   ``letx`` is one identifier, not ``let x``.
-* ``->`` and ``==`` are single tokens; the other punctuation is one character.
+* ``->``, ``==``, ``<=``, ``>=`` and ``!=`` are single tokens; the other
+  punctuation is one character.
 * Any other character outside a comment is rejected, including non-ASCII
   letters (LEX-02), the byte-order mark (LEX-01), no-break and other non-ASCII
   spaces, and control characters other than the line ending.
@@ -105,6 +106,7 @@ Contextual words
    tokens match firing transition take put read runtime_cancel via api foreign
    pending keyed by correlate client_key or provider_reference outcome
    flow let await return
+   fn record if else and fork
 
 ``Nat`` and ``Unit`` have special roles. ``Ok``, ``Err``, and ``Unknown`` are
 required foreign-result tags and are used by propagation lowering.
@@ -120,8 +122,11 @@ Punctuation
 -----------------
 
 Punctuation is ``(``, ``)``, ``[``, ``]``, ``,``, ``:``, ``.``, ``=``,
-``->``, ``==``, ``+``, ``-``, ``*``, and ``?``. Their presence does not imply a
-general expression language.
+``->``, ``==``, ``+``, ``-``, ``*``, and ``?``, and, for P0 pure files
+(:doc:`pure`), ``<``, ``<=``, ``>``, ``>=`` and ``!=``. Their presence does not
+imply a general expression language: only the P0 grammar derives the five P0
+tokens, so a flow or net that contains one is rejected as before, with the same
+code, now at the syntax stage (:ref:`chapters/grammar:Syntax diagnostics`).
 
 Integer tokens
 --------------------
@@ -132,7 +137,8 @@ counts are positive; initial counts are nonnegative. Unary minus supplies
 negative invariant terms.
 
 There are no flow literals: strings, floats, Booleans, lists, durations, and
-integer expressions are unsupported. ``Nat`` constrains the net parameter, not
+integer expressions are unsupported in flows. P0 pure files have integer
+literals, list literals and integer expressions (:doc:`pure`). ``Nat`` constrains the net parameter, not
 runtime arithmetic. The reference uses arbitrary-precision Python integers for
 accounting. Host numeric forms incidentally accepted by the invariant AST reader,
 such as hexadecimal integers, are outside the portable grammar.

@@ -111,5 +111,6 @@ What is not specified
 F0 has no loops, ordinary if/else, recursion, parallel blocks, effect handlers,
 timeouts, retry statements, arithmetic, or user-defined pure function evaluation.
 No evaluation rules should be inferred from familiar syntax in other languages.
-See :doc:`proposals` for the separate pure-computation design brief.
+Pure computation is the separate P0 profile (:doc:`pure`), in its own file kind;
+F0 flows do not call P0 functions in this revision.
 

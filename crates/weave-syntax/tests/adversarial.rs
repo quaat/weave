@@ -381,3 +381,107 @@ fn the_depth_cap_fits_the_parser_stack() {
         .unwrap();
     assert_eq!(handle.join().unwrap(), (Some(true), Some("limit")));
 }
+
+// ------------------------------------------------------------------ P0 pure files
+
+const PURE: &str = "fn f(x: Int) -> Int:\n    return x\n";
+
+#[test]
+fn p0_files_round_trip_and_reject_with_e500() {
+    ok(PURE, Start::PureFile);
+    ok(
+        "record R:\n    a: Int\n\nfn g(r: R, xs: List[List[Int]]) -> Bool:\n    if r.a <= 1 and not(r.a != 2) or r.a >= -3:\n        return length(xs) > 0\n    else:\n        let s = R(a: div(1, 2))\n        return s.a == mod(3, -4)\n",
+        Start::PureFile,
+    );
+    for bad in [
+        "fn f() -> Int:\n    return 1 < 2 < 3\n",
+        "fn f() -> Int:\n    return 007\n",
+        "fn f() -> Int:\n    return 1 !\n",
+        "fn f() -> Int:\n    return a.b(c).d\n",
+        "fn f() -> Int:\n    return await f(1)\n",
+        "flow f():\n    return\n",
+        "fn f() -> Int\n",
+        "fn f(x: Int) -> Int:\n    return xé\n",
+        "",
+    ] {
+        let d = err(bad, Start::PureFile);
+        assert_eq!(d.code, "E500", "{bad:?}: {}", d.message);
+        assert_eq!(d.rule().as_deref(), Some("P0-FILE-1"));
+    }
+    assert_eq!(
+        err(&PURE.replace("    return", "\treturn"), Start::PureFile).code,
+        "E001"
+    );
+}
+
+#[test]
+fn p0_punctuation_lexes_but_f0_and_n0_still_reject_it() {
+    // Before P0 these characters were lexical errors; now they are tokens the
+    // flow and net grammars do not derive. The code is the same either way.
+    for op in ["<", "<=", ">", ">=", "!="] {
+        let flow = FLOW.replace("return hold", &format!("return hold {op} hold"));
+        let d = err(&flow, Start::FlowFile);
+        assert_eq!((d.code, d.stage), ("E200", "syntax"), "{op}");
+        let net = NET.replace("p == stock", &format!("p {op} stock"));
+        assert_eq!(err(&net, Start::N0File).code, "E003", "{op}");
+    }
+    // A lone '!' stays a lexical error; '=>' is not a token, and '<-' is '<' '-'.
+    assert_eq!(
+        err(
+            &FLOW.replace("return hold", "return !hold"),
+            Start::FlowFile
+        )
+        .stage,
+        "lexical"
+    );
+    assert_eq!(
+        err(
+            &format!("{PURE}fn g() -> Int:\n    return 1 => 2\n"),
+            Start::PureFile
+        )
+        .code,
+        "E500"
+    );
+    ok(
+        &format!("{PURE}fn g() -> Bool:\n    return 1 <- 2\n"),
+        Start::PureFile,
+    );
+}
+
+#[test]
+fn p0_nesting_at_the_parser_limit_is_a_limit_diagnostic() {
+    let nested = |n: usize| {
+        format!(
+            "fn f() -> Int:\n    return {}1{}\n",
+            "(".repeat(n),
+            ")".repeat(n)
+        )
+    };
+    // Each parenthesised level costs one pass through the seven expression productions.
+    let mut deepest_ok = 0;
+    for n in [1, 10, 30, 50, 54] {
+        if parse(&nested(n), Start::PureFile).is_ok() {
+            deepest_ok = n;
+        }
+    }
+    assert!(deepest_ok >= 50, "{deepest_ok}");
+    let d = err(&nested(60), Start::PureFile);
+    assert_eq!((d.code, d.stage), ("E500", "limit"));
+    let minus = format!("fn f() -> Int:\n    return {}1\n", "-".repeat(1000));
+    assert_eq!(err(&minus, Start::PureFile).stage, "limit");
+    let ok_minus = format!("fn f() -> Int:\n    return {}1\n", "-".repeat(300));
+    assert!(parse(&ok_minus, Start::PureFile).is_ok());
+}
+
+#[test]
+fn p0_long_lists_and_wide_expressions_parse() {
+    let items: Vec<String> = (0..20_000).map(|i| i.to_string()).collect();
+    ok(
+        &format!("fn f() -> List[Int]:\n    return [{}]\n", items.join(", ")),
+        Start::PureFile,
+    );
+    ok(
+        &format!("fn f() -> Int:\n    return {}\n", items.join(" + ")),
+        Start::PureFile,
+    );
+}

@@ -23,6 +23,8 @@ pub const LAYOUT_CODE: &str = "E001";
 pub const NET_SYNTAX_CODE: &str = "E003";
 /// Lexical or grammar faults in a `flow-file`.
 pub const FLOW_SYNTAX_CODE: &str = "E200";
+/// Lexical or grammar faults in a P0 `pure-file`.
+pub const PURE_SYNTAX_CODE: &str = "E500";
 
 /// One code's entry in `diagnostics.json`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -160,6 +162,7 @@ mod tests {
             (LAYOUT_CODE, "LEX-REQ-1"),
             (NET_SYNTAX_CODE, "SYN-04"),
             (FLOW_SYNTAX_CODE, "CONF-REQ-1"),
+            (PURE_SYNTAX_CODE, "P0-FILE-1"),
         ] {
             let info = code_info(code);
             assert_eq!(

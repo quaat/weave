@@ -47,8 +47,8 @@ and a new evidence format does not change a profile.
      - Toolchain maintainer
      - Semantic versioning ``MAJOR.MINOR.PATCH`` per tool
    * - Profiles
-     - F0, N0, N1 and R0; the targets D0 and N2; later profiles and versioned
-       extensions
+     - F0, N0, N1, R0 and P0; the targets D0 and N2; later profiles and
+       versioned extensions
      - Language maintainer
      - Profile name qualified by the specification revision that defines it;
        an extension has a name and an integer version
@@ -111,7 +111,7 @@ Each tool carries its own semantic version. Bump rule:
 * PATCH: a fix that changes no interface.
 * While MAJOR is 0, an incompatible change increments MINOR instead.
 
-A tool's output names claims only with the six result labels, one label per claim,
+A tool's output names claims only with the seven result labels, one label per claim,
 and reports tool and runtime status separately
 (:ref:`chapters/verification:Result labels in tool output`). Changing the layout
 of that output is an interface change under the rule above; changing which result
@@ -152,9 +152,10 @@ Evidence schemas
 ~~~~~~~~~~~~~~~~~~~~~~
 
 An evidence document MUST name its schema in a top-level ``format`` field of
-the form ``weave-<artefact>-v<N>``. Eight format strings are used by committed
+the form ``weave-<artefact>-v<N>``. Nine format strings are used by committed
 files (seven existed when this policy was written; quaat/weave#4 added
-``weave-rule-coverage-v1``), but many existing evidence files have no ``format``
+``weave-rule-coverage-v1`` and quaat/weave#10 ``weave-p0-conformance-v1``), but
+many existing evidence files have no ``format``
 field; both groups are listed under `Existing evidence files`_. Four more are
 defined by JSON Schemas in ``evidence/schemas/`` and written by tools rather than
 committed: ``weave-trace-v1``, ``weave-canonical-net-v1`` and
@@ -204,7 +205,8 @@ Current identifiers
 -------------------------
 
 These are the identifiers in the repository at the time this policy was written,
-plus the rule-coverage map row, which quaat/weave#4 added later.
+plus the rule-coverage map row, which quaat/weave#4 added later, and the P0 rows
+(profile, tools and corpus manifest), which quaat/weave#10 added later.
 "None yet" means the repository has no identifier for that item.
 
 .. list-table::
@@ -236,15 +238,21 @@ plus the rule-coverage map row, which quaat/weave#4 added later.
      - ``agent-kit/PROVENANCE.json`` (``kit_version``)
    * - Tools
      - Production checker, runtime and CLI
-     - None yet
-     - The repository contains no production compiler or runtime: no Rust
-       source exists yet (``docs/development/implementation-language.md``
-       sets Rust as the default), and the root ``README.md`` states there is
-       no general compiler and no distributed runtime
+     - For P0 only: ``weave-check``, ``weave-eval`` and ``weave-cli`` (command
+       ``weave``), each ``0.1.0`` (quaat/weave#10); the syntax crate
+       ``weave-syntax`` is ``0.1.0`` (quaat/weave#9). No checker or runtime yet
+       for F0, N0, N1 or R0
+     - ``version`` in each ``crates/*/Cargo.toml``; ``weave --version``. The root
+       ``README.md`` states there is no general compiler and no distributed
+       runtime
    * - Profiles
      - F0, N0, N1, R0
      - Defined by 0.2-draft; no separate revision
      - Profile table in :doc:`status`
+   * - Profiles
+     - P0, added by quaat/weave#10
+     - Defined by 0.2-draft; no separate revision
+     - :doc:`pure`; profile table in :doc:`status`
    * - Profiles
      - D0, N2 (targets, unimplemented)
      - Defined by 0.2-draft; no separate revision
@@ -286,6 +294,10 @@ plus the rule-coverage map row, which quaat/weave#4 added later.
      - Rule-coverage map, added by quaat/weave#4
      - ``weave-rule-coverage-v1``
      - ``format`` in ``specification/tests/rule-coverage.json``
+   * - Evidence schemas
+     - P0 conformance corpus manifest, added by quaat/weave#10
+     - ``weave-p0-conformance-v1``
+     - ``format`` in ``specification/examples/pure/manifest.json``
    * - Evidence schemas
      - Scenario results, agent-kit demo traces and artefacts, specification
        audit reports
@@ -345,6 +357,14 @@ generates :doc:`rule-coverage` from it. It is not the output of an analysis or
 scenario run. It belongs with the files that have a ``format`` field, beside the
 conformance corpus manifest (``weave-conformance-v1``), as a conformance artefact
 versioned under this axis.
+
+quaat/weave#10 added two more files after ``0d3185f``. The P0 conformance corpus
+manifest ``specification/examples/pure/manifest.json`` has the format string
+``weave-p0-conformance-v1``; it is a conformance artefact beside
+``weave-conformance-v1``, kept separate because its run cases need checks that
+``weave-conformance-v1`` readers do not perform. The Rust/Python P0 differential
+report ``specification/validation/p0-differential.json`` has no ``format`` field;
+it is a specification build report, like ``grammar-report.json``.
 
 The byte-identical prototype copies in
 ``agent-kit/.agents/skills/weave/assets/prototype/`` and
@@ -467,9 +487,10 @@ F0, N0, N1 and R0 keep the meanings defined in 0.2-draft. The following arrive a
 versioned extensions or new profiles, never by changing those four:
 
 * **New pure syntax**: pure functions, arithmetic, lists, conditionals, loops
-  and recursion in flows. F0 flows have none of them; the root ``README.md``
-  places this computation only in the agent kit's separate ``fn`` extension,
-  outside the specified fragment.
+  and recursion in flows. F0 flows have none of them. quaat/weave#10 added pure
+  computation as the new profile P0 (:doc:`pure`) in its own file kind, without
+  changing F0; the agent kit's separate ``fn`` extension stays outside the
+  specified fragment.
 * **Generalised identity**: identity sorts beyond N1's two positional colour
   sorts, tenant and order (:doc:`net-semantics`).
 * **Durable execution**: execution of arbitrary flows with persisted state,

@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MIT
 """Result labels in tool output (quaat/weave#8): the policy in verification.rst and its lint.
 
-The six labels of the Result vocabulary table are the closed set used by the evidence
-envelope schema and by the agent kit's label lint. The specification's own evidence,
+The seven labels of the Result vocabulary table are the closed set of result labels;
+CHECKED pure (quaat/weave#10) joined the six that the evidence envelope schema and the
+agent kit's label lint use. The specification's own evidence,
 ``validation/report.json``, is wrapped in envelopes and linted: each envelope carries
 exactly one claim, at ``claim_label``, with one of the six labels. The agent kit's
 ``tests/test_result_labels.py`` runs the same lint on every runner command.
@@ -40,8 +41,8 @@ def policy() -> str:
 
 
 class LabelPolicyTests(unittest.TestCase):
-    def test_table_has_exactly_six_labels(self):
-        self.assertEqual(table_labels(), ("PROVED", "CHECKED WITHIN BOUNDS", "CHECKED flow",
+    def test_table_has_exactly_seven_labels(self):
+        self.assertEqual(table_labels(), ("PROVED", "CHECKED WITHIN BOUNDS", "CHECKED flow", "CHECKED pure",
                                           "SCRIPTED / passed scenario", "VIOLATED", "NOT ESTABLISHED"))
 
     def test_policy_section_states_each_rule(self):
@@ -69,7 +70,10 @@ class LabelPolicyTests(unittest.TestCase):
         from evidence.weave_evidence import documents, schema
         self.assertEqual(RESULT_LABELS, table_labels())
         envelope = schema.load(documents.SCHEMA_FILES[documents.ENVELOPE])
-        self.assertEqual(tuple(envelope["properties"]["claim_label"]["enum"]), table_labels())
+        # weave-evidence-envelope-v1 predates CHECKED pure (quaat/weave#10); wrapping a P0 claim
+        # in an envelope needs the next envelope version.
+        self.assertEqual(tuple(envelope["properties"]["claim_label"]["enum"]),
+                         tuple(label for label in table_labels() if label != "CHECKED pure"))
         self.assertEqual(tuple(envelope["properties"]["runtime_status"]["enum"]), RUNTIME_STATUSES + (None,))
 
 

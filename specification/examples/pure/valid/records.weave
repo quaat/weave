@@ -1,0 +1,23 @@
+# Nominal records: construction by named fields in any order, field access on bindings.
+
+record Point:
+    x: Int
+    y: Int
+
+record Segment:
+    start: Point
+    finish: Point
+
+fn point(x: Int, y: Int) -> Point:
+    return Point(y: y, x: x)
+
+fn length_squared(s: Segment) -> Int:
+    let dx = s.finish.x - s.start.x
+    let dy = s.finish.y - s.start.y
+    return dx * dx + dy * dy
+
+fn mirror(s: Segment) -> Segment:
+    return Segment(start: s.finish, finish: s.start)
+
+fn diagonal(n: Int) -> Segment:
+    return Segment(start: point(0, 0), finish: point(n, n))

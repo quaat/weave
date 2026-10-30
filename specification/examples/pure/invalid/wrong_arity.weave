@@ -1,0 +1,5 @@
+fn add(a: Int, b: Int) -> Int:
+    return a + b
+
+fn three() -> Int:
+    return add(1, 2, 3)

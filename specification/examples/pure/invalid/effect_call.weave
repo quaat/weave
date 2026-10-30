@@ -1,0 +1,2 @@
+fn pay(amount: Int) -> Int:
+    return Payments.charge(amount)

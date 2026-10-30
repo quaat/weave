@@ -1,7 +1,7 @@
 {
-  "description": "Code-to-rule map for every diagnostic code the reference prototype (reference/prototype/checker.py, coloured.py, durable.py) and the agent kit (agent-kit/.agents/skills/weave/scripts/) can emit. Each code has exactly one principal rule and optional secondary rules. Category 'specification': rule IDs from rules.json. Category 'kit-extension': rule IDs of the agent kit's pure fn extension, defined in agent-kit/docs/weave.md, outside the specified fragment. Category 'tool': not a language diagnostic; rule is null. related_roles maps each related-span role a diagnostic of that code can carry to 'always' or to the condition under which it is present. scripts/refresh_reference_pages.py generates the tables in docs/chapters/diagnostics.rst from this file; agent-kit/.agents/skills/weave/assets/diagnostics.json is a byte-identical copy.",
+  "description": "Code-to-rule map for every diagnostic code the reference prototype (reference/prototype/checker.py, coloured.py, durable.py), the P0 implementations (crates/weave-syntax, crates/weave-check, crates/weave-eval and scripts/p0_reference.py; codes E500-E540) and the agent kit (agent-kit/.agents/skills/weave/scripts/) can emit. Each code has exactly one principal rule and optional secondary rules. Category 'specification': rule IDs from rules.json. Category 'kit-extension': rule IDs of the agent kit's pure fn extension, defined in agent-kit/docs/weave.md, outside the specified fragment. Category 'tool': not a language diagnostic; rule is null. related_roles maps each related-span role a diagnostic of that code can carry to 'always' or to the condition under which it is present. scripts/refresh_reference_pages.py generates the tables in docs/chapters/diagnostics.rst from this file; agent-kit/.agents/skills/weave/assets/diagnostics.json is a byte-identical copy.",
   "categories": {
-    "specification": "Language diagnostic of the reference prototype; the rule is a rule ID in rules.json",
+    "specification": "Language diagnostic of the reference prototype or of a P0 implementation; the rule is a rule ID in rules.json",
     "kit-extension": "Diagnostic of the agent kit's pure fn extension; the rule is a kit rule ID defined in agent-kit/docs/weave.md",
     "tool": "Runner failure outside the checker; no rule applies"
   },
@@ -366,6 +366,181 @@
       ],
       "meaning": "Coloured bound/budget exhausted",
       "correction": "Report NOT ESTABLISHED, not successful verification"
+    },
+    "E500": {
+      "category": "specification",
+      "rule": "P0-FILE-1",
+      "secondary_rules": [
+        "SYN-01"
+      ],
+      "meaning": "Invalid P0 pure-file syntax: a lexical fault, input the pure-file grammar does not derive, a word other than await before a qualified name, or nesting beyond the parser's limit",
+      "correction": "Use only P0 syntax (fn and record declarations)"
+    },
+    "E501": {
+      "category": "specification",
+      "rule": "P0-DECL-1",
+      "secondary_rules": [],
+      "meaning": "Duplicate top-level name, or a function or record named like a built-in name",
+      "correction": "Give each function and record a distinct, non-built-in name"
+    },
+    "E502": {
+      "category": "specification",
+      "rule": "P0-DECL-2",
+      "secondary_rules": [],
+      "meaning": "Duplicate field name in a record declaration",
+      "correction": "Name each field once"
+    },
+    "E503": {
+      "category": "specification",
+      "rule": "P0-DECL-3",
+      "secondary_rules": [],
+      "meaning": "Recursive record type: a record reaches itself through its field types",
+      "correction": "Remove the cycle; P0 has no recursive records"
+    },
+    "E504": {
+      "category": "specification",
+      "rule": "P0-TYPE-1",
+      "secondary_rules": [
+        "TYPE-REQ-1"
+      ],
+      "meaning": "Type outside P0: a handle or other indexed nominal type, an unknown type name, or a malformed List type",
+      "correction": "Use Int, Bool, List[T] or a record declared in the file"
+    },
+    "E505": {
+      "category": "specification",
+      "rule": "P0-NAME-1",
+      "secondary_rules": [],
+      "meaning": "Unknown name, or a function, record or primitive name used as a value",
+      "correction": "Refer to a parameter, an earlier let binding, true or false"
+    },
+    "E506": {
+      "category": "specification",
+      "rule": "P0-NAME-2",
+      "secondary_rules": [],
+      "meaning": "Shadowing: a parameter or let binding reuses a name already in scope, a top-level name or a built-in name",
+      "correction": "Choose a fresh name"
+    },
+    "E507": {
+      "category": "specification",
+      "rule": "P0-CALL-1",
+      "secondary_rules": [],
+      "meaning": "Unknown call target, wrong argument count, or wrong argument form (named and positional arguments)",
+      "correction": "Call a declared function, primitive or record with its arguments"
+    },
+    "E508": {
+      "category": "specification",
+      "rule": "P0-RECORD-1",
+      "secondary_rules": [],
+      "meaning": "Record construction does not name every field exactly once",
+      "correction": "Name every declared field once, and no other"
+    },
+    "E509": {
+      "category": "specification",
+      "rule": "P0-RECORD-2",
+      "secondary_rules": [],
+      "meaning": "Field access on a value that is not a record, or of a field the record does not declare",
+      "correction": "Access a declared field of a record-typed binding"
+    },
+    "E510": {
+      "category": "specification",
+      "rule": "P0-TYPE-2",
+      "secondary_rules": [],
+      "meaning": "Type mismatch in an operand, argument, condition, list element or returned value",
+      "correction": "Make the expression's type match the expected type"
+    },
+    "E511": {
+      "category": "specification",
+      "rule": "P0-TYPE-3",
+      "secondary_rules": [],
+      "meaning": "Empty list literal without an expected list type",
+      "correction": "Use [] where a List type is expected, such as a return or an argument"
+    },
+    "E512": {
+      "category": "specification",
+      "rule": "P0-EFFECT-1",
+      "secondary_rules": [],
+      "meaning": "Qualified call in pure code: a net, foreign or flow operation",
+      "correction": "Perform effects in a flow; pure code calls only functions, primitives and records"
+    },
+    "E513": {
+      "category": "specification",
+      "rule": "P0-EFFECT-2",
+      "secondary_rules": [],
+      "meaning": "await in pure code",
+      "correction": "Pure code does not wait; move the operation to a flow"
+    },
+    "E514": {
+      "category": "specification",
+      "rule": "P0-FORK-1",
+      "secondary_rules": [],
+      "meaning": "fork block in pure code",
+      "correction": "P0 is sequential; call the functions one after the other"
+    },
+    "E515": {
+      "category": "specification",
+      "rule": "P0-PATH-1",
+      "secondary_rules": [],
+      "meaning": "A block does not end in return or a terminal if/else, an if has no else, or a statement follows a return or if",
+      "correction": "End every block with return or with if/else whose blocks both end"
+    },
+    "E516": {
+      "category": "specification",
+      "rule": "P0-REC-1",
+      "secondary_rules": [],
+      "meaning": "Mutual recursion: a call cycle through two or more functions",
+      "correction": "Only direct self-recursion is allowed"
+    },
+    "E520": {
+      "category": "specification",
+      "rule": "P0-ARITH-2",
+      "secondary_rules": [
+        "P0-FAULT-1"
+      ],
+      "meaning": "Division or remainder by zero at run time (pure fault)",
+      "correction": "Test the divisor before calling div or mod"
+    },
+    "E521": {
+      "category": "specification",
+      "rule": "P0-LIST-1",
+      "secondary_rules": [
+        "P0-FAULT-1"
+      ],
+      "meaning": "head or tail of an empty list at run time (pure fault)",
+      "correction": "Test is_empty before head or tail"
+    },
+    "E530": {
+      "category": "specification",
+      "rule": "P0-BUDGET-2",
+      "secondary_rules": [
+        "P0-BUDGET-1"
+      ],
+      "meaning": "Fuel budget exhausted: too many user-function calls",
+      "correction": "Raise the fuel budget, or check termination; fuel is not a termination proof"
+    },
+    "E531": {
+      "category": "specification",
+      "rule": "P0-BUDGET-3",
+      "secondary_rules": [
+        "P0-BUDGET-1"
+      ],
+      "meaning": "Depth budget exhausted: too many active function calls",
+      "correction": "Raise the depth budget or reduce recursion depth"
+    },
+    "E532": {
+      "category": "specification",
+      "rule": "P0-BUDGET-4",
+      "secondary_rules": [
+        "P0-BUDGET-1"
+      ],
+      "meaning": "Integer size budget exhausted: an integer needs more bits than the budget",
+      "correction": "Raise the integer size budget or keep values smaller"
+    },
+    "E540": {
+      "category": "specification",
+      "rule": "P0-RUN-1",
+      "secondary_rules": [],
+      "meaning": "Invalid run request: unknown entry function, or arguments that do not match its parameters",
+      "correction": "Name a declared function and pass one JSON value of the right type per parameter"
     },
     "P400": {
       "category": "kit-extension",

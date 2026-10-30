@@ -1,0 +1,6 @@
+record Route:
+    dest: Int
+    cost: Int
+
+fn price(r: Route) -> Int:
+    return r.price

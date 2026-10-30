@@ -1,0 +1,11 @@
+fn even(n: Int) -> Bool:
+    if n == 0:
+        return true
+    else:
+        return odd(n - 1)
+
+fn odd(n: Int) -> Bool:
+    if n == 0:
+        return false
+    else:
+        return even(n - 1)

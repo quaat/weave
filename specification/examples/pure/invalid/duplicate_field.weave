@@ -1,0 +1,3 @@
+record Route:
+    dest: Int
+    dest: Int

@@ -4,7 +4,7 @@
 //! Ordered-choice interpretation of the compiled grammar over the token stream.
 
 use crate::cst::{Cst, Element, Leaf, Node};
-use crate::diagnostic::{Diagnostic, FLOW_SYNTAX_CODE, NET_SYNTAX_CODE};
+use crate::diagnostic::{Diagnostic, FLOW_SYNTAX_CODE, NET_SYNTAX_CODE, PURE_SYNTAX_CODE};
 use crate::grammar::{self, GExpr, Grammar, Symbol};
 use crate::json::Value;
 use crate::lexer::{self, LexCodes, Token, TokenClass};
@@ -26,16 +26,24 @@ pub enum Start {
     FlowFile,
     N0File,
     N1File,
+    /// A P0 pure file (`chapters/pure.rst`).
+    PureFile,
 }
 
 impl Start {
-    pub const ALL: [Start; 3] = [Start::FlowFile, Start::N0File, Start::N1File];
+    pub const ALL: [Start; 4] = [
+        Start::FlowFile,
+        Start::N0File,
+        Start::N1File,
+        Start::PureFile,
+    ];
 
     pub fn name(self) -> &'static str {
         match self {
             Start::FlowFile => "flow-file",
             Start::N0File => "n0-file",
             Start::N1File => "n1-file",
+            Start::PureFile => "pure-file",
         }
     }
 
@@ -43,11 +51,13 @@ impl Start {
         Start::ALL.into_iter().find(|s| s.name() == name)
     }
 
-    /// The reference checker's syntax family: E200 for flows, E003 for nets.
+    /// The syntax code: the reference checker's E200 for flows and E003 for
+    /// nets; E500 for P0 pure files.
     pub fn syntax_code(self) -> &'static str {
         match self {
             Start::FlowFile => FLOW_SYNTAX_CODE,
             Start::N0File | Start::N1File => NET_SYNTAX_CODE,
+            Start::PureFile => PURE_SYNTAX_CODE,
         }
     }
 }
@@ -148,13 +158,20 @@ pub fn parse_grammar(
             "Internal parser error.",
             Span::at(0),
         )),
-        Err(e) => Err(Diagnostic::new(
-            code,
-            "limit",
-            format!("Could not start the parser thread: {e}"),
-            Span::at(0),
-        )),
+        Err(e) => Err(spawn_failure(code, &e)),
     }
+}
+
+/// A failure to start the parser thread is a host failure, not a statement
+/// about the source: stage `internal`, which tools report as an internal
+/// error rather than a rejection.
+fn spawn_failure(code: &'static str, e: &std::io::Error) -> Diagnostic {
+    Diagnostic::new(
+        code,
+        "internal",
+        format!("Could not start the parser thread: {e}"),
+        Span::at(0),
+    )
 }
 
 fn interpret(
@@ -377,5 +394,16 @@ impl Interp<'_> {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_thread_spawn_failure_is_internal() {
+        let e = std::io::Error::other("no threads");
+        let d = super::spawn_failure("E500", &e);
+        assert_eq!(d.stage, "internal");
+        assert!(d.message.contains("no threads"));
     }
 }

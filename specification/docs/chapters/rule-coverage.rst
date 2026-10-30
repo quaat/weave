@@ -7,7 +7,8 @@ Rule coverage
 ===================
 
 This generated page records, for each rule ID in ``rules.json``, the
-conformance cases (from ``examples/manifest.json``) and tests that exercise it,
+conformance cases (from ``examples/manifest.json`` and, for P0,
+``examples/pure/manifest.json``) and tests that exercise it,
 or a pending-implementation entry. The map is ``tests/rule-coverage.json``.
 ``python scripts/rule_coverage.py`` regenerates this page and ``--check`` fails
 if a rule has no case, test or pending entry, if a listed test does not exist,
@@ -17,15 +18,17 @@ if a listed code is not asserted by its test, or if this page is stale.
 A *positive* test or case expects acceptance or the conforming behaviour; a
 *negative* one expects rejection, with the diagnostic code shown where the test
 asserts one. A listed test exercises the rule through the reference prototype in
-``reference/prototype/``: it is regression evidence for that implementation, not
-a proof that the rule holds for every input. Tests from ``test_rule_cases`` and
-``test_documentation`` are in ``tests/``; the others are the prototype's tests
-in ``reference/prototype/tests/``.
+``reference/prototype/``, or, for the ``P0-*`` rules, through the P0 reference
+evaluator ``scripts/p0_reference.py`` (``test_p0``; the Rust crates have their own
+tests, and ``scripts/p0_differential.py`` compares the two): it is regression
+evidence for that implementation, not a proof that the rule holds for every input.
+Tests from ``test_rule_cases``, ``test_documentation`` and ``test_p0`` are in
+``tests/``; the others are the prototype's tests in ``reference/prototype/tests/``.
 
-**Summary.** 65 rule IDs; 48 with a test or conformance case and
+**Summary.** 97 rule IDs; 80 with a test or conformance case and
 no pending entry; 17 pending implementation, each with a tracking issue.
 
-Rules with tests or cases in one direction only: LEX-REQ-2.
+Rules with tests or cases in one direction only: LEX-REQ-2, P0-EFFECT-2, P0-EVAL-2, P0-FAULT-1, P0-FORK-1, P0-RUN-2, P0-VALUE-1.
 
 Summary table
 -------------------
@@ -258,6 +261,166 @@ Summary table
      - none
      - 1
      - 3
+     - tested
+   * - :ref:`P0-ARITH-1 <P0-ARITH-1>`
+     - C128, C129, C130, C139, C140, C141, C142, C174
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-ARITH-2 <P0-ARITH-2>`
+     - C131, C132, C133, C134, C135, C136, C137, C138, C139, C166
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
+     - C143, C170
+     - 1
+     - 2
+     - tested
+   * - :ref:`P0-BUDGET-2 <P0-BUDGET-2>`
+     - C168, C169, C170
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-BUDGET-3 <P0-BUDGET-3>`
+     - C169, C171, C172
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-BUDGET-4 <P0-BUDGET-4>`
+     - C143, C173, C175
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-CALL-1 <P0-CALL-1>`
+     - C103, C117
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-DECL-1 <P0-DECL-1>`
+     - C105, C108, C111
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-DECL-2 <P0-DECL-2>`
+     - C102, C112
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-DECL-3 <P0-DECL-3>`
+     - C104, C113
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-DECL-4 <P0-DECL-4>`
+     - C104, C127
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
+     - C105, C122
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-EFFECT-2 <P0-EFFECT-2>`
+     - C123
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-EVAL-1 <P0-EVAL-1>`
+     - C128, C145, C149
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-EVAL-2 <P0-EVAL-2>`
+     - C160, C162, C163, C164, C165, C166, C167, C168, C169
+     - 1
+     - 0
+     - tested
+   * - :ref:`P0-EVAL-3 <P0-EVAL-3>`
+     - C146, C157, C158, C159, C171
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-FAULT-1 <P0-FAULT-1>`
+     - C137, C138, C152, C153
+     - 0
+     - 2
+     - tested
+   * - :ref:`P0-FILE-1 <P0-FILE-1>`
+     - C101, C108, C109, C110
+     - 1
+     - 2
+     - tested
+   * - :ref:`P0-FORK-1 <P0-FORK-1>`
+     - C124
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-LIST-1 <P0-LIST-1>`
+     - C148, C149, C150, C151, C152, C153, C154, C155, C156, C167
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-NAME-1 <P0-NAME-1>`
+     - C105, C115
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-NAME-2 <P0-NAME-2>`
+     - C102, C108, C116
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-PATH-1 <P0-PATH-1>`
+     - C101, C125
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-REC-1 <P0-REC-1>`
+     - C101, C104, C107, C126
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-RECORD-1 <P0-RECORD-1>`
+     - C102, C118
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-RECORD-2 <P0-RECORD-2>`
+     - C102, C119
+     - 0
+     - 1
+     - tested
+   * - :ref:`P0-RUN-1 <P0-RUN-1>`
+     - C139, C145, C154, C161, C175, C176, C177, C178
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-RUN-2 <P0-RUN-2>`
+     - C128, C129, C130, C140, C141, C142, C144, C157, C160
+     - 1
+     - 0
+     - tested
+   * - :ref:`P0-TYPE-1 <P0-TYPE-1>`
+     - C103, C114
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-TYPE-2 <P0-TYPE-2>`
+     - C101, C106, C120, C127
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-TYPE-3 <P0-TYPE-3>`
+     - C103, C121
+     - 1
+     - 1
+     - tested
+   * - :ref:`P0-VALUE-1 <P0-VALUE-1>`
+     - C142, C144, C147, C159
+     - 1
+     - 0
      - tested
    * - :ref:`PROTO-IDENTITY-1 <PROTO-IDENTITY-1>`
      - none
@@ -665,6 +828,222 @@ Tests by rule
   * negative, E321: ``test_composition.CompositionChecks.test_bounded_search_never_silently_prunes``
   * negative, E321: ``test_composition.CompositionChecks.test_state_budget_is_not_a_success``
   * negative, E422: ``test_coloured.ColourChecks.test_budget_exhaustion_is_not_success``
+
+* :ref:`P0-ARITH-1 <P0-ARITH-1>`
+
+  * Conformance cases: C128 (VALUE), C129 (VALUE), C130 (VALUE), C139 (VALUE), C140 (VALUE), C141 (VALUE), C142 (VALUE), C174 (VALUE)
+  * positive: ``test_p0.Dynamic.test_exact_values``
+  * negative, E532: ``test_p0.Dynamic.test_integer_size``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-ARITH-2 <P0-ARITH-2>`
+
+  * Conformance cases: C131 (VALUE), C132 (VALUE), C133 (VALUE), C134 (VALUE), C135 (VALUE), C136 (VALUE), C137 (E520), C138 (E520), C139 (VALUE), C166 (VALUE)
+  * positive: ``test_p0.Dynamic.test_euclidean_division``
+  * negative, E520: ``test_p0.Dynamic.test_euclidean_division``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-BUDGET-1 <P0-BUDGET-1>`
+
+  * Conformance cases: C143 (E532), C170 (E530)
+  * positive: ``test_p0.Dynamic.test_corpus_run_cases``
+  * negative, E530: ``test_p0.Dynamic.test_fuel_and_depth``
+  * negative: ``test_p0.Static.test_negative_budgets_are_usage_errors``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-BUDGET-2 <P0-BUDGET-2>`
+
+  * Conformance cases: C168 (VALUE), C169 (VALUE), C170 (E530)
+  * negative, E530: ``test_p0.Dynamic.test_fuel_and_depth``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-BUDGET-3 <P0-BUDGET-3>`
+
+  * Conformance cases: C169 (VALUE), C171 (E531), C172 (VALUE)
+  * negative, E531: ``test_p0.Dynamic.test_fuel_and_depth``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-BUDGET-4 <P0-BUDGET-4>`
+
+  * Conformance cases: C143 (E532), C173 (E532), C175 (E532)
+  * positive: ``test_p0.Dynamic.test_integer_size``
+  * negative, E532: ``test_p0.Dynamic.test_integer_size``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-CALL-1 <P0-CALL-1>`
+
+  * Conformance cases: C103 (ACCEPT), C117 (E507)
+  * positive: ``test_p0.Static.test_calls``
+  * negative, E507: ``test_p0.Static.test_calls``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-DECL-1 <P0-DECL-1>`
+
+  * Conformance cases: C105 (ACCEPT), C108 (ACCEPT), C111 (E501)
+  * positive: ``test_p0.Static.test_top_level_names``
+  * negative, E501: ``test_p0.Static.test_top_level_names``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-DECL-2 <P0-DECL-2>`
+
+  * Conformance cases: C102 (ACCEPT), C112 (E502)
+  * positive: ``test_p0.Static.test_records``
+  * negative, E502: ``test_p0.Static.test_records``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-DECL-3 <P0-DECL-3>`
+
+  * Conformance cases: C104 (ACCEPT), C113 (E503)
+  * negative, E503: ``test_p0.Static.test_records``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-DECL-4 <P0-DECL-4>`
+
+  * Conformance cases: C104 (ACCEPT), C127 (E510)
+  * positive: ``test_p0.Static.test_signatures_first_and_unused_bodies``
+  * negative, E510: ``test_p0.Static.test_signatures_first_and_unused_bodies``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-EFFECT-1 <P0-EFFECT-1>`
+
+  * Conformance cases: C105 (ACCEPT), C122 (E512)
+  * positive: ``test_p0.Static.test_purity``
+  * negative, E512: ``test_p0.Static.test_purity``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-EFFECT-2 <P0-EFFECT-2>`
+
+  * Conformance cases: C123 (E513)
+  * negative, E513: ``test_p0.Static.test_purity``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-EVAL-1 <P0-EVAL-1>`
+
+  * Conformance cases: C128 (VALUE), C145 (VALUE), C149 (VALUE)
+  * positive: ``test_p0.Dynamic.test_corpus_run_cases``
+  * negative, E521: ``test_p0.Dynamic.test_left_to_right``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-EVAL-2 <P0-EVAL-2>`
+
+  * Conformance cases: C160 (VALUE), C162 (VALUE), C163 (VALUE), C164 (VALUE), C165 (VALUE), C166 (VALUE), C167 (VALUE), C168 (VALUE), C169 (VALUE)
+  * positive: ``test_p0.Dynamic.test_short_circuit``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-EVAL-3 <P0-EVAL-3>`
+
+  * Conformance cases: C146 (VALUE), C157 (VALUE), C158 (VALUE), C159 (VALUE), C171 (E531)
+  * negative, E531: ``test_p0.Dynamic.test_fuel_and_depth``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-FAULT-1 <P0-FAULT-1>`
+
+  * Conformance cases: C137 (E520), C138 (E520), C152 (E521), C153 (E521)
+  * negative, E521: ``test_p0.Dynamic.test_list_primitives_and_faults``
+  * negative, E520: ``test_p0.Dynamic.test_euclidean_division``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-FILE-1 <P0-FILE-1>`
+
+  * Conformance cases: C101 (ACCEPT), C108 (ACCEPT), C109 (E500), C110 (E500)
+  * positive: ``test_p0.Static.test_file_syntax``
+  * negative, E500: ``test_p0.Static.test_file_syntax``
+  * negative, E500: ``test_p0.Static.test_nesting_limits``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-FORK-1 <P0-FORK-1>`
+
+  * Conformance cases: C124 (E514)
+  * negative, E514: ``test_p0.Static.test_purity``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-LIST-1 <P0-LIST-1>`
+
+  * Conformance cases: C148 (VALUE), C149 (VALUE), C150 (VALUE), C151 (VALUE), C152 (E521), C153 (E521), C154 (VALUE), C155 (VALUE), C156 (VALUE), C167 (VALUE)
+  * positive: ``test_p0.Dynamic.test_list_primitives_and_faults``
+  * negative, E521: ``test_p0.Dynamic.test_list_primitives_and_faults``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-NAME-1 <P0-NAME-1>`
+
+  * Conformance cases: C105 (ACCEPT), C115 (E505)
+  * positive: ``test_p0.Static.test_names_in_values``
+  * negative, E505: ``test_p0.Static.test_names_in_values``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-NAME-2 <P0-NAME-2>`
+
+  * Conformance cases: C102 (ACCEPT), C108 (ACCEPT), C116 (E506)
+  * positive: ``test_p0.Static.test_no_shadowing``
+  * negative, E506: ``test_p0.Static.test_no_shadowing``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-PATH-1 <P0-PATH-1>`
+
+  * Conformance cases: C101 (ACCEPT), C125 (E515)
+  * positive: ``test_p0.Static.test_terminal_blocks``
+  * negative, E515: ``test_p0.Static.test_terminal_blocks``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-REC-1 <P0-REC-1>`
+
+  * Conformance cases: C101 (ACCEPT), C104 (ACCEPT), C107 (ACCEPT), C126 (E516)
+  * positive: ``test_p0.Static.test_direct_recursion_only``
+  * negative, E516: ``test_p0.Static.test_direct_recursion_only``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-RECORD-1 <P0-RECORD-1>`
+
+  * Conformance cases: C102 (ACCEPT), C118 (E508)
+  * positive: ``test_p0.Static.test_record_construction_and_access``
+  * negative, E508: ``test_p0.Static.test_record_construction_and_access``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-RECORD-2 <P0-RECORD-2>`
+
+  * Conformance cases: C102 (ACCEPT), C119 (E509)
+  * negative, E509: ``test_p0.Static.test_record_construction_and_access``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-RUN-1 <P0-RUN-1>`
+
+  * Conformance cases: C139 (VALUE), C145 (VALUE), C154 (VALUE), C161 (VALUE), C175 (E532), C176 (E540), C177 (E540), C178 (E540)
+  * positive: ``test_p0.Dynamic.test_corpus_run_cases``
+  * negative, E540: ``test_p0.Dynamic.test_run_requests``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-RUN-2 <P0-RUN-2>`
+
+  * Conformance cases: C128 (VALUE), C129 (VALUE), C130 (VALUE), C140 (VALUE), C141 (VALUE), C142 (VALUE), C144 (VALUE), C157 (VALUE), C160 (VALUE)
+  * positive: ``test_p0.Dynamic.test_exact_values``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-TYPE-1 <P0-TYPE-1>`
+
+  * Conformance cases: C103 (ACCEPT), C114 (E504)
+  * positive: ``test_p0.Static.test_types_and_handles``
+  * negative, E504: ``test_p0.Static.test_types_and_handles``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-TYPE-2 <P0-TYPE-2>`
+
+  * Conformance cases: C101 (ACCEPT), C106 (ACCEPT), C120 (E510), C127 (E510)
+  * positive: ``test_p0.Static.test_type_mismatch``
+  * negative, E510: ``test_p0.Static.test_type_mismatch``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-TYPE-3 <P0-TYPE-3>`
+
+  * Conformance cases: C103 (ACCEPT), C121 (E511)
+  * positive: ``test_p0.Static.test_empty_list_needs_an_expected_type``
+  * negative, E511: ``test_p0.Static.test_empty_list_needs_an_expected_type``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
+
+* :ref:`P0-VALUE-1 <P0-VALUE-1>`
+
+  * Conformance cases: C142 (VALUE), C144 (VALUE), C147 (VALUE), C159 (VALUE)
+  * positive: ``test_p0.Dynamic.test_exact_values``
+  * Note: The Rust crates (crates/weave-check/tests/rules.rs, crates/weave-eval/tests/eval.rs) test the same rule; scripts/p0_differential.py compares both implementations.
 
 * :ref:`PROTO-IDENTITY-1 <PROTO-IDENTITY-1>`
 

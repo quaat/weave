@@ -43,3 +43,11 @@ The manifest is executable metadata. Valid helper-only files are statically chec
 | `Unknown` | `available=0`, `uncertain=0`, `recovery_queue=1`, `registrations=1` |
 
 Append mutations are net fragments, not standalone flow files. Their diagnostics use the line numbers of the combined net. `nets/unsafe_paid_release.weave` is a full alternative net: it preserves aggregate accounting but fails bounded ordering. All examples use the prototype fragment, not future design syntax.
+
+## P0 pure files
+
+`pure/` holds the P0 corpus (`docs/chapters/pure.rst`): `pure/valid/` and `pure/invalid/`, with
+`pure/manifest.json` (format `weave-p0-conformance-v1`) listing a check case per file and run
+cases with entry functions, JSON arguments, budgets and required outcomes. The conformance
+appendix lists every case. Check a file with `python3 scripts/p0_reference.py check FILE` from
+`specification/`, or with `cargo run -q -p weave-cli -- check FILE` from the repository root.

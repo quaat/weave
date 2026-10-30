@@ -1,0 +1,5 @@
+fn double(x: Int) -> Int:
+    return x * 2
+
+flow f(hold: Hold[t, o]) -> Hold[t, o]:
+    return hold

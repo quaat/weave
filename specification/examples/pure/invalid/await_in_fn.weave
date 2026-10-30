@@ -1,0 +1,3 @@
+fn reserve(n: Int) -> Int:
+    let hold = await Inventory.reserve(n)
+    return n

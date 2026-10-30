@@ -1,0 +1,13 @@
+# Contextual words are not reserved: they name functions, fields and bindings.
+
+record record:
+    let: Int
+    if: Bool
+
+fn fn(return: Int) -> record:
+    let let = return + 1
+    return record(let: let, if: let > 1)
+
+fn else(and: List[Int]) -> Int:
+    let or = length(and)
+    return or

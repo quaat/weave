@@ -31,9 +31,11 @@ python3 scripts/weave.py simulate examples/valid/checkout_propagating.weave --en
 The simulator uses symbolic scalar parameters and one scripted foreign reply.
 It does not contact a payment provider or start a durable/asynchronous runtime.
 
-Every claim the runner prints carries one of the specification's six result labels
-(`PROVED`, `CHECKED WITHIN BOUNDS`, `CHECKED flow`, `SCRIPTED / passed scenario`,
-`VIOLATED`, `NOT ESTABLISHED`), as a `LABEL statement` line or a JSON `claim_label`.
+Every claim the runner prints carries one of the result labels of the specification,
+which has seven. The runner emits six of them (`PROVED`, `CHECKED WITHIN BOUNDS`,
+`CHECKED flow`, `SCRIPTED / passed scenario`, `VIOLATED`, `NOT ESTABLISHED`), as a
+`LABEL statement` line or a JSON `claim_label`; the seventh, `CHECKED pure`, is stated
+only by the P0 `weave` command (quaat/weave#10), and the kit's label lint accepts all seven.
 Tool status and the runtime status of a run are reported separately and are not
 evidence; see `docs/commands.md`. `tests/test_result_labels.py` lints the output of
 every command for this.

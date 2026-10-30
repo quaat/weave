@@ -398,6 +398,7 @@
       "PROVED",
       "CHECKED WITHIN BOUNDS",
       "CHECKED flow",
+      "CHECKED pure",
       "SCRIPTED",
       "VIOLATED",
       "NOT ESTABLISHED"

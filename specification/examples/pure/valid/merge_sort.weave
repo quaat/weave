@@ -1,0 +1,68 @@
+# Sequential merge sort, with the split written in Weave over a record.
+# merge takes from the left list on equal keys, so sort_items is stable.
+
+record Halves:
+    left: List[Int]
+    right: List[Int]
+
+record Item:
+    key: Int
+    id: Int
+
+record ItemHalves:
+    left: List[Item]
+    right: List[Item]
+
+fn split(xs: List[Int], n: Int) -> Halves:
+    if n == 0:
+        return Halves(left: [], right: xs)
+    else:
+        let rest = split(tail(xs), n - 1)
+        return Halves(left: cons(head(xs), rest.left), right: rest.right)
+
+fn merge(a: List[Int], b: List[Int]) -> List[Int]:
+    if is_empty(a):
+        return b
+    else:
+        if is_empty(b):
+            return a
+        else:
+            if head(a) <= head(b):
+                return cons(head(a), merge(tail(a), b))
+            else:
+                return cons(head(b), merge(a, tail(b)))
+
+fn merge_sort(xs: List[Int]) -> List[Int]:
+    if length(xs) <= 1:
+        return xs
+    else:
+        let halves = split(xs, div(length(xs), 2))
+        return merge(merge_sort(halves.left), merge_sort(halves.right))
+
+fn split_items(xs: List[Item], n: Int) -> ItemHalves:
+    if n == 0:
+        return ItemHalves(left: [], right: xs)
+    else:
+        let rest = split_items(tail(xs), n - 1)
+        return ItemHalves(left: cons(head(xs), rest.left), right: rest.right)
+
+fn merge_items(a: List[Item], b: List[Item]) -> List[Item]:
+    if is_empty(a):
+        return b
+    else:
+        if is_empty(b):
+            return a
+        else:
+            let x = head(a)
+            let y = head(b)
+            if x.key <= y.key:
+                return cons(x, merge_items(tail(a), b))
+            else:
+                return cons(y, merge_items(a, tail(b)))
+
+fn sort_items(xs: List[Item]) -> List[Item]:
+    if length(xs) <= 1:
+        return xs
+    else:
+        let halves = split_items(xs, div(length(xs), 2))
+        return merge_items(sort_items(halves.left), sort_items(halves.right))

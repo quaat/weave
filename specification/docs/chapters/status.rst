@@ -31,6 +31,11 @@ conflated. These profile names are introduced by this draft:
    * - R0
      - Concrete two-order process-crash model over the Inventory N1 protocol
      - ``durable.py``; not a general F0 interpreter
+   * - P0
+     - Pure files: typed pure functions over integers, Booleans, lists and
+       records, terminal conditionals, direct recursion, run budgets
+     - Rust ``crates/weave-check`` and ``crates/weave-eval`` (command
+       ``weave``); Python ``scripts/p0_reference.py``; not the snapshot
 
 Supporting N1 does not imply supporting R0. Accepting an F0 program does not
 establish that every operation is enabled or that a real service completes it.
@@ -97,6 +102,22 @@ have no implementation, so no command establishes them.
      - ``test_durable.py``
      - ``python3 reference/prototype/durable.py``: exit 0, six ``PASSED``
        process-crash scenario lines
+   * - P0
+     - :doc:`pure`, :doc:`grammar`; rules ``P0-*``
+     - Yes, outside the snapshot: Rust ``crates/weave-check``,
+       ``crates/weave-eval`` and the ``weave`` command (``crates/weave-cli``);
+       the Python reference evaluator ``scripts/p0_reference.py``
+     - Conformance cases C101--C178 (``examples/pure/manifest.json``);
+       ``tests/test_p0.py``; ``cargo test --all`` (``crates/weave-check``,
+       ``crates/weave-eval``, ``crates/weave-cli``);
+       ``scripts/p0_differential.py``
+     - From the repository root, ``cargo run -q -p weave-cli -- check
+       specification/examples/pure/valid/merge_sort.weave``: exit 0, one line
+       ``CHECKED pure ...: split, merge, merge_sort, split_items, merge_items,
+       sort_items``. ``python3 scripts/p0_differential.py`` (needs Lark) with
+       ``cargo`` on ``PATH``: exit 0, ``PASS: P0 reference meets 78 corpus
+       expectations; ...`` and ``PASS: Rust weave agrees with the P0
+       reference on 743 inputs``
    * - D0 (target)
      - :doc:`execution-contract`; rules ``D0-*``
      - No
@@ -119,11 +140,15 @@ procedure that reproduces the whole baseline from a fresh clone. What the
 checkers trust about parsing and lowering is stated in
 :ref:`source-to-model-trust-boundary`.
 
-The profiles are implemented only by the reference snapshot. The Rust crate
-``crates/weave-syntax`` (quaat/weave#9) parses F0, N0 and N1 source with the
-EBNF of :doc:`grammar` and reports syntax diagnostics. It checks syntax only:
-it implements no static rule, analysis or runtime, so it adds no profile to the
-matrix and establishes no conformance claim beyond syntax acceptance. Its
+F0, N0, N1 and R0 are implemented only by the reference snapshot. The Rust
+crate ``crates/weave-syntax`` (quaat/weave#9) parses F0, N0, N1 and P0 source
+with the EBNF of :doc:`grammar` and reports syntax diagnostics. For F0, N0 and
+N1 it checks syntax only: it implements no static rule, analysis or runtime of
+those profiles and establishes no conformance claim for them beyond syntax
+acceptance. P0 (quaat/weave#10) is implemented outside the snapshot, by the
+Rust crates ``crates/weave-check`` and ``crates/weave-eval`` and,
+independently, by the Python reference evaluator; a P0 conformance claim names
+the implementation and the budgets used. Its
 acceptance is compared with the generated parser on the corpus
 (:ref:`chapters/grammar:Generated-parser agreement`); run ``cargo test --all``
 from the repository root.
@@ -202,6 +227,11 @@ evidence/check DSL is not domain-neutral.
 change or implicit failure; runtime identity selects one exact firing colour.
 D0 is a normative implementation target, not a claim about the existing simulator.
 The profile table above lists implemented reference scopes only.
+
+**D-03:** :doc:`pure` defines P0, pure computation in a separate file kind
+(quaat/weave#10). It is implemented by the Rust crates and the Python reference
+evaluator, not by the snapshot. Flows do not call P0 functions in this
+revision.
 
 A new implementation can claim F0 static conformance without a D0 runtime. It
 must name that limitation. Neither a future N2 implementation nor a D0 scheduler

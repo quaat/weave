@@ -35,6 +35,7 @@ followed by static and dynamic semantics. For reviewers, use
    chapters/declarations
    chapters/static-semantics
    chapters/flow-semantics
+   chapters/pure
    chapters/execution-contract
    chapters/net-semantics
    chapters/effects

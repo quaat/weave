@@ -18,6 +18,8 @@
 //! * Words are maximal runs of ASCII letters, digits and `_`. A word that
 //!   starts with a digit must be all digits (an integer token). Words are not
 //!   reserved: the grammar matches keywords by text (LEX-REQ-2).
+//! * Two-character punctuation (`->`, `==`, `<=`, `>=`, `!=`) is matched
+//!   before one-character punctuation.
 //! * Any other character outside a comment, including non-ASCII characters
 //!   and control characters, is a lexical error.
 
@@ -106,8 +108,8 @@ pub struct LexCodes {
     pub syntax: &'static str,
 }
 
-const PUNCT2: [&str; 2] = ["->", "=="];
-const PUNCT1: &[u8] = b"()[],:.=+-*?";
+const PUNCT2: [&str; 5] = ["->", "==", "<=", ">=", "!="];
+const PUNCT1: &[u8] = b"()[],:.=+-*?<>";
 
 /// Split `source` into tokens with trivia, including layout tokens and a final `EOF`.
 pub fn lex(source: &str, codes: LexCodes) -> Result<Vec<Token>, Diagnostic> {

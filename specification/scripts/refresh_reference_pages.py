@@ -16,7 +16,9 @@ def generate():
             id=match[1]
             if id in rules:raise ValueError("Duplicate rule ID: "+id)
             rules[id]={"chapter":p.stem,"line":s[:match.start()].count("\n")+1}
-    for c in m["cases"]:
+    pure=json.loads((ROOT/"examples/pure/manifest.json").read_text())
+    if pure.get("format")!="weave-p0-conformance-v1":raise ValueError("Unsupported P0 manifest format")
+    for c in m["cases"]+pure["cases"]:
         for rule in c["rules"]:
             if rule not in rules:raise ValueError(f"Unknown rule {rule} in {c['file']}")
     conf="""Conformance appendix
@@ -69,6 +71,53 @@ outside the original 25-case baseline.
 
 N2 and D0 have identified normative target rules but no implemented conformance
 suite in this delivery. No existing test-pass claim establishes them.
+
+P0 pure files
+-------------------
+
+The P0 cases are in ``examples/pure/manifest.json`` (format
+``weave-p0-conformance-v1``), apart from ``manifest.json``, whose
+``weave-conformance-v1`` readers do not implement their kinds
+(:doc:`pure`). A *check* case requires ACCEPT or the code of the first
+diagnostic. A *run* case checks the file and calls the entry function with
+the given JSON arguments and budgets (others at the tool defaults); it requires
+VALUE with the given value, or the code of the fault, exhaustion or invalid
+request, and, where a usage is listed, exactly that fuel used, largest depth
+and largest integer size. CONF-CASE-1 applies to these cases for P0.
+``scripts/p0_differential.py`` checks them with the P0 reference evaluator
+and compares the Rust ``weave`` command with it; ``tests/test_p0.py`` and the
+Rust tests check them too.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 8 40 18 34
+
+   * - ID
+     - File / entry and arguments
+     - Required result
+     - Rules
+""".format(**counts)
+    for c in pure["cases"]:
+        refs=", ".join(f":ref:`{x} <{x}>`" for x in c["rules"])
+        if c["kind"]=="check":
+            what=f"``{c['file']}`` (check)"
+            result=c["expect"]
+        else:
+            args=json.dumps(c["args"],separators=(", ",": "))
+            if len(args)>60:args=args[:57]+"..."
+            what=f"``{c['file']}``: ``{c['entry']}({args[1:-1]})``"
+            if c.get("budgets"):
+                what+=" with "+", ".join(f"{k} {v}" for k,v in c["budgets"].items())
+            result=c["expect"]
+            if c["expect"]=="VALUE":
+                value=json.dumps(c["value"],separators=(",",":"))
+                if len(value)>40:value=value[:37]+"..."
+                result=f"VALUE ``{value}``"
+            if c.get("usage"):
+                u=c["usage"]
+                result+=f"; usage fuel {u['fuel']}, depth {u['depth']}, bits {u['int_bits']}"
+        conf+=f"   * - {c['id']}\n     - {what}\n     - {result}\n     - {refs}\n"
+    conf+="""
 
 Generated grammar comparison
 -----------------------------

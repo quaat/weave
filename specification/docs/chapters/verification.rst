@@ -20,6 +20,8 @@ Result vocabulary
        state budget, and guard abstraction
    * - CHECKED flow
      - F0 type, identity, move, return, and exhaustiveness checks passed
+   * - CHECKED pure
+     - P0 type, effect, path, and recursion-shape checks passed
    * - SCRIPTED / passed scenario
      - A selected concrete execution or injected crash case satisfied assertions
    * - VIOLATED
@@ -30,8 +32,13 @@ Result vocabulary
 Result labels in tool output
 ----------------------------------
 
-The six labels above are the only labels a tool or an evidence document attaches
-to a claim, written exactly as in the table. They are used as follows.
+The seven labels above are the only labels a tool or an evidence document attaches
+to a claim, written exactly as in the table. CHECKED pure was added with the P0
+profile (:doc:`pure`, quaat/weave#10); the other six predate it. It is a compatible
+addition: no existing result changes label, and no label changes meaning.
+CHECKED pure applies only to P0 files and says nothing about termination,
+faults or budgets; a P0 run's outcome is runtime status, and a run compared with
+an asserted expectation is a passed scenario. The labels are used as follows.
 
 * **One label per claim.** A label attaches to an individual claim: one stated
   result about one subject, such as the invariants of one net, one bounded

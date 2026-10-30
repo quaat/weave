@@ -55,7 +55,7 @@ The machine-readable map is `tools/weave_workflow/docmap.json`; the human-readab
    conformance metadata exist. The audit flags a removed boundary statement without
    `status.rst`, `limitations.rst` and `design-history.rst` updates.
 5. **Evidence vocabulary is protected.** PROVED, CHECKED WITHIN BOUNDS, CHECKED flow,
-   SCRIPTED, VIOLATED and NOT ESTABLISHED keep the specification's meaning. The audit flags
+   CHECKED pure, SCRIPTED, VIOLATED and NOT ESTABLISHED keep the specification's meaning. The audit flags
    new uses outside the specification and prototype for review.
 6. **Generated documents are regenerated, not edited.** The rule catalogue, conformance
    appendix, prototype outputs and report, lowered sources, certificates and the generated

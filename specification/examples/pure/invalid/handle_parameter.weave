@@ -1,0 +1,2 @@
+fn peek(hold: Hold[t, o]) -> Int:
+    return 0

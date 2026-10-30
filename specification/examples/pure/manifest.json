@@ -1,0 +1,1316 @@
+{
+  "format": "weave-p0-conformance-v1",
+  "specification": "0.2-draft",
+  "profile": "P0",
+  "description": "P0 conformance corpus (docs/chapters/pure.rst). Files are relative to examples/. A check case requires ACCEPT or the code of the first diagnostic. A run case checks the file, then calls entry with the JSON array args; budgets not given take the tool defaults, which every case stays well within (fuel 1000000 calls, depth 10000 calls, 65536 bits). It requires VALUE with value, or the code of the fault, exhaustion or invalid run request; usage, where given, is the required fuel used, largest depth and largest integer size (P0-BUDGET-1). Kept apart from manifest.json (weave-conformance-v1), whose readers do not implement these kinds.",
+  "cases": [
+    {
+      "id": "C101",
+      "kind": "check",
+      "file": "pure/valid/arithmetic.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-FILE-1",
+        "P0-TYPE-2",
+        "P0-PATH-1",
+        "P0-REC-1"
+      ],
+      "lesson": "Arithmetic, comparisons, div/mod and terminal if/else type-check."
+    },
+    {
+      "id": "C102",
+      "kind": "check",
+      "file": "pure/valid/records.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-DECL-2",
+        "P0-RECORD-1",
+        "P0-RECORD-2",
+        "P0-NAME-2"
+      ],
+      "lesson": "Records are built with every field named once, in any order, and read through bindings."
+    },
+    {
+      "id": "C103",
+      "kind": "check",
+      "file": "pure/valid/lists.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-TYPE-1",
+        "P0-TYPE-3",
+        "P0-CALL-1"
+      ],
+      "lesson": "List[T] works for every P0 type; [] needs an expected list type."
+    },
+    {
+      "id": "C104",
+      "kind": "check",
+      "file": "pure/valid/merge_sort.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-DECL-3",
+        "P0-DECL-4",
+        "P0-REC-1"
+      ],
+      "lesson": "Merge sort with the split written in Weave over non-recursive records."
+    },
+    {
+      "id": "C105",
+      "kind": "check",
+      "file": "pure/valid/routing.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-DECL-1",
+        "P0-NAME-1",
+        "P0-EFFECT-1"
+      ],
+      "lesson": "Record-based route validation and selection, with no operation calls."
+    },
+    {
+      "id": "C106",
+      "kind": "check",
+      "file": "pure/valid/short_circuit.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-TYPE-2"
+      ],
+      "lesson": "and/or take Bool operands."
+    },
+    {
+      "id": "C107",
+      "kind": "check",
+      "file": "pure/valid/budgets.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-REC-1"
+      ],
+      "lesson": "A function that never terminates is still well-typed; budgets bound its runs."
+    },
+    {
+      "id": "C108",
+      "kind": "check",
+      "file": "pure/valid/contextual_words.weave",
+      "expect": "ACCEPT",
+      "rules": [
+        "P0-FILE-1",
+        "P0-DECL-1",
+        "P0-NAME-2"
+      ],
+      "lesson": "P0 reserves no word: contextual words name records, functions, fields and bindings."
+    },
+    {
+      "id": "C109",
+      "kind": "check",
+      "file": "pure/invalid/chained_comparison.weave",
+      "expect": "E500",
+      "rules": [
+        "P0-FILE-1"
+      ],
+      "lesson": "Comparisons do not chain."
+    },
+    {
+      "id": "C110",
+      "kind": "check",
+      "file": "pure/invalid/flow_in_pure_file.weave",
+      "expect": "E500",
+      "rules": [
+        "P0-FILE-1"
+      ],
+      "lesson": "A pure file contains only fn and record declarations."
+    },
+    {
+      "id": "C111",
+      "kind": "check",
+      "file": "pure/invalid/builtin_name.weave",
+      "expect": "E501",
+      "rules": [
+        "P0-DECL-1"
+      ],
+      "lesson": "A function cannot take a built-in name."
+    },
+    {
+      "id": "C112",
+      "kind": "check",
+      "file": "pure/invalid/duplicate_field.weave",
+      "expect": "E502",
+      "rules": [
+        "P0-DECL-2"
+      ],
+      "lesson": "Field names of a record are distinct."
+    },
+    {
+      "id": "C113",
+      "kind": "check",
+      "file": "pure/invalid/recursive_record.weave",
+      "expect": "E503",
+      "rules": [
+        "P0-DECL-3"
+      ],
+      "lesson": "A record cannot contain itself, even through a list."
+    },
+    {
+      "id": "C114",
+      "kind": "check",
+      "file": "pure/invalid/handle_parameter.weave",
+      "expect": "E504",
+      "rules": [
+        "P0-TYPE-1"
+      ],
+      "lesson": "Pure code cannot receive a linear handle."
+    },
+    {
+      "id": "C115",
+      "kind": "check",
+      "file": "pure/invalid/unknown_name.weave",
+      "expect": "E505",
+      "rules": [
+        "P0-NAME-1"
+      ],
+      "lesson": "Every value name is a binding in scope."
+    },
+    {
+      "id": "C116",
+      "kind": "check",
+      "file": "pure/invalid/shadowing.weave",
+      "expect": "E506",
+      "rules": [
+        "P0-NAME-2"
+      ],
+      "lesson": "A let binding cannot shadow a parameter."
+    },
+    {
+      "id": "C117",
+      "kind": "check",
+      "file": "pure/invalid/wrong_arity.weave",
+      "expect": "E507",
+      "rules": [
+        "P0-CALL-1"
+      ],
+      "lesson": "Calls pass exactly the declared number of arguments."
+    },
+    {
+      "id": "C118",
+      "kind": "check",
+      "file": "pure/invalid/missing_field.weave",
+      "expect": "E508",
+      "rules": [
+        "P0-RECORD-1"
+      ],
+      "lesson": "Construction names every field."
+    },
+    {
+      "id": "C119",
+      "kind": "check",
+      "file": "pure/invalid/wrong_field.weave",
+      "expect": "E509",
+      "rules": [
+        "P0-RECORD-2"
+      ],
+      "lesson": "Field access names a declared field."
+    },
+    {
+      "id": "C120",
+      "kind": "check",
+      "file": "pure/invalid/type_mismatch.weave",
+      "expect": "E510",
+      "rules": [
+        "P0-TYPE-2"
+      ],
+      "lesson": "Bool is not Int."
+    },
+    {
+      "id": "C121",
+      "kind": "check",
+      "file": "pure/invalid/untyped_empty_list.weave",
+      "expect": "E511",
+      "rules": [
+        "P0-TYPE-3"
+      ],
+      "lesson": "[] without an expected list type is rejected."
+    },
+    {
+      "id": "C122",
+      "kind": "check",
+      "file": "pure/invalid/effect_call.weave",
+      "expect": "E512",
+      "rules": [
+        "P0-EFFECT-1"
+      ],
+      "lesson": "Pure code cannot call a net or foreign operation."
+    },
+    {
+      "id": "C123",
+      "kind": "check",
+      "file": "pure/invalid/await_in_fn.weave",
+      "expect": "E513",
+      "rules": [
+        "P0-EFFECT-2"
+      ],
+      "lesson": "Pure code cannot await."
+    },
+    {
+      "id": "C124",
+      "kind": "check",
+      "file": "pure/invalid/fork.weave",
+      "expect": "E514",
+      "rules": [
+        "P0-FORK-1"
+      ],
+      "lesson": "P0 is sequential: fork is rejected."
+    },
+    {
+      "id": "C125",
+      "kind": "check",
+      "file": "pure/invalid/non_terminal_if.weave",
+      "expect": "E515",
+      "rules": [
+        "P0-PATH-1"
+      ],
+      "lesson": "Every if has an else and ends its block."
+    },
+    {
+      "id": "C126",
+      "kind": "check",
+      "file": "pure/invalid/mutual_recursion.weave",
+      "expect": "E516",
+      "rules": [
+        "P0-REC-1"
+      ],
+      "lesson": "Only direct self-recursion is allowed."
+    },
+    {
+      "id": "C127",
+      "kind": "check",
+      "file": "pure/invalid/unused_body_checked.weave",
+      "expect": "E510",
+      "rules": [
+        "P0-DECL-4",
+        "P0-TYPE-2"
+      ],
+      "lesson": "A body nothing calls is still checked."
+    },
+    {
+      "id": "C128",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "polynomial",
+      "args": [
+        5
+      ],
+      "expect": "VALUE",
+      "value": 58,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-RUN-2",
+        "P0-EVAL-1"
+      ],
+      "lesson": "3*25 - 2*5 - 7."
+    },
+    {
+      "id": "C129",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "polynomial",
+      "args": [
+        -3
+      ],
+      "expect": "VALUE",
+      "value": 26,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-RUN-2"
+      ],
+      "lesson": "Unary minus and a negative argument."
+    },
+    {
+      "id": "C130",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "precedence",
+      "args": [
+        2,
+        5,
+        3
+      ],
+      "expect": "VALUE",
+      "value": 11,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-RUN-2"
+      ],
+      "lesson": "Unary minus binds tighter than *, which binds tighter than + and -."
+    },
+    {
+      "id": "C131",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "quotient",
+      "args": [
+        -7,
+        2
+      ],
+      "expect": "VALUE",
+      "value": -4,
+      "rules": [
+        "P0-ARITH-2"
+      ],
+      "lesson": "Euclidean div(-7, 2)."
+    },
+    {
+      "id": "C132",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "remainder",
+      "args": [
+        -7,
+        2
+      ],
+      "expect": "VALUE",
+      "value": 1,
+      "rules": [
+        "P0-ARITH-2"
+      ],
+      "lesson": "Euclidean mod(-7, 2) is never negative."
+    },
+    {
+      "id": "C133",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "quotient",
+      "args": [
+        7,
+        -2
+      ],
+      "expect": "VALUE",
+      "value": -3,
+      "rules": [
+        "P0-ARITH-2"
+      ],
+      "lesson": "Euclidean div(7, -2)."
+    },
+    {
+      "id": "C134",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "remainder",
+      "args": [
+        7,
+        -2
+      ],
+      "expect": "VALUE",
+      "value": 1,
+      "rules": [
+        "P0-ARITH-2"
+      ],
+      "lesson": "Euclidean mod(7, -2) is never negative."
+    },
+    {
+      "id": "C135",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "quotient",
+      "args": [
+        -7,
+        -2
+      ],
+      "expect": "VALUE",
+      "value": 4,
+      "rules": [
+        "P0-ARITH-2"
+      ],
+      "lesson": "Euclidean div(-7, -2)."
+    },
+    {
+      "id": "C136",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "remainder",
+      "args": [
+        -7,
+        -2
+      ],
+      "expect": "VALUE",
+      "value": 1,
+      "rules": [
+        "P0-ARITH-2"
+      ],
+      "lesson": "Euclidean mod(-7, -2) is never negative."
+    },
+    {
+      "id": "C137",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "quotient",
+      "args": [
+        1,
+        0
+      ],
+      "expect": "E520",
+      "rules": [
+        "P0-ARITH-2",
+        "P0-FAULT-1"
+      ],
+      "lesson": "Division by zero is a pure fault."
+    },
+    {
+      "id": "C138",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "remainder",
+      "args": [
+        0,
+        0
+      ],
+      "expect": "E520",
+      "rules": [
+        "P0-ARITH-2",
+        "P0-FAULT-1"
+      ],
+      "lesson": "Remainder by zero is the same fault."
+    },
+    {
+      "id": "C139",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "reconstructs",
+      "args": [
+        -123456789012345678901234567890,
+        97
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-ARITH-2",
+        "P0-RUN-1"
+      ],
+      "lesson": "a = d*div(a, d) + mod(a, d) for a 97-bit argument."
+    },
+    {
+      "id": "C140",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "compare",
+      "args": [
+        1,
+        2
+      ],
+      "expect": "VALUE",
+      "value": -1,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-RUN-2"
+      ],
+      "lesson": "Comparison and nested terminal if/else."
+    },
+    {
+      "id": "C141",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "ordered",
+      "args": [
+        1,
+        2
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-RUN-2"
+      ],
+      "lesson": "All six comparisons and not."
+    },
+    {
+      "id": "C142",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "power",
+      "args": [
+        2,
+        100
+      ],
+      "expect": "VALUE",
+      "value": 1267650600228229401496703205376,
+      "rules": [
+        "P0-ARITH-1",
+        "P0-VALUE-1",
+        "P0-RUN-2"
+      ],
+      "lesson": "Integers are exact: 2^100 does not wrap."
+    },
+    {
+      "id": "C143",
+      "kind": "run",
+      "file": "pure/valid/arithmetic.weave",
+      "entry": "power",
+      "args": [
+        2,
+        100
+      ],
+      "budgets": {
+        "int_bits": 64
+      },
+      "expect": "E532",
+      "usage": {
+        "fuel": 101,
+        "depth": 101,
+        "int_bits": 64
+      },
+      "rules": [
+        "P0-BUDGET-4",
+        "P0-BUDGET-1"
+      ],
+      "lesson": "2^64 needs 65 bits: integer-size exhaustion, not wrap-around."
+    },
+    {
+      "id": "C144",
+      "kind": "run",
+      "file": "pure/valid/records.weave",
+      "entry": "point",
+      "args": [
+        1,
+        2
+      ],
+      "expect": "VALUE",
+      "value": {
+        "x": 1,
+        "y": 2
+      },
+      "rules": [
+        "P0-VALUE-1",
+        "P0-RUN-2"
+      ],
+      "lesson": "A record result is a JSON object in declaration order."
+    },
+    {
+      "id": "C145",
+      "kind": "run",
+      "file": "pure/valid/records.weave",
+      "entry": "length_squared",
+      "args": [
+        {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "finish": {
+            "x": 3,
+            "y": 4
+          }
+        }
+      ],
+      "expect": "VALUE",
+      "value": 25,
+      "rules": [
+        "P0-RUN-1",
+        "P0-EVAL-1"
+      ],
+      "lesson": "Record arguments are JSON objects; nested field access."
+    },
+    {
+      "id": "C146",
+      "kind": "run",
+      "file": "pure/valid/records.weave",
+      "entry": "diagonal",
+      "args": [
+        2
+      ],
+      "expect": "VALUE",
+      "value": {
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "finish": {
+          "x": 2,
+          "y": 2
+        }
+      },
+      "rules": [
+        "P0-EVAL-3"
+      ],
+      "lesson": "Nested construction through function calls."
+    },
+    {
+      "id": "C147",
+      "kind": "run",
+      "file": "pure/valid/records.weave",
+      "entry": "mirror",
+      "args": [
+        {
+          "finish": {
+            "y": 4,
+            "x": 3
+          },
+          "start": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "expect": "VALUE",
+      "value": {
+        "start": {
+          "x": 3,
+          "y": 4
+        },
+        "finish": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rules": [
+        "P0-VALUE-1"
+      ],
+      "lesson": "Records are immutable values; members may come in any order."
+    },
+    {
+      "id": "C148",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "empty_ints",
+      "args": [],
+      "expect": "VALUE",
+      "value": [],
+      "rules": [
+        "P0-LIST-1"
+      ],
+      "lesson": "[] typed by the result type."
+    },
+    {
+      "id": "C149",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "literal",
+      "args": [],
+      "expect": "VALUE",
+      "value": [
+        1,
+        5,
+        -4
+      ],
+      "rules": [
+        "P0-LIST-1",
+        "P0-EVAL-1"
+      ],
+      "lesson": "List literal elements in order."
+    },
+    {
+      "id": "C150",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "nested",
+      "args": [],
+      "expect": "VALUE",
+      "value": [
+        [],
+        [
+          1
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "rules": [
+        "P0-LIST-1"
+      ],
+      "lesson": "Lists of lists."
+    },
+    {
+      "id": "C151",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "first",
+      "args": [
+        [
+          7,
+          8
+        ]
+      ],
+      "expect": "VALUE",
+      "value": 7,
+      "rules": [
+        "P0-LIST-1"
+      ],
+      "lesson": "head of a nonempty list."
+    },
+    {
+      "id": "C152",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "first",
+      "args": [
+        []
+      ],
+      "expect": "E521",
+      "rules": [
+        "P0-LIST-1",
+        "P0-FAULT-1"
+      ],
+      "lesson": "head of [] is a pure fault, with no default value."
+    },
+    {
+      "id": "C153",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "rest",
+      "args": [
+        []
+      ],
+      "expect": "E521",
+      "rules": [
+        "P0-LIST-1",
+        "P0-FAULT-1"
+      ],
+      "lesson": "tail of [] is the same fault."
+    },
+    {
+      "id": "C154",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "flags",
+      "args": [
+        [
+          {
+            "tag": 1,
+            "flag": true
+          },
+          {
+            "tag": 2,
+            "flag": false
+          }
+        ]
+      ],
+      "expect": "VALUE",
+      "value": [
+        true,
+        false
+      ],
+      "rules": [
+        "P0-LIST-1",
+        "P0-RUN-1"
+      ],
+      "lesson": "A list of records."
+    },
+    {
+      "id": "C155",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "reverse",
+      "args": [
+        [
+          1,
+          2,
+          3
+        ],
+        []
+      ],
+      "expect": "VALUE",
+      "value": [
+        3,
+        2,
+        1
+      ],
+      "rules": [
+        "P0-LIST-1"
+      ],
+      "lesson": "cons and an accumulator."
+    },
+    {
+      "id": "C156",
+      "kind": "run",
+      "file": "pure/valid/lists.weave",
+      "entry": "sum",
+      "args": [
+        [
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "expect": "VALUE",
+      "value": 10,
+      "rules": [
+        "P0-LIST-1"
+      ],
+      "lesson": "Recursion over a list."
+    },
+    {
+      "id": "C157",
+      "kind": "run",
+      "file": "pure/valid/merge_sort.weave",
+      "entry": "merge_sort",
+      "args": [
+        [
+          5,
+          -2,
+          5,
+          0,
+          -2
+        ]
+      ],
+      "expect": "VALUE",
+      "value": [
+        -2,
+        -2,
+        0,
+        5,
+        5
+      ],
+      "rules": [
+        "P0-EVAL-3",
+        "P0-RUN-2"
+      ],
+      "lesson": "Sequential merge sort."
+    },
+    {
+      "id": "C158",
+      "kind": "run",
+      "file": "pure/valid/merge_sort.weave",
+      "entry": "merge_sort",
+      "args": [
+        []
+      ],
+      "expect": "VALUE",
+      "value": [],
+      "rules": [
+        "P0-EVAL-3"
+      ],
+      "lesson": "The empty list is sorted."
+    },
+    {
+      "id": "C159",
+      "kind": "run",
+      "file": "pure/valid/merge_sort.weave",
+      "entry": "sort_items",
+      "args": [
+        [
+          {
+            "key": 2,
+            "id": 1
+          },
+          {
+            "key": 1,
+            "id": 2
+          },
+          {
+            "key": 2,
+            "id": 3
+          },
+          {
+            "key": 1,
+            "id": 4
+          }
+        ]
+      ],
+      "expect": "VALUE",
+      "value": [
+        {
+          "key": 1,
+          "id": 2
+        },
+        {
+          "key": 1,
+          "id": 4
+        },
+        {
+          "key": 2,
+          "id": 1
+        },
+        {
+          "key": 2,
+          "id": 3
+        }
+      ],
+      "rules": [
+        "P0-EVAL-3",
+        "P0-VALUE-1"
+      ],
+      "lesson": "Equal keys keep their input order (observable through id)."
+    },
+    {
+      "id": "C160",
+      "kind": "run",
+      "file": "pure/valid/routing.weave",
+      "entry": "route",
+      "args": [
+        [
+          {
+            "dest": 1,
+            "cost": 5,
+            "hops": 2
+          },
+          {
+            "dest": 2,
+            "cost": 3,
+            "hops": 20
+          },
+          {
+            "dest": 3,
+            "cost": 3,
+            "hops": 1
+          },
+          {
+            "dest": 0,
+            "cost": 3,
+            "hops": 4
+          }
+        ],
+        10
+      ],
+      "expect": "VALUE",
+      "value": {
+        "accepted": true,
+        "dest": 0,
+        "cost": 3
+      },
+      "rules": [
+        "P0-EVAL-2",
+        "P0-RUN-2"
+      ],
+      "lesson": "The cheapest valid route; ties go to the lower destination."
+    },
+    {
+      "id": "C161",
+      "kind": "run",
+      "file": "pure/valid/routing.weave",
+      "entry": "route",
+      "args": [
+        [],
+        10
+      ],
+      "expect": "VALUE",
+      "value": {
+        "accepted": false,
+        "dest": 0,
+        "cost": 0
+      },
+      "rules": [
+        "P0-RUN-1"
+      ],
+      "lesson": "No route: a rejection decision."
+    },
+    {
+      "id": "C162",
+      "kind": "run",
+      "file": "pure/valid/routing.weave",
+      "entry": "route",
+      "args": [
+        [
+          {
+            "dest": 1,
+            "cost": 50,
+            "hops": 2
+          }
+        ],
+        10
+      ],
+      "expect": "VALUE",
+      "value": {
+        "accepted": false,
+        "dest": 0,
+        "cost": 0
+      },
+      "rules": [
+        "P0-EVAL-2"
+      ],
+      "lesson": "A route over the cost limit is not valid."
+    },
+    {
+      "id": "C163",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "safe_ratio_above",
+      "args": [
+        0,
+        1
+      ],
+      "expect": "VALUE",
+      "value": false,
+      "rules": [
+        "P0-EVAL-2"
+      ],
+      "lesson": "and skips div(100, 0): no fault."
+    },
+    {
+      "id": "C164",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "safe_ratio_above",
+      "args": [
+        3,
+        30
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "rules": [
+        "P0-EVAL-2"
+      ],
+      "lesson": "and evaluates its right operand when the left is true."
+    },
+    {
+      "id": "C165",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "zero_or_divides",
+      "args": [
+        0
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "rules": [
+        "P0-EVAL-2"
+      ],
+      "lesson": "or skips mod(100, 0): no fault."
+    },
+    {
+      "id": "C166",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "zero_or_divides",
+      "args": [
+        7
+      ],
+      "expect": "VALUE",
+      "value": false,
+      "rules": [
+        "P0-EVAL-2",
+        "P0-ARITH-2"
+      ],
+      "lesson": "or evaluates its right operand when the left is false."
+    },
+    {
+      "id": "C167",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "guarded_head",
+      "args": [
+        []
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "rules": [
+        "P0-EVAL-2",
+        "P0-LIST-1"
+      ],
+      "lesson": "or skips head([])."
+    },
+    {
+      "id": "C168",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "skips_calls",
+      "args": [
+        true,
+        1000
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "usage": {
+        "fuel": 1,
+        "depth": 1,
+        "int_bits": 10
+      },
+      "rules": [
+        "P0-EVAL-2",
+        "P0-BUDGET-2"
+      ],
+      "lesson": "A skipped operand calls nothing and uses no fuel."
+    },
+    {
+      "id": "C169",
+      "kind": "run",
+      "file": "pure/valid/short_circuit.weave",
+      "entry": "skips_calls",
+      "args": [
+        false,
+        3
+      ],
+      "expect": "VALUE",
+      "value": true,
+      "usage": {
+        "fuel": 5,
+        "depth": 5,
+        "int_bits": 2
+      },
+      "rules": [
+        "P0-EVAL-2",
+        "P0-BUDGET-2",
+        "P0-BUDGET-3"
+      ],
+      "lesson": "The evaluated operand's calls use fuel and depth."
+    },
+    {
+      "id": "C170",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "spin",
+      "args": [
+        0
+      ],
+      "budgets": {
+        "fuel": 1000
+      },
+      "expect": "E530",
+      "usage": {
+        "fuel": 1000,
+        "depth": 1000,
+        "int_bits": 10
+      },
+      "rules": [
+        "P0-BUDGET-2",
+        "P0-BUDGET-1"
+      ],
+      "lesson": "A non-terminating function fails cleanly at its fuel budget."
+    },
+    {
+      "id": "C171",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "depth",
+      "args": [
+        100
+      ],
+      "budgets": {
+        "depth": 50
+      },
+      "expect": "E531",
+      "usage": {
+        "fuel": 51,
+        "depth": 50,
+        "int_bits": 7
+      },
+      "rules": [
+        "P0-BUDGET-3",
+        "P0-EVAL-3"
+      ],
+      "lesson": "The 51st call takes fuel, then exceeds the depth budget."
+    },
+    {
+      "id": "C172",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "depth",
+      "args": [
+        100000
+      ],
+      "budgets": {
+        "depth": 200000
+      },
+      "expect": "VALUE",
+      "value": 100000,
+      "usage": {
+        "fuel": 100001,
+        "depth": 100001,
+        "int_bits": 17
+      },
+      "rules": [
+        "P0-BUDGET-3"
+      ],
+      "lesson": "Deep recursion within the depth budget."
+    },
+    {
+      "id": "C173",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "doubling",
+      "args": [
+        100,
+        1
+      ],
+      "budgets": {
+        "int_bits": 32
+      },
+      "expect": "E532",
+      "usage": {
+        "fuel": 32,
+        "depth": 32,
+        "int_bits": 32
+      },
+      "rules": [
+        "P0-BUDGET-4"
+      ],
+      "lesson": "An intermediate product past the size budget."
+    },
+    {
+      "id": "C174",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "factorial",
+      "args": [
+        30
+      ],
+      "expect": "VALUE",
+      "value": 265252859812191058636308480000000,
+      "rules": [
+        "P0-ARITH-1"
+      ],
+      "lesson": "30! is exact."
+    },
+    {
+      "id": "C175",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "identity",
+      "args": [
+        300
+      ],
+      "budgets": {
+        "int_bits": 8
+      },
+      "expect": "E532",
+      "usage": {
+        "fuel": 0,
+        "depth": 0,
+        "int_bits": 0
+      },
+      "rules": [
+        "P0-BUDGET-4",
+        "P0-RUN-1"
+      ],
+      "lesson": "An argument past the size budget exhausts it before the entry call."
+    },
+    {
+      "id": "C176",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "identity",
+      "args": [
+        "300"
+      ],
+      "expect": "E540",
+      "rules": [
+        "P0-RUN-1"
+      ],
+      "lesson": "A string is not an Int argument."
+    },
+    {
+      "id": "C177",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "missing",
+      "args": [],
+      "expect": "E540",
+      "rules": [
+        "P0-RUN-1"
+      ],
+      "lesson": "The entry must be a function of the file."
+    },
+    {
+      "id": "C178",
+      "kind": "run",
+      "file": "pure/valid/budgets.weave",
+      "entry": "identity",
+      "args": [
+        1.5
+      ],
+      "expect": "E540",
+      "rules": [
+        "P0-RUN-1"
+      ],
+      "lesson": "Int arguments are JSON integers."
+    }
+  ]
+}

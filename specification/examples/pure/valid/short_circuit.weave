@@ -1,0 +1,19 @@
+# and/or evaluate left to right and skip the right operand when the left decides.
+
+fn safe_ratio_above(x: Int, bound: Int) -> Bool:
+    return x != 0 and div(100, x) > bound
+
+fn zero_or_divides(x: Int) -> Bool:
+    return x == 0 or mod(100, x) == 0
+
+fn guarded_head(xs: List[Int]) -> Bool:
+    return is_empty(xs) or head(xs) > 0
+
+fn count(n: Int) -> Int:
+    if n == 0:
+        return 0
+    else:
+        return 1 + count(n - 1)
+
+fn skips_calls(flag: Bool, n: Int) -> Bool:
+    return flag or count(n) > 0
