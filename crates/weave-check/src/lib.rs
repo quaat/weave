@@ -20,16 +20,17 @@ pub mod check;
 pub mod lower;
 pub mod typed;
 
-pub use check::check_program;
+pub use check::{TYPE_DEPTH_LIMIT, check_program};
 pub use typed::{Prim, Program, Ty};
 pub use weave_syntax::{Diagnostic, Span};
 
 pub use lower::{EXPR_DEPTH_LIMIT, SYNTAX_DEPTH_LIMIT};
 
-/// Stack for lowering and checking. Recursion follows the syntax tree and the
-/// AST: the syntax depth is at most [`SYNTAX_DEPTH_LIMIT`] and the expression
-/// depth at most [`EXPR_DEPTH_LIMIT`], both checked before any recursive pass
-/// over the AST (a flat operator chain is shallow in the syntax tree but deep
+/// Stack for lowering and checking. Recursion follows the syntax tree, the
+/// AST and types: the syntax depth is at most [`SYNTAX_DEPTH_LIMIT`], the
+/// expression depth at most [`EXPR_DEPTH_LIMIT`], both checked before any
+/// recursive pass over the AST, and every type is at most
+/// [`TYPE_DEPTH_LIMIT`] deep, which also bounds the depth of every value (a flat operator chain is shallow in the syntax tree but deep
 /// in the AST, so the parser's limit alone would not bound it). The bounded
 /// passes would fit a default thread; the dedicated thread keeps the bound
 /// independent of the caller's stack.

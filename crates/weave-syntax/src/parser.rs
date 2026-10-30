@@ -158,13 +158,20 @@ pub fn parse_grammar(
             "Internal parser error.",
             Span::at(0),
         )),
-        Err(e) => Err(Diagnostic::new(
-            code,
-            "limit",
-            format!("Could not start the parser thread: {e}"),
-            Span::at(0),
-        )),
+        Err(e) => Err(spawn_failure(code, &e)),
     }
+}
+
+/// A failure to start the parser thread is a host failure, not a statement
+/// about the source: stage `internal`, which tools report as an internal
+/// error rather than a rejection.
+fn spawn_failure(code: &'static str, e: &std::io::Error) -> Diagnostic {
+    Diagnostic::new(
+        code,
+        "internal",
+        format!("Could not start the parser thread: {e}"),
+        Span::at(0),
+    )
 }
 
 fn interpret(
@@ -387,5 +394,16 @@ impl Interp<'_> {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_thread_spawn_failure_is_internal() {
+        let e = std::io::Error::other("no threads");
+        let d = super::spawn_failure("E500", &e);
+        assert_eq!(d.stage, "internal");
+        assert!(d.message.contains("no threads"));
     }
 }

@@ -373,6 +373,25 @@ def _bool_fn(expr: str) -> str:
 
 
 _G = "fn g(x: Int) -> Int:\n    return x\n\n"
+
+
+def _records(n: int) -> str:
+    """A chain of n records, R0 holding R1 ... R{n-1} holding an Int, and a function that
+    builds and returns the n + 1 deep value with one-level lets."""
+    decls = [f"record R{i}:\n    a: {'R' + str(i + 1) if i + 1 < n else 'Int'}\n" for i in range(n)]
+    lets = [f"    let v{n - 1} = R{n - 1}(a: x)\n"]
+    lets += [f"    let v{i} = R{i}(a: v{i + 1})\n" for i in range(n - 2, -1, -1)]
+    return "\n".join(decls) + "\nfn f(x: Int) -> R0:\n" + "".join(lets) + "    return v0\n"
+
+
+def _list_type(lists: int) -> str:
+    return "List[" * lists + "Int" + "]" * lists
+
+
+def _list_lets(lists: int) -> str:
+    """Values nested `lists` lists deep, built with one-level lets."""
+    lets = ["    let v0 = [x]\n"] + [f"    let v{i} = [v{i - 1}]\n" for i in range(1, lists)]
+    return "fn f(x: Int) -> Int:\n" + "".join(lets) + "    return x\n"
 E = ref.EXPR_DEPTH_LIMIT
 
 # (name, source, required code) at and just over each nesting limit.
@@ -391,18 +410,45 @@ LIMIT_PROBES = [
     ("nested calls at the syntax limit", _G + _int_fn("g(" * 28 + "x" + ")" * 28), "ACCEPT"),
     ("nested calls over the syntax limit", _G + _int_fn("g(" * 29 + "x" + ")" * 29), "E500"),
     ("parentheses far over the parser limit", _int_fn("(" * 70 + "1" + ")" * 70), "E500"),
+    ("record chain at the type limit", _records(ref.TYPE_DEPTH_LIMIT - 1), "ACCEPT"),
+    ("record chain over the type limit", _records(ref.TYPE_DEPTH_LIMIT), "E500"),
+    ("record chain far over the type limit", _records(500), "E500"),
+    ("list type at the limit", _int_fn("0").replace("(x: Int)", "(x: " + _list_type(ref.TYPE_DEPTH_LIMIT - 1) + ")"),
+     "ACCEPT"),
+    ("list type over the limit", _int_fn("0").replace("(x: Int)", "(x: " + _list_type(ref.TYPE_DEPTH_LIMIT) + ")"),
+     "E500"),
+    ("nested list values at the limit", _list_lets(ref.TYPE_DEPTH_LIMIT - 1), "ACCEPT"),
+    ("nested list values over the limit", _list_lets(ref.TYPE_DEPTH_LIMIT), "E500"),
 ]
 
 
+def python_stage(source: str) -> tuple[str, str | None]:
+    """The reference's static code and the stage of its diagnostic (None for ACCEPT)."""
+    try:
+        ref.check(source)
+        return "ACCEPT", None
+    except ref.Diagnostic as d:
+        return d.code, d.stage
+
+
+def rust_stage(binary: Path, source: str) -> tuple[str, str | None]:
+    out = rust(binary, ["check"], source)
+    if not out["diagnostics"]:
+        return "ACCEPT", None
+    return out["diagnostics"][0]["code"], out["diagnostics"][0]["stage"]
+
+
 def limits(binary: Path | None) -> dict:
+    """Each probe's code and stage: ACCEPT, or E500 at stage limit, alike on both sides."""
     for name, source, want in LIMIT_PROBES:
-        py = python_check(source)[0]
-        if py != want:
-            raise AssertionError(f"limit probe {name}: Python reference {py}, required {want}")
-        if binary is not None and rust_check(binary, source) != py:
-            raise AssertionError(f"limit probe {name}: Rust {rust_check(binary, source)}, Python reference {py}")
+        py = python_stage(source)
+        required = ("ACCEPT", None) if want == "ACCEPT" else (want, "limit")
+        if py != required:
+            raise AssertionError(f"limit probe {name}: Python reference {py}, required {required}")
+        if binary is not None and rust_stage(binary, source) != py:
+            raise AssertionError(f"limit probe {name}: Rust {rust_stage(binary, source)}, Python reference {py}")
     return {"probes": len(LIMIT_PROBES), "syntax_depth_limit": ref.SYNTAX_DEPTH_LIMIT,
-            "expression_depth_limit": ref.EXPR_DEPTH_LIMIT}
+            "expression_depth_limit": ref.EXPR_DEPTH_LIMIT, "type_depth_limit": ref.TYPE_DEPTH_LIMIT}
 
 
 def build_report(binary: Path | None, how: str, programs: int = GENERATED_PROGRAMS) -> dict:

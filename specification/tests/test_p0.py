@@ -174,7 +174,7 @@ class Static(unittest.TestCase):
     # P0-FILE-1: the nesting limits, the same in both implementations
     def test_nesting_limits(self):
         limit = ref.EXPR_DEPTH_LIMIT
-        self.assertEqual((ref.SYNTAX_DEPTH_LIMIT, limit), (300, 256))
+        self.assertEqual((ref.SYNTAX_DEPTH_LIMIT, limit, ref.TYPE_DEPTH_LIMIT), (300, 256, 64))
         self.assertEqual(code(fn("return " + " + ".join(["x"] * limit))), "ACCEPT")
         for source in (fn("return " + " + ".join(["x"] * (limit + 1))),
                        fn("return " + " or ".join(["true"] * (limit + 1)), "(x: Int) -> Bool"),
@@ -187,11 +187,33 @@ class Static(unittest.TestCase):
             else:
                 self.fail("accepted")
         self.assertEqual(code(fn("return " + "(" * 41 + "1" + ")" * 41)), "ACCEPT")
+        # Type depth: record chains, written types and types built through lets.
+        types = ref.TYPE_DEPTH_LIMIT
+        self.assertEqual(code(p0_differential._records(types - 1)), "ACCEPT")
+        self.assertEqual(code(p0_differential._list_lets(types - 1)), "ACCEPT")
+        self.assertEqual(code(fn("return 0", f"(x: {p0_differential._list_type(types - 1)}) -> Int")), "ACCEPT")
+        for source in (p0_differential._records(types), p0_differential._records(300),
+                       p0_differential._list_lets(types),
+                       fn("return 0", f"(x: {p0_differential._list_type(types)}) -> Int")):
+            try:
+                ref.check(source)
+            except ref.Diagnostic as d:
+                self.assertEqual((d.code, d.stage), ("E500", "limit"))
+            else:
+                self.fail("accepted")
+        report = run(p0_differential._records(types - 1), "f", [7])
+        value, depth = report["value"], 1
+        while isinstance(value, dict):
+            value, depth = value["a"], depth + 1
+        self.assertEqual((depth, value), (types, 7))
 
     def test_negative_budgets_are_usage_errors(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "b.weave"
             path.write_text(BUDGETS, encoding="utf-8")
+            with mock.patch("sys.stderr"), self.assertRaises(SystemExit) as raised:
+                ref.main(["run", str(path), "--entry", "identity", "--args", "[1]", "--fuel", "\u0663"])
+            self.assertEqual(raised.exception.code, 2)
             for flag in ("--fuel", "--max-depth", "--int-bits"):
                 with self.subTest(flag), mock.patch("sys.stderr"), self.assertRaises(SystemExit) as raised:
                     ref.main(["run", str(path), "--entry", "identity", "--args", "[1]", flag, "-1"])

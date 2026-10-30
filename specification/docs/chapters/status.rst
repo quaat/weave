@@ -117,7 +117,7 @@ have no implementation, so no command establishes them.
        sort_items``. ``python3 scripts/p0_differential.py`` (needs Lark) with
        ``cargo`` on ``PATH``: exit 0, ``PASS: P0 reference meets 78 corpus
        expectations; ...`` and ``PASS: Rust weave agrees with the P0
-       reference on 736 inputs``
+       reference on 743 inputs``
    * - D0 (target)
      - :doc:`execution-contract`; rules ``D0-*``
      - No

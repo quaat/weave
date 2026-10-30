@@ -44,6 +44,7 @@ DEFAULT_BUDGETS = {"fuel": 1_000_000, "depth": 10_000, "int_bits": 65_536}
 # Nesting limits (pure.rst, "Nesting limits"), the same as the Rust checker's.
 SYNTAX_DEPTH_LIMIT = 300
 EXPR_DEPTH_LIMIT = 256
+TYPE_DEPTH_LIMIT = 64
 BUILTIN_TYPES = ("Int", "Bool", "List")
 BUILTIN_CONSTANTS = ("true", "false")
 PRIMITIVES = {"length": 1, "is_empty": 1, "head": 1, "tail": 1, "cons": 2, "div": 2, "mod": 2, "not": 1}
@@ -464,6 +465,7 @@ class Checker:
         self.globals = {}
         self.records = []
         self.signatures = []
+        self.depths = []
         self.scopes = []
         self.slots = 0
         self.calls = []
@@ -551,14 +553,22 @@ class Checker:
         for i, r in enumerate(records):
             if self.record_cycle(i):
                 fail("E503", f"Record {r[1].text} is recursive.", r[1].span)
+        self.depths = self.record_depths()
+        for i, r in enumerate(records):
+            if self.depths[i] > TYPE_DEPTH_LIMIT:
+                self.type_limit(r[1].span)
         for f in fns:
             params = []
             for pname, ptype in f[2]:
                 if any(n == pname.text for n, _ in params):
                     fail("E506", f"Parameter {pname.text} is declared twice.", pname.span)
                 self.fresh(pname)
-                params.append((pname.text, self.resolve(ptype)))
-            self.signatures.append((params, self.resolve(f[3])))
+                ty = self.resolve(ptype)
+                self.depth_ok(ty, ptype.span)
+                params.append((pname.text, ty))
+            ret = self.resolve(f[3])
+            self.depth_ok(ret, f[3].span)
+            self.signatures.append((params, ret))
         functions, graph = [], []
         for index, f in enumerate(fns):
             self.structure(f[4])
@@ -628,7 +638,56 @@ class Checker:
             fail("E510", f"Expected {spell(expected, self.records)}, found {spell(typed[1], self.records)}.", e.span)
         return typed
 
+    # -- type depth (pure.rst, "Nesting limits")
+    @staticmethod
+    def type_limit(span):
+        raise Diagnostic("E500", f"Type nesting exceeds the P0 type depth limit of {TYPE_DEPTH_LIMIT}.", span, "limit")
+
+    def ty_depth(self, t, depths=None) -> int:
+        """Int and Bool 1, List[T] one more than T, a record its depth (iterative)."""
+        depths = self.depths if depths is None else depths
+        lists = 0
+        while t[0] == "List":
+            lists, t = lists + 1, t[1]
+        if t[0] != "Record":
+            return lists + 1
+        d = depths[t[1]]
+        return lists + (d if d is not None else 1)
+
+    def record_depths(self) -> list:
+        """Each record's depth: one more than its deepest field type, by an explicit-stack
+        post-order walk of the record graph (acyclic once E503 has passed)."""
+        def base(t):
+            while t[0] == "List":
+                t = t[1]
+            return t[1] if t[0] == "Record" else None
+        depth = [None] * len(self.records)
+        for start in range(len(self.records)):
+            stack = [start]
+            while stack:
+                i = stack[-1]
+                if depth[i] is not None:
+                    stack.pop()
+                    continue
+                fields = self.records[i]["fields"]
+                pending = next((j for j in (base(t) for _, t in fields) if j is not None and depth[j] is None), None)
+                if pending is not None:
+                    stack.append(pending)
+                    continue
+                depth[i] = 1 + max((self.ty_depth(t, depth) for _, t in fields), default=0)
+                stack.pop()
+        return [d if d is not None else 1 for d in depth]
+
+    def depth_ok(self, t, span):
+        if self.ty_depth(t) > TYPE_DEPTH_LIMIT:
+            self.type_limit(span)
+
     def synth(self, e: Expr, expected):
+        typed = self.synth_inner(e, expected)
+        self.depth_ok(typed[1], e.span)
+        return typed
+
+    def synth_inner(self, e: Expr, expected):
         if e.kind == "int":
             return ("int", INT, e.span, int(e.a))
         if e.kind == "list":
@@ -1018,7 +1077,7 @@ def run(program: Checked, entry: str, args_json, budgets: dict | None = None) ->
 
 def budget(text: str) -> int:
     """A budget is a nonnegative integer (P0-BUDGET-1); anything else is a usage error."""
-    if not text.isdigit():
+    if not (text.isascii() and text.isdigit()):
         raise argparse.ArgumentTypeError(f"{text!r} is not a nonnegative integer")
     return int(text)
 
@@ -1056,7 +1115,7 @@ def main(argv=None) -> int:
             out["outcome"] = None
         out["diagnostics"] = [d.document(name)]
         code = 1
-    except ValueError as e:
+    except (ValueError, RecursionError) as e:
         print(f"p0_reference: {e}", file=sys.stderr)
         return 2
     if a.json:

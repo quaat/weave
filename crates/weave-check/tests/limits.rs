@@ -7,7 +7,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use weave_check::{EXPR_DEPTH_LIMIT, SYNTAX_DEPTH_LIMIT, check};
+use weave_check::{EXPR_DEPTH_LIMIT, SYNTAX_DEPTH_LIMIT, TYPE_DEPTH_LIMIT, check};
 
 fn chain(op: &str, operand: &str, n: usize) -> String {
     vec![operand; n].join(&format!(" {op} "))
@@ -34,7 +34,10 @@ fn assert_limit(src: &str) {
 
 #[test]
 fn the_limits_are_the_documented_values() {
-    assert_eq!((SYNTAX_DEPTH_LIMIT, EXPR_DEPTH_LIMIT), (300, 256));
+    assert_eq!(
+        (SYNTAX_DEPTH_LIMIT, EXPR_DEPTH_LIMIT, TYPE_DEPTH_LIMIT),
+        (300, 256, 64)
+    );
 }
 
 #[test]
@@ -106,4 +109,64 @@ fn internal_errors_are_distinguished_from_rejections() {
         weave_check::Span::at(0),
     );
     assert!(weave_check::is_internal(&internal));
+}
+
+/// A chain of `n` records (R0 holds R1, ..., R{n-1} holds an Int) and a
+/// function that builds and returns the `n + 1` deep value with one-level lets.
+pub fn record_chain(n: usize) -> String {
+    let mut src = String::new();
+    for i in 0..n {
+        let field = if i + 1 < n {
+            format!("R{}", i + 1)
+        } else {
+            "Int".into()
+        };
+        src.push_str(&format!("record R{i}:\n    a: {field}\n\n"));
+    }
+    src.push_str("fn f(x: Int) -> R0:\n");
+    src.push_str(&format!("    let v{} = R{}(a: x)\n", n - 1, n - 1));
+    for i in (0..n - 1).rev() {
+        src.push_str(&format!("    let v{i} = R{i}(a: v{})\n", i + 1));
+    }
+    src.push_str("    return v0\n");
+    src
+}
+
+#[test]
+fn record_chains_are_bounded_by_the_type_depth_limit() {
+    // S-9: R0 in a chain of n records has type depth n + 1.
+    assert!(check(&record_chain(TYPE_DEPTH_LIMIT - 1)).is_ok());
+    let d = check(&record_chain(TYPE_DEPTH_LIMIT)).unwrap_err();
+    assert_eq!((d.code, d.stage), ("E500", "limit"));
+    // Reported at the first record that is too deep.
+    let src = record_chain(TYPE_DEPTH_LIMIT);
+    assert_eq!(src.get(d.span.start..d.span.end), Some("R0"));
+    assert_limit(&record_chain(3_000));
+}
+
+#[test]
+fn written_and_synthesised_types_are_bounded() {
+    let list = |n: usize| format!("{}Int{}", "List[".repeat(n), "]".repeat(n));
+    let param = |n: usize| format!("fn f(x: {}) -> Int:\n    return 0\n", list(n));
+    assert!(check(&param(TYPE_DEPTH_LIMIT - 1)).is_ok());
+    let src = param(TYPE_DEPTH_LIMIT);
+    let d = check(&src).unwrap_err();
+    assert_eq!((d.code, d.stage), ("E500", "limit"));
+    assert_eq!(
+        src.get(d.span.start..d.span.end),
+        Some(list(TYPE_DEPTH_LIMIT).as_str())
+    );
+    let ret = format!("fn f() -> {}:\n    return []\n", list(TYPE_DEPTH_LIMIT));
+    assert_limit(&ret);
+    // Values nested through one-level lets: each let's type is checked.
+    let lets = |n: usize| {
+        let mut src = String::from("fn f(x: Int) -> Int:\n    let v0 = [x]\n");
+        for i in 1..n {
+            src.push_str(&format!("    let v{i} = [v{}]\n", i - 1));
+        }
+        src + "    return x\n"
+    };
+    assert!(check(&lets(TYPE_DEPTH_LIMIT - 1)).is_ok());
+    assert_limit(&lets(TYPE_DEPTH_LIMIT));
+    assert_limit(&lets(5_000));
 }

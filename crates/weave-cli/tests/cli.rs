@@ -290,3 +290,60 @@ fn long_operator_chains_are_limit_diagnostics_under_check_and_run() {
     assert_eq!(out.status.code(), Some(1));
     assert!(stdout(&out).contains("E500 (P0-FILE-1) [limit]"));
 }
+
+#[test]
+fn values_at_the_type_depth_limit_run_and_deeper_ones_are_rejected() {
+    // S-9: a value as deep as the type depth limit is returned, printed as
+    // JSON and dropped; a deeper one is rejected before it can be built.
+    let chain = |n: usize| {
+        let mut src = String::new();
+        for i in 0..n {
+            let field = if i + 1 < n {
+                format!("R{}", i + 1)
+            } else {
+                "Int".into()
+            };
+            src.push_str(&format!("record R{i}:\n    a: {field}\n\n"));
+        }
+        src.push_str(&format!(
+            "fn f(x: Int) -> R0:\n    let v{} = R{}(a: x)\n",
+            n - 1,
+            n - 1
+        ));
+        for i in (0..n - 1).rev() {
+            src.push_str(&format!("    let v{i} = R{i}(a: v{})\n", i + 1));
+        }
+        src + "    return v0\n"
+    };
+    let at = chain(63);
+    let out = weave(
+        &["run", "-", "--entry", "f", "--args", "[7]", "--json"],
+        Some(&at),
+    );
+    assert_eq!(out.status.code(), Some(0), "{}", stdout(&out));
+    let d = doc(&out);
+    let mut value = d.get("value").unwrap();
+    let mut depth = 1;
+    while let Some(inner) = value.get("a") {
+        value = inner;
+        depth += 1;
+    }
+    assert_eq!((depth, value), (64, &Value::Number("7".into())));
+    for n in [64, 3_000] {
+        let src = chain(n);
+        for args in [
+            &["check", "-", "--json"][..],
+            &["run", "-", "--entry", "f", "--args", "[7]", "--json"][..],
+        ] {
+            let out = weave(args, Some(&src));
+            assert_eq!(out.status.code(), Some(1), "{n} {args:?}");
+            let d = doc(&out);
+            let diag = &d.get("diagnostics").and_then(Value::as_array).unwrap()[0];
+            assert_eq!(
+                (s(diag, "code"), s(diag, "stage")),
+                ("E500", "limit"),
+                "{n}"
+            );
+        }
+    }
+}

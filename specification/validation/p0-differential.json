@@ -588,13 +588,14 @@
     "compared_runs": 160
   },
   "limits": {
-    "probes": 14,
+    "probes": 21,
     "syntax_depth_limit": 300,
-    "expression_depth_limit": 256
+    "expression_depth_limit": 256,
+    "type_depth_limit": 64
   },
   "rust_differential": {
     "status": "compared",
     "binary": "cargo build --offline --locked",
-    "compared": 736
+    "compared": 743
   }
 }

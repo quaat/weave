@@ -48,9 +48,9 @@ Nesting limits
 ~~~~~~~~~~~~~~~~~~~~
 
 Both P0 implementations reject, with E500 at stage ``limit``, a file whose
-nesting exceeds either of two limits. They are limits of these
-implementations, which keep recursion within a fixed stack, not properties of
-the grammar; a program within them is portable between the two.
+nesting exceeds any of three limits. They are limits of these
+implementations, not properties of the grammar; a program within them is
+portable between the two.
 
 * **Syntax depth** at most **300**: the largest number of nested production
   nodes in the file's derivation tree from ``pure-file``, the root counting 1,
@@ -67,9 +67,27 @@ the grammar; a program within them is portable between the two.
   call. Parentheses add nothing. A chain of ``n`` operands such as
   ``x + x + ... + x`` has depth ``n``, so at most 256 operands; a flat chain is
   shallow in the syntax tree, so the syntax depth alone would not bound it.
+* **Type depth** at most **64**: ``Int`` and ``Bool`` have depth 1, ``List[T]``
+  one more than ``T``, and a record one more than its deepest field type. The
+  limit applies to every record of the file, every type written in a
+  signature, and the type of every expression. A chain of records ``R0`` with
+  a field of type ``R1``, ..., ``R62`` with a field of type ``Int`` is at the
+  limit; so is ``List`` nested 63 times around ``Int``. Without it, records
+  declared in a chain, or list literals nested through one-level ``let``
+  bindings, could build values of any depth at a fuel cost of one call.
 
-Each implementation checks the syntax depth after parsing and the expression
-depth while it builds each expression, before any recursive pass over it.
+Each implementation checks the syntax depth after parsing, the expression
+depth while it builds each expression, and the type depth of each record
+after the recursive-record check (:ref:`P0-DECL-3 <P0-DECL-3>`), of each written
+type when it is resolved and of each expression when its type is known.
+
+Every recursive walk in the two implementations follows the syntax tree, an
+expression, a type or a value. The first three are bounded by these limits.
+A value is never deeper than its type: records are not recursive, and the
+elements of a list are walked one after another, not by recursion. Run
+arguments are read by a JSON reader with its own nesting limit. So the depth of
+every recursive walk is bounded by a fixed number, whatever the input, and the
+Rust implementation runs within a fixed stack.
 
 The P0 productions of the shared grammar are:
 
@@ -355,21 +373,24 @@ each corpus case, each of which has one violation. Both P0 implementations
 report the first violation found in this order and share the
 `Nesting limits`_, so their codes can be compared on any input:
 
-#. syntax and layout (E001, E500), including the nesting limits and the
-   prefix word of :ref:`P0-FILE-1 <P0-FILE-1>`;
+#. syntax and layout (E001, E500), including the syntax and expression depth
+   limits and the prefix word of :ref:`P0-FILE-1 <P0-FILE-1>`;
 #. top-level names in file order (E501);
 #. records in file order, each field in order: duplicate name (E502), then
    type (E504);
 #. recursive records: the first record in file order that reaches itself
-   (E503, at its name);
-#. function signatures in file order: each parameter's name (E506) and type
-   (E504), then the result type (E504);
+   (E503, at its name); then the first record in file order deeper than the
+   type depth limit (E500, at its name);
+#. function signatures in file order: each parameter's name (E506), type
+   (E504) and type depth (E500), then the result type (E504) and its depth
+   (E500);
 #. function bodies in file order. First the block structure, walking the
    statements in source order and an ``if``'s blocks before what follows it
    (E514, E515). Then the statements in order and each expression in
    evaluation order (`Evaluation`_): ``await`` (E513), a qualified call (E512),
    the call target, the argument forms and count, the record fields
-   (E507, E508), then the arguments; a ``let`` value before its name (E506);
+   (E507, E508), then the arguments, and each expression's type depth once
+   its type is known (E500); a ``let`` value before its name (E506);
 #. mutual recursion: the first function in file order on a cycle, at its first
    call in source order to another function of the cycle (E516).
 
@@ -721,7 +742,7 @@ the ``weave`` command.
 **Differential.** ``scripts/p0_differential.py``, part of
 ``make validate-offline``, runs both implementations on the P0 corpus
 (``examples/pure/manifest.json``), on seeded generated programs and inputs,
-and on inputs just under and just over the `Nesting limits`_, and requires
+and on inputs just under and just over each of the `Nesting limits`_, and requires
 equal static codes, outcome kinds, values, fault and exhaustion
 kinds and budget usage. When ``cargo`` is not on ``PATH`` and
 ``WEAVE_BIN`` does not name the ``weave`` binary, the comparison is recorded as

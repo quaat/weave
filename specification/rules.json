@@ -161,127 +161,127 @@
   },
   "P0-DECL-1": {
     "chapter": "pure",
-    "line": 149
+    "line": 167
   },
   "P0-DECL-2": {
     "chapter": "pure",
-    "line": 154
+    "line": 172
   },
   "P0-DECL-3": {
     "chapter": "pure",
-    "line": 159
+    "line": 177
   },
   "P0-DECL-4": {
     "chapter": "pure",
-    "line": 165
+    "line": 183
   },
   "P0-TYPE-1": {
     "chapter": "pure",
-    "line": 171
+    "line": 189
   },
   "P0-NAME-1": {
     "chapter": "pure",
-    "line": 182
+    "line": 200
   },
   "P0-NAME-2": {
     "chapter": "pure",
-    "line": 188
+    "line": 206
   },
   "P0-TYPE-2": {
     "chapter": "pure",
-    "line": 265
+    "line": 283
   },
   "P0-TYPE-3": {
     "chapter": "pure",
-    "line": 271
+    "line": 289
   },
   "P0-CALL-1": {
     "chapter": "pure",
-    "line": 278
+    "line": 296
   },
   "P0-RECORD-1": {
     "chapter": "pure",
-    "line": 288
+    "line": 306
   },
   "P0-RECORD-2": {
     "chapter": "pure",
-    "line": 294
+    "line": 312
   },
   "P0-EFFECT-1": {
     "chapter": "pure",
-    "line": 306
+    "line": 324
   },
   "P0-EFFECT-2": {
     "chapter": "pure",
-    "line": 313
+    "line": 331
   },
   "P0-FORK-1": {
     "chapter": "pure",
-    "line": 318
+    "line": 336
   },
   "P0-PATH-1": {
     "chapter": "pure",
-    "line": 334
+    "line": 352
   },
   "P0-REC-1": {
     "chapter": "pure",
-    "line": 343
+    "line": 361
   },
   "P0-VALUE-1": {
     "chapter": "pure",
-    "line": 396
+    "line": 417
   },
   "P0-EVAL-1": {
     "chapter": "pure",
-    "line": 408
+    "line": 429
   },
   "P0-EVAL-2": {
     "chapter": "pure",
-    "line": 420
+    "line": 441
   },
   "P0-EVAL-3": {
     "chapter": "pure",
-    "line": 429
+    "line": 450
   },
   "P0-ARITH-1": {
     "chapter": "pure",
-    "line": 442
+    "line": 463
   },
   "P0-ARITH-2": {
     "chapter": "pure",
-    "line": 451
+    "line": 472
   },
   "P0-LIST-1": {
     "chapter": "pure",
-    "line": 485
+    "line": 506
   },
   "P0-FAULT-1": {
     "chapter": "pure",
-    "line": 495
+    "line": 516
   },
   "P0-BUDGET-1": {
     "chapter": "pure",
-    "line": 520
+    "line": 541
   },
   "P0-BUDGET-2": {
     "chapter": "pure",
-    "line": 535
+    "line": 556
   },
   "P0-BUDGET-3": {
     "chapter": "pure",
-    "line": 545
+    "line": 566
   },
   "P0-BUDGET-4": {
     "chapter": "pure",
-    "line": 552
+    "line": 573
   },
   "P0-RUN-1": {
     "chapter": "pure",
-    "line": 578
+    "line": 599
   },
   "P0-RUN-2": {
     "chapter": "pure",
-    "line": 589
+    "line": 610
   },
   "SEC-CAP-1": {
     "chapter": "security",

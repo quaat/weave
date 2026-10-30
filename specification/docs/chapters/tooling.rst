@@ -155,8 +155,10 @@ exhausted budget. The tests check every static rule with its code, rule and
 span, every P0 corpus case, Euclidean division for every sign, the budgets
 (including recursion 300,000 calls deep on a 256 KiB thread stack, integers of
 66,000 bits and a list of a million elements), the nesting limits of
-:ref:`chapters/pure:Nesting limits` (operator chains of 100,000 operands and
-10,000 nested parentheses are limit diagnostics, never a stack overflow),
+:ref:`chapters/pure:Nesting limits` (operator chains of 100,000 operands,
+10,000 nested parentheses, 3,000 chained records and list values nested
+5,000 deep are limit diagnostics, never a stack overflow, and a value at the
+type depth limit is returned, printed and dropped),
 renaming and source edits that must change behaviour, and the command's
 output. Exit status 70 reports an internal error, never a rejection.
 

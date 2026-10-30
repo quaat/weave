@@ -6,12 +6,15 @@
 //! 1. top-level names (`P0-DECL-1`, E501);
 //! 2. records in file order: duplicate fields (`P0-DECL-2`, E502) and field
 //!    types (`P0-TYPE-1`, E504);
-//! 3. recursive records (`P0-DECL-3`, E503);
+//! 3. recursive records (`P0-DECL-3`, E503), then record type depth (E500,
+//!    stage `limit`, [`TYPE_DEPTH_LIMIT`]);
 //! 4. function signatures in file order: parameter names (`P0-NAME-2`, E506)
-//!    and types, then the result type (`P0-TYPE-1`, E504);
+//!    and types, then the result type (`P0-TYPE-1`, E504), each type's depth
+//!    checked after it is resolved (E500 `limit`);
 //! 5. function bodies in file order: first the block structure (`P0-FORK-1`
 //!    E514, `P0-PATH-1` E515), then statements and expressions in evaluation
-//!    order (E505 to E513);
+//!    order (E505 to E513), each expression's type depth checked when its
+//!    type is known (E500 `limit`);
 //! 6. mutual recursion (`P0-REC-1`, E516).
 //!
 //! The first violation is reported. Signatures are registered before any body
@@ -27,6 +30,96 @@ use weave_syntax::{Diagnostic, Span};
 /// namespace for types, functions, records, primitives and local bindings.
 pub const BUILTIN_TYPES: [&str; 3] = ["Int", "Bool", "List"];
 pub const BUILTIN_CONSTANTS: [&str; 2] = ["true", "false"];
+
+/// Largest type depth (`pure.rst`, "Nesting limits"): `Int` and `Bool` are 1,
+/// `List[T]` is one more than `T`, a record one more than its deepest field
+/// type. It applies to every record, every written type and the type of every
+/// expression. A value is never deeper than its type (records are not
+/// recursive, and a list's length is walked iteratively), so this bounds every
+/// recursive walk over values: encoding, printing, decoding and dropping.
+pub const TYPE_DEPTH_LIMIT: usize = 64;
+
+fn type_limit(span: Span) -> Diagnostic {
+    Diagnostic::new(
+        weave_syntax::diagnostic::PURE_SYNTAX_CODE,
+        "limit",
+        format!("Type nesting exceeds the P0 type depth limit of {TYPE_DEPTH_LIMIT}."),
+        span,
+    )
+    .with_detail(
+        "limit",
+        weave_syntax::json::Value::from_usize(TYPE_DEPTH_LIMIT),
+    )
+}
+
+/// The record a type ends in, through any `List` wrappers.
+fn base_record(ty: &Ty) -> Option<usize> {
+    let mut t = ty;
+    loop {
+        match t {
+            Ty::List(inner) => t = inner,
+            Ty::Record(i) => return Some(*i),
+            Ty::Int | Ty::Bool => return None,
+        }
+    }
+}
+
+/// Depth of `ty`, given the depths of the records (iterative).
+fn ty_depth(ty: &Ty, records: &[usize]) -> usize {
+    ty_depth_with(ty, |i| records.get(i).copied().unwrap_or(1))
+}
+
+fn ty_depth_with(ty: &Ty, record: impl Fn(usize) -> usize) -> usize {
+    let mut lists = 0;
+    let mut t = ty;
+    loop {
+        match t {
+            Ty::List(inner) => {
+                lists += 1;
+                t = inner;
+            }
+            Ty::Record(i) => return lists + record(*i),
+            Ty::Int | Ty::Bool => return lists + 1,
+        }
+    }
+}
+
+/// The depth of every record, by an explicit-stack post-order walk of the
+/// record graph, which is acyclic once `P0-DECL-3` holds.
+fn record_depths(records: &[Record]) -> Vec<usize> {
+    let n = records.len();
+    let mut depth: Vec<Option<usize>> = vec![None; n];
+    for start in 0..n {
+        let mut stack = vec![start];
+        while let Some(&i) = stack.last() {
+            if depth.get(i).copied().flatten().is_some() || stack.len() > n + 1 {
+                stack.pop();
+                continue;
+            }
+            let fields = records.get(i).map_or(&[][..], |r| &r.fields[..]);
+            let pending = fields
+                .iter()
+                .filter_map(|(_, t)| base_record(t))
+                .find(|j| depth.get(*j).copied().flatten().is_none());
+            match pending {
+                Some(j) => stack.push(j),
+                None => {
+                    let known = |j: usize| depth.get(j).copied().flatten().unwrap_or(1);
+                    let d = 1 + fields
+                        .iter()
+                        .map(|(_, t)| ty_depth_with(t, known))
+                        .max()
+                        .unwrap_or(0);
+                    if let Some(slot) = depth.get_mut(i) {
+                        *slot = Some(d);
+                    }
+                    stack.pop();
+                }
+            }
+        }
+    }
+    depth.into_iter().map(|d| d.unwrap_or(1)).collect()
+}
 
 pub fn is_builtin(name: &str) -> bool {
     BUILTIN_TYPES.contains(&name)
@@ -53,6 +146,7 @@ struct Local {
 struct Checker<'a> {
     globals: BTreeMap<&'a str, Global>,
     records: Vec<Record>,
+    record_depths: Vec<usize>,
     signatures: Vec<(Vec<(String, Ty)>, Ty)>,
     scopes: Vec<Vec<Local>>,
     slots: usize,
@@ -65,6 +159,7 @@ pub fn check_program(file: &FileAst, source: &str) -> Result<Program, Diagnostic
     let mut c = Checker {
         globals: BTreeMap::new(),
         records: Vec::new(),
+        record_depths: Vec::new(),
         signatures: Vec::new(),
         scopes: Vec::new(),
         slots: 0,
@@ -163,6 +258,14 @@ pub fn check_program(file: &FileAst, source: &str) -> Result<Program, Diagnostic
         }
     }
 
+    // 3b. Record type depth.
+    c.record_depths = record_depths(&c.records);
+    for (i, r) in record_asts.iter().enumerate() {
+        if c.record_depths.get(i).copied().unwrap_or(1) > TYPE_DEPTH_LIMIT {
+            return Err(type_limit(r.name.span));
+        }
+    }
+
     // 4. Signatures.
     for f in &fn_asts {
         let mut params: Vec<(String, Ty)> = Vec::new();
@@ -178,9 +281,12 @@ pub fn check_program(file: &FileAst, source: &str) -> Result<Program, Diagnostic
                 ));
             }
             c.fresh_name(pname)?;
-            params.push((pname.text.clone(), c.resolve_type(pty)?));
+            let ty = c.resolve_type(pty)?;
+            c.depth_ok(&ty, pty.span)?;
+            params.push((pname.text.clone(), ty));
         }
         let ret = c.resolve_type(&f.ret)?;
+        c.depth_ok(&ret, f.ret.span)?;
         c.signatures.push((params, ret));
     }
 
@@ -517,7 +623,22 @@ impl<'a> Checker<'a> {
 
     /// The type of `e`; `expected`, where present, types `[]`, list elements and
     /// `cons` (`P0-TYPE-3`). The caller compares the result with `expected`.
+    /// E500 at `span` when `ty` is deeper than [`TYPE_DEPTH_LIMIT`].
+    fn depth_ok(&self, ty: &Ty, span: Span) -> Result<(), Diagnostic> {
+        if ty_depth(ty, &self.record_depths) > TYPE_DEPTH_LIMIT {
+            return Err(type_limit(span));
+        }
+        Ok(())
+    }
+
+    /// [`Self::synth_inner`], then the type depth of the result.
     fn synth(&mut self, e: &ExprAst, expected: Option<&Ty>) -> Result<Expr, Diagnostic> {
+        let typed = self.synth_inner(e, expected)?;
+        self.depth_ok(&typed.ty, e.span)?;
+        Ok(typed)
+    }
+
+    fn synth_inner(&mut self, e: &ExprAst, expected: Option<&Ty>) -> Result<Expr, Diagnostic> {
         match &e.kind {
             ExprKind::Int(text) => Ok(Self::mk(ExprK::Int(text.clone()), Ty::Int, e.span)),
             ExprKind::List(items) => self.list(items, expected, e.span),
