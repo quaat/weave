@@ -90,6 +90,10 @@ F0/N0/N1 do not include general expressions in flows, pure functions, if/else,
 loops, recursion, lists, tuples as values, parallel/fork blocks, higher-order
 calls, closures, imports, general generics, subtyping, open unions, borrowing,
 effect handlers, retry, within, durations, or statements after a terminal match.
+The P0 profile (:doc:`pure`) has pure functions, if/else, direct recursion,
+lists and records in separate pure files that flows cannot call yet; it has no
+loops, fork/join, higher-order calls, closures, imports or termination
+checking.
 
 General arithmetic exists only inside invariant equalities. The net grammar has
 no inhibitor arcs, arbitrary colour expressions, timed transitions, or priorities.

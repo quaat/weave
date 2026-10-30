@@ -10,6 +10,19 @@ Proposed extensions — nonnormative
 Pure computation
 ----------------------
 
+.. note::
+
+   **Adopted by P0.** quaat/weave#10 adopted this proposal, with the maintainer's
+   decisions recorded there, as the P0 profile (:doc:`pure`): typed pure
+   functions over integers, Booleans, ``List[T]`` and records, with arithmetic,
+   Euclidean ``div`` and ``mod``, comparisons, ``and``/``or``/``not``, terminal
+   if/else, direct self-recursion and reported fuel, depth and integer-size
+   budgets. P0 keeps the core list primitives (``length``, ``is_empty``,
+   ``head``, ``tail``, ``cons``); ``split_half``, ``first``, ``second`` and the
+   built-in pair were not adopted, because a split is written in Weave over a
+   record. Fork/join remains a proposal (below). The text of this section is
+   kept as the proposal's history.
+
 The separate merge-sort brief proposes typed pure functions with immutable
 integers, Booleans, integer lists, and a pair of integer lists. It requests
 integer literals, comparison, local bindings, terminal if/else, direct
@@ -79,7 +92,8 @@ included in the acceptance corpus.
 Promotion process
 -----------------------
 
-To promote a proposal, adopt its complete grammar and semantics, implement the
+P0 followed this process for pure computation (:doc:`pure`). To promote a
+proposal, adopt its complete grammar and semantics, implement the
 parser/checker/evaluator, add positive and negative cases, test runtime failure
 paths, preserve existing conformance cases, update provenance, and revise the
 profile matrix. A plausible source example alone is insufficient.

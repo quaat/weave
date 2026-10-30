@@ -110,3 +110,40 @@ match = "match", IDENT, ":", NL,
 branch = IDENT, "(", [ IDENT ], ")", ":", NL,
          INDENT, body, DEDENT ;
 
+
+(* P0 pure files (chapters/pure.rst). Words such as fn, record, if, and, or
+   are contextual; true, false, not and the primitives are built-in names that
+   static checking resolves, not grammar words. The grammar recognises a word
+   before a qualified name (await X.y), dotted calls and fork blocks only so
+   that static checking can reject them (P0-EFFECT-1, P0-EFFECT-2, P0-FORK-1),
+   and a call argument as expr, [ ":", expr ] so that static checking can
+   require a field name before ":" (P0-CALL-1). *)
+pure-file = pure-item, { pure-item } ;
+pure-item = record-decl | fn-decl ;
+record-decl = "record", IDENT, ":", NL,
+              INDENT, field-decl, { field-decl }, DEDENT ;
+field-decl = IDENT, ":", pure-type, NL ;
+fn-decl = "fn", IDENT, "(", [ fn-params ], ")", "->", pure-type, pure-block ;
+fn-params = fn-param, { ",", fn-param } ;
+fn-param = IDENT, ":", pure-type ;
+pure-type = IDENT, [ "[", pure-type, { ",", pure-type }, "]" ] ;
+pure-block = ":", NL, INDENT, statement, { statement }, DEDENT ;
+statement = let-stmt | return-stmt | if-stmt | fork-stmt ;
+let-stmt = "let", IDENT, "=", expr, NL ;
+return-stmt = "return", expr, NL ;
+if-stmt = "if", expr, pure-block, [ "else", pure-block ] ;
+fork-stmt = "fork", pure-block ;
+expr = conjunction, { "or", conjunction } ;
+conjunction = comparison, { "and", comparison } ;
+comparison = sum, [ compare-op, sum ] ;
+compare-op = "<" | "<=" | ">" | ">=" | "==" | "!=" ;
+sum = product, { ( "+" | "-" ), product } ;
+product = unary, { "*", unary } ;
+unary = "-", unary | primary ;
+primary = UINT | "(", expr, ")" | list-literal | name-expr ;
+list-literal = "[", [ expr, { ",", expr } ], "]" ;
+name-expr = IDENT, [ prefixed ], { ".", IDENT },
+            [ "(", [ call-args ], ")" ] ;
+prefixed = IDENT, ".", IDENT ;
+call-args = call-arg, { ",", call-arg } ;
+call-arg = expr, [ ":", expr ] ;

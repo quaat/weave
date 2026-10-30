@@ -38,8 +38,9 @@ Functional and concurrent meaning
 ---------------------------------------
 
 Bindings are single-assignment. State changes occur through declared operations
-and net firings. The implemented fragment does not yet provide general pure
-functions, arithmetic in flows, lists, or higher-order programming.
+and net firings. Flows do not provide general pure functions, arithmetic,
+lists, or higher-order programming; typed pure functions with arithmetic, lists
+and records are the separate P0 profile (:doc:`pure`), in its own file kind.
 
 A net may enable multiple transitions simultaneously. Reference analysis uses
 interleaved atomic firings, expressing potential concurrency without providing a
@@ -49,7 +50,8 @@ simulator and durable protocol driver have different execution scopes.
 Reading a result
 ----------------------
 
-``CHECKED flow`` means static obligations were satisfied. ``PROVED`` means a
+``CHECKED flow`` means static obligations were satisfied; ``CHECKED pure`` means
+the same for a P0 pure file, not that a run terminates. ``PROVED`` means a
 specified accounting equality is inductive over net firings. ``CHECKED WITHIN
 BOUNDS`` means the stated finite model was exhaustively explored. A passed
 scenario is concrete execution evidence. These do not individually establish

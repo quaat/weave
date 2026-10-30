@@ -137,6 +137,22 @@ Known evolution
   Conformance cases C026 (comments and blank lines in every block position) and
   C027 (a skipped indentation level, E001) were added. The reference snapshot is
   unchanged. No rule, diagnostic code or profile changed.
+* Pure computation, added during 0.2-draft (quaat/weave#10): a new profile, P0
+  (:doc:`pure`), with rule IDs ``P0-*``, diagnostic codes E500 to E540 and the
+  result label CHECKED pure (:doc:`verification`). The ``pure-file`` start symbol
+  and its productions were added to ``grammar/weave.ebnf``, and SYN-01 now lists
+  the pure file kind; the lexer gained the tokens ``<``, ``<=``, ``>``, ``>=`` and
+  ``!=``. F0, N0 and N1 accept and reject exactly the files they did before: the
+  Rust and generated parsers give the same verdicts and codes on the earlier 32
+  corpus files and 22 probes, and two probes were added. The Rust crates
+  ``weave-check``, ``weave-eval`` and ``weave-cli`` (command ``weave``) and the
+  Python reference evaluator ``scripts/p0_reference.py`` implement P0, and
+  ``scripts/p0_differential.py`` compares them. The P0 corpus is
+  ``examples/pure/manifest.json`` (``weave-p0-conformance-v1``). These are
+  compatible additions (MINOR at the next draft cut, :doc:`stability`); no
+  existing rule, code, profile or label changed meaning. The proposal in
+  :doc:`proposals` is marked adopted; the agent kit's ``fn`` extension is
+  unchanged.
 
 To complete the four-draft appendix, the original texts are still needed.
 When available, record each draft's identity/hash and cite concrete changes.

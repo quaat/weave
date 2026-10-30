@@ -30,7 +30,9 @@ read the same file, and none keeps a copy:
   and no build script, and the concrete syntax tree's node kinds are the
   production names;
 * ``scripts/grammar_audit.py`` translates it into a Lark grammar for an
-  independent generated parser (`Generated-parser agreement`_).
+  independent generated parser (`Generated-parser agreement`_); the P0
+  reference evaluator ``scripts/p0_reference.py`` parses pure files with that
+  generated parser (:doc:`pure`).
 
 ``grammar/weave-n2-delta.ebnf`` is a target-only delta. No parser reads it; the
 Rust normalisation tests read it as EBNF and resolve its names against the base
@@ -124,8 +126,8 @@ Syntax diagnostics
 
 The Rust parser reports the first fault as one ``weave-diagnostic-v1`` document
 with a code from ``diagnostics.json`` and that code's rules
-(:doc:`diagnostics`). It uses the reference checker's syntax family and mints no
-code:
+(:doc:`diagnostics`). For flow and net files it uses the reference checker's
+syntax family; for P0 pure files it uses E500 (:ref:`P0-FILE-1 <P0-FILE-1>`):
 
 .. list-table::
    :header-rows: 1
@@ -142,15 +144,16 @@ code:
      - :ref:`LEX-REQ-1 <LEX-REQ-1>`
    * - Character outside every token, carriage return outside a CRLF ending, a
        word starting with a digit, invalid UTF-8
-     - E200 in a flow file, E003 in a net file
+     - E200 in a flow file, E003 in a net file, E500 in a pure file
      - ``lexical``
-     - :ref:`CONF-REQ-1 <CONF-REQ-1>` (E200), :ref:`SYN-04 <SYN-04>` (E003)
+     - :ref:`CONF-REQ-1 <CONF-REQ-1>` (E200), :ref:`SYN-04 <SYN-04>` (E003),
+       :ref:`P0-FILE-1 <P0-FILE-1>` (E500)
    * - Input the grammar does not derive
-     - E200 or E003, as above
+     - E200, E003 or E500, as above
      - ``syntax``
      - as above
    * - Nesting deeper than the parser's limit (400 productions by default)
-     - E200 or E003, as above
+     - E200, E003 or E500, as above
      - ``limit``
      - as above
 
@@ -164,8 +167,10 @@ stack, and the input is not checked further.
 Start symbols
 -------------------
 
-``n0-file`` selects N0, ``n1-file`` selects N1, and ``flow-file`` selects F0.
-SYN-01 requires exactly one start symbol per file. Common declarations refer to places
+``n0-file`` selects N0, ``n1-file`` selects N1, ``flow-file`` selects F0, and
+``pure-file`` selects P0 (:doc:`pure`). SYN-01 requires exactly one start symbol
+per file. The P0 productions are reachable only from ``pure-file``, so they add
+nothing to the files the other start symbols derive. Common declarations refer to places
 without indices; N1 inscriptions appear on places, transitions, arcs, and
 invariant families.
 
@@ -177,7 +182,9 @@ invariant families.
 Precedence
 ----------------
 
-Only invariant arithmetic has an expression grammar. From highest to lowest:
+Invariant arithmetic and P0 expressions have expression grammars; P0
+precedence, which extends this arithmetic with comparisons, ``and`` and ``or``,
+is stated in :ref:`chapters/pure:Pure files`. For invariants, from highest to lowest:
 parenthesized atoms, unary minus, multiplication, addition/subtraction.
 Binary arithmetic associates to the left. Equality separates the two sides of
 one invariant and cannot be chained.
@@ -195,7 +202,9 @@ The following numbered constraints are normative and applied after parsing.
 .. _SYN-01:
 
 **SYN-01 — File kind.** A file MUST select exactly one start symbol: N0 net,
-N1 net, or F0 flows. A net file contains exactly one net.
+N1 net, F0 flows, or P0 pure file. A net file contains exactly one net.
+(quaat/weave#10 added the P0 pure file to this list as a compatible
+clarification: no F0, N0 or N1 file is accepted or rejected differently.)
 
 .. _SYN-02:
 
@@ -295,14 +304,17 @@ skipped-level cases are rejected syntactically; semantic negatives parse before
 rejection.
 
 The audit also parses every other ``.weave`` file in ``examples/`` (the N0, N1
-and lease nets and the lease client), 32 files in all, and requires the
-supplementary ones to be accepted. It checks the 22 syntax probes of
-`Reference parser discrepancies`_ against their documented verdicts.
+and lease nets, the lease client and the 27 P0 pure files of ``examples/pure/``),
+59 files in all, and requires the supplementary ones to be accepted, except
+the P0 files whose case in ``examples/pure/manifest.json`` requires a syntax code
+(E500), which must be rejected. P0 syntax faults are classed as E500. It checks
+the 24 syntax probes of `Reference parser discrepancies`_ against their
+documented verdicts.
 
 **Rust differential.** When ``WEAVE_SYNTAX_BIN`` names the ``weave-syntax``
 binary, or ``cargo`` is on ``PATH`` (the audit then builds it with
 ``cargo build --offline --locked``), the audit runs the Rust parser on the
-32 corpus files and the 22 probes. Every verdict must equal the generated
+59 corpus files and the 24 probes. Every verdict must equal the generated
 parser's. Every accepted input must round-trip. Where the generated pipeline
 gives a syntax code, the Rust code must be the same. Without ``cargo`` and
 without the variable, the comparison is skipped and
@@ -425,6 +437,14 @@ does not decide those items, and the reference snapshot is unchanged.
      - Comment after a net header
      - ACCEPT
      - ACCEPT
+   * - SA-11
+     - P0 comparison operator (``<``) in a flow
+     - REJECT
+     - REJECT
+   * - SA-12
+     - P0 function declaration in a flow file
+     - REJECT
+     - REJECT
 
 
 Portable source avoids every ``SD-*`` form: it uses canonical spacing, ASCII
